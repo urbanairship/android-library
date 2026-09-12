@@ -4,11 +4,13 @@ import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.CompoundAudienceSelector
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.time.Instant
@@ -440,6 +442,99 @@ public class AutomationScheduleTests {
         )
 
         verify(json, expected)
+    }
+
+    @Test
+    public fun testParseVariantAudience() {
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [
+                   {
+                       "type": "custom_event_count",
+                       "goal": 1,
+                       "id": "json-id"
+                   }
+               ],
+               "type": "actions",
+               "actions": {
+                   "foo": "bar"
+               },
+               "variant_audience": {
+                   "audience_hash": {
+                       "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
+                       "num_hash_buckets": 16384,
+                       "hash_identifier": "contact",
+                       "hash_algorithm": "farm_hash"
+                   },
+                   "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 8191 },
+                   "holdout_subset": { "min_hash_bucket": 8192, "max_hash_bucket": 9999 },
+                   "reporting_context": { "experiment": "exp-1" }
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        val expected = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(
+                AutomationTrigger.Event(
+                    EventAutomationTrigger(
+                        id = "json-id",
+                        type = EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+                        goal = 1.0,
+                        predicate = null
+                    )
+                )
+            ),
+            created = Instant.ofEpochMilli(1703073600000),
+            variantAudience = VariantAudience.fromJson(
+                JsonValue.parseString(
+                    """
+                    {
+                        "audience_hash": {
+                            "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
+                            "num_hash_buckets": 16384,
+                            "hash_identifier": "contact",
+                            "hash_algorithm": "farm_hash"
+                        },
+                        "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 8191 },
+                        "holdout_subset": { "min_hash_bucket": 8192, "max_hash_bucket": 9999 },
+                        "reporting_context": { "experiment": "exp-1" }
+                    }
+                    """.trimIndent()
+                ).requireMap()
+            )
+        )
+
+        verify(json, expected)
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsUnreadableVariantAudience() {
+        // A variant experiment this version can't evaluate must take the schedule with it
+        // rather than leave a schedule that displays to everyone.
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [],
+               "type": "actions",
+               "actions": { "foo": "bar" },
+               "variant_audience": {
+                   "audience_hash": {
+                       "hash_prefix": "prefix:",
+                       "num_hash_buckets": 16384,
+                       "hash_identifier": "contact",
+                       "hash_algorithm": "some_future_algorithm"
+                   },
+                   "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 8191 }
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        AutomationSchedule.fromJson(JsonValue.parseString(json))
     }
 
     @Test

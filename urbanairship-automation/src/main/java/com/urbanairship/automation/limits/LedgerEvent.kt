@@ -52,16 +52,29 @@ internal sealed class LedgerExecutionResult(internal val json: String) : JsonSer
     data object SUCCEEDED : LedgerExecutionResult("succeeded")
 
     /**
-     * A holdout group execution: everything except display or actions
-     * occurred. Counts toward the limit like a real execution.
+     * The user reached the very last mile before display (trigger fired,
+     * audience and frequency checks passed, assets loaded) but the resolved
+     * outcome was "no message." Everything except display or actions
+     * occurred, so it counts toward the limit like a real execution. Emitted
+     * by the global holdout mechanism (holdout experiment groups /
+     * `bypass_holdout_groups`), and equally by an Experiment Groups variant
+     * experiment whose resolved hash bucket lands in its own no-message arm —
+     * the two are indistinguishable in their effect on the ledger, only in
+     * why they occurred.
      */
     data object HOLDOUT : LedgerExecutionResult("holdout")
 
     /**
-     * A variant control: the user triggered the experiment but was assigned a
-     * different variant. Not a holdout.
+     * Reached the same last mile as [HOLDOUT], but the resolved hash bucket
+     * landed in neither this schedule's own arm nor its holdout arm — i.e.
+     * some sibling schedule's arm owns it. Not a holdout: the user wasn't
+     * assigned "no message," just not this schedule's message. This is what
+     * lets a schedule whose own trigger fired, and who would otherwise have
+     * executed, still be counted as a known member of the experiment
+     * audience. Counts toward the limit by default, same as any other
+     * execution.
      */
-    data object CONTROL : LedgerExecutionResult("control")
+    data object VARIANT_MISS : LedgerExecutionResult("variant_miss")
 
     /** The audience check failed with a budget-consuming miss behavior. */
     data object AUDIENCE_MISS : LedgerExecutionResult("audience_miss")
@@ -89,7 +102,7 @@ internal sealed class LedgerExecutionResult(internal val json: String) : JsonSer
          * null.
          */
         internal val known: List<LedgerExecutionResult> by lazy {
-            listOf(SUCCEEDED, HOLDOUT, CONTROL, AUDIENCE_MISS, BACKFILL)
+            listOf(SUCCEEDED, HOLDOUT, VARIANT_MISS, AUDIENCE_MISS, BACKFILL)
         }
 
         /**

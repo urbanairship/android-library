@@ -75,7 +75,9 @@ internal class InAppMessageAutomationPreparer(
         val assets = prepareAssets(
             message = data,
             scheduleID = preparedScheduleInfo.scheduleId,
-            skip = !preparedScheduleInfo.additionalAudienceCheckResult || preparedScheduleInfo.experimentResult?.isMatching == true
+            skip = !preparedScheduleInfo.additionalAudienceCheckResult
+                || preparedScheduleInfo.experimentResult?.isMatching == true
+                || preparedScheduleInfo.variantAudienceResult?.outcome?.isDisplaySkipped == true
         ).getOrElse {
             return Result.failure(it)
         }

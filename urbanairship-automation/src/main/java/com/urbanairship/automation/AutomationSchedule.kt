@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation
 
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.isInAppMessage
 import com.urbanairship.automation.engine.AutomationScheduleData
@@ -108,6 +109,12 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val sendMetadata: String? = null,
     internal val ledgerConfig: LedgerConfig? = null,
     internal val limitConfig: LimitConfig? = null,
+    /**
+     * Makes this schedule one arm of an Experiment Groups variant experiment. Null for
+     * schedules that aren't part of one. Independent of [bypassHoldoutGroups], which applies
+     * to the (unrelated) global holdout mechanism.
+     */
+    internal val variantAudience: VariantAudience? = null,
     internal val aiSuppression: AutomationAiSuppression? = null
 ) : JsonSerializable {
 
@@ -156,6 +163,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private val sendMetadata: String? = schedule.sendMetadata
         private val ledgerConfig: LedgerConfig? = schedule.ledgerConfig
         private val limitConfig: LimitConfig? = schedule.limitConfig
+        private val variantAudience: VariantAudience? = schedule.variantAudience
         private val aiSuppression: AutomationAiSuppression? = schedule.aiSuppression
 
         /**
@@ -314,6 +322,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 sendMetadata = sendMetadata,
                 ledgerConfig = ledgerConfig,
                 limitConfig = limitConfig,
+                variantAudience = variantAudience,
                 aiSuppression = aiSuppression
             )
         }
@@ -356,6 +365,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             sendMetadata = sendMetadata,
             ledgerConfig = ledgerConfig,
             limitConfig = limitConfig,
+            variantAudience = variantAudience,
             aiSuppression = aiSuppression
         )
     }
@@ -458,6 +468,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val SEND_METADATA = "send_metadata"
         private const val LEDGER_CONFIG = "ledger_config"
         private const val LIMIT_CONFIG = "limit_config"
+        private const val VARIANT_AUDIENCE = "variant_audience"
         private const val AI_SUPPRESSION = "ai_suppression"
 
         @Throws(
@@ -508,6 +519,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 sendMetadata = content.optionalField(SEND_METADATA),
                 ledgerConfig = content[LEDGER_CONFIG]?.let(LedgerConfig::fromJson),
                 limitConfig = content[LIMIT_CONFIG]?.let(LimitConfig::fromJson),
+                variantAudience = content[VARIANT_AUDIENCE]?.let { VariantAudience.fromJson(it.requireMap()) },
                 aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)
             )
         }
@@ -543,6 +555,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(SEND_METADATA, sendMetadata)
         .putOpt(LEDGER_CONFIG, ledgerConfig)
         .putOpt(LIMIT_CONFIG, limitConfig)
+        .putOpt(VARIANT_AUDIENCE, variantAudience)
         .putOpt(AI_SUPPRESSION, aiSuppression)
         .build()
         .toJsonValue()
@@ -580,6 +593,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (sendMetadata != other.sendMetadata) return false
         if (ledgerConfig != other.ledgerConfig) return false
         if (limitConfig != other.limitConfig) return false
+        if (variantAudience != other.variantAudience) return false
         if (aiSuppression != other.aiSuppression) return false
         return endDate == other.endDate
     }
@@ -589,7 +603,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
             minSDKVersion, created, queue, metadata, sendMetadata, ledgerConfig, limitConfig,
-            aiSuppression, endDate)
+            variantAudience, aiSuppression, endDate)
     }
 }
 

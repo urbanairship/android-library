@@ -12,6 +12,7 @@ import com.urbanairship.audience.AirshipDeviceAudienceResult
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationCompoundAudience
 import com.urbanairship.automation.AutomationSchedule
@@ -37,6 +38,7 @@ import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.info.InAppMessageButtonLayoutType
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.time.Instant
@@ -1243,7 +1245,8 @@ public class AutomationPreparerTest {
         data: AutomationSchedule.ScheduleData? = null,
         messageType: String? = null,
         bypassHoldoutGroup: Boolean? = null,
-        sendMetadata: String? = null
+        sendMetadata: String? = null,
+        variantAudience: VariantAudience? = null
     ): AutomationSchedule {
         val content = displayContent ?: InAppMessageDisplayContent.CustomContent(Custom(JsonValue.NULL))
         val scheduleData = data ?: AutomationSchedule.ScheduleData.InAppMessageData(
@@ -1264,10 +1267,149 @@ public class AutomationPreparerTest {
             campaigns = campaigns,
             messageType = messageType,
             bypassHoldoutGroups = bypassHoldoutGroup,
-            sendMetadata = sendMetadata
+            sendMetadata = sendMetadata,
+            variantAudience = variantAudience
         )
     }
 
+    // Same fixture as AudienceHashSelectorTest.testHash: this prefix/contactID
+    // combination resolves to bucket 9908 of 16384 via farm hash.
+    private fun makeVariantAudience(
+        audienceSubset: Pair<Int, Int>,
+        holdoutSubset: Pair<Int, Int>? = null,
+        reportingContext: JsonMap? = null
+    ): VariantAudience {
+        val holdoutJson = holdoutSubset?.let {
+            """, "holdout_subset": { "min_hash_bucket": ${it.first}, "max_hash_bucket": ${it.second} }"""
+        } ?: ""
+
+        val reportingContextJson = reportingContext?.let {
+            """, "reporting_context": ${it.toJsonValue()}"""
+        } ?: ""
+
+        val json = """
+            {
+                "audience_hash": {
+                    "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
+                    "num_hash_buckets": 16384,
+                    "hash_identifier": "contact",
+                    "hash_algorithm": "farm_hash"
+                },
+                "audience_subset": { "min_hash_bucket": ${audienceSubset.first}, "max_hash_bucket": ${audienceSubset.second} }
+                $holdoutJson
+                $reportingContextJson
+            }
+        """.trimIndent()
+
+        return requireNotNull(VariantAudience.fromJson(JsonValue.parseString(json).requireMap()))
+    }
+
+    @Test
+    public fun testVariantAudienceMatched(): TestResult = runTest {
+        val schedule = makeSchedule(variantAudience = makeVariantAudience(audienceSubset = 9908 to 9908))
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contactId", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns ""
+
+        mockExperimentsManager()
+
+        coEvery { messagePreparer.prepare(any(), any()) } answers {
+            val info: PreparedScheduleInfo = secondArg()
+            assertEquals(VariantAudienceResult(outcome = VariantAudience.Outcome.MATCHED), info.variantAudienceResult)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
+        }
+
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        if (result is SchedulePrepareResult.Prepared) {
+            assertEquals(VariantAudienceResult(outcome = VariantAudience.Outcome.MATCHED), result.schedule.info.variantAudienceResult)
+        } else {
+            fail()
+        }
+    }
+
+    @Test
+    public fun testVariantAudienceHoldout(): TestResult = runTest {
+        val schedule = makeSchedule(
+            variantAudience = makeVariantAudience(audienceSubset = 0 to 0, holdoutSubset = 9908 to 9908)
+        )
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contactId", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns ""
+
+        mockExperimentsManager()
+
+        coEvery { messagePreparer.prepare(any(), any()) } answers {
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
+        }
+
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        if (result is SchedulePrepareResult.Prepared) {
+            assertEquals(VariantAudienceResult(outcome = VariantAudience.Outcome.HOLDOUT), result.schedule.info.variantAudienceResult)
+        } else {
+            fail()
+        }
+    }
+
+    @Test
+    public fun testVariantAudienceMiss(): TestResult = runTest {
+        val schedule = makeSchedule(variantAudience = makeVariantAudience(audienceSubset = 0 to 0))
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contactId", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns ""
+
+        mockExperimentsManager()
+
+        coEvery { messagePreparer.prepare(any(), any()) } answers {
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
+        }
+
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        if (result is SchedulePrepareResult.Prepared) {
+            assertEquals(VariantAudienceResult(outcome = VariantAudience.Outcome.VARIANT_MISS), result.schedule.info.variantAudienceResult)
+        } else {
+            fail()
+        }
+    }
+
+    @Test
+    public fun testVariantAudienceCarriesReportingContext(): TestResult = runTest {
+        val schedule = makeSchedule(
+            variantAudience = makeVariantAudience(
+                audienceSubset = 9908 to 9908,
+                reportingContext = jsonMapOf("foo" to "bar")
+            )
+        )
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contactId", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns ""
+
+        mockExperimentsManager()
+
+        coEvery { messagePreparer.prepare(any(), any()) } answers {
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
+        }
+
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        if (result is SchedulePrepareResult.Prepared) {
+            assertEquals(
+                VariantAudienceResult(
+                    outcome = VariantAudience.Outcome.MATCHED,
+                    reportingContext = jsonMapOf("foo" to "bar")
+                ),
+                result.schedule.info.variantAudienceResult
+            )
+        } else {
+            fail()
+        }
+    }
 
     private fun mockExperimentsManager() {
         coEvery { experimentManager.evaluateExperiments(any(), any()) } returns Result.success(null)

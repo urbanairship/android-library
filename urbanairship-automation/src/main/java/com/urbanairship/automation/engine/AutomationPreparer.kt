@@ -6,6 +6,7 @@ import com.urbanairship.UALog
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
@@ -129,6 +130,8 @@ internal class AutomationPreparer internal constructor(
                 return@run RetryingQueue.Result.Retry()
             }
 
+            val variantAudienceResult = resolveVariantAudience(schedule, deviceInfoProvider)
+
             prepareData(
                 prepareCache = prepareCache,
                 data = schedule.data,
@@ -140,8 +143,13 @@ internal class AutomationPreparer internal constructor(
                 },
                 onPrepareInfo = { aiSuppression ->
                     prepareInfo(
-                        schedule, experimentResult, deviceInfoProvider, triggerSessionId,
-                        triggerId, aiSuppression
+                        schedule,
+                        experimentResult,
+                        variantAudienceResult,
+                        deviceInfoProvider,
+                        triggerSessionId,
+                        triggerId,
+                        aiSuppression
                     )
                 },
                 onPrepareSchedule = { info, data ->
@@ -154,6 +162,7 @@ internal class AutomationPreparer internal constructor(
     private suspend fun prepareInfo(
         schedule: AutomationSchedule,
         experimentResult: ExperimentResult?,
+        variantAudienceResult: VariantAudienceResult?,
         deviceInfoProvider: DeviceInfoProvider,
         triggerSessionId: String,
         triggerId: String?,
@@ -174,6 +183,7 @@ internal class AutomationPreparer internal constructor(
                 campaigns = schedule.campaigns,
                 contactId = deviceInfoProvider.getStableContactInfo().contactId,
                 experimentResult = experimentResult,
+                variantAudienceResult = variantAudienceResult,
                 reportingContext = schedule.reportingContext,
                 triggerSessionId = triggerSessionId,
                 additionalAudienceCheckResult = additionalAudienceCheckResult,
@@ -405,6 +415,22 @@ internal class AutomationPreparer internal constructor(
         } else {
             Result.success(null)
         }
+    }
+
+    private suspend fun resolveVariantAudience(
+        schedule: AutomationSchedule,
+        deviceInfoProvider: DeviceInfoProvider
+    ): VariantAudienceResult? {
+        val variantAudience = schedule.variantAudience?.takeIf { schedule.isInAppMessageType() }
+            ?: return null
+
+        return VariantAudienceResult(
+            outcome = variantAudience.resolve(
+                channelId = deviceInfoProvider.getChannelId(),
+                contactId = deviceInfoProvider.getStableContactInfo().contactId
+            ),
+            reportingContext = variantAudience.reportingContext
+        )
     }
 
     private suspend fun prepareDeferred(

@@ -5,10 +5,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action
 import com.urbanairship.android.layout.analytics.DisplayResult
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
+import com.urbanairship.automation.engine.VariantAudienceResult
 import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.TestAutomationLedger
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
@@ -225,11 +227,15 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
         coEvery { assetManager.clearCache(any()) } just runs
 
-        every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(LayoutResolutionEvent.control(experimentResult).eventType, firstArg<LayoutEvent>().eventType)
-        }
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.control(experimentResult).data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
 
         assertEquals(
             listOf(
@@ -238,6 +244,192 @@ public class InAppMessageAutomationExecutorTest {
                     sharedId = null,
                     triggerId = null,
                     result = LedgerExecutionResult.HOLDOUT,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testExecuteGlobalHoldoutTakesPrecedenceOverVariantHoldout(): TestResult = runTest {
+        // A schedule can independently resolve to both the global holdout mechanism and its
+        // own variant experiment's holdout arm at the same last-mile point. Only one outcome
+        // may be reported: the global holdout event, recorded once.
+        val experimentResult = ExperimentResult(
+            channelId = "some channel",
+            contactId = "some contact",
+            isMatching = true,
+            allEvaluatedExperimentsMetadata = listOf()
+        )
+
+        val info = preparedInfo.copy(
+            experimentResult = experimentResult,
+            variantAudienceResult = VariantAudienceResult(outcome = VariantAudience.Outcome.HOLDOUT)
+        )
+
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        coEvery { assetManager.clearCache(any()) } just runs
+
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
+
+        assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.control(experimentResult).data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = info.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.HOLDOUT,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testExecuteVariantHoldout(): TestResult = runTest {
+        val info = preparedInfo.copy(
+            variantAudienceResult = VariantAudienceResult(outcome = VariantAudience.Outcome.HOLDOUT)
+        )
+
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        coEvery { assetManager.clearCache(any()) } just runs
+
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
+
+        assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.variantControl().data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
+
+        // A variant experiment's own holdout arm is indistinguishable from the global holdout
+        // mechanism in ledger terms, even though it reports its own resolution event.
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = info.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.HOLDOUT,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testExecuteVariantMiss(): TestResult = runTest {
+        val info = preparedInfo.copy(
+            variantAudienceResult = VariantAudienceResult(outcome = VariantAudience.Outcome.VARIANT_MISS)
+        )
+
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        coEvery { assetManager.clearCache(any()) } just runs
+
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
+
+        assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.variantMiss().data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = info.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.VARIANT_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testExecuteUnknownVariantOutcomeSkipsDisplay(): TestResult = runTest {
+        // An outcome stamped by a newer SDK must not display just because this version can't
+        // name it. It reports as a variant miss: "not this schedule's message" is all an
+        // unreadable outcome still tells us.
+        val info = preparedInfo.copy(
+            variantAudienceResult = VariantAudienceResult(
+                outcome = VariantAudience.Outcome.Unknown("some_future_arm")
+            )
+        )
+
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        coEvery { assetManager.clearCache(any()) } just runs
+
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
+
+        assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        coVerify(exactly = 0) { displayAdapter.display(any(), any()) }
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.variantMiss().data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = info.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.VARIANT_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testExecuteVariantMatchedDisplaysNormally(): TestResult = runTest {
+        val info = preparedInfo.copy(
+            variantAudienceResult = VariantAudienceResult(outcome = VariantAudience.Outcome.MATCHED)
+        )
+
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        coEvery { assetManager.clearCache(any()) } just runs
+        coEvery { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) } just runs
+
+        coEvery { displayAdapter.display(any(), any()) } returns DisplayResult.FINISHED
+
+        assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+        coVerify { displayAdapter.display(any(), any()) }
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = info.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.SUCCEEDED,
                     cancel = false
                 )
             ),
