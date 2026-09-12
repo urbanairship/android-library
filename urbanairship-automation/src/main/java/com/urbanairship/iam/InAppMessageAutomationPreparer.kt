@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.android.layout.assets.AssetCacheManager
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.android.layout.util.UrlInfo
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.engine.AutomationPreparerDelegate
 import com.urbanairship.automation.engine.DelegatePreparerResult
@@ -16,6 +17,8 @@ import com.urbanairship.iam.actions.InAppActionRunnerFactory
 import com.urbanairship.iam.adapter.CustomDisplayAdapter
 import com.urbanairship.iam.adapter.CustomDisplayAdapterType
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
+import com.urbanairship.iam.ai.InAppMessageSuppressionEvaluation
+import com.urbanairship.iam.ai.InAppMessageSuppressionSubject
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 import kotlin.time.Duration
@@ -25,7 +28,8 @@ internal class InAppMessageAutomationPreparer(
     private val displayCoordinatorManager: DisplayCoordinatorManager,
     private val displayAdapterFactory: DisplayAdapterFactory,
     private val analyticsFactory: InAppMessageAnalyticsFactory,
-    private val actionRunnerFactory: InAppActionRunnerFactory = InAppActionRunnerFactory()
+    private val actionRunnerFactory: InAppActionRunnerFactory = InAppActionRunnerFactory(),
+    private val ai: InternalAirshipAi? = null
 ) : AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> {
 
     var messageContentExtender: InAppMessageContentExtender?
@@ -46,8 +50,26 @@ internal class InAppMessageAutomationPreparer(
         onCheckSuppression?.let { check ->
             val result = check(data, preparedScheduleInfo.scheduleId)
             if (result is SuppressionResult.Suppress) {
-                return Result.success(suppressed(result.behavior, data, preparedScheduleInfo))
+                return Result.success(
+                    suppressed(
+                        result.behavior,
+                        data,
+                        preparedScheduleInfo,
+                        LayoutResolutionEvent.appSuppressed()
+                    )
+                )
             }
+        }
+
+        aiSuppression(data, preparedScheduleInfo)?.let { behavior ->
+            return Result.success(
+                suppressed(
+                    behavior,
+                    data,
+                    preparedScheduleInfo,
+                    LayoutResolutionEvent.aiSuppressed()
+                )
+            )
         }
 
         val assets = prepareAssets(
@@ -82,13 +104,56 @@ internal class InAppMessageAutomationPreparer(
         )
     }
 
+    /**
+     * Asks the model whether the schedule's authored condition holds for this user.
+     *
+     * Fails open at every step — no config, no AI manager, a skipped or failed evaluation, and
+     * output that won't parse all show the message. Only an explicit `allow = false` suppresses,
+     * so a model that is absent or confused can't silently stop a campaign.
+     *
+     * @param message The message being prepared.
+     * @param preparedScheduleInfo The schedule info, carrying the `ai_suppression` config.
+     * @return The miss behavior to suppress with, or `null` to show the message.
+     */
+    private suspend fun aiSuppression(
+        message: InAppMessage,
+        preparedScheduleInfo: PreparedScheduleInfo
+    ): AutomationAudience.MissBehavior? {
+        val suppression = preparedScheduleInfo.aiSuppression ?: return null
+        if (suppression.condition.isEmpty()) {
+            return null
+        }
+
+        val ai = this.ai ?: return null
+
+        val evaluation = InAppMessageSuppressionEvaluation(
+            condition = suppression.condition,
+            subject = InAppMessageSuppressionSubject(
+                name = message.name ?: "",
+                extras = message.extras?.toJsonValue(),
+                priority = preparedScheduleInfo.priority,
+                hints = suppression.subjectHints ?: emptyMap()
+            )
+        )
+
+        if (ai.evaluate(evaluation).output?.allow != false) {
+            return null
+        }
+
+        // The model's stated reason is deliberately left out: it is free text derived from user
+        // context, and a log line is not where that belongs.
+        UALog.d { "AI suppressed message ${message.name}" }
+        return suppression.missBehavior ?: AutomationAudience.MissBehavior.SKIP
+    }
+
     private suspend fun suppressed(
         behavior: AutomationAudience.MissBehavior,
         message: InAppMessage,
-        preparedScheduleInfo: PreparedScheduleInfo
+        preparedScheduleInfo: PreparedScheduleInfo,
+        event: LayoutResolutionEvent
     ): DelegatePreparerResult<PreparedInAppMessageData> {
         val analytics = analyticsFactory.makeAnalytics(message, preparedScheduleInfo)
-        analytics.recordEvent(LayoutResolutionEvent.appSuppressed(), null)
+        analytics.recordEvent(event, null)
         return when (behavior) {
             AutomationAudience.MissBehavior.CANCEL -> DelegatePreparerResult.Cancel
             AutomationAudience.MissBehavior.SKIP -> DelegatePreparerResult.Skip

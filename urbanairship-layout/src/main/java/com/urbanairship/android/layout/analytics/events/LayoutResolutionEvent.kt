@@ -122,6 +122,15 @@ public class LayoutResolutionEvent(
             )
         }
 
+        public fun aiSuppressed(): LayoutResolutionEvent {
+            return LayoutResolutionEvent(
+                ResolutionData(
+                    resolutionType = ResolutionData.ResolutionType.AiSuppressed,
+                    displayTime = 0.seconds
+                )
+            )
+        }
+
     }
 
 
@@ -176,6 +185,7 @@ public class LayoutResolutionEvent(
                 private const val VARIANT_MISS = "variant_miss"
                 private const val AUDIENCE_EXCLUDED = "audience_check_excluded"
                 private const val APP_SUPPRESSED = "app_suppressed"
+                private const val AI_SUPPRESSED = "ai_suppressed"
             }
             data class ButtonTap(val identifier: String, val description: String) : ResolutionType() {
 
@@ -211,6 +221,9 @@ public class LayoutResolutionEvent(
             }
             data object AppSuppressed : ResolutionType() {
                 override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to APP_SUPPRESSED).toJsonValue()
+            }
+            data object AiSuppressed : ResolutionType() {
+                override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to AI_SUPPRESSED).toJsonValue()
             }
         }
     }

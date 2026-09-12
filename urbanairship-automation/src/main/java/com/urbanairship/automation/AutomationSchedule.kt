@@ -114,7 +114,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      * schedules that aren't part of one. Independent of [bypassHoldoutGroups], which applies
      * to the (unrelated) global holdout mechanism.
      */
-    internal val variantAudience: VariantAudience? = null
+    internal val variantAudience: VariantAudience? = null,
+    internal val aiSuppression: AutomationAiSuppression? = null
 ) : JsonSerializable {
 
     /**
@@ -163,6 +164,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private val ledgerConfig: LedgerConfig? = schedule.ledgerConfig
         private val limitConfig: LimitConfig? = schedule.limitConfig
         private val variantAudience: VariantAudience? = schedule.variantAudience
+        private val aiSuppression: AutomationAiSuppression? = schedule.aiSuppression
 
         /**
          * Set the triggers.
@@ -320,7 +322,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 sendMetadata = sendMetadata,
                 ledgerConfig = ledgerConfig,
                 limitConfig = limitConfig,
-                variantAudience = variantAudience
+                variantAudience = variantAudience,
+                aiSuppression = aiSuppression
             )
         }
     }
@@ -362,7 +365,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             sendMetadata = sendMetadata,
             ledgerConfig = ledgerConfig,
             limitConfig = limitConfig,
-            variantAudience = variantAudience
+            variantAudience = variantAudience,
+            aiSuppression = aiSuppression
         )
     }
 
@@ -465,6 +469,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val LEDGER_CONFIG = "ledger_config"
         private const val LIMIT_CONFIG = "limit_config"
         private const val VARIANT_AUDIENCE = "variant_audience"
+        private const val AI_SUPPRESSION = "ai_suppression"
 
         @Throws(
             JsonException::class,
@@ -514,7 +519,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 sendMetadata = content.optionalField(SEND_METADATA),
                 ledgerConfig = content[LEDGER_CONFIG]?.let(LedgerConfig::fromJson),
                 limitConfig = content[LIMIT_CONFIG]?.let(LimitConfig::fromJson),
-                variantAudience = content[VARIANT_AUDIENCE]?.let { VariantAudience.fromJson(it.requireMap()) }
+                variantAudience = content[VARIANT_AUDIENCE]?.let { VariantAudience.fromJson(it.requireMap()) },
+                aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)
             )
         }
     }
@@ -550,6 +556,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(LEDGER_CONFIG, ledgerConfig)
         .putOpt(LIMIT_CONFIG, limitConfig)
         .putOpt(VARIANT_AUDIENCE, variantAudience)
+        .putOpt(AI_SUPPRESSION, aiSuppression)
         .build()
         .toJsonValue()
 
@@ -587,6 +594,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (ledgerConfig != other.ledgerConfig) return false
         if (limitConfig != other.limitConfig) return false
         if (variantAudience != other.variantAudience) return false
+        if (aiSuppression != other.aiSuppression) return false
         return endDate == other.endDate
     }
 
@@ -595,7 +603,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
             minSDKVersion, created, queue, metadata, sendMetadata, ledgerConfig, limitConfig,
-            variantAudience, endDate)
+            variantAudience, aiSuppression, endDate)
     }
 }
 

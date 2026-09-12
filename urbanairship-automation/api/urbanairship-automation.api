@@ -55,7 +55,7 @@ public final class com/urbanairship/automation/AutomationDelay : com/urbanairshi
 }
 
 public final class com/urbanairship/automation/AutomationSchedule : com/urbanairship/json/JsonSerializable {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/UInt;Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/automation/AutomationAudience;Lcom/urbanairship/automation/AutomationCompoundAudience;Lcom/urbanairship/automation/AutomationDelay;Lkotlin/time/Duration;Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;Ljava/lang/Boolean;Ljava/lang/Long;Lcom/urbanairship/json/JsonValue;Ljava/util/List;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lcom/urbanairship/json/JsonValue;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Ljava/lang/String;Lcom/urbanairship/automation/AdditionalAudienceCheckOverrides;Ljava/lang/String;Lcom/urbanairship/automation/limits/LedgerConfig;Lcom/urbanairship/automation/limits/LimitConfig;Lcom/urbanairship/audience/VariantAudience;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/UInt;Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/automation/AutomationAudience;Lcom/urbanairship/automation/AutomationCompoundAudience;Lcom/urbanairship/automation/AutomationDelay;Lkotlin/time/Duration;Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;Ljava/lang/Boolean;Ljava/lang/Long;Lcom/urbanairship/json/JsonValue;Ljava/util/List;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lcom/urbanairship/json/JsonValue;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Ljava/lang/String;Lcom/urbanairship/automation/AdditionalAudienceCheckOverrides;Ljava/lang/String;Lcom/urbanairship/automation/limits/LedgerConfig;Lcom/urbanairship/automation/limits/LimitConfig;Lcom/urbanairship/audience/VariantAudience;Lcom/urbanairship/automation/AutomationAiSuppression;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAudience ()Lcom/urbanairship/automation/AutomationAudience;
 	public final fun getBypassHoldoutGroups ()Ljava/lang/Boolean;
@@ -544,6 +544,41 @@ public final class com/urbanairship/iam/adapter/DisplayFinishedCallback : androi
 }
 
 public final class com/urbanairship/iam/adapter/DisplayFinishedCallback$Companion {
+}
+
+public final class com/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output {
+	public fun <init> (ZLjava/lang/String;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (ZLjava/lang/String;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;ZLjava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllow ()Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/ai/InAppMessageSuppressionKt {
+	public static final fun getInAppMessageSuppression (Lcom/urbanairship/ai/Usage$Companion;)Lcom/urbanairship/ai/Usage;
+}
+
+public final class com/urbanairship/iam/ai/InAppMessageSuppressionSubject {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/urbanairship/json/JsonValue;
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionSubject;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/ai/InAppMessageSuppressionSubject;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;ILjava/lang/Object;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionSubject;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExtras ()Lcom/urbanairship/json/JsonValue;
+	public final fun getHints ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPriority ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/urbanairship/iam/content/AirshipLayout : android/os/Parcelable, com/urbanairship/json/JsonSerializable {
