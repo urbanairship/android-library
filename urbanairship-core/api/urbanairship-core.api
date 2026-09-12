@@ -2310,6 +2310,8 @@ public class com/urbanairship/contacts/Contact : com/urbanairship/JobAwareAirshi
 	public synthetic fun editSubscriptionLists (Lkotlin/jvm/functions/Function1;)V
 	public fun editTagGroups ()Lcom/urbanairship/channel/TagGroupsEditor;
 	public synthetic fun editTagGroups (Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun fetchContactChannels-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun fetchContactChannelsPendingResult ()Lcom/urbanairship/PendingResult;
 	public synthetic fun fetchSubscriptionLists-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fetchSubscriptionListsPendingResult ()Lcom/urbanairship/PendingResult;
 	public fun getChannelContacts ()Lkotlinx/coroutines/flow/Flow;
