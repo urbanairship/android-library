@@ -4,6 +4,7 @@ package com.urbanairship.devapp.ai
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.ai.EvaluationContext
+import com.urbanairship.ai.EvaluationRecord
 import com.urbanairship.ai.ModelAdapter
 import com.urbanairship.ai.ModelSelector
 import com.urbanairship.devapp.BuildConfig
@@ -31,8 +32,32 @@ internal object DevAI {
 
         Airship.ai.setModelResolver { ModelSelector.Custom(model) }
 
-        Airship.ai.setEvaluationObserver { record ->
-            UALog.i { "AI evaluation [${record.usage}] ${record.outcome} in ${record.duration}" }
+        Airship.ai.setEvaluationObserver(::logEvaluation)
+    }
+
+    /**
+     * Logs a finished evaluation to the console, prompt and output included.
+     *
+     * Devapp-only on purpose: the prompt carries whatever the context providers supplied, so a
+     * real app forwarding this anywhere is forwarding user context with it.
+     */
+    private fun logEvaluation(record: EvaluationRecord) {
+        val retries = if (record.attempts > 1) " after ${record.attempts} attempts" else ""
+        val header = "AI [${record.usage}] took ${record.duration}$retries"
+        when (val outcome = record.outcome) {
+            is EvaluationRecord.Outcome.Completed ->
+                UALog.i { "$header\n  instructions: ${record.request.instructions}" +
+                        "\n  prompt: ${record.request.prompt()}" +
+                        "\n  output: ${outcome.output}" }
+
+            // Skipped is the ordinary "no model, or the feature opted out" path, so it stays
+            // below the failure level — it is not something going wrong.
+            is EvaluationRecord.Outcome.Skipped ->
+                UALog.i { "$header — skipped: ${outcome.reason}" }
+
+            is EvaluationRecord.Outcome.Failed ->
+                UALog.e(outcome.error) { "$header — failed" +
+                        "\n  prompt: ${record.request.prompt()}" }
         }
     }
 

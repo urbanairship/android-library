@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
  */
 class GeminiModel(
     private val apiKey: String,
-    private val model: String = "gemini-2.5-flash"
+    private val model: String = "gemini-3.5-flash"
 ) : ModelAdapter {
 
     override suspend fun respond(request: ModelRequest): JsonValue = withContext(Dispatchers.IO) {

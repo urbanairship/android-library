@@ -111,7 +111,7 @@ class SampleAutopilot : Autopilot() {
         // Register the "squareview" InApp Message Content Extender
         SampleInAppMessageContentExtender.register()
 
-        // Route AI evaluations to OpenAI when a key is configured.
+        // Route AI evaluations to a sample model when a key is configured.
         DevAI.register()
     }
 
