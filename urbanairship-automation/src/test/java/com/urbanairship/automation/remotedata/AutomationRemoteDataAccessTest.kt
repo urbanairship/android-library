@@ -311,6 +311,162 @@ public class AutomationRemoteDataAccessTest {
         assertEquals(InAppRemoteData(emptyMap()), result)
     }
 
+    @Test
+    public fun testParseTracksFailedSchedules() {
+        val data = parseData(
+            listOf(VALID_SCHEDULE, INVALID_SCHEDULE_WITH_ID),
+            payloadTimestamp = 999L
+        )
+
+        assertEquals(1, data.schedules.size)
+        assertEquals("valid_schedule", data.schedules.first().identifier)
+
+        assertEquals(listOf("failed_schedule_id"), data.failedSchedules.map { it.identifier })
+        assertEquals(CREATED_MILLIS, data.failedSchedules.first().createdDate)
+        assertEquals("18.0.0", data.failedSchedules.first().minSDKVersion)
+    }
+
+    @Test
+    public fun testParseIgnoresFailedScheduleWithoutId() {
+        // Without an ID there is nothing to track it by, so it stays dropped.
+        val invalidWithoutId = """
+            {
+                "created": "2023-12-20T12:00:00Z",
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        val data = parseData(listOf(VALID_SCHEDULE, invalidWithoutId), payloadTimestamp = 999L)
+
+        assertEquals(1, data.schedules.size)
+        assertTrue(data.failedSchedules.isEmpty())
+    }
+
+    @Test
+    public fun testParseFallsBackToPayloadTimestampForMissingCreated() {
+        val invalidWithoutCreated = """
+            {
+                "id": "failed_schedule_id",
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        val data = parseData(listOf(invalidWithoutCreated), payloadTimestamp = 999L)
+
+        assertEquals(999L, data.failedSchedules.first().createdDate)
+        assertNull(data.failedSchedules.first().minSDKVersion)
+    }
+
+    @Test
+    public fun testParseTracksFailedScheduleWithMalformedMinSDKVersion() {
+        // A min SDK version sent as a number is the same class of malformation we are tolerating
+        // everywhere else here, so it must not cost us the record. Losing it would leave the
+        // schedule untrackable and make the next sync read its absence as a recovery.
+        val invalidWithBadMinSDKVersion = """
+            {
+                "id": "failed_schedule_id",
+                "created": "2023-12-20T12:00:00Z",
+                "min_sdk_version": 18,
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        val data = parseData(listOf(invalidWithBadMinSDKVersion), payloadTimestamp = 999L)
+
+        assertEquals(listOf("failed_schedule_id"), data.failedSchedules.map { it.identifier })
+        assertEquals(CREATED_MILLIS, data.failedSchedules.first().createdDate)
+        assertNull(data.failedSchedules.first().minSDKVersion)
+    }
+
+    @Test
+    public fun testFromPayloadsAggregatesFailedSchedules() {
+        // Covers the full payload path, including the metadata pass in parse() that rebuilds Data.
+        val payload = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = Instant.ofEpochMilli(999L),
+            data = JsonValue
+                .parseString("""{ "in_app_messages": [$VALID_SCHEDULE, $INVALID_SCHEDULE_WITH_ID] }""")
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo()
+        )
+
+        val result = InAppRemoteData.fromPayloads(listOf(payload))
+
+        assertEquals(1, result.payload[RemoteDataSource.APP]?.data?.schedules?.size)
+        assertEquals(listOf("failed_schedule_id"), result.failedSchedules.map { it.identifier })
+        assertEquals(CREATED_MILLIS, result.failedSchedules.first().createdDate)
+    }
+
+    @Test
+    public fun testCorruptPayloadDoesNotAffectOtherSources() {
+        // Missing the required "in_app_messages" key, so the whole payload fails to parse.
+        val corruptContact = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = Instant.ofEpochMilli(999L),
+            data = JsonMap.EMPTY_MAP,
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.CONTACT)
+        )
+
+        val validApp = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = Instant.ofEpochMilli(999L),
+            data = JsonValue
+                .parseString("""{ "in_app_messages": [$VALID_SCHEDULE] }""")
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.APP)
+        )
+
+        val result = InAppRemoteData.fromPayloads(listOf(validApp, corruptContact))
+
+        // The APP source survives; only CONTACT reads as having no payload.
+        assertEquals(
+            listOf("valid_schedule"),
+            result.payload[RemoteDataSource.APP]?.data?.schedules?.map { it.identifier }
+        )
+        assertNull(result.payload[RemoteDataSource.CONTACT])
+    }
+
+    @Test
+    public fun testBadConstraintOnlyFailsItsOwnSource() {
+        // A single malformed frequency constraint still fails its whole payload, but must not
+        // reach across sources.
+        val badConstraints = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = Instant.ofEpochMilli(999L),
+            data = JsonValue
+                .parseString(
+                    """{ "in_app_messages": [], "frequency_constraints": [ { "id": "no-range" } ] }"""
+                )
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.CONTACT)
+        )
+
+        val validApp = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = Instant.ofEpochMilli(999L),
+            data = JsonValue
+                .parseString("""{ "in_app_messages": [$VALID_SCHEDULE] }""")
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.APP)
+        )
+
+        val result = InAppRemoteData.fromPayloads(listOf(validApp, badConstraints))
+
+        assertEquals(1, result.payload[RemoteDataSource.APP]?.data?.schedules?.size)
+        assertNull(result.payload[RemoteDataSource.CONTACT])
+    }
+
+    private fun parseData(schedules: List<String>, payloadTimestamp: Long): InAppRemoteData.Data {
+        val json = JsonValue
+            .parseString("""{ "in_app_messages": [${schedules.joinToString(",")}] }""")
+            .requireMap()
+
+        return InAppRemoteData.Data.fromJson(json, payloadTimestamp)
+    }
+
     private fun makeRemoteDataInfo(source: RemoteDataSource = RemoteDataSource.APP): RemoteDataInfo {
         return RemoteDataInfo(
             url = "https://airship.test",
@@ -327,5 +483,32 @@ public class AutomationRemoteDataAccessTest {
             created = clock.currentTime,
             metadata = jsonMapOf("com.urbanairship.iaa.REMOTE_DATA_INFO" to (remoteDataInfo ?: "")).toJsonValue()
         )
+    }
+
+    private companion object {
+        const val CREATED_MILLIS: Long = 1703073600000L
+
+        val VALID_SCHEDULE: String = """
+            {
+                "id": "valid_schedule",
+                "created": "2023-12-20T12:00:00Z",
+                "triggers": [
+                    { "type": "custom_event_count", "goal": 1, "id": "json-id" }
+                ],
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        /** Missing the required "triggers" field. */
+        val INVALID_SCHEDULE_WITH_ID: String = """
+            {
+                "id": "failed_schedule_id",
+                "created": "2023-12-20T12:00:00Z",
+                "min_sdk_version": "18.0.0",
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
     }
 }

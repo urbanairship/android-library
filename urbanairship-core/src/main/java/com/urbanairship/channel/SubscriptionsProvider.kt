@@ -15,13 +15,13 @@ import kotlinx.coroutines.flow.Flow
 internal class SubscriptionsProvider(
     private val apiClient: SubscriptionListApiClient,
     private val privacyManager: PrivacyManager,
-    stableContactIdUpdates: Flow<String>,
+    channelIdUpdates: Flow<String>,
     overrideUpdates: Flow<AudienceOverrides.Channel>,
     clock: Clock = Clock.DEFAULT_CLOCK,
     taskSleeper: TaskSleeper = TaskSleeper.default,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AutoRefreshingDataProvider<Set<String>, AudienceOverrides.Channel> (
-    identifierUpdates = stableContactIdUpdates,
+    identifierUpdates = channelIdUpdates,
     overrideUpdates = overrideUpdates,
     clock = clock,
     taskSleeper = taskSleeper,
@@ -30,12 +30,12 @@ internal class SubscriptionsProvider(
     constructor(
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
-        stableContactIdUpdates: Flow<String>,
+        channelIdUpdates: Flow<String>,
         overrideUpdates: Flow<AudienceOverrides.Channel>,
     ): this(
         apiClient = SubscriptionListApiClient(config),
         privacyManager = privacyManager,
-        stableContactIdUpdates = stableContactIdUpdates,
+        channelIdUpdates = channelIdUpdates,
         overrideUpdates = overrideUpdates
     )
 

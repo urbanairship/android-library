@@ -81,7 +81,13 @@ internal abstract class AutoRefreshingDataProvider<T, R>(
             }
         }.shareIn(
             scope = scope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 100),
+            // Drop the replay cache once sharing stops, otherwise it is kept forever and a
+            // subscriber that takes one value and leaves keeps getting the previous identifier's
+            // result. The fetch cache still avoids a network call for the same identifier.
+            started = SharingStarted.WhileSubscribed(
+                stopTimeoutMillis = 100,
+                replayExpirationMillis = 0
+            ),
             replay = 1
         )
     }

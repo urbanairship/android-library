@@ -629,3 +629,30 @@ internal fun AutomationSchedule.isNewSchedule(sinceDate: Instant, lastSDKVersion
         VersionUtils.isVersionNewer(lastSDKVersion, minSDKVersion)
     }
 }
+
+internal fun isNewSchedule(
+    created: ULong,
+    minSDKVersion: String?,
+    sinceDate: Long,
+    lastSDKVersion: String?
+): Boolean {
+    if (created.toLong() > sinceDate) {
+        return true
+    }
+
+    if (minSDKVersion == null) {
+        return false
+    }
+
+    // We can skip checking if the min_sdk_version is newer than the current SDK version since
+    // remote-data will filter them out. This flag is only a hint to the SDK to treat a schedule with
+    // an older created timestamp as a new schedule.
+
+    // If we do not have a last SDK version, then we are coming from an SDK older than
+    // 16.2.0. Check for a min SDK version newer or equal to 16.2.0.
+    return if (lastSDKVersion == null) {
+        VersionUtils.isVersionNewerOrEqualTo("16.2.0", minSDKVersion)
+    } else {
+        VersionUtils.isVersionNewer(lastSDKVersion, minSDKVersion)
+    }
+}

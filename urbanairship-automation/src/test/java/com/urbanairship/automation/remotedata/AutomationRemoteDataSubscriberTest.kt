@@ -26,6 +26,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -461,6 +463,171 @@ public class AutomationRemoteDataSubscriberTest {
         coVerify { frequencyLimitManager.setConstraints(appConstraints + contactConstraints) }
     }
 
+    @Test
+    public fun testFailedScheduleRetriedOnSDKUpdate(): TestResult = runTest {
+        coEvery { engine.upsertSchedules(any()) } just runs
+        clock.currentTime = Instant.ofEpochMilli(1)
+
+        val scheduleA = makeSchedule(RemoteDataSource.APP)
+        val failedB = FailedScheduleRecord(
+            identifier = "failed_schedule_B",
+            createdDate = clock.currentTime.toEpochMilli(),
+            minSDKVersion = null
+        )
+
+        subscriber = AutomationRemoteDataSubscriber(
+            sourceInfoStore, remoteDataAccess, engine, frequencyLimitManager, "1.0.0", testDispatcher
+        )
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(makeUpdate(listOf(scheduleA), listOf(failedB)))
+        advanceUntilIdle()
+
+        coVerify { engine.upsertSchedules(listOf(scheduleA)) }
+        assertEquals(listOf(failedB), trackedFailures())
+
+        subscriber.unsubscribe()
+        advanceUntilIdle()
+        coEvery { engine.getSchedules() } returns listOf(scheduleA)
+
+        // New SDK version can now parse B. Its created date is not newer than the last payload
+        // timestamp, so only the recovery bypass can get it scheduled.
+        val scheduleB = makeSchedule(RemoteDataSource.APP, identifier = failedB.identifier)
+
+        subscriber = AutomationRemoteDataSubscriber(
+            sourceInfoStore, remoteDataAccess, engine, frequencyLimitManager, "2.0.0", testDispatcher
+        )
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(makeUpdate(listOf(scheduleA, scheduleB), emptyList()))
+        advanceUntilIdle()
+
+        coVerify { engine.upsertSchedules(listOf(scheduleA, scheduleB)) }
+        assertNull(trackedFailures())
+    }
+
+    @Test
+    public fun testFailedScheduleRecoveredOnServerFix(): TestResult = runTest {
+        coEvery { engine.upsertSchedules(any()) } just runs
+        clock.currentTime = Instant.ofEpochMilli(1)
+
+        val scheduleA = makeSchedule(RemoteDataSource.APP)
+        val failedB = FailedScheduleRecord(
+            identifier = "failed_schedule_B",
+            createdDate = clock.currentTime.toEpochMilli(),
+            minSDKVersion = null
+        )
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(makeUpdate(listOf(scheduleA), listOf(failedB)))
+        advanceUntilIdle()
+
+        coVerify { engine.upsertSchedules(listOf(scheduleA)) }
+        coEvery { engine.getSchedules() } returns listOf(scheduleA)
+
+        // Server republishes B in a form we can parse. B keeps its original created date, which is
+        // older than the checkpoint we advanced to on the first sync.
+        val scheduleB = makeSchedule(RemoteDataSource.APP, identifier = failedB.identifier)
+
+        updatesFlow.emit(
+            makeUpdate(listOf(scheduleA, scheduleB), emptyList(), timestamp = clock.currentTime.plusMillis(100))
+        )
+        advanceUntilIdle()
+
+        coVerify { engine.upsertSchedules(listOf(scheduleA, scheduleB)) }
+        assertNull(trackedFailures())
+    }
+
+    @Test
+    public fun testFailedScheduleRemovedFromRemoteData(): TestResult = runTest {
+        coEvery { engine.upsertSchedules(any()) } just runs
+        clock.currentTime = Instant.ofEpochMilli(1)
+
+        val scheduleA = makeSchedule(RemoteDataSource.APP)
+        val failedB = FailedScheduleRecord(
+            identifier = "failed_schedule_B",
+            createdDate = clock.currentTime.toEpochMilli(),
+            minSDKVersion = null
+        )
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(makeUpdate(listOf(scheduleA), listOf(failedB)))
+        advanceUntilIdle()
+
+        assertEquals(listOf(failedB), trackedFailures())
+        coEvery { engine.getSchedules() } returns listOf(scheduleA)
+
+        // B is gone from remote data entirely, so we stop tracking it and never schedule it.
+        updatesFlow.emit(
+            makeUpdate(listOf(scheduleA), emptyList(), timestamp = clock.currentTime.plusMillis(100))
+        )
+        advanceUntilIdle()
+
+        assertNull(trackedFailures())
+        coVerify(exactly = 0) {
+            engine.upsertSchedules(match { schedules ->
+                schedules.any { it.identifier == failedB.identifier }
+            })
+        }
+    }
+
+    @Test
+    public fun testSamePayloadWithFailuresSkipsAutomations(): TestResult = runTest {
+        coEvery { engine.upsertSchedules(any()) } just runs
+        clock.currentTime = Instant.ofEpochMilli(1)
+
+        val update = makeUpdate(
+            schedules = listOf(makeSchedule(RemoteDataSource.APP)),
+            failedSchedules = listOf(
+                FailedScheduleRecord(
+                    identifier = "failed_schedule_B",
+                    createdDate = clock.currentTime.toEpochMilli(),
+                    minSDKVersion = null
+                )
+            )
+        )
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(update)
+        advanceUntilIdle()
+
+        updatesFlow.emit(update)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { engine.upsertSchedules(any()) }
+    }
+
+    private fun trackedFailures(): List<FailedScheduleRecord>? =
+        sourceInfoState[RemoteDataSource.APP to null]?.failedSchedules
+
+    private fun makeUpdate(
+        schedules: List<AutomationSchedule>,
+        failedSchedules: List<FailedScheduleRecord>,
+        timestamp: Instant = clock.now()
+    ): InAppRemoteData {
+        return InAppRemoteData(
+            payload = mapOf(
+                RemoteDataSource.APP to InAppRemoteData.Payload(
+                    data = InAppRemoteData.Data(schedules, emptyList(), failedSchedules),
+                    timestamp = timestamp,
+                    remoteDataInfo = RemoteDataInfo(
+                        url = "https://some.url",
+                        lastModified = null,
+                        source = RemoteDataSource.APP
+                    )
+                )
+            )
+        )
+    }
+
     private fun makeSchedules(
         source: RemoteDataSource,
         count: Int = Random.nextInt(1, 10),
@@ -474,7 +641,8 @@ public class AutomationRemoteDataSubscriberTest {
     private fun makeSchedule(
         source: RemoteDataSource,
         minSDKVersion: String? = null,
-        created: Instant = clock.now()
+        created: Instant = clock.now(),
+        identifier: String = UUID.randomUUID().toString()
     ) : AutomationSchedule {
         val remoteDataInfo = RemoteDataInfo(
             url = "https://test.url",
@@ -483,7 +651,7 @@ public class AutomationRemoteDataSubscriberTest {
         )
 
         return AutomationSchedule(
-            identifier = UUID.randomUUID().toString(),
+            identifier = identifier,
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
             triggers = listOf(AutomationTrigger.activeSession(1u)),
             created = created,
