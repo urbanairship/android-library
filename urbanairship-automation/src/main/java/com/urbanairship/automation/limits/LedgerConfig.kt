@@ -16,7 +16,8 @@ import com.urbanairship.json.optionalField
  * under even if the schedule's config later changes. Recording is
  * unconditional — a schedule with [sharedId] set tags its events with it
  * regardless of whether it reads that group's history back itself. Whether it
- * does is decided by [LimitConfig.includeSharedEvents], not by this field.
+ * does is decided by [LimitConfig] (`type: 'shared'` vs `'self'`), not by this
+ * field.
  */
 internal data class LedgerConfig(
     val sharedId: String? = null

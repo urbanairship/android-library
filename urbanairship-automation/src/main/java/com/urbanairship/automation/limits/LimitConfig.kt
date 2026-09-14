@@ -15,47 +15,104 @@ import com.urbanairship.json.toJsonList
  * Configures how a schedule's limit is evaluated against the ledger.
  *
  * The limit always counts the schedule's own `execution` events, of every
- * [LedgerExecutionResult] (never `triggered`). With no config — or with
- * [includeSharedEvents] false — that's all it counts: the schedule's own
- * events, regardless of any `shared_id` it records under. Nothing another
- * schedule declares can affect a schedule that leaves this unset; it never
- * changes the cap itself (the schedule's `limit`), only what counts toward it.
+ * [LedgerExecutionResult] (never `triggered`); it never changes the cap
+ * itself (the schedule's `limit`), only what counts toward it.
+ *
+ * The two variants are a hard split, not a flag with a doc caveat: with
+ * [Self] (or no config at all), the tally is the schedule's own events, full
+ * stop — nothing another schedule declares can affect it, and there's no
+ * `source` field around to write a no-op reference to another schedule with.
+ * Only [Shared] additionally counts events whose `schedule_id` or `shared_id`
+ * matches this schedule's `ledger_config.shared_id` — not just events from
+ * schedules that also declare that `shared_id` themselves, but any event
+ * carrying it in either field, including a named schedule's own un-tagged
+ * history (e.g. backfill). Only then does an [ExclusionRule.source] have
+ * another schedule's events to actually subtract.
  */
-internal data class LimitConfig(
+internal sealed class LimitConfig : JsonSerializable {
+
     /**
-     * Whether this schedule's limit also counts events recorded under its
-     * `ledger_config.shared_id`, pooling its tally with every other schedule
-     * that shares it. If false, only this schedule's own events count, no
-     * matter what any other schedule declares.
+     * The schedule's limit counts only its own events. [exclude] has no
+     * `source` field: with no shared group in scope, "this schedule's own
+     * events" is the only possible source.
      */
-    val includeSharedEvents: Boolean = false,
+    data class Self(
+        /**
+         * Rules that remove recorded events from this schedule's own limit
+         * tally. When absent, nothing is excluded.
+         */
+        val exclude: List<SelfExclusionRule>? = null
+    ) : LimitConfig()
+
     /**
-     * Rules that remove recorded events from this schedule's limit tally.
-     * Applies to whatever the tally already includes — the schedule's own
-     * events always, plus shared events too when [includeSharedEvents] is
-     * true. When absent, nothing is excluded.
+     * The schedule's limit also counts events matching its
+     * `ledger_config.shared_id`, pooling its tally with them.
      */
-    val exclude: ExclusionSet? = null
-) : JsonSerializable {
+    data class Shared(
+        /**
+         * Rules that remove recorded events from this schedule's limit tally
+         * — its own events and pooled shared events alike. When absent,
+         * nothing is excluded.
+         */
+        val exclude: ExclusionSet? = null
+    ) : LimitConfig()
 
     internal companion object {
-        private const val INCLUDE_SHARED_EVENTS = "include_shared_events"
+        private const val TYPE = "type"
         private const val EXCLUDE = "exclude"
+        private const val OR = "or"
+        private const val SELF = "self"
+        private const val SHARED = "shared"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): LimitConfig {
             val content = value.requireMap()
-            return LimitConfig(
-                includeSharedEvents = content.optionalField(INCLUDE_SHARED_EVENTS) ?: false,
-                exclude = content.get(EXCLUDE)?.let(ExclusionSet::fromJson)
-            )
+            return when (content.optionalField<String>(TYPE)) {
+                SHARED -> Shared(exclude = content.get(EXCLUDE)?.let(ExclusionSet::fromJson))
+                // SELF, and anything unrecognized, default to the narrow,
+                // safe variant — the same as omitting `limit_config` entirely.
+                else -> Self(
+                    exclude = content.get(EXCLUDE)?.requireMap()?.get(OR)?.requireList()
+                        ?.map(SelfExclusionRule::fromJson)
+                )
+            }
         }
     }
 
-    override fun toJsonValue(): JsonValue = jsonMapOf(
-        INCLUDE_SHARED_EVENTS to includeSharedEvents,
-        EXCLUDE to exclude
-    ).toJsonValue()
+    override fun toJsonValue(): JsonValue = when (this) {
+        is Self -> jsonMapOf(
+            TYPE to SELF,
+            EXCLUDE to exclude?.let { jsonMapOf(OR to it.toJsonList()) }
+        )
+
+        is Shared -> jsonMapOf(TYPE to SHARED, EXCLUDE to exclude)
+    }.toJsonValue()
+}
+
+/**
+ * Excludes recorded events from a schedule's own limit tally
+ * ([LimitConfig.Self]). No `source` field: with no shared group in scope,
+ * "this schedule's own events" is the only possible source, so a rule is just
+ * what to subtract.
+ */
+internal data class SelfExclusionRule(
+    /**
+     * Which of this schedule's own events to subtract. If null, every event
+     * is subtracted.
+     */
+    val match: LedgerEventMatch? = null
+) : JsonSerializable {
+
+    internal companion object {
+        private const val MATCH = "match"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): SelfExclusionRule = SelfExclusionRule(
+            match = value.requireMap().get(MATCH)?.let(LedgerEventMatch::fromJson)
+        )
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(MATCH to match).toJsonValue()
 }
 
 /**

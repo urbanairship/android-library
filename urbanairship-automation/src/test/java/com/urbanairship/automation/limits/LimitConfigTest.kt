@@ -416,7 +416,7 @@ public class LimitConfigTest {
             JsonValue.parseString(
                 """
                 {
-                  "include_shared_events": true,
+                  "type": "shared",
                   "exclude": {
                     "or": [
                       { "source": { "type": "other_schedules" } },
@@ -438,7 +438,7 @@ public class LimitConfigTest {
             )
         )
 
-        assertTrue(config.includeSharedEvents)
+        check(config is LimitConfig.Shared)
         val rules = requireNotNull(config.exclude).or
         assertEquals(2, rules.size)
         assertEquals(LedgerSource.OtherSchedules, rules[0].source)
@@ -460,16 +460,47 @@ public class LimitConfigTest {
     }
 
     @Test
-    public fun testParseLimitConfigWithoutExclude() {
-        // `exclude` is optional: a config with no exclusions parses to null, so
-        // every execution counts against the cap.
-        assertNull(LimitConfig.fromJson(JsonValue.parseString("{}")).exclude)
+    public fun testParseSelfLimitConfig() {
+        val config = LimitConfig.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                  "type": "self",
+                  "exclude": {
+                    "or": [
+                      { "match": { "type": "execution", "results": ["holdout"] } }
+                    ]
+                  }
+                }
+                """
+            )
+        )
+
+        check(config is LimitConfig.Self)
+        val rules = requireNotNull(config.exclude)
+        assertEquals(1, rules.size)
+        assertEquals(
+            LedgerEventMatch.Execution(results = listOf(LedgerExecutionResult.HOLDOUT)),
+            rules[0].match
+        )
     }
 
     @Test
-    public fun testParseLimitConfigDefaultsIncludeSharedEventsToFalse() {
-        // Omitting the field must not silently opt a schedule into pooling.
-        assertFalse(LimitConfig.fromJson(JsonValue.parseString("{}")).includeSharedEvents)
+    public fun testParseLimitConfigWithoutExclude() {
+        // `exclude` is optional: a config with no exclusions parses to null, so
+        // every execution counts against the cap.
+        val config = LimitConfig.fromJson(JsonValue.parseString("""{ "type": "shared" }"""))
+        check(config is LimitConfig.Shared)
+        assertNull(config.exclude)
+    }
+
+    @Test
+    public fun testParseLimitConfigDefaultsToSelf() {
+        // Omitting `type` (or the whole config) must not silently opt a
+        // schedule into pooling — it defaults to the narrow, self-only variant.
+        val config = LimitConfig.fromJson(JsonValue.parseString("{}"))
+        check(config is LimitConfig.Self)
+        assertNull(config.exclude)
     }
 
     @Test
@@ -478,9 +509,8 @@ public class LimitConfigTest {
     }
 
     @Test
-    public fun testLimitConfigJsonRoundTrip() {
-        val config = LimitConfig(
-            includeSharedEvents = true,
+    public fun testSharedLimitConfigJsonRoundTrip() {
+        val config = LimitConfig.Shared(
             exclude = ExclusionSet(
                 listOf(
                     ExclusionRule(
@@ -503,6 +533,22 @@ public class LimitConfigTest {
                     ExclusionRule(source = LedgerSource.OtherSchedules),
                     ExclusionRule(source = LedgerSource.AnySchedule, match = LedgerEventMatch.Unknown)
                 )
+            )
+        )
+
+        assertEquals(config, LimitConfig.fromJson(config.toJsonValue()))
+    }
+
+    @Test
+    public fun testSelfLimitConfigJsonRoundTrip() {
+        val config = LimitConfig.Self(
+            exclude = listOf(
+                SelfExclusionRule(
+                    match = LedgerEventMatch.Execution(
+                        results = listOf(LedgerExecutionResult.HOLDOUT)
+                    )
+                ),
+                SelfExclusionRule(match = null)
             )
         )
 
