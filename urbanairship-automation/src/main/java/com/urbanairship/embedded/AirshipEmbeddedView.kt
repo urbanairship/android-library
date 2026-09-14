@@ -182,10 +182,18 @@ public class AirshipEmbeddedView private constructor(
     public var selection: AirshipEmbeddedSelection = selection
         set(value) {
             field = value
+            // A ranking made under the old config has nothing to say about the new one.
+            selectionSession = EmbeddedSelectionSession()
             if (isAttachedToWindow) {
                 collectDisplayRequests()
             }
         }
+
+    /**
+     * Outlives collection, so detaching and reattaching — recycled in a list, paged, rotated —
+     * doesn't blank an AI selection's content and ask the model again.
+     */
+    private var selectionSession = EmbeddedSelectionSession()
 
     /**
      * Decides which pending embedded instances are eligible to be displayed.
@@ -309,6 +317,7 @@ public class AirshipEmbeddedView private constructor(
                     embeddedViewId = id,
                     selection = selection,
                     filter = filterInstances,
+                    session = selectionSession,
                     scope = viewScope
                 )
                     .map { it.next }

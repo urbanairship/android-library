@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedInfo
 import com.urbanairship.embedded.AirshipEmbeddedSelection
+import com.urbanairship.embedded.EmbeddedSelectionSession
 import com.urbanairship.json.JsonMap
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -84,12 +85,26 @@ public interface AirshipEmbeddedViewManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun recordDisplayed(embeddedViewId: String, viewInstanceId: String)
 
-    /** @hide */
+    /**
+     * The display requests for an embedded view.
+     *
+     * @param embeddedViewId The embedded view ID.
+     * @param selection Which pending instance to display, and in what order.
+     * @param filter Which pending instances are eligible at all, applied before [selection].
+     * @param session State an [AirshipEmbeddedSelection.ByAi] selection keeps across
+     * collections, so a view that detaches and reattaches neither blanks nor re-ranks. Held by
+     * the caller for as long as the view and its config live. Null gives each collection its
+     * own, which is all a selection that decides synchronously needs.
+     * @param scope The scope the returned flow is shared in.
+     *
+     * @hide
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun displayRequests(
         embeddedViewId: String,
         selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
         filter: AirshipEmbeddedFilter? = null,
+        session: EmbeddedSelectionSession? = null,
         scope: CoroutineScope
     ): Flow<EmbeddedDisplayRequestResult>
 
@@ -105,6 +120,7 @@ public interface AirshipEmbeddedViewManager {
             embeddedViewId = embeddedViewId,
             selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority,
             filter = null,
+            session = null,
             scope = scope
         )
     }

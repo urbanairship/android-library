@@ -204,6 +204,90 @@ public class EmbeddedAiSelectionDisplayTest {
         assertEquals(2, selector.rankCount)
     }
 
+    /**
+     * A view detaching and reattaching collects again. The session is the view's, not the
+     * collection's, so the second collection answers from what the first decided rather than
+     * blanking the view and paying for another round trip.
+     */
+    @Test
+    public fun testReattachingKeepsTheRankingAndDoesNotReask(): TestResult = runTest {
+        EmbeddedViewManager.aiSelector = selector
+        selector.ranking = listOf("b", "a")
+        addPending("a", priority = 0)
+        addPending("b", priority = 10)
+
+        val session = EmbeddedSelectionSession()
+
+        val first = Job()
+        EmbeddedViewManager.displayRequests(
+            embeddedId, selection, session = session, scope = this + first
+        ).test {
+            assertNull(awaitItem().next)
+            assertEquals("b", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+        first.cancel()
+
+        val second = Job()
+        EmbeddedViewManager.displayRequests(
+            embeddedId, selection, session = session, scope = this + second
+        ).test {
+            // Straight to the committed order — no placeholder frame to tear content down.
+            val reattached = awaitItem()
+            assertEquals("b", reattached.next?.viewInstanceId)
+            assertEquals(listOf("b", "a"), reattached.list.map { it.viewInstanceId })
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+        second.cancel()
+
+        assertEquals(1, selector.rankCount)
+    }
+
+    /**
+     * Content arriving while detached does have to be ranked, but the instance already chosen
+     * holds the screen through it rather than the view going blank first.
+     */
+    @Test
+    public fun testReattachingAfterAnArrivalHoldsTheScreen(): TestResult = runTest {
+        EmbeddedViewManager.aiSelector = selector
+        selector.ranking = listOf("b", "a")
+        addPending("a", priority = 0)
+        addPending("b", priority = 10)
+
+        val session = EmbeddedSelectionSession()
+
+        val first = Job()
+        EmbeddedViewManager.displayRequests(
+            embeddedId, selection, session = session, scope = this + first
+        ).test {
+            assertNull(awaitItem().next)
+            assertEquals("b", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+        first.cancel()
+
+        selector.ranking = listOf("c", "b", "a")
+        addPending("c", priority = 20)
+
+        val second = Job()
+        EmbeddedViewManager.displayRequests(
+            embeddedId, selection, session = session, scope = this + second
+        ).test {
+            // Re-ranking, but "b" stays up while it happens.
+            assertEquals("b", awaitItem().next?.viewInstanceId)
+
+            // And the arrival joins the end, as it would have without the detach.
+            val ranked = awaitItem()
+            assertEquals("b", ranked.next?.viewInstanceId)
+            assertEquals(listOf("b", "a", "c"), ranked.list.map { it.viewInstanceId })
+            cancelAndIgnoreRemainingEvents()
+        }
+        second.cancel()
+
+        assertEquals(2, selector.rankCount)
+    }
+
     @Test
     public fun testArrivalDoesNotDisplaceWhatIsOnScreen(): TestResult = runTest {
         EmbeddedViewManager.aiSelector = selector

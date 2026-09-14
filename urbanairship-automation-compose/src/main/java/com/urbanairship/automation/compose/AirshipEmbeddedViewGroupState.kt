@@ -21,6 +21,7 @@ import com.urbanairship.android.layout.ui.EmbeddedLayout
 import com.urbanairship.embedded.AirshipEmbeddedInfo
 import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedSelection
+import com.urbanairship.embedded.EmbeddedSelectionSession
 import com.urbanairship.embedded.EmbeddedViewManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -91,9 +92,13 @@ internal fun rememberAirshipEmbeddedViewGroupState(
     val state = remember { AirshipEmbeddedViewGroupState(embeddedId) }
     val scope = rememberCoroutineScope()
 
+    // Keyed on the config and not on `filterInstances`, as the single view is: an unremembered
+    // lambda restarting the effect shouldn't also cost an AI selection its committed order.
+    val session = remember(embeddedId, selection) { EmbeddedSelectionSession() }
+
     LaunchedEffect(embeddedId, selection, filterInstances) {
         withContext(Dispatchers.Default) {
-            embeddedViewManager.displayRequests(embeddedId, selection, filterInstances, scope)
+            embeddedViewManager.displayRequests(embeddedId, selection, filterInstances, session, scope)
                 .map { it.list }
                 .distinctUntilChanged()
                 .collect { state.displayRequests = it }
