@@ -188,7 +188,11 @@ public constructor(
         pushManager.removePushListener(pushListener)
     }
 
-    /** The inbox user. */
+    /**
+     * The inbox user.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val user: User
         get() = inbox.user
 
