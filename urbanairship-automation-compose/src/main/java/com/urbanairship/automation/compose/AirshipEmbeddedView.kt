@@ -26,6 +26,7 @@ import androidx.core.view.updateLayoutParams
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ui.EmbeddedLayout
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedSelection
 
 /** Default values used for [AirshipEmbeddedView] implementations. */
@@ -59,6 +60,9 @@ public object AirshipEmbeddedViewDefaults {
  * @param embeddedId the embedded ID.
  * @param modifier the modifier to apply to this layout.
  * @param selection the [AirshipEmbeddedSelection] that controls which instance is displayed.
+ * @param filterInstances optional [AirshipEmbeddedFilter] deciding which instances are eligible.
+ *   Applied before [selection], so an excluded instance is never displayed even when [selection]
+ *   targets it. Remember the lambda: an unstable one re-subscribes on every recomposition.
  * @param contentAlignment optional alignment of the embedded content.
  * @param parentWidthProvider optional provider for the parent width.
  * @param parentHeightProvider optional provider for the parent height.
@@ -70,6 +74,7 @@ public fun AirshipEmbeddedView(
     embeddedId: String,
     modifier: Modifier = Modifier,
     selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+    filterInstances: AirshipEmbeddedFilter? = null,
     contentAlignment: Alignment = AirshipEmbeddedViewDefaults.ContentAlignment,
     parentWidthProvider: (() -> Int)? = null,
     parentHeightProvider: (() -> Int)? = null,
@@ -78,7 +83,7 @@ public fun AirshipEmbeddedView(
 ) {
     EmbeddedViewContent(
         modifier = modifier,
-        state = rememberAirshipEmbeddedViewState(embeddedId, selection),
+        state = rememberAirshipEmbeddedViewState(embeddedId, selection, filterInstances),
         contentAlignment = contentAlignment,
         parentWidthProvider = parentWidthProvider,
         parentHeightProvider = parentHeightProvider,

@@ -85,6 +85,46 @@ As a result of this change, the `copy()` methods on the following data classes a
 * `com.urbanairship.automation.AutomationSchedule.ScheduleData.Deferred`
 * `com.urbanairship.automation.compose.EmbeddedViewItem`
 
+### Embedded view selection and filtering
+
+`AirshipEmbeddedView` and `AirshipEmbeddedViewGroup` (and their `remember*State` functions) now take an optional `filterInstances` between `selection` and the trailing composables. It decides *eligibility*; `selection` still decides order. Callers that passed the following arguments positionally need to name them, or move the argument over.
+
+```kotlin
+AirshipEmbeddedView(
+    embeddedId = "home_banner",
+    selection = AirshipEmbeddedSelection.Priority,
+    filterInstances = { it.instanceId !in suppressedInstanceIds },
+)
+```
+
+The view-system `AirshipEmbeddedView` gains the same thing, as a constructor parameter and as a settable property.
+
+#### `AirshipEmbeddedSelection.ByInstanceId` takes a list
+
+It now carries an ordered list of instance IDs rather than one, so `getInstanceId` is replaced by `getInstanceIds`. The single-ID constructor still works unchanged.
+
+| Removed                      | Replacement                         |
+|------------------------------|-------------------------------------|
+| `ByInstanceId.getInstanceId` | `ByInstanceId.getInstanceIds`       |
+| `ByInstanceId.component1()`  | `component1()` now returns the list |
+| `ByInstanceId.copy(String)`  | `copy(List<String>)`                |
+
+Two behavior changes come with it:
+
+* **The earliest named instance that is pending wins**, rather than the only named one — the list is an order of preference.
+* **It is an allow-list.** Pending content that isn't named is now excluded entirely rather than ordered after the target, so `AirshipEmbeddedViewGroup` renders only the named subset, and newly pending content will not display until your app includes it. Use `filterInstances` instead when the intent is to exclude specific instances rather than to enumerate the acceptable ones.
+
+#### `AirshipEmbeddedInfo` now reports the real priority
+
+`AirshipEmbeddedInfo.priority` was previously left at its `0` default everywhere the SDK built one, so it did not describe the instance it came with. Two places are affected:
+
+* **A comparator passed to `AirshipEmbeddedSelection.ByComparator` compared `0` against `0`.** Sorting on `priority` was a no-op that left arrival order intact. Comparators that sort on `priority` will now actually reorder content.
+* **`AirshipEmbeddedObserver` reported `0` for every instance**, so an observer filter testing `priority` matched everything. It now matches on the real value.
+
+If your app relied on either of these being effectively inert, review it before upgrading.
+
+`AirshipEmbeddedInfo` also gains `contentDescription`. Its constructor is now restricted — see [Internal APIs now marked `@RestrictTo`](#internal-apis-now-marked-restrictto).
+
 ### `@RestrictTo` changes
 
 #### Internal APIs now marked `@RestrictTo`
@@ -95,8 +135,8 @@ These were public but are SDK plumbing, and are now `@RestrictTo(LIBRARY_GROUP)`
 * `com.urbanairship.android.layout.util.Timer`
 * `com.urbanairship.util.CachedList`
 * `com.urbanairship.messagecenter.User`, along with `MessageCenter.user` and `Inbox.user`, which exposed it
-
-`AirshipLayout.layoutInfo` is likewise now restricted, aligning it with `LayoutInfo`.
+* `AirshipLayout.layoutInfo` (`LayoutInfo` was restricted already).
+* `AirshipEmbeddedInfo`'s constructor.
 
 The Message Center user (its ID and basic-auth password) is credential plumbing for our [out-of-the-box Message Center UI](https://www.airship.com/docs/developer/sdk-integration/android/message-center/getting-started/) and was never meant to be read or managed by app code directly. If you were using `messageCenter.user` to build a custom message list or detail screen, integrate the provided `MessageCenterFragment`/`MessageCenterActivity` (or the Compose equivalents) instead — see the getting-started guide linked above.
 

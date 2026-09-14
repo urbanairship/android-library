@@ -168,6 +168,13 @@ internal fun HomeScreen(
                     HorizontalDivider()
 
                     QuickSettingItem(
+                        title = stringResource(R.string.embedded_ai_title),
+                        subtitle = stringResource(R.string.embedded_ai_subtitle),
+                        onClick = { onNavigate(QuickAccess.EmbeddedAi) }
+                    )
+                    HorizontalDivider()
+
+                    QuickSettingItem(
                         title = "Rate App",
                         subtitle = "Trigger in-app review prompt",
                         onClick = {
