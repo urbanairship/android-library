@@ -131,15 +131,11 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         // displayed, so ordering it, holding it on screen, or spending a model candidate slot
         // on it would all be wasted — and scoring one would let it skew the candidates that
         // can actually display.
-        //
-        // The filter is handed `describing()` rather than `embeddedInfo()`: it is app-facing
-        // and deciding eligibility on what the content is about is the point, so a null
-        // description would be a silent trap. The cost is paid only when there is a filter.
         val pendingForView = viewsFlow
             .map { it[embeddedViewId].orEmpty() }
             .distinctUntilChanged()
             .map { forView ->
-                filter?.let { eligible -> forView.filter { eligible(it.describing()) } } ?: forView
+                filter?.let { eligible -> forView.filter { eligible(it.embeddedInfo) } } ?: forView
             }
 
         val results = if (selection is AirshipEmbeddedSelection.ByAi) {
@@ -170,7 +166,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         return when (selection) {
             is AirshipEmbeddedSelection.ByComparator -> {
                 val sorted = pendingList
-                    .map { request -> request.embeddedInfo() to request }
+                    .map { request -> request.embeddedInfo to request }
                     .sortedWith { a, b -> selection.comparator.compare(a.first, b.first) }
                     .map { it.second }
                 EmbeddedDisplayRequestResult(next = sorted.firstOrNull(), list = sorted)
@@ -341,9 +337,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
     ): EmbeddedSelectionRequest = EmbeddedSelectionRequest(
         embeddedId = embeddedViewId,
         prompt = selection.config.prompt,
-        // `describing()` resolves each layout payload, so it runs once per ranking rather
-        // than per emission of the pending list.
-        candidates = pendingList.map { it.describing() },
+        candidates = pendingList.map { it.embeddedInfo },
         strategy = when (selection.config.strategy) {
             AirshipEmbeddedSelection.ByAi.Strategy.SCORE_THEN_PRIORITY ->
                 EmbeddedSelectionStrategy.SCORE_THEN_PRIORITY
@@ -384,44 +378,4 @@ private class AiSelectionState {
      * arrivals rather than reshuffle what a user is already looking at.
      */
     var committedOrder: List<String> = emptyList()
-}
-
-/**
- * The pending request as the info a selection reasons about.
- *
- * Deliberately does not touch [EmbeddedDisplayRequest.layoutInfoProvider]: this runs for every
- * candidate on every emission of the pending list, and the payload is behind a provider so that
- * it isn't resolved on that path. What a layout says about itself is read only where a
- * selection actually needs it — see [describing].
- *
- * @return The info.
- */
-internal fun EmbeddedDisplayRequest.embeddedInfo(): AirshipEmbeddedInfo = AirshipEmbeddedInfo(
-    instanceId = viewInstanceId,
-    embeddedId = embeddedViewId,
-    // From the request rather than the type's default, so a comparator that sorts on priority
-    // sees the real value.
-    priority = priority,
-    extras = extras
-)
-
-/**
- * The same info with the layout's `content_description` folded in, for a selection that reasons
- * about what the content *is* rather than only about priority.
- *
- * Resolves the layout payload, so it is called only where a description is actually needed:
- * for the model's candidates, and for an app-supplied filter.
- *
- * @return The info, described as far as the layout describes itself.
- */
-internal fun EmbeddedDisplayRequest.describing(): AirshipEmbeddedInfo {
-    val description = layoutInfoProvider()?.contentDescription ?: return embeddedInfo()
-    return AirshipEmbeddedInfo(
-        instanceId = viewInstanceId,
-        embeddedId = embeddedViewId,
-        priority = priority,
-        extras = extras,
-        contentDescription = description.description,
-        additionalContext = description.additionalContext
-    )
 }

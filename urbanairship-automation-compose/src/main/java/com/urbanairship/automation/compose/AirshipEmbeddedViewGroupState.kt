@@ -112,12 +112,7 @@ public data class EmbeddedViewItem internal constructor(
     private val request: EmbeddedDisplayRequest
 ) {
     /** The [AirshipEmbeddedInfo] for this embedded content. */
-    public val info: AirshipEmbeddedInfo = AirshipEmbeddedInfo(
-        embeddedId = request.embeddedViewId,
-        instanceId = request.viewInstanceId,
-        priority = request.priority,
-        extras = request.extras,
-    )
+    public val info: AirshipEmbeddedInfo get() = request.embeddedInfo
 
     /** The content to display for this embedded view item. */
     @Composable

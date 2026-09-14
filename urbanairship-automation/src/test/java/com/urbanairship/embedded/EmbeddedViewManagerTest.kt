@@ -207,9 +207,9 @@ public class EmbeddedViewManagerTest {
      */
     @Test
     public fun testFilterAppliesBeforeSelection(): TestResult = runTest {
-        addPending("instance-a", 0, layoutInfoProvider = { null })
-        addPending("instance-b", 1, layoutInfoProvider = { null })
-        addPending("instance-c", 2, layoutInfoProvider = { null })
+        addPending("instance-a", 0)
+        addPending("instance-b", 1)
+        addPending("instance-c", 2)
 
         val job = Job()
 
@@ -260,10 +260,11 @@ public class EmbeddedViewManagerTest {
         job.cancel()
     }
 
+    /** These exercise selection, so the fixtures carry no layout to describe. */
     private fun addPending(
         instanceId: String,
         priority: Int,
-        layoutInfoProvider: () -> LayoutInfo? = { mockk() }
+        layoutInfoProvider: () -> LayoutInfo? = { null }
     ) {
         EmbeddedViewManager.addPending(
             embeddedViewId = testEmbeddedId,
