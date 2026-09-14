@@ -41,6 +41,7 @@ public class AirshipEmbeddedView private constructor(
     embeddedId: String?,
     @LayoutRes placeholderRes: Int?,
     selection: AirshipEmbeddedSelection,
+    filterInstances: AirshipEmbeddedFilter?,
     private val manager: AirshipEmbeddedViewManager
 ) : RelativeLayout(context, attrs, defStyle) {
 
@@ -63,6 +64,7 @@ public class AirshipEmbeddedView private constructor(
         embeddedId = null,
         placeholderRes = null,
         selection = AirshipEmbeddedSelection.Priority,
+        filterInstances = null,
         manager = EmbeddedViewManager
     )
 
@@ -74,6 +76,9 @@ public class AirshipEmbeddedView private constructor(
      * @param selection the [AirshipEmbeddedSelection] that controls which instance is displayed.
      * @param placeholderRes optional placeholder layout resource to display when no content is
      *      available.
+     * @param filterInstances optional [AirshipEmbeddedFilter] deciding which instances are
+     *      eligible. Applied before [selection], so an excluded instance is never displayed even
+     *      when [selection] targets it.
      */
     @JvmOverloads
     public constructor(
@@ -81,6 +86,7 @@ public class AirshipEmbeddedView private constructor(
         embeddedId: String,
         selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
         @LayoutRes placeholderRes: Int? = null,
+        filterInstances: AirshipEmbeddedFilter? = null,
     ) : this(
         context = context,
         attrs = null,
@@ -88,6 +94,7 @@ public class AirshipEmbeddedView private constructor(
         embeddedId = embeddedId,
         placeholderRes = placeholderRes,
         selection = selection,
+        filterInstances = filterInstances,
         manager = EmbeddedViewManager
     )
 
@@ -147,6 +154,23 @@ public class AirshipEmbeddedView private constructor(
      * to a window.
      */
     public var selection: AirshipEmbeddedSelection = selection
+        set(value) {
+            field = value
+            if (isAttachedToWindow) {
+                collectDisplayRequests()
+            }
+        }
+
+    /**
+     * Decides which pending embedded instances are eligible to be displayed.
+     *
+     * Applied before [selection], so an excluded instance is never displayed even when
+     * [selection] targets it. Null (default) keeps every pending instance.
+     *
+     * Setting this property will restart the display request collection if the view is attached
+     * to a window.
+     */
+    public var filterInstances: AirshipEmbeddedFilter? = filterInstances
         set(value) {
             field = value
             if (isAttachedToWindow) {
@@ -255,7 +279,12 @@ public class AirshipEmbeddedView private constructor(
     private fun collectDisplayRequests() {
         displayRequestsJob = viewScope.launch {
             try {
-                manager.displayRequests(embeddedViewId = id, selection = selection, scope = viewScope)
+                manager.displayRequests(
+                    embeddedViewId = id,
+                    selection = selection,
+                    filter = filterInstances,
+                    scope = viewScope
+                )
                     .map { it.next }
                     .collect(::onUpdate)
             } catch (e: CancellationException) {

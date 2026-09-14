@@ -268,16 +268,19 @@ public final class com/urbanairship/embedded/AirshipEmbeddedView : android/widge
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;)V
-	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;Ljava/lang/Integer;)V
 	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getComparator ()Ljava/util/Comparator;
+	public final fun getFilterInstances ()Lkotlin/jvm/functions/Function1;
 	public final fun getParentHeightProvider ()Lkotlin/jvm/functions/Function0;
 	public final fun getParentWidthProvider ()Lkotlin/jvm/functions/Function0;
 	public final fun getSelection ()Lcom/urbanairship/embedded/AirshipEmbeddedSelection;
 	public final fun setAnimations (Ljava/lang/Integer;Ljava/lang/Integer;)V
 	public final fun setComparator (Ljava/util/Comparator;)V
+	public final fun setFilterInstances (Lkotlin/jvm/functions/Function1;)V
 	public final fun setParentHeightProvider (Lkotlin/jvm/functions/Function0;)V
 	public final fun setParentWidthProvider (Lkotlin/jvm/functions/Function0;)V
 	public final fun setSelection (Lcom/urbanairship/embedded/AirshipEmbeddedSelection;)V

@@ -3,6 +3,7 @@ package com.urbanairship.embedded
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.util.UUID
 import app.cash.turbine.test
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.embedded.AirshipEmbeddedSelection
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -200,12 +201,75 @@ public class EmbeddedViewManagerTest {
         job.cancel()
     }
 
-    private fun addPending(instanceId: String, priority: Int) {
+    /**
+     * Eligibility is decided before the selection, so an excluded instance is not displayed
+     * even by a selection that names it, and is not listed for a group or carousel either.
+     */
+    @Test
+    public fun testFilterAppliesBeforeSelection(): TestResult = runTest {
+        addPending("instance-a", 0, layoutInfoProvider = { null })
+        addPending("instance-b", 1, layoutInfoProvider = { null })
+        addPending("instance-c", 2, layoutInfoProvider = { null })
+
+        val job = Job()
+
+        // Priority would pick a; the filter takes it out of the running entirely.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.Priority,
+            filter = { it.instanceId != "instance-a" },
+            scope = this + job
+        ).test {
+            val result = awaitItem()
+            assertEquals("instance-b", result.next?.viewInstanceId)
+            assertEquals(
+                listOf("instance-b", "instance-c"),
+                result.list.map { it.viewInstanceId }
+            )
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // An allow-list still can't display what the filter excluded.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.ByInstanceId(
+                listOf("instance-a", "instance-c")
+            ),
+            filter = { it.instanceId != "instance-a" },
+            scope = this + job
+        ).test {
+            val result = awaitItem()
+            assertEquals("instance-c", result.next?.viewInstanceId)
+            assertEquals(listOf("instance-c"), result.list.map { it.viewInstanceId })
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Nothing eligible: the placeholder, not a fallback to something excluded.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.Priority,
+            filter = { false },
+            scope = this + job
+        ).test {
+            val result = awaitItem()
+            assertEquals(null, result.next)
+            assertEquals(0, result.list.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        job.cancel()
+    }
+
+    private fun addPending(
+        instanceId: String,
+        priority: Int,
+        layoutInfoProvider: () -> LayoutInfo? = { mockk() }
+    ) {
         EmbeddedViewManager.addPending(
             embeddedViewId = testEmbeddedId,
             viewInstanceId = instanceId,
             priority = priority,
-            layoutInfoProvider = { mockk() },
+            layoutInfoProvider = layoutInfoProvider,
             displayArgsProvider = { mockk() },
         )
     }

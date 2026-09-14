@@ -113,6 +113,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
     override fun displayRequests(
         embeddedViewId: String,
         selection: AirshipEmbeddedSelection,
+        filter: AirshipEmbeddedFilter?,
         scope: CoroutineScope,
     ): Flow<EmbeddedDisplayRequestResult> {
 
@@ -125,9 +126,21 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         // view's pending list, so an unrelated view's add or dismiss publishes a new map and
         // wakes this collector too — which for the AI branch would blank the view and re-rank
         // content already on screen.
+        //
+        // Filtered here too, ahead of every selection: an ineligible instance can't be
+        // displayed, so ordering it, holding it on screen, or spending a model candidate slot
+        // on it would all be wasted — and scoring one would let it skew the candidates that
+        // can actually display.
+        //
+        // The filter is handed `describing()` rather than `embeddedInfo()`: it is app-facing
+        // and deciding eligibility on what the content is about is the point, so a null
+        // description would be a silent trap. The cost is paid only when there is a filter.
         val pendingForView = viewsFlow
             .map { it[embeddedViewId].orEmpty() }
             .distinctUntilChanged()
+            .map { forView ->
+                filter?.let { eligible -> forView.filter { eligible(it.describing()) } } ?: forView
+            }
 
         val results = if (selection is AirshipEmbeddedSelection.ByAi) {
             aiDisplayRequests(embeddedViewId, selection, pendingForView)
@@ -304,7 +317,10 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
 
         state.committedOrder = emptyList()
         return if (state.phase == AiSelectionPhase.Resolving) {
-            EmbeddedDisplayRequestResult(next = null, list = pendingList)
+            // The list is empty, not merely unselected: a group or carousel renders `list`, and
+            // showing every candidate in arrival order until the ranking lands would page
+            // content the model may be about to reorder or exclude.
+            EmbeddedDisplayRequestResult(next = null, list = emptyList())
         } else {
             select(embeddedViewId, selection.fallback.asSelection, pendingList)
         }
@@ -393,7 +409,8 @@ internal fun EmbeddedDisplayRequest.embeddedInfo(): AirshipEmbeddedInfo = Airshi
  * The same info with the layout's `content_description` folded in, for a selection that reasons
  * about what the content *is* rather than only about priority.
  *
- * Resolves the layout payload, so call it once per selection rather than per emission.
+ * Resolves the layout payload, so it is called only where a description is actually needed:
+ * for the model's candidates, and for an app-supplied filter.
  *
  * @return The info, described as far as the layout describes itself.
  */

@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
+import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedInfo
 import com.urbanairship.embedded.AirshipEmbeddedSelection
 import com.urbanairship.json.JsonMap
@@ -72,6 +73,7 @@ public interface AirshipEmbeddedViewManager {
     public fun displayRequests(
         embeddedViewId: String,
         selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+        filter: AirshipEmbeddedFilter? = null,
         scope: CoroutineScope
     ): Flow<EmbeddedDisplayRequestResult>
 
@@ -86,6 +88,7 @@ public interface AirshipEmbeddedViewManager {
         return displayRequests(
             embeddedViewId = embeddedViewId,
             selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority,
+            filter = null,
             scope = scope
         )
     }

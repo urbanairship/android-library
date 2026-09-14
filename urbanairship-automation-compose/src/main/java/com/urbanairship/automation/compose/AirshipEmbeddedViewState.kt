@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
 import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.ui.EmbeddedLayout
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedSelection
 import com.urbanairship.embedded.EmbeddedViewManager
 import kotlinx.coroutines.Dispatchers
@@ -37,9 +38,10 @@ import kotlin.math.round
 @Composable
 public fun rememberAirshipEmbeddedViewState(
     embeddedId: String,
-    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority
+    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+    filterInstances: AirshipEmbeddedFilter? = null
 ): AirshipEmbeddedViewState {
-    return rememberAirshipEmbeddedViewState(embeddedId, selection, EmbeddedViewManager)
+    return rememberAirshipEmbeddedViewState(embeddedId, selection, filterInstances, EmbeddedViewManager)
 }
 
 /**
@@ -55,7 +57,7 @@ public fun rememberAirshipEmbeddedViewState(
         ?.let { AirshipEmbeddedSelection.ByComparator(it) }
         ?: AirshipEmbeddedSelection.Priority
 
-    return rememberAirshipEmbeddedViewState(embeddedId, selection, EmbeddedViewManager)
+    return rememberAirshipEmbeddedViewState(embeddedId, selection, null, EmbeddedViewManager)
 }
 
 /** State holder for [AirshipEmbeddedView] content. */
@@ -118,16 +120,17 @@ public class AirshipEmbeddedViewState(
 internal fun rememberAirshipEmbeddedViewState(
     embeddedId: String,
     selection: AirshipEmbeddedSelection,
+    filterInstances: AirshipEmbeddedFilter?,
     embeddedViewManager: AirshipEmbeddedViewManager,
 ): AirshipEmbeddedViewState {
     val context = LocalContext.current
     val state = remember { AirshipEmbeddedViewState(embeddedId) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(embeddedId, selection) {
+    LaunchedEffect(embeddedId, selection, filterInstances) {
         // Collect display requests and update the current layout state.
         withContext(Dispatchers.Default) {
-            embeddedViewManager.displayRequests(embeddedId, selection, scope)
+            embeddedViewManager.displayRequests(embeddedId, selection, filterInstances, scope)
                 .map { request ->
                     val next = request.next
                     if (next == null) {

@@ -54,11 +54,13 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 10)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
-            // Placeholder while the model decides — the pending list is still reported.
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
+            // Placeholder while the model decides. Nothing is listed either: a carousel
+            // renders the list, and paging unranked content until the answer arrives would
+            // show what the model may be about to reorder or exclude.
             val placeholder = awaitItem()
             assertNull(placeholder.next)
-            assertEquals(2, placeholder.list.size)
+            assertEquals(0, placeholder.list.size)
 
             val ranked = awaitItem()
             assertEquals("b", ranked.next?.viewInstanceId)
@@ -77,7 +79,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 0)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
             assertNull(awaitItem().next)
             // Priority fallback: lowest value wins.
             assertEquals("b", awaitItem().next?.viewInstanceId)
@@ -93,7 +95,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 0)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
             // Straight to the fallback: availability is synchronous, so there is no round
             // trip to show a placeholder through.
             assertEquals("b", awaitItem().next?.viewInstanceId)
@@ -111,7 +113,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("a", priority = 0, description = "Spring sale on cat trees")
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
             assertEquals("a", awaitItem().next?.viewInstanceId)
             expectNoEvents()
             cancelAndIgnoreRemainingEvents()
@@ -128,7 +130,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 10)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
             assertNull(awaitItem().next)
             assertEquals("b", awaitItem().next?.viewInstanceId)
 
@@ -157,7 +159,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 10)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
             assertNull(awaitItem().next)
             assertEquals("b", awaitItem().next?.viewInstanceId)
 
@@ -186,17 +188,12 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("c", priority = 20)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
-            assertEquals(3, awaitItem().list.size)
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
+            assertEquals(0, awaitItem().list.size)
 
             // Cancels the in-flight ranking without adding anything to rank.
             EmbeddedViewManager.dismiss(embeddedId, "c")
             selector.gate?.complete(Unit)
-
-            // Still the placeholder, now over the shrunken list.
-            val stillWaiting = awaitItem()
-            assertNull(stillWaiting.next)
-            assertEquals(2, stillWaiting.list.size)
 
             val ranked = awaitItem()
             assertEquals("b", ranked.next?.viewInstanceId)
@@ -215,7 +212,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 10)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
             assertNull(awaitItem().next)
             assertEquals("b", awaitItem().next?.viewInstanceId)
 
@@ -248,7 +245,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 10)
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, interrupting, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, interrupting, scope = this + job).test {
             assertNull(awaitItem().next)
             assertEquals("b", awaitItem().next?.viewInstanceId)
 
@@ -263,6 +260,95 @@ public class EmbeddedAiSelectionDisplayTest {
         job.cancel()
     }
 
+    /**
+     * Eligibility is decided before the model is asked, so an instance that could never be
+     * displayed can't take a candidate slot or skew the scores of ones that can.
+     */
+    @Test
+    public fun testFilteredInstancesAreNotCandidates(): TestResult = runTest {
+        EmbeddedViewManager.aiSelector = selector
+        selector.ranking = listOf("b", "a")
+        addPending("a", priority = 0, description = "Spring sale on cat trees")
+        addPending("b", priority = 10, description = "Dog grooming week")
+        addPending("c", priority = 20, description = "Bird seed clearance")
+
+        val job = Job()
+        EmbeddedViewManager.displayRequests(
+            embeddedId,
+            selection,
+            filter = { it.instanceId != "c" },
+            scope = this + job
+        ).test {
+            assertNull(awaitItem().next)
+            val ranked = awaitItem()
+            assertEquals("b", ranked.next?.viewInstanceId)
+            assertEquals(listOf("b", "a"), ranked.list.map { it.viewInstanceId })
+            cancelAndIgnoreRemainingEvents()
+        }
+        job.cancel()
+
+        assertEquals(
+            listOf("a", "b"),
+            selector.request?.candidates?.map { it.instanceId }
+        )
+    }
+
+    /**
+     * Two pending instances but one eligible: the model is never asked, because ranking a
+     * single candidate is a round trip with one possible answer.
+     */
+    @Test
+    public fun testFilterCanLeaveTooLittleToRank(): TestResult = runTest {
+        EmbeddedViewManager.aiSelector = selector
+        selector.ranking = listOf("a")
+        addPending("a", priority = 0, description = "Spring sale on cat trees")
+        addPending("b", priority = 10, description = "Dog grooming week")
+
+        val job = Job()
+        EmbeddedViewManager.displayRequests(
+            embeddedId,
+            selection,
+            filter = { it.instanceId == "a" },
+            scope = this + job
+        ).test {
+            assertEquals("a", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+        job.cancel()
+        assertEquals(0, selector.rankCount)
+    }
+
+    /**
+     * The filter decides eligibility from what the content is, so it is handed the layout's
+     * description rather than identity alone.
+     */
+    @Test
+    public fun testFilterSeesWhatTheLayoutSaysAboutTheContent(): TestResult = runTest {
+        addPending("a", priority = 0, description = "Spring sale on cat trees")
+        addPending("b", priority = 10, description = "Dog grooming week")
+
+        val seen = mutableMapOf<String, String?>()
+        val job = Job()
+        EmbeddedViewManager.displayRequests(
+            embeddedId,
+            AirshipEmbeddedSelection.Priority,
+            filter = { info ->
+                seen[info.instanceId] = info.contentDescription
+                info.contentDescription?.contains("cat") == true
+            },
+            scope = this + job
+        ).test {
+            assertEquals("a", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+        job.cancel()
+
+        assertEquals(
+            mapOf("a" to "Spring sale on cat trees", "b" to "Dog grooming week"),
+            seen
+        )
+    }
+
     @Test
     public fun testCandidatesCarryWhatTheLayoutSaysAboutThem(): TestResult = runTest {
         EmbeddedViewManager.aiSelector = selector
@@ -271,7 +357,7 @@ public class EmbeddedAiSelectionDisplayTest {
         addPending("b", priority = 10, description = "Dog grooming week")
 
         val job = Job()
-        EmbeddedViewManager.displayRequests(embeddedId, selection, this + job).test {
+        EmbeddedViewManager.displayRequests(embeddedId, selection, scope = this + job).test {
             awaitItem()
             awaitItem()
             cancelAndIgnoreRemainingEvents()
