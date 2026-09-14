@@ -94,8 +94,11 @@ These were public but are SDK plumbing, and are now `@RestrictTo(LIBRARY_GROUP)`
 * `com.urbanairship.android.layout.BannerPresentation`
 * `com.urbanairship.android.layout.util.Timer`
 * `com.urbanairship.util.CachedList`
+* `com.urbanairship.messagecenter.User`, along with `MessageCenter.user` and `Inbox.user`, which exposed it
 
 `AirshipLayout.layoutInfo` is likewise now restricted, aligning it with `LayoutInfo`.
+
+The Message Center user (its ID and basic-auth password) is credential plumbing for our [out-of-the-box Message Center UI](https://www.airship.com/docs/developer/sdk-integration/android/message-center/getting-started/) and was never meant to be read or managed by app code directly. If you were using `messageCenter.user` to build a custom message list or detail screen, integrate the provided `MessageCenterFragment`/`MessageCenterActivity` (or the Compose equivalents) instead — see the getting-started guide linked above.
 
 `@RestrictTo` now also covers nested types and overrides of already-restricted APIs. None of that is reachable from app code except `MessageWebViewClient`, when overriding `extendActionRequest` or `extendJavascriptEnvironment`. These are now considered internal with no public replacement.
 

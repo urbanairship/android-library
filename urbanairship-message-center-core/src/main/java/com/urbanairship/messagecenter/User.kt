@@ -12,12 +12,20 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/** The Airship rich push user. */
+/**
+ * The Airship rich push user.
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class User internal constructor(
     private val preferences: PreferenceStore
 ) {
 
-    /** A listener interface for receiving events for user updates. */
+    /**
+     * A listener interface for receiving events for user updates.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun interface Listener {
 
         /**
@@ -31,24 +39,27 @@ public class User internal constructor(
     private val listeners: MutableList<Listener> = CopyOnWriteArrayList()
 
     private val userUpdatedFlow = MutableSharedFlow<Boolean>()
+
+    /** @hide */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val userUpdated: Flow<Boolean> = userUpdatedFlow
         .asSharedFlow()
         .distinctUntilChanged()
 
     /**
      * Subscribe a listener for user update events.
-     *
-     * @param listener An object implementing the [Listener] interface.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun addListener(listener: Listener) {
         listeners.add(listener)
     }
 
     /**
      * Unsubscribe a listener for inbox and user update events.
-     *
-     * @param listener An object implementing the [Listener] interface.
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun removeListener(listener: Listener) {
         listeners.remove(listener)
     }
@@ -83,7 +94,11 @@ public class User internal constructor(
         setUser(userCredentials)
     }
 
-    /** Returns `true` if the user credentials are available, otherwise `false. */
+    /**
+     * Returns `true` if the user credentials are available, otherwise `false.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val isUserCreated: Boolean
         get() = !id.isNullOrEmpty() && !password.isNullOrEmpty()
 
@@ -114,7 +129,11 @@ public class User internal constructor(
             return UserCredentials(id, password)
         }
 
-    /** The user's ID. */
+    /**
+     * The user's ID.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val id: String?
         get() = if (preferences.get(USER_TOKEN_KEY) != null) {
             preferences.get(USER_ID_KEY)
@@ -122,7 +141,11 @@ public class User internal constructor(
             null
         }
 
-    /** The user's token used for basic auth. */
+    /**
+     * The user's token used for basic auth.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val password: String?
         get() {
             val id = id ?: return null

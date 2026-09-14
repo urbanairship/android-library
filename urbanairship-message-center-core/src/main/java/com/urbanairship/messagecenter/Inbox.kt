@@ -60,6 +60,7 @@ import kotlinx.coroutines.withContext
  */
 public class Inbox @VisibleForTesting internal constructor(
     dataStore: PreferenceStore,
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val user: User,
     private val messageDao: MessageDao,
     private val activityMonitor: ActivityMonitor,

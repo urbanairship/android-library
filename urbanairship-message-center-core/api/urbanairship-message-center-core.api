@@ -39,7 +39,6 @@ public final class com/urbanairship/messagecenter/Inbox {
 	public final fun getUnreadMessagesPendingResult ()Lcom/urbanairship/PendingResult;
 	public final fun getUnreadMessagesPendingResult (Lcom/urbanairship/Predicate;)Lcom/urbanairship/PendingResult;
 	public static synthetic fun getUnreadMessagesPendingResult$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;ILjava/lang/Object;)Lcom/urbanairship/PendingResult;
-	public final fun getUser ()Lcom/urbanairship/messagecenter/User;
 	public final fun markMessagesRead (Ljava/util/Set;)V
 	public final fun markMessagesRead ([Ljava/lang/String;)V
 	public final fun markMessagesUnread (Ljava/util/Set;)V
@@ -145,7 +144,6 @@ public final class com/urbanairship/messagecenter/MessageCenter : com/urbanairsh
 	public static final field VIEW_MESSAGE_INTENT_ACTION Ljava/lang/String;
 	public final fun getInbox ()Lcom/urbanairship/messagecenter/Inbox;
 	public final fun getPredicate ()Lcom/urbanairship/Predicate;
-	public final fun getUser ()Lcom/urbanairship/messagecenter/User;
 	public static final fun parseMessageId (Landroid/content/Intent;)Ljava/lang/String;
 	public final fun setOnShowMessageCenterListener (Lcom/urbanairship/messagecenter/MessageCenter$OnShowMessageCenterListener;)V
 	public final fun setPredicate (Lcom/urbanairship/Predicate;)V
@@ -166,19 +164,6 @@ public abstract interface class com/urbanairship/messagecenter/MessageCenter$OnS
 
 public final class com/urbanairship/messagecenter/MessageCenterKt {
 	public static final fun getMessageCenter (Lcom/urbanairship/Airship;)Lcom/urbanairship/messagecenter/MessageCenter;
-}
-
-public final class com/urbanairship/messagecenter/User {
-	public final fun addListener (Lcom/urbanairship/messagecenter/User$Listener;)V
-	public final fun getId ()Ljava/lang/String;
-	public final fun getPassword ()Ljava/lang/String;
-	public final fun getUserUpdated ()Lkotlinx/coroutines/flow/Flow;
-	public final fun isUserCreated ()Z
-	public final fun removeListener (Lcom/urbanairship/messagecenter/User$Listener;)V
-}
-
-public abstract interface class com/urbanairship/messagecenter/User$Listener {
-	public abstract fun onUserUpdated (Z)V
 }
 
 public class com/urbanairship/messagecenter/actions/MessageCenterAction : com/urbanairship/actions/Action {
