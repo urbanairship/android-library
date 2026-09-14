@@ -23,10 +23,10 @@ import com.urbanairship.json.jsonMapOf
 
 internal class DefaultThomasLayoutDisplay private constructor() {
 
-    fun display(context: Context, info: LayoutInfo) {
+    fun display(context: Context, info: LayoutInfo, priority: Int = 0) {
         Thomas.prepareDisplay(
             payload = info,
-            priority = 0,
+            priority = priority,
             extras = emptyJsonMap(),
             activityMonitor = GlobalActivityMonitor.shared(context),
             listener = thomasListener,

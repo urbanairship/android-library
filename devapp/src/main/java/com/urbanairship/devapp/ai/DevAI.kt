@@ -8,6 +8,12 @@ import com.urbanairship.ai.EvaluationRecord
 import com.urbanairship.ai.ModelAdapter
 import com.urbanairship.ai.ModelSelector
 import com.urbanairship.devapp.BuildConfig
+import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import org.json.JSONObject
 
 /**
  * Bring-your-own-model testing for the AI features: routes every usage to whichever sample
@@ -20,6 +26,20 @@ import com.urbanairship.devapp.BuildConfig
  * scene takes its non-AI path.
  */
 internal object DevAI {
+
+    private val _evaluations = MutableStateFlow<Map<String, Int>>(emptyMap())
+
+    /**
+     * How many evaluations each usage has completed, so a screen can show what would
+     * otherwise only be visible by counting log lines.
+     */
+    val evaluations: StateFlow<Map<String, Int>> = _evaluations.asStateFlow()
+
+    fun evaluationCount(usage: String): Int = _evaluations.value[usage] ?: 0
+
+    fun resetEvaluationCounts() {
+        _evaluations.value = emptyMap()
+    }
 
     fun register() {
         Airship.ai.setDefaultContextProvider { defaultContext() }
@@ -42,13 +62,16 @@ internal object DevAI {
      * real app forwarding this anywhere is forwarding user context with it.
      */
     private fun logEvaluation(record: EvaluationRecord) {
+        val usage = record.usage.toString()
+        _evaluations.update { it + (usage to (it[usage] ?: 0) + 1) }
+
         val retries = if (record.attempts > 1) " after ${record.attempts} attempts" else ""
         val header = "AI [${record.usage}] took ${record.duration}$retries"
         when (val outcome = record.outcome) {
             is EvaluationRecord.Outcome.Completed ->
                 UALog.i { "$header\n  instructions: ${record.request.instructions}" +
                         "\n  prompt: ${record.request.prompt()}" +
-                        "\n  output: ${outcome.output}" }
+                        "\n  output: ${JSONObject(outcome.output.toString()).toString(2)}" }
 
             // Skipped is the ordinary "no model, or the feature opted out" path, so it stays
             // below the failure level — it is not something going wrong.
