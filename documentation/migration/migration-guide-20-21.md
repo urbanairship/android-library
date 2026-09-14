@@ -87,7 +87,7 @@ As a result of this change, the `copy()` methods on the following data classes a
 
 ### Embedded view selection and filtering
 
-`AirshipEmbeddedView`, `AirshipEmbeddedViewGroup` and `AirshipEmbeddedCarousel` (and their `remember*State` functions) now take an optional `filterInstances` between `selection` and the trailing composables. It decides *eligibility*; `selection` still decides order. Callers that passed the following arguments positionally need to name them, or move the argument over.
+`AirshipEmbeddedView` and `AirshipEmbeddedViewGroup` (and their `remember*State` functions) now take an optional `filterInstances` between `selection` and the trailing composables. It decides *eligibility*; `selection` still decides order. Callers that passed the following arguments positionally need to name them, or move the argument over.
 
 ```kotlin
 AirshipEmbeddedView(
@@ -112,16 +112,18 @@ It now carries an ordered list of instance IDs rather than one, so `getInstanceI
 Two behavior changes come with it:
 
 * **The earliest named instance that is pending wins**, rather than the only named one — the list is an order of preference.
-* **It is an allow-list.** Pending content that isn't named is now excluded entirely rather than ordered after the target, so a group or carousel renders only the named subset, and newly pending content will not display until your app includes it. Use `filterInstances` instead when the intent is to exclude specific instances rather than to enumerate the acceptable ones.
+* **It is an allow-list.** Pending content that isn't named is now excluded entirely rather than ordered after the target, so `AirshipEmbeddedViewGroup` renders only the named subset, and newly pending content will not display until your app includes it. Use `filterInstances` instead when the intent is to exclude specific instances rather than to enumerate the acceptable ones.
 
-#### `AirshipEmbeddedInfo` reports priority and content description
+#### `AirshipEmbeddedInfo` now reports the real priority
 
-`AirshipEmbeddedInfo` gains `contentDescription`, taken from the layout's `content_description`. Every consumer — a comparator, `filterInstances`, and `AirshipEmbeddedObserver` — now reads one shared instance rather than building its own, which fixes two cases where fields were missing:
+`AirshipEmbeddedInfo.priority` was previously left at its `0` default everywhere the SDK built one, so it did not describe the instance it came with. Two places are affected:
 
-* **`AirshipEmbeddedObserver` reported `priority` as `0`** for every instance. It now reports the real priority, so an observer filter that tests `priority` will start matching differently.
-* A comparator now sees `contentDescription` as well as `priority`.
+* **A comparator passed to `AirshipEmbeddedSelection.ByComparator` compared `0` against `0`.** Sorting on `priority` was a no-op that left arrival order intact. Comparators that sort on `priority` will now actually reorder content.
+* **`AirshipEmbeddedObserver` reported `0` for every instance**, so an observer filter testing `priority` matched everything. It now matches on the real value.
 
-The primary constructor grew parameters. It stays source-compatible through default arguments, but Kotlin code compiled against 20.x that constructed `AirshipEmbeddedInfo` using those defaults must be recompiled against 21.x.
+If your app relied on either of these being effectively inert, review it before upgrading.
+
+`AirshipEmbeddedInfo` also gains `contentDescription`, taken from the layout's `content_description`, and every consumer now reads one shared instance rather than building its own. The primary constructor grew parameters as a result: it stays source-compatible through default arguments, but Kotlin code compiled against 20.x that constructed `AirshipEmbeddedInfo` using those defaults must be recompiled against 21.x.
 
 ### `@RestrictTo` changes
 
