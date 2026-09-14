@@ -89,6 +89,9 @@ public sealed class AirshipEmbeddedSelection {
          * @param strategy How scores and candidate priorities combine into the final order.
          * @param minScoreThreshold The score the winner must reach for the model's answer to
          * be used at all; below it, [fallback] decides. Null accepts any score.
+         * @param allowDisplayInterruptions Whether a change in the pending set may re-run the
+         * model and swap the instance already on screen. When false — the default — a chosen
+         * instance keeps displaying as others come and go, until it is dismissed.
          * @param subjectHints Hints carried on the subject handed to the context provider.
          * Never rendered into the prompt.
          */
@@ -96,10 +99,16 @@ public sealed class AirshipEmbeddedSelection {
             public val prompt: String,
             public val strategy: Strategy = Strategy.SCORE_THEN_PRIORITY,
             public val minScoreThreshold: Int? = null,
+            public val allowDisplayInterruptions: Boolean = false,
             public val subjectHints: Map<String, String> = emptyMap()
         )
 
-        /** How model scores and candidate priorities combine into a final ordering. */
+        /**
+         * How model scores and candidate priorities combine into a final ordering.
+         *
+         * Governs the candidates the model scored. Candidates it declined to score trail all
+         * scored ones under either strategy, in priority order among themselves.
+         */
         public enum class Strategy {
 
             /** Score leads; priority breaks ties between equal scores. */

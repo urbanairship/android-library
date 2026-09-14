@@ -23,7 +23,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
@@ -45,8 +47,10 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
      */
     @Volatile
     internal var aiSelector: EmbeddedAiSelector? = null
-        get() = field ?: DefaultEmbeddedAiSelector(Airship.internalAi)
-            .takeIf { Airship.isFlyingOrTakingOff }
+        // `takeIf` would not do: it runs after its receiver is built, and building one reads
+        // `Airship.internalAi`, which throws before takeOff.
+        get() = field
+            ?: if (Airship.isFlyingOrTakingOff) DefaultEmbeddedAiSelector(Airship.internalAi) else null
 
     public override fun addPending(
         embeddedViewId: String,
@@ -117,23 +121,21 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         // subsequent calls to this method to get the same EmbeddedDisplayRequest until
         // it is no longer in the listing.
 
-        @OptIn(ExperimentalCoroutinesApi::class)
-        return viewsFlow
-            .transformLatest { map ->
-                val pendingList = map[embeddedViewId].orEmpty()
+        // Narrowed to this view before anything else runs. `viewsFlow` carries every embedded
+        // view's pending list, so an unrelated view's add or dismiss publishes a new map and
+        // wakes this collector too — which for the AI branch would blank the view and re-rank
+        // content already on screen.
+        val pendingForView = viewsFlow
+            .map { it[embeddedViewId].orEmpty() }
+            .distinctUntilChanged()
 
-                // The AI branch has to emit twice: the placeholder first, because ranking is a
-                // round trip to a model and the view can't sit blank while it happens, then
-                // the answer. transformLatest cancels an in-flight ranking when the pending
-                // list changes under it, so a superseded decision never lands.
-                if (selection is AirshipEmbeddedSelection.ByAi && pendingList.isNotEmpty()) {
-                    emit(EmbeddedDisplayRequestResult(next = null, list = pendingList))
-                    emit(rankWithAi(embeddedViewId, selection, pendingList))
-                    return@transformLatest
-                }
+        val results = if (selection is AirshipEmbeddedSelection.ByAi) {
+            aiDisplayRequests(embeddedViewId, selection, pendingForView)
+        } else {
+            pendingForView.map { select(embeddedViewId, selection, it) }
+        }
 
-                emit(select(embeddedViewId, selection, pendingList))
-            }
+        return results
             .distinctUntilChanged()
             .shareIn(scope, replay = 1, started = WhileSubscribed())
     }
@@ -143,7 +145,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
      *
      * @param embeddedViewId The embedded view being selected for.
      * @param selection The selection to apply. An AI selection resolves through its fallback,
-     * which is how [rankWithAi] hands off when the model has no answer.
+     * which is how [resolveAi] hands off when the model has no answer.
      * @param pendingList The pending requests.
      * @return What to display, and the full list.
      */
@@ -166,7 +168,10 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
                 // entirely rather than ordered last, so the list is the named subset rather
                 // than everything pending.
                 val byId = pendingList.associateBy { it.viewInstanceId }
-                val ordered = selection.instanceIds.mapNotNull { byId[it] }
+                // Deduped: an app-supplied preference list concatenated from several sources
+                // can name the same instance twice, and a repeat would put one request in the
+                // list twice, which a pager keyed on instance ID rejects.
+                val ordered = selection.instanceIds.distinct().mapNotNull { byId[it] }
                 EmbeddedDisplayRequestResult(next = ordered.firstOrNull(), list = ordered)
             }
 
@@ -187,44 +192,182 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
     }
 
     /**
-     * Ranks the pending list with the model, falling back when it has no answer.
+     * The display results for an AI selection, ranking the pending list with the model.
+     *
+     * Stateful, unlike the other selections: what the model decided has to outlive the
+     * emission it was decided on, so that a later change to the pending list can drop a
+     * departed instance without re-asking, and so an instance already on screen can stay
+     * there. The state is per collection of the returned flow, which is per subscribed view.
+     *
+     * @param embeddedViewId The embedded view being selected for.
+     * @param selection The AI selection, carrying the config and the fallback.
+     * @param pendingForView This view's pending requests.
+     * @return What to display, and the list in the order the model chose.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun aiDisplayRequests(
+        embeddedViewId: String,
+        selection: AirshipEmbeddedSelection.ByAi,
+        pendingForView: Flow<List<EmbeddedDisplayRequest>>
+    ): Flow<EmbeddedDisplayRequestResult> = flow {
+        val state = AiSelectionState()
+
+        emitAll(
+            // transformLatest cancels an in-flight ranking when the pending list changes
+            // under it, so a decision about a set that no longer exists never lands.
+            pendingForView.transformLatest { pendingList ->
+                val incomingIds = pendingList.mapTo(mutableSetOf()) { it.viewInstanceId }
+                val hasNewId = !state.knownIds.containsAll(incomingIds)
+                state.knownIds = incomingIds
+
+                // Ranking a single candidate is a round trip with one possible answer.
+                if (pendingList.size < 2) {
+                    state.phase = AiSelectionPhase.Fallback
+                    emit(resolveAi(embeddedViewId, selection, pendingList, state))
+                    return@transformLatest
+                }
+
+                // Nothing arrived, so the set the model already ranked only shrank. The order
+                // still has to drop what left, but there is nothing new to ask about — unless
+                // this very change cancelled a ranking, since transformLatest tears the
+                // in-flight one down and nothing else would ever answer the placeholder.
+                if (!hasNewId && state.phase != AiSelectionPhase.Resolving) {
+                    emit(resolveAi(embeddedViewId, selection, pendingList, state))
+                    return@transformLatest
+                }
+
+                // Before the placeholder, not after: `rank` returns synchronously when there
+                // is no model, so emitting a blank frame first would be a flash that no other
+                // selection has.
+                val selector = aiSelector?.takeIf { it.isAvailable }
+                if (selector == null) {
+                    state.phase = AiSelectionPhase.Fallback
+                    emit(resolveAi(embeddedViewId, selection, pendingList, state))
+                    return@transformLatest
+                }
+
+                state.phase = AiSelectionPhase.Resolving
+                emit(resolveAi(embeddedViewId, selection, pendingList, state))
+
+                val ranking = selector.rank(selectionRequest(embeddedViewId, selection, pendingList))
+                state.phase = ranking
+                    ?.let(AiSelectionPhase::Ranked)
+                    ?: AiSelectionPhase.Fallback
+                emit(resolveAi(embeddedViewId, selection, pendingList, state))
+            }
+        )
+    }
+
+    /**
+     * Turns the current AI state into what to display.
      *
      * @param embeddedViewId The embedded view being selected for.
      * @param selection The AI selection, carrying the config and the fallback.
      * @param pendingList The pending requests.
-     * @return What to display, and the full list in the order the model chose.
+     * @param state The AI state, whose committed order this updates.
+     * @return What to display, and the list in the order it settled on.
      */
-    private suspend fun rankWithAi(
+    private fun resolveAi(
+        embeddedViewId: String,
+        selection: AirshipEmbeddedSelection.ByAi,
+        pendingList: List<EmbeddedDisplayRequest>,
+        state: AiSelectionState
+    ): EmbeddedDisplayRequestResult {
+        val byId = pendingList.associateBy { it.viewInstanceId }
+
+        val order = when (val phase = state.phase) {
+            is AiSelectionPhase.Ranked -> {
+                val ranked = phase.ranking.filter(byId::containsKey)
+                val committed = state.committedOrder.filter(byId::containsKey)
+                if (!selection.config.allowDisplayInterruptions && committed.isNotEmpty()) {
+                    // What is on screen stays where it is. Anything newly ranked was not up
+                    // before, so it is an arrival rather than a reshuffle and can join at the
+                    // end.
+                    committed + ranked.filterNot(committed::contains)
+                } else {
+                    ranked
+                }
+            }
+
+            // Hold the screen through a re-ask rather than blanking it. Empty when nothing is
+            // up yet, which is what puts the placeholder on screen for the first ranking.
+            AiSelectionPhase.Resolving -> state.committedOrder.filter(byId::containsKey)
+
+            AiSelectionPhase.Fallback -> emptyList()
+        }
+
+        if (order.isNotEmpty()) {
+            state.committedOrder = order
+            val ordered = order.mapNotNull(byId::get)
+            return EmbeddedDisplayRequestResult(next = ordered.firstOrNull(), list = ordered)
+        }
+
+        state.committedOrder = emptyList()
+        return if (state.phase == AiSelectionPhase.Resolving) {
+            EmbeddedDisplayRequestResult(next = null, list = pendingList)
+        } else {
+            select(embeddedViewId, selection.fallback.asSelection, pendingList)
+        }
+    }
+
+    /**
+     * The ranking request for a pending list.
+     *
+     * @param embeddedViewId The embedded view being selected for.
+     * @param selection The AI selection, carrying the config.
+     * @param pendingList The pending requests.
+     * @return The request.
+     */
+    private fun selectionRequest(
         embeddedViewId: String,
         selection: AirshipEmbeddedSelection.ByAi,
         pendingList: List<EmbeddedDisplayRequest>
-    ): EmbeddedDisplayRequestResult {
-        val fallback = { select(embeddedViewId, selection.fallback.asSelection, pendingList) }
+    ): EmbeddedSelectionRequest = EmbeddedSelectionRequest(
+        embeddedId = embeddedViewId,
+        prompt = selection.config.prompt,
+        // `describing()` resolves each layout payload, so it runs once per ranking rather
+        // than per emission of the pending list.
+        candidates = pendingList.map { it.describing() },
+        strategy = when (selection.config.strategy) {
+            AirshipEmbeddedSelection.ByAi.Strategy.SCORE_THEN_PRIORITY ->
+                EmbeddedSelectionStrategy.SCORE_THEN_PRIORITY
+            AirshipEmbeddedSelection.ByAi.Strategy.PRIORITY_THEN_SCORE ->
+                EmbeddedSelectionStrategy.PRIORITY_THEN_SCORE
+        },
+        minScoreThreshold = selection.config.minScoreThreshold,
+        subjectHints = selection.config.subjectHints
+    )
+}
 
-        val selector = aiSelector?.takeIf { it.isAvailable } ?: return fallback()
+/** Where an AI selection stands, which decides what [EmbeddedViewManager.resolveAi] shows. */
+private sealed interface AiSelectionPhase {
 
-        // `describing()` resolves each layout payload, so it runs once per ranking rather than
-        // per emission of the pending list.
-        val byId = pendingList.associateBy { it.viewInstanceId }
-        val ranking = selector.rank(
-            EmbeddedSelectionRequest(
-                embeddedId = embeddedViewId,
-                prompt = selection.config.prompt,
-                candidates = pendingList.map { it.describing() },
-                strategy = when (selection.config.strategy) {
-                    AirshipEmbeddedSelection.ByAi.Strategy.SCORE_THEN_PRIORITY ->
-                        EmbeddedSelectionStrategy.SCORE_THEN_PRIORITY
-                    AirshipEmbeddedSelection.ByAi.Strategy.PRIORITY_THEN_SCORE ->
-                        EmbeddedSelectionStrategy.PRIORITY_THEN_SCORE
-                },
-                minScoreThreshold = selection.config.minScoreThreshold,
-                subjectHints = selection.config.subjectHints
-            )
-        ) ?: return fallback()
+    /** A ranking is in flight, so an empty order means "wait" rather than "fall back". */
+    data object Resolving : AiSelectionPhase
 
-        val ordered = ranking.mapNotNull { byId[it] }
-        return EmbeddedDisplayRequestResult(next = ordered.firstOrNull(), list = ordered)
-    }
+    /** The model's answer, best first. */
+    data class Ranked(val ranking: List<String>) : AiSelectionPhase
+
+    /** The model had no answer, or was never asked, so the selection's fallback decides. */
+    data object Fallback : AiSelectionPhase
+}
+
+/** What an AI selection remembers between emissions of one view's pending list. */
+private class AiSelectionState {
+
+    /** Where the selection stands. */
+    var phase: AiSelectionPhase = AiSelectionPhase.Fallback
+
+    /** The instance IDs last seen pending, so an arrival can be told from a departure. */
+    var knownIds: Set<String> = emptySet()
+
+    /**
+     * The order last put on screen, most preferred first.
+     *
+     * Consulted when `allowDisplayInterruptions` is false, so a re-rank can only append
+     * arrivals rather than reshuffle what a user is already looking at.
+     */
+    var committedOrder: List<String> = emptyList()
 }
 
 /**

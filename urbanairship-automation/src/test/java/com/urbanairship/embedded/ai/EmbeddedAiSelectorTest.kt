@@ -116,6 +116,47 @@ public class EmbeddedAiSelectorTest {
         )
     }
 
+    /**
+     * Unscored candidates trail the scored ones under either strategy, so priority leading
+     * applies among the candidates the model actually scored.
+     */
+    @Test
+    public fun testUnscoredCandidatesTrailUnderPriorityFirst(): Unit = runTest {
+        ai.result = scores("a" to 7)
+
+        assertEquals(
+            listOf("a", "c", "b"),
+            selector.rank(
+                request(
+                    listOf(
+                        candidate("a", priority = 5),
+                        candidate("b", priority = 9),
+                        candidate("c", priority = 2)
+                    ),
+                    strategy = EmbeddedSelectionStrategy.PRIORITY_THEN_SCORE
+                )
+            )
+        )
+    }
+
+    /**
+     * Nothing the model returned matched a candidate, so it had no opinion — the caller's
+     * fallback decides, rather than priority order standing in for a ranking.
+     */
+    @Test
+    public fun testOnlyInventedIdsGiveNoOpinion(): Unit = runTest {
+        ai.result = scores("ghost" to 10, "phantom" to 2)
+
+        assertNull(selector.rank(request(listOf(candidate("a"), candidate("b", priority = 1)))))
+    }
+
+    @Test
+    public fun testEmptyScoresGiveNoOpinion(): Unit = runTest {
+        ai.result = scores()
+
+        assertNull(selector.rank(request(listOf(candidate("a"), candidate("b", priority = 1)))))
+    }
+
     @Test
     public fun testInventedAndRepeatedIdsAreIgnored(): Unit = runTest {
         ai.result = scores("ghost" to 10, "a" to 3, "a" to 9)

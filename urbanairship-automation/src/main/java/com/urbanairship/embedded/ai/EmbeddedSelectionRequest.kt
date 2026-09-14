@@ -73,7 +73,12 @@ public class EmbeddedSelectionRequest public constructor(
         }
 }
 
-/** How model scores and candidate priorities combine into a final ordering. */
+/**
+ * How model scores and candidate priorities combine into a final ordering.
+ *
+ * Governs the candidates the model scored. Candidates it declined to score trail all scored
+ * ones under either strategy, in priority order among themselves.
+ */
 public enum class EmbeddedSelectionStrategy {
 
     /** Score leads; priority breaks ties between equal scores. */

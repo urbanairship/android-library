@@ -44,7 +44,13 @@ public class DefaultEmbeddedAiSelector public constructor(
 ) : EmbeddedAiSelector {
 
     override val isAvailable: Boolean
-        get() = ai.model(Usage.embeddedSelection)?.availability == ModelAvailability.Available
+        get() = try {
+            ai.model(Usage.embeddedSelection)?.availability == ModelAvailability.Available
+        } catch (e: Exception) {
+            // App-implemented getter; a throw here means "can't use it", not "crash the caller".
+            UALog.w(e) { "Embedded selection model availability threw" }
+            false
+        }
 
     override suspend fun rank(request: EmbeddedSelectionRequest): List<String>? {
         if (request.candidates.isEmpty()) {
@@ -79,14 +85,21 @@ public class DefaultEmbeddedAiSelector public constructor(
         }
 
         val ranking = request.order(output.scores)
-        if (ranking.isEmpty()) {
-            UALog.w { "Embedded AI selection returned no scored ids" }
+
+        // On `scored`, not on the whole ranking: the unscored tail covers every candidate, so
+        // the full list is empty only when there were no candidates at all. A model that
+        // returned nothing usable has no opinion, and the fallback — which may be an
+        // allow-list or a comparator — decides instead of priority order standing in for it.
+        if (ranking.scored.isEmpty()) {
+            UALog.w { "Embedded AI selection returned no usable scores" }
             return null
         }
 
+        val ids = ranking.scored + ranking.unscored
+
         val threshold = request.minScoreThreshold
         if (threshold != null) {
-            val topScore = output.scores.firstOrNull { it.id == ranking.first() }?.score ?: 0
+            val topScore = output.scores.firstOrNull { it.id == ids.first() }?.score ?: 0
             if (topScore < threshold) {
                 UALog.d {
                     "Embedded AI top score $topScore below threshold $threshold, using fallback"
@@ -97,10 +110,18 @@ public class DefaultEmbeddedAiSelector public constructor(
 
         // Instance IDs are generated per pending instance and carry nothing about the user.
         // The model's stated reason does, so it stays out.
-        UALog.d { "Embedded AI ranking $ranking" }
-        return ranking
+        UALog.d { "Embedded AI ranking $ids" }
+        return ids
     }
 }
+
+/**
+ * A ranking split by whether the model actually scored the candidate.
+ *
+ * @param scored The scored candidates' instance IDs, best first.
+ * @param unscored The instance IDs the model didn't score, in priority order.
+ */
+private class Ranking(val scored: List<String>, val unscored: List<String>)
 
 /**
  * Orders the candidates from the model's scores.
@@ -110,11 +131,11 @@ public class DefaultEmbeddedAiSelector public constructor(
  * priority order — so the ranking always covers the whole pending set.
  *
  * @param scores The model's scores.
- * @return The instance IDs in display order.
+ * @return The scored and unscored instance IDs, each in display order.
  */
 private fun EmbeddedSelectionRequest.order(
     scores: List<EmbeddedSelectionEvaluation.Output.CandidateScore>
-): List<String> {
+): Ranking {
     val priorities = candidates.associate { it.instanceId to it.priority }
     val seen = mutableSetOf<String>()
 
@@ -137,5 +158,5 @@ private fun EmbeddedSelectionRequest.order(
         .sortedBy { it.priority }
         .map { it.instanceId }
 
-    return scored + unscored
+    return Ranking(scored = scored, unscored = unscored)
 }

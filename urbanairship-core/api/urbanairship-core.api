@@ -2405,15 +2405,18 @@ public final class com/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Confi
 	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;)V
 	public fun <init> (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;)V
-	public fun <init> (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;Ljava/util/Map;)V
-	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;Z)V
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;ZLjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;ZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;
 	public final fun component3 ()Ljava/lang/Integer;
-	public final fun component4 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;Ljava/util/Map;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Config;
-	public static synthetic fun copy$default (Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Config;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;Ljava/util/Map;ILjava/lang/Object;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Config;
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;ZLjava/util/Map;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Config;
+	public static synthetic fun copy$default (Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Config;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;Ljava/lang/Integer;ZLjava/util/Map;ILjava/lang/Object;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Config;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowDisplayInterruptions ()Z
 	public final fun getMinScoreThreshold ()Ljava/lang/Integer;
 	public final fun getPrompt ()Ljava/lang/String;
 	public final fun getStrategy ()Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Strategy;

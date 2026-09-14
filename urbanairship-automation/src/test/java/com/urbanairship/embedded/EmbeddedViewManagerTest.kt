@@ -172,6 +172,34 @@ public class EmbeddedViewManagerTest {
         job.cancel()
     }
 
+    /**
+     * A preference list concatenated from several sources can name the same instance twice,
+     * and a repeat in the list is a duplicate key to anything that pages the list.
+     */
+    @Test
+    public fun testInstanceSelectionDedupes(): TestResult = runTest {
+        addPending("instance-a", 0)
+        addPending("instance-b", 0)
+
+        val job = Job()
+
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.ByInstanceId(
+                listOf("instance-a", "instance-b", "instance-a")
+            ),
+            scope = this + job
+        ).test {
+            assertEquals(
+                listOf("instance-a", "instance-b"),
+                awaitItem().list.map { it.viewInstanceId }
+            )
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        job.cancel()
+    }
+
     private fun addPending(instanceId: String, priority: Int) {
         EmbeddedViewManager.addPending(
             embeddedViewId = testEmbeddedId,
