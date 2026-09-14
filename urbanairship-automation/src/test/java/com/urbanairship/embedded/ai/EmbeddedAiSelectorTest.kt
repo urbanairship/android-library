@@ -9,13 +9,18 @@ import com.urbanairship.ai.EvaluationObserver
 import com.urbanairship.ai.EvaluationResult
 import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.ai.ModelAdapter
+import com.urbanairship.ai.ModelAvailability
+import com.urbanairship.ai.ModelRequest
 import com.urbanairship.ai.ModelResolver
 import com.urbanairship.ai.Usage
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -275,8 +280,40 @@ public class EmbeddedAiSelectorTest {
         )
     }
 
+    @Test
+    public fun testAvailabilityFollowsTheModel() {
+        assertFalse(selector.isAvailable)
+
+        ai.model = FakeModel(ModelAvailability.Unavailable(ModelAvailability.Reason.MissingModel))
+        assertFalse(selector.isAvailable)
+
+        ai.model = FakeModel(ModelAvailability.Available)
+        assertTrue(selector.isAvailable)
+    }
+
+    /**
+     * `availability` is app-implemented. A throw there means "can't use it", not "take down the
+     * flow that asked" — which would leave the view stuck on its placeholder for good.
+     */
+    @Test
+    public fun testAThrowingAvailabilityGetterIsUnavailableRatherThanFatal() {
+        ai.model = FakeModel(reports = null)
+
+        assertFalse(selector.isAvailable)
+    }
+
+    /** A null [FakeModel.reports] stands in for an app getter that throws. */
+    private class FakeModel(private val reports: ModelAvailability?) : ModelAdapter {
+        override val availability: ModelAvailability
+            get() = reports ?: throw IllegalStateException("boom")
+
+        override suspend fun respond(request: ModelRequest): JsonValue =
+            throw UnsupportedOperationException()
+    }
+
     private class FakeAi : InternalAirshipAi {
         var result: EvaluationResult<*> = EvaluationResult.Skipped("unset")
+        var model: ModelAdapter? = null
 
         var evaluation: Evaluation<*, *>? = null
             private set
@@ -293,8 +330,8 @@ public class EmbeddedAiSelectorTest {
             return result as EvaluationResult<Output>
         }
 
-        override val defaultModel: ModelAdapter? = null
-        override fun model(usage: Usage<*>): ModelAdapter? = null
+        override val defaultModel: ModelAdapter? get() = model
+        override fun model(usage: Usage<*>): ModelAdapter? = model
         override fun gatedModel(usage: Usage<*>): ModelAdapter? = null
         override fun <Subject> setContextProvider(
             usage: Usage<Subject>,

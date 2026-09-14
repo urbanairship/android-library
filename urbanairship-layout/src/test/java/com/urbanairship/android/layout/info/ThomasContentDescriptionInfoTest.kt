@@ -45,6 +45,63 @@ public class ThomasContentDescriptionInfoTest {
         assertTrue(info.additionalContext.isEmpty())
     }
 
+    /** The whole of content_description is advisory, so a bad entry costs only itself. */
+    @Test
+    public fun testMalformedContextItemsAreDropped() {
+        val info = parse(
+            """
+            {
+                "description": "Spring sale on cat trees",
+                "additional_context": [
+                    { "content": "Interests: cats" },
+                    { "priority": -5 },
+                    "not an object",
+                    { "content": "Targeted: lapsed buyer" }
+                ]
+            }
+            """
+        )
+
+        assertEquals("Spring sale on cat trees", info.description)
+        assertEquals(
+            listOf(
+                EvaluationContext.Item("Interests: cats"),
+                EvaluationContext.Item("Targeted: lapsed buyer")
+            ),
+            info.additionalContext
+        )
+    }
+
+    /**
+     * This parses inside `LayoutInfo(json)`, so a throw would cost the layout its ability to
+     * render rather than its description.
+     */
+    @Test
+    public fun testAMalformedContextItemDoesNotFailTheLayout() {
+        val layout = LayoutInfo(
+            JsonValue.parseString(
+                """
+                {
+                    "version": 1,
+                    "presentation": {
+                        "type": "embedded",
+                        "embedded_id": "home_banner",
+                        "default_placement": { "size": { "width": "100%", "height": "auto" } }
+                    },
+                    "view": { "type": "empty_view" },
+                    "content_description": {
+                        "description": "Spring sale on cat trees",
+                        "additional_context": [{ "priority": -5 }]
+                    }
+                }
+                """
+            ).requireMap()
+        )
+
+        assertEquals("Spring sale on cat trees", layout.contentDescription?.description)
+        assertTrue(layout.contentDescription?.additionalContext?.isEmpty() == true)
+    }
+
     @Test
     public fun testReadFromTheLayout() {
         val layout = LayoutInfo(
