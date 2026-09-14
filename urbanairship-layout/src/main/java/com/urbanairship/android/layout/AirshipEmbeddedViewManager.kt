@@ -68,6 +68,22 @@ public interface AirshipEmbeddedViewManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun dismiss(embeddedViewId: String, viewInstanceId: String)
 
+    /**
+     * Records that an instance reached the screen, which is what
+     * [AirshipEmbeddedSelection.Priority] keeps displaying until it is dismissed.
+     *
+     * Called by whatever put the content up, once it is actually up — selecting an instance is
+     * not the same as displaying it, and a surface that displays the whole pending list has no
+     * single instance to report.
+     *
+     * @param embeddedViewId The embedded view ID.
+     * @param viewInstanceId The instance now on screen.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun recordDisplayed(embeddedViewId: String, viewInstanceId: String)
+
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun displayRequests(

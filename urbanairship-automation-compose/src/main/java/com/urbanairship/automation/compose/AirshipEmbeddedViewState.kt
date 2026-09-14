@@ -141,6 +141,7 @@ internal fun rememberAirshipEmbeddedViewState(
                         // Inflate the embedded layout.
                         UALog.v { "Display request available for id: \"$embeddedId\"" }
                         val displayArgs = next.displayArgsProvider.invoke()
+                        embeddedViewManager.recordDisplayed(embeddedId, next.viewInstanceId)
                         EmbeddedLayout(context, embeddedId, next.viewInstanceId, displayArgs, embeddedViewManager)
                     }
                 }

@@ -99,6 +99,10 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         viewsFlow.value = pending.toMap()
     }
 
+    override fun recordDisplayed(embeddedViewId: String, viewInstanceId: String) {
+        lastViewedLock.withLock { lastViewed[embeddedViewId] = viewInstanceId }
+    }
+
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun allPending(): Flow<List<EmbeddedDisplayRequest>> {
@@ -185,13 +189,13 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
             }
 
             AirshipEmbeddedSelection.Priority -> {
-                val current = lastViewedLock.withLock {
-                    lastViewed[embeddedViewId]?.let { lastId ->
-                        pendingList.find { it.viewInstanceId == lastId }
-                    } ?: pendingList.minByOrNull { it.priority }?.also {
-                        lastViewed[embeddedViewId] = it.viewInstanceId
-                    }
-                }
+                // Read-only: what is sticky is decided by what actually reached the screen, via
+                // recordDisplayed. Choosing here would let a surface that never displays an
+                // instance — a group, a carousel, a view whose pending list excludes the sticky
+                // one — rewrite what a sibling view is looking at.
+                val lastId = lastViewedLock.withLock { lastViewed[embeddedViewId] }
+                val current = lastId?.let { id -> pendingList.find { it.viewInstanceId == id } }
+                    ?: pendingList.minByOrNull { it.priority }
                 EmbeddedDisplayRequestResult(next = current, list = pendingList)
             }
 

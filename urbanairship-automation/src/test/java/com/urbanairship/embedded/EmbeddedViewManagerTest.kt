@@ -34,6 +34,9 @@ public class EmbeddedViewManagerTest {
         EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
             addPending("low priority", 100)
             assertEquals("low priority", awaitItem().next?.viewInstanceId);
+            // What a view does once the content is actually on screen. Stickiness follows
+            // display, so without this nothing is sticky and the higher-priority arrivals win.
+            EmbeddedViewManager.recordDisplayed(testEmbeddedId, "low priority")
             addPending("medium priority", 0)
             addPending("high priority", -100)
             cancelAndIgnoreRemainingEvents()
@@ -92,6 +95,7 @@ public class EmbeddedViewManagerTest {
         // Make sure standard sort still works
         EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
             assertEquals("medium priority", awaitItem().next?.viewInstanceId);
+            EmbeddedViewManager.recordDisplayed(testEmbeddedId, "medium priority")
             cancelAndIgnoreRemainingEvents()
         }
         addPending("high priority", -100)
@@ -254,6 +258,74 @@ public class EmbeddedViewManagerTest {
             val result = awaitItem()
             assertEquals(null, result.next)
             assertEquals(0, result.list.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        job.cancel()
+    }
+
+    /**
+     * Selecting an instance is not displaying it. A view can pick one and still fail to put it
+     * up — no resolvable placement, no inflated view — so what sticks is what reached the
+     * screen and said so.
+     */
+    @Test
+    public fun testStickinessFollowsDisplayNotSelection(): TestResult = runTest {
+        addPending("instance-a", 100)
+
+        val job = Job()
+
+        // Subscribing alone picks "instance-a" but records nothing.
+        EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
+            assertEquals("instance-a", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        addPending("instance-b", -100)
+
+        // Nothing is sticky, so the higher-priority arrival wins rather than being held off.
+        EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
+            assertEquals("instance-b", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        job.cancel()
+    }
+
+    /**
+     * Last-displayed is shared across every view on an embedded ID, so only a surface that
+     * actually displays a single instance may write it. A group or carousel renders the whole
+     * list and has nothing to report; a view filtering the sticky instance out has no business
+     * moving what a sibling is looking at.
+     */
+    @Test
+    public fun testAFilteredViewDoesNotClobberADisplayedInstance(): TestResult = runTest {
+        addPending("instance-a", 0)
+        addPending("instance-b", 10)
+
+        val job = Job()
+
+        // A view displays "instance-a" and reports it.
+        EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
+            assertEquals("instance-a", awaitItem().next?.viewInstanceId)
+            EmbeddedViewManager.recordDisplayed(testEmbeddedId, "instance-a")
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // A second view on the same embedded ID excludes it, and falls to what it can show.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.Priority,
+            filter = { it.instanceId != "instance-a" },
+            scope = this + job
+        ).test {
+            assertEquals("instance-b", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // The first view is unmoved.
+        EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
+            assertEquals("instance-a", awaitItem().next?.viewInstanceId)
             cancelAndIgnoreRemainingEvents()
         }
 

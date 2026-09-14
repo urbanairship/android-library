@@ -348,6 +348,9 @@ public class AirshipEmbeddedView private constructor(
             } ?: return
 
             addView(view)
+            // After the view is up, not when it was selected: the two returns above can drop a
+            // selected instance without ever showing it.
+            manager.recordDisplayed(embeddedViewId = id, viewInstanceId = request.viewInstanceId)
             UALog.v { "onUpdate: displayed content $logTag" }
         } else {
             placeholderLayoutRes?.let { resId ->
