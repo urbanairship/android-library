@@ -15,10 +15,6 @@ import com.urbanairship.embedded.AirshipEmbeddedInfo
  *     EvaluationContext(listOf(EvaluationContext.Item("Interests: ${profile.interests}")))
  * }
  * ```
- *
- * Its own usage, independent of scene text-input inference. Declared in this module but hung
- * off [Usage.Companion], so every usage the SDK has is reachable from one place whichever
- * module owns it.
  */
 public val Usage.Companion.embeddedSelection: Usage<EmbeddedSelectionSubject>
     get() = EMBEDDED_SELECTION
