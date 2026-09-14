@@ -47,10 +47,11 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
      */
     @Volatile
     internal var aiSelector: EmbeddedAiSelector? = null
-        // `takeIf` would not do: it runs after its receiver is built, and building one reads
-        // `Airship.internalAi`, which throws before takeOff.
-        get() = field
-            ?: if (Airship.isFlyingOrTakingOff) DefaultEmbeddedAiSelector(Airship.internalAi) else null
+        get() = field ?: if (Airship.isFlying) {
+            DefaultEmbeddedAiSelector(Airship.internalAi).also { field = it }
+        } else {
+            null
+        }
 
     public override fun addPending(
         embeddedViewId: String,
