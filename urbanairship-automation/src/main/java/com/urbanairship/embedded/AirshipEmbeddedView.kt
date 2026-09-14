@@ -41,6 +41,7 @@ public class AirshipEmbeddedView private constructor(
     embeddedId: String?,
     @LayoutRes placeholderRes: Int?,
     selection: AirshipEmbeddedSelection,
+    filterInstances: AirshipEmbeddedFilter?,
     private val manager: AirshipEmbeddedViewManager
 ) : RelativeLayout(context, attrs, defStyle) {
 
@@ -63,6 +64,7 @@ public class AirshipEmbeddedView private constructor(
         embeddedId = null,
         placeholderRes = null,
         selection = AirshipEmbeddedSelection.Priority,
+        filterInstances = null,
         manager = EmbeddedViewManager
     )
 
@@ -88,6 +90,37 @@ public class AirshipEmbeddedView private constructor(
         embeddedId = embeddedId,
         placeholderRes = placeholderRes,
         selection = selection,
+        filterInstances = null,
+        manager = EmbeddedViewManager
+    )
+
+    /**
+     * Constructs an embedded view that will display content for the given embedded ID, with an
+     * eligibility filter.
+     *
+     * @param context a [Context].
+     * @param embeddedId the embedded ID.
+     * @param selection the [AirshipEmbeddedSelection] that controls which instance is displayed.
+     * @param placeholderRes placeholder layout resource to display when no content is available,
+     *      or null for none.
+     * @param filterInstances [AirshipEmbeddedFilter] deciding which instances are eligible, or
+     *      null to keep every pending instance. Applied before [selection], so an excluded
+     *      instance is never displayed even when [selection] targets it.
+     */
+    public constructor(
+        context: Context,
+        embeddedId: String,
+        selection: AirshipEmbeddedSelection,
+        @LayoutRes placeholderRes: Int?,
+        filterInstances: AirshipEmbeddedFilter?,
+    ) : this(
+        context = context,
+        attrs = null,
+        defStyle = 0,
+        embeddedId = embeddedId,
+        placeholderRes = placeholderRes,
+        selection = selection,
+        filterInstances = filterInstances,
         manager = EmbeddedViewManager
     )
 
@@ -147,6 +180,31 @@ public class AirshipEmbeddedView private constructor(
      * to a window.
      */
     public var selection: AirshipEmbeddedSelection = selection
+        set(value) {
+            field = value
+            // A ranking made under the old config has nothing to say about the new one.
+            selectionSession = EmbeddedSelectionSession()
+            if (isAttachedToWindow) {
+                collectDisplayRequests()
+            }
+        }
+
+    /**
+     * Outlives collection, so detaching and reattaching — recycled in a list, paged, rotated —
+     * doesn't blank an AI selection's content and ask the model again.
+     */
+    private var selectionSession = EmbeddedSelectionSession()
+
+    /**
+     * Decides which pending embedded instances are eligible to be displayed.
+     *
+     * Applied before [selection], so an excluded instance is never displayed even when
+     * [selection] targets it. Null (default) keeps every pending instance.
+     *
+     * Setting this property will restart the display request collection if the view is attached
+     * to a window.
+     */
+    public var filterInstances: AirshipEmbeddedFilter? = filterInstances
         set(value) {
             field = value
             if (isAttachedToWindow) {
@@ -255,7 +313,13 @@ public class AirshipEmbeddedView private constructor(
     private fun collectDisplayRequests() {
         displayRequestsJob = viewScope.launch {
             try {
-                manager.displayRequests(embeddedViewId = id, selection = selection, scope = viewScope)
+                manager.displayRequests(
+                    embeddedViewId = id,
+                    selection = selection,
+                    filter = filterInstances,
+                    session = selectionSession,
+                    scope = viewScope
+                )
                     .map { it.next }
                     .collect(::onUpdate)
             } catch (e: CancellationException) {
@@ -293,6 +357,9 @@ public class AirshipEmbeddedView private constructor(
             } ?: return
 
             addView(view)
+            // After the view is up, not when it was selected: the two returns above can drop a
+            // selected instance without ever showing it.
+            manager.recordDisplayed(embeddedViewId = id, viewInstanceId = request.viewInstanceId)
             UALog.v { "onUpdate: displayed content $logTag" }
         } else {
             placeholderLayoutRes?.let { resId ->

@@ -2,6 +2,7 @@ package com.urbanairship.devapp.home
 
 import androidx.navigation3.runtime.NavEntry
 import com.urbanairship.devapp.Destination
+import com.urbanairship.devapp.embedded.EmbeddedAiScreen
 import com.urbanairship.devapp.thomas.LayoutsHomeScreen
 
 data object QuickAccess {
@@ -9,7 +10,25 @@ data object QuickAccess {
         return when(value) {
             NamedUserScreen.NAME-> NamedUserScreen
             ThomasLayoutsHome.NAME -> ThomasLayoutsHome
+            EmbeddedAi.NAME -> EmbeddedAi
             else -> null
+        }
+    }
+
+    data object EmbeddedAi: Destination {
+        const val NAME = "embedded_ai"
+
+        override fun serialize(): String = NAME
+
+        override fun navigationEntry(
+            onNavigate: (Destination) -> Unit,
+            onPopBackStack: () -> Unit
+        ): NavEntry<Any> {
+            return NavEntry(this) {
+                EmbeddedAiScreen(
+                    onNavigateUp = onPopBackStack
+                )
+            }
         }
     }
 

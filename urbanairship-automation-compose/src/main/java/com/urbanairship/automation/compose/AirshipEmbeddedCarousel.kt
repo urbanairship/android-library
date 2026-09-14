@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.urbanairship.R as CoreR
+import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedSelection
 import com.urbanairship.embedded.EmbeddedViewManager
 import kotlinx.coroutines.launch
@@ -85,16 +86,24 @@ public class AirshipEmbeddedCarouselState internal constructor(
  * Creates and remembers an [AirshipEmbeddedCarouselState] for the given [embeddedId].
  *
  * @param embeddedId The embedded ID.
- * @param selection Controls which instances are selected for display. Only [AirshipEmbeddedSelection.ByComparator]
- *   sorts instances deterministically; [AirshipEmbeddedSelection.Priority] and
- *   [AirshipEmbeddedSelection.ByInstanceId] preserve arrival order, matching [AirshipEmbeddedViewGroup].
+ * @param selection Controls which instances are paged, and in what order.
+ *   [AirshipEmbeddedSelection.ByComparator] sorts by its comparator,
+ *   [AirshipEmbeddedSelection.ByInstanceId] pages in the order its IDs are listed, showing only
+ *   those, and [AirshipEmbeddedSelection.ByAi] pages in the order the model ranked, showing the
+ *   placeholder rather than an unranked order while it decides;
+ *   [AirshipEmbeddedSelection.Priority] preserves arrival order, matching
+ *   [AirshipEmbeddedViewGroup].
+ * @param filterInstances Optional [AirshipEmbeddedFilter] deciding which instances are eligible.
+ *   Applied before [selection], so an excluded instance never becomes a page. Remember the
+ *   lambda: an unstable one re-subscribes on every recomposition.
  */
 @Composable
 public fun rememberAirshipEmbeddedCarouselState(
     embeddedId: String,
     selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+    filterInstances: AirshipEmbeddedFilter? = null,
 ): AirshipEmbeddedCarouselState {
-    val groupState = rememberAirshipEmbeddedViewGroupState(embeddedId, selection)
+    val groupState = rememberAirshipEmbeddedViewGroupState(embeddedId, selection, filterInstances)
     val pagerState = rememberPagerState { groupState.items.value.size }
     return remember { AirshipEmbeddedCarouselState(groupState, pagerState) }
 }
@@ -106,9 +115,16 @@ public fun rememberAirshipEmbeddedCarouselState(
  *
  * @param embeddedId The embedded ID.
  * @param modifier The modifier to be applied to the layout.
- * @param selection Controls which instances are selected for display. Only [AirshipEmbeddedSelection.ByComparator]
- *   sorts instances deterministically; [AirshipEmbeddedSelection.Priority] and
- *   [AirshipEmbeddedSelection.ByInstanceId] preserve arrival order, matching [AirshipEmbeddedViewGroup].
+ * @param selection Controls which instances are paged, and in what order.
+ *   [AirshipEmbeddedSelection.ByComparator] sorts by its comparator,
+ *   [AirshipEmbeddedSelection.ByInstanceId] pages in the order its IDs are listed, showing only
+ *   those, and [AirshipEmbeddedSelection.ByAi] pages in the order the model ranked, showing the
+ *   placeholder rather than an unranked order while it decides;
+ *   [AirshipEmbeddedSelection.Priority] preserves arrival order, matching
+ *   [AirshipEmbeddedViewGroup].
+ * @param filterInstances Optional [AirshipEmbeddedFilter] deciding which instances are eligible.
+ *   Applied before [selection], so an excluded instance never becomes a page. Remember the
+ *   lambda: an unstable one re-subscribes on every recomposition.
  * @param indicator Optional overlay composable for page indicators. Receives the [PagerState] and page count.
  *   Use [AirshipEmbeddedCarouselDefaults.dotsIndicator] for a simple default.
  * @param previousArrow Optional composable for a "previous page" button, positioned at [Alignment.CenterStart].
@@ -122,13 +138,14 @@ public fun AirshipEmbeddedCarousel(
     embeddedId: String,
     modifier: Modifier = Modifier,
     selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+    filterInstances: AirshipEmbeddedFilter? = null,
     indicator: (@Composable BoxScope.(pagerState: PagerState, pageCount: Int) -> Unit)? = null,
     previousArrow: (@Composable (onClick: () -> Unit, enabled: Boolean) -> Unit)? = null,
     nextArrow: (@Composable (onClick: () -> Unit, enabled: Boolean) -> Unit)? = null,
     placeholder: (@Composable () -> Unit)? = null,
 ) {
     AirshipEmbeddedCarousel(
-        state = rememberAirshipEmbeddedCarouselState(embeddedId, selection),
+        state = rememberAirshipEmbeddedCarouselState(embeddedId, selection, filterInstances),
         modifier = modifier,
         indicator = indicator,
         previousArrow = previousArrow,

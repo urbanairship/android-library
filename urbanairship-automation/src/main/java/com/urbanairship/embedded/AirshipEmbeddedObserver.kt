@@ -56,12 +56,6 @@ internal constructor(
     @JvmSynthetic
     public val embeddedViewInfoFlow: Flow<List<AirshipEmbeddedInfo>> =
         manager.allPending().map { list ->
-            list.map {
-                AirshipEmbeddedInfo(
-                    instanceId = it.viewInstanceId,
-                    embeddedId = it.embeddedViewId,
-                    extras = it.extras
-                )
-            }.filter(filter)
+            list.map { it.embeddedInfo }.filter(filter)
         }
 }

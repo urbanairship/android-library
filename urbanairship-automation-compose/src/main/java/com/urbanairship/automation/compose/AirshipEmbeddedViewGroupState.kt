@@ -19,7 +19,9 @@ import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedDisplayRequest
 import com.urbanairship.android.layout.ui.EmbeddedLayout
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedSelection
+import com.urbanairship.embedded.EmbeddedSelectionSession
 import com.urbanairship.embedded.EmbeddedViewManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -38,9 +40,10 @@ import kotlinx.coroutines.withContext
 @Composable
 public fun rememberAirshipEmbeddedViewGroupState(
     embeddedId: String,
-    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority
+    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+    filterInstances: AirshipEmbeddedFilter? = null
 ): AirshipEmbeddedViewGroupState {
-    return rememberAirshipEmbeddedViewGroupState(embeddedId, selection, EmbeddedViewManager)
+    return rememberAirshipEmbeddedViewGroupState(embeddedId, selection, filterInstances, EmbeddedViewManager)
 }
 
 /**
@@ -59,7 +62,7 @@ public fun rememberAirshipEmbeddedViewGroupState(
     comparator: Comparator<AirshipEmbeddedInfo>?
 ): AirshipEmbeddedViewGroupState {
     val selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority
-    return rememberAirshipEmbeddedViewGroupState(embeddedId, selection, EmbeddedViewManager)
+    return rememberAirshipEmbeddedViewGroupState(embeddedId, selection, null, EmbeddedViewManager)
 }
 
 /**
@@ -83,14 +86,19 @@ public class AirshipEmbeddedViewGroupState(
 internal fun rememberAirshipEmbeddedViewGroupState(
     embeddedId: String,
     selection: AirshipEmbeddedSelection,
+    filterInstances: AirshipEmbeddedFilter?,
     embeddedViewManager: AirshipEmbeddedViewManager,
 ): AirshipEmbeddedViewGroupState {
     val state = remember { AirshipEmbeddedViewGroupState(embeddedId) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(embeddedId, selection) {
+    // Keyed on the config and not on `filterInstances`, as the single view is: an unremembered
+    // lambda restarting the effect shouldn't also cost an AI selection its committed order.
+    val session = remember(embeddedId, selection) { EmbeddedSelectionSession() }
+
+    LaunchedEffect(embeddedId, selection, filterInstances) {
         withContext(Dispatchers.Default) {
-            embeddedViewManager.displayRequests(embeddedId, selection, scope)
+            embeddedViewManager.displayRequests(embeddedId, selection, filterInstances, session, scope)
                 .map { it.list }
                 .distinctUntilChanged()
                 .collect { state.displayRequests = it }
@@ -109,12 +117,7 @@ public data class EmbeddedViewItem internal constructor(
     private val request: EmbeddedDisplayRequest
 ) {
     /** The [AirshipEmbeddedInfo] for this embedded content. */
-    public val info: AirshipEmbeddedInfo = AirshipEmbeddedInfo(
-        embeddedId = request.embeddedViewId,
-        instanceId = request.viewInstanceId,
-        priority = request.priority,
-        extras = request.extras,
-    )
+    public val info: AirshipEmbeddedInfo get() = request.embeddedInfo
 
     /** The content to display for this embedded view item. */
     @Composable

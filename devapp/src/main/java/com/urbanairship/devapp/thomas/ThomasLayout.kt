@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import java.io.InputStream
@@ -81,7 +82,14 @@ internal class ThomasLayout {
                         LayoutInfo(layoutInfo)
                     }
 
-                    DefaultThomasLayoutDisplay.shared.display(context, payload)
+                    DefaultThomasLayoutDisplay.shared.display(
+                        context = context,
+                        info = payload,
+                        // Devapp-only, and absent from every layout that doesn't care. The
+                        // preview path used to queue everything at 0, which left priority
+                        // ordering and any selection that reads it untestable from here.
+                        priority = map.optionalField<Int>(KEY_DEVAPP_PRIORITY) ?: 0
+                    )
                 }
                 Type.MESSAGE_BANNERS, Type.MESSAGE_FULLSCREEN, Type.MESSAGE_HTML, Type.MESSAGE_MODAL -> {
                     InAppMessagePreview(map.toJsonValue()).display(context)
@@ -108,6 +116,7 @@ internal class ThomasLayout {
             private const val KEY_PATH = "asset_path"
             private const val KEY_NAME = "name"
             private const val KEY_TYPE = "type"
+            private const val KEY_DEVAPP_PRIORITY = "devapp_priority"
             private const val MAX_YAML_ALIASES = 10_000
 
             fun from(json: JsonValue): LayoutFile? {
