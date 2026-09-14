@@ -2367,12 +2367,6 @@ public final class com/urbanairship/contacts/SmsRegistrationOptions$Companion {
 }
 
 public final class com/urbanairship/embedded/AirshipEmbeddedInfo {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;I)V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;ILcom/urbanairship/json/JsonMap;)V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;ILcom/urbanairship/json/JsonMap;Ljava/lang/String;)V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;ILcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getContentDescription ()Ljava/lang/String;
 	public final fun getEmbeddedId ()Ljava/lang/String;

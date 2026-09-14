@@ -76,9 +76,6 @@ public class AirshipEmbeddedView private constructor(
      * @param selection the [AirshipEmbeddedSelection] that controls which instance is displayed.
      * @param placeholderRes optional placeholder layout resource to display when no content is
      *      available.
-     * @param filterInstances optional [AirshipEmbeddedFilter] deciding which instances are
-     *      eligible. Applied before [selection], so an excluded instance is never displayed even
-     *      when [selection] targets it.
      */
     @JvmOverloads
     public constructor(
@@ -86,7 +83,36 @@ public class AirshipEmbeddedView private constructor(
         embeddedId: String,
         selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
         @LayoutRes placeholderRes: Int? = null,
-        filterInstances: AirshipEmbeddedFilter? = null,
+    ) : this(
+        context = context,
+        attrs = null,
+        defStyle = 0,
+        embeddedId = embeddedId,
+        placeholderRes = placeholderRes,
+        selection = selection,
+        filterInstances = null,
+        manager = EmbeddedViewManager
+    )
+
+    /**
+     * Constructs an embedded view that will display content for the given embedded ID, with an
+     * eligibility filter.
+     *
+     * @param context a [Context].
+     * @param embeddedId the embedded ID.
+     * @param selection the [AirshipEmbeddedSelection] that controls which instance is displayed.
+     * @param placeholderRes placeholder layout resource to display when no content is available,
+     *      or null for none.
+     * @param filterInstances [AirshipEmbeddedFilter] deciding which instances are eligible, or
+     *      null to keep every pending instance. Applied before [selection], so an excluded
+     *      instance is never displayed even when [selection] targets it.
+     */
+    public constructor(
+        context: Context,
+        embeddedId: String,
+        selection: AirshipEmbeddedSelection,
+        @LayoutRes placeholderRes: Int?,
+        filterInstances: AirshipEmbeddedFilter?,
     ) : this(
         context = context,
         attrs = null,

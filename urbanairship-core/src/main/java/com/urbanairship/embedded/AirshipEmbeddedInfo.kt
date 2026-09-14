@@ -3,6 +3,7 @@
 package com.urbanairship.embedded
 
 import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP
 import androidx.core.util.ObjectsCompat
 import com.urbanairship.ai.EvaluationContext
 import com.urbanairship.json.JsonMap
@@ -18,7 +19,7 @@ import com.urbanairship.json.emptyJsonMap
  * @param contentDescription What this content is about, from the layout's `content_description`.
  * Null when the layout doesn't describe itself.
  */
-public class AirshipEmbeddedInfo @JvmOverloads public constructor(
+public class AirshipEmbeddedInfo @RestrictTo(LIBRARY_GROUP) public constructor(
     public val instanceId: String,
     public val embeddedId: String,
     public val priority: Int = 0,
@@ -35,7 +36,7 @@ public class AirshipEmbeddedInfo @JvmOverloads public constructor(
      *
      * @hide
      */
-    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @get:RestrictTo(LIBRARY_GROUP)
     public val additionalContext: List<EvaluationContext.Item> = emptyList()
 ) {
     override fun equals(other: Any?): Boolean {

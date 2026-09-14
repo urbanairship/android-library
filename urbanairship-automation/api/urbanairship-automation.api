@@ -268,8 +268,8 @@ public final class com/urbanairship/embedded/AirshipEmbeddedView : android/widge
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)V
-	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;)V
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;Ljava/lang/Integer;)V
 	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

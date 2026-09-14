@@ -97,7 +97,7 @@ AirshipEmbeddedView(
 )
 ```
 
-The view-system `AirshipEmbeddedView` gains the same thing, as a constructor parameter after `placeholderRes` and as a settable property.
+The view-system `AirshipEmbeddedView` gains the same thing, as a constructor parameter and as a settable property.
 
 #### `AirshipEmbeddedSelection.ByInstanceId` takes a list
 
@@ -123,7 +123,7 @@ Two behavior changes come with it:
 
 If your app relied on either of these being effectively inert, review it before upgrading.
 
-`AirshipEmbeddedInfo` also gains `contentDescription`, taken from the layout's `content_description`, and every consumer now reads one shared instance rather than building its own. The primary constructor grew parameters as a result: it stays source-compatible through default arguments, but Kotlin code compiled against 20.x that constructed `AirshipEmbeddedInfo` using those defaults must be recompiled against 21.x.
+`AirshipEmbeddedInfo` also gains `contentDescription`. Its constructor is now restricted — see [Internal APIs now marked `@RestrictTo`](#internal-apis-now-marked-restrictto).
 
 ### `@RestrictTo` changes
 
@@ -134,8 +134,8 @@ These were public but are SDK plumbing, and are now `@RestrictTo(LIBRARY_GROUP)`
 * `com.urbanairship.android.layout.BannerPresentation`
 * `com.urbanairship.android.layout.util.Timer`
 * `com.urbanairship.util.CachedList`
-
-`AirshipLayout.layoutInfo` is likewise now restricted, aligning it with `LayoutInfo`.
+* `AirshipLayout.layoutInfo` (`LayoutInfo` was restricted already).
+* `AirshipEmbeddedInfo`'s constructor.
 
 `@RestrictTo` now also covers nested types and overrides of already-restricted APIs. None of that is reachable from app code except `MessageWebViewClient`, when overriding `extendActionRequest` or `extendJavascriptEnvironment`. These are now considered internal with no public replacement.
 
