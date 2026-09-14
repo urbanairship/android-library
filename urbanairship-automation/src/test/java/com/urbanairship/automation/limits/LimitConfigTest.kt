@@ -416,6 +416,7 @@ public class LimitConfigTest {
             JsonValue.parseString(
                 """
                 {
+                  "include_shared_events": true,
                   "exclude": {
                     "or": [
                       { "source": { "type": "other_schedules" } },
@@ -437,6 +438,7 @@ public class LimitConfigTest {
             )
         )
 
+        assertTrue(config.includeSharedEvents)
         val rules = requireNotNull(config.exclude).or
         assertEquals(2, rules.size)
         assertEquals(LedgerSource.OtherSchedules, rules[0].source)
@@ -465,6 +467,12 @@ public class LimitConfigTest {
     }
 
     @Test
+    public fun testParseLimitConfigDefaultsIncludeSharedEventsToFalse() {
+        // Omitting the field must not silently opt a schedule into pooling.
+        assertFalse(LimitConfig.fromJson(JsonValue.parseString("{}")).includeSharedEvents)
+    }
+
+    @Test
     public fun testParseExclusionSetWithoutOr() {
         assertEquals(emptyList<ExclusionRule>(), ExclusionSet.fromJson(JsonValue.parseString("{}")).or)
     }
@@ -472,6 +480,7 @@ public class LimitConfigTest {
     @Test
     public fun testLimitConfigJsonRoundTrip() {
         val config = LimitConfig(
+            includeSharedEvents = true,
             exclude = ExclusionSet(
                 listOf(
                     ExclusionRule(

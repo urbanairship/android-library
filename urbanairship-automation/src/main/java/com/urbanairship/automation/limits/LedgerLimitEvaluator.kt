@@ -16,11 +16,15 @@ internal class LedgerLimitEvaluator(
     /**
      * Whether the schedule is at or over its limit.
      *
-     * Counts `execution` events of every [LedgerExecutionResult] (never
-     * `triggered`) recorded under either of the schedule's ledger IDs
-     * (`schedule_id` or its current `shared_id`), minus any events removed by
-     * `limit_config.exclude`, and compares the total against the schedule's
-     * `limit` (null → 1, 0 → unlimited).
+     * Always counts the schedule's own `execution` events (every
+     * [LedgerExecutionResult], never `triggered`). Additionally counts events
+     * recorded under the schedule's `shared_id` — matched against either the
+     * `schedule_id` or `shared_id` of another event, so a named schedule's
+     * pre-existing history is picked up even if it predates any `shared_id` —
+     * but only when `limit_config.include_shared_events` is true; otherwise no
+     * other schedule's events can affect this one, regardless of `shared_id`.
+     * Subtracts any events removed by `limit_config.exclude`, and compares the
+     * total against the schedule's `limit` (null → 1, 0 → unlimited).
      */
     suspend fun isOverLimit(schedule: AutomationSchedule): Boolean {
         // null means 1, 0 means no limit.
@@ -29,10 +33,14 @@ internal class LedgerLimitEvaluator(
             return false
         }
 
-        val sharedId = schedule.ledgerConfig?.sharedId
+        val currentSharedId = schedule.ledgerConfig?.sharedId
+        val includeSharedEvents = schedule.limitConfig?.includeSharedEvents == true
+        // Only reach beyond the schedule's own events when it opted in; a
+        // schedule's own payload alone must determine what can affect it.
+        val fetchSharedId = currentSharedId.takeIf { includeSharedEvents }
 
         val events = try {
-            store.events(scheduleId = schedule.identifier, sharedId = sharedId)
+            store.events(scheduleId = schedule.identifier, sharedId = fetchSharedId)
         } catch (ex: Exception) {
             // A ledger read failure must never wedge execution. Err toward
             // showing the message rather than silently suppressing it.
@@ -45,7 +53,10 @@ internal class LedgerLimitEvaluator(
             events = events,
             context = LedgerLimitContext(
                 scheduleId = schedule.identifier,
-                currentSharedId = sharedId
+                // The real current shared_id, not gated by includeSharedEvents:
+                // exclusion rules filtering the schedule's own already-fetched
+                // events (e.g. a `current` shared_group match) still need it.
+                currentSharedId = currentSharedId
             ),
             exclude = schedule.limitConfig?.exclude
         )

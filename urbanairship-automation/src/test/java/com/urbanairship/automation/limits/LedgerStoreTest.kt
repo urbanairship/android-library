@@ -110,6 +110,22 @@ public class LedgerStoreTest {
     }
 
     @Test
+    public fun testQueryMatchesSharedIdAgainstBareScheduleId(): TestResult = runTest {
+        // schedule-2's own pre-group history, recorded before it ever had a
+        // shared_id (e.g. backfilled). A schedule naming schedule-2's own ID as
+        // its shared_id must still pick this up, even though it carries no
+        // shared_id itself.
+        val preGroupEvent = execution(scheduleId = "schedule-2")
+        // Unrelated schedule sharing neither ID.
+        val unrelated = execution(scheduleId = "schedule-3", sharedId = "group-x")
+
+        store.recordEvents(listOf(preGroupEvent, unrelated))
+
+        val result = store.events(scheduleId = "schedule-1", sharedId = "schedule-2")
+        assertEquals(listOf(preGroupEvent), result)
+    }
+
+    @Test
     public fun testRecordEmptyIsNoop(): TestResult = runTest {
         store.recordEvents(emptyList())
         val result = store.events(scheduleId = "schedule-1", sharedId = "group-1")

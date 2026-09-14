@@ -12,34 +12,50 @@ import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
 
 /**
- * Optional exclusions applied when a schedule's limit is evaluated against the
- * ledger.
+ * Configures how a schedule's limit is evaluated against the ledger.
  *
- * The limit is always evaluated against the ledger, counting `execution` events
- * of every [LedgerExecutionResult] — never `triggered` — recorded under either
- * of the schedule's ledger IDs. This config only subtracts from that tally via
- * [exclude]; it never changes the cap itself (the schedule's `limit`). With no
- * config, every such execution counts.
+ * The limit always counts the schedule's own `execution` events, of every
+ * [LedgerExecutionResult] (never `triggered`). With no config — or with
+ * [includeSharedEvents] false — that's all it counts: the schedule's own
+ * events, regardless of any `shared_id` it records under. Nothing another
+ * schedule declares can affect a schedule that leaves this unset; it never
+ * changes the cap itself (the schedule's `limit`), only what counts toward it.
  */
 internal data class LimitConfig(
     /**
+     * Whether this schedule's limit also counts events recorded under its
+     * `ledger_config.shared_id`, pooling its tally with every other schedule
+     * that shares it. If false, only this schedule's own events count, no
+     * matter what any other schedule declares.
+     */
+    val includeSharedEvents: Boolean = false,
+    /**
      * Rules that remove recorded events from this schedule's limit tally.
-     * Events are always recorded; these rules only affect what counts against
-     * the cap. When absent, nothing is excluded and every execution counts.
+     * Applies to whatever the tally already includes — the schedule's own
+     * events always, plus shared events too when [includeSharedEvents] is
+     * true. When absent, nothing is excluded.
      */
     val exclude: ExclusionSet? = null
 ) : JsonSerializable {
 
     internal companion object {
+        private const val INCLUDE_SHARED_EVENTS = "include_shared_events"
         private const val EXCLUDE = "exclude"
 
         @Throws(JsonException::class)
-        fun fromJson(value: JsonValue): LimitConfig = LimitConfig(
-            exclude = value.requireMap().get(EXCLUDE)?.let(ExclusionSet::fromJson)
-        )
+        fun fromJson(value: JsonValue): LimitConfig {
+            val content = value.requireMap()
+            return LimitConfig(
+                includeSharedEvents = content.optionalField(INCLUDE_SHARED_EVENTS) ?: false,
+                exclude = content.get(EXCLUDE)?.let(ExclusionSet::fromJson)
+            )
+        }
     }
 
-    override fun toJsonValue(): JsonValue = jsonMapOf(EXCLUDE to exclude).toJsonValue()
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        INCLUDE_SHARED_EVENTS to includeSharedEvents,
+        EXCLUDE to exclude
+    ).toJsonValue()
 }
 
 /**

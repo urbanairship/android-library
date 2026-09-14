@@ -115,18 +115,61 @@ public class LedgerLimitEvaluatorTest {
         recordExecution(scheduleId = "schedule-A", sharedId = "group-1")
         recordExecution(scheduleId = "schedule-B", sharedId = "group-1")
 
+        val config = LimitConfig(includeSharedEvents = true)
         assertTrue(
+            evaluator.isOverLimit(
+                schedule(id = "schedule-A", limit = 2U, sharedId = "group-1", limitConfig = config)
+            )
+        )
+    }
+
+    @Test
+    public fun testSharedGroupIgnoredWithoutIncludeSharedEvents(): TestResult = runTest {
+        // A `shared_id` alone must not pool anything for this schedule's own
+        // limit: without `include_shared_events`, only its own events count,
+        // no matter what schedule-B declares.
+        recordExecution(scheduleId = "schedule-A", sharedId = "group-1")
+        recordExecution(scheduleId = "schedule-B", sharedId = "group-1")
+
+        assertFalse(
             evaluator.isOverLimit(schedule(id = "schedule-A", limit = 2U, sharedId = "group-1"))
         )
     }
 
     @Test
     public fun testEventsOutsideScopeIgnored(): TestResult = runTest {
-        // An event for an unrelated schedule/group must not count.
+        // An event for an unrelated schedule/group must not count, even with
+        // pooling turned on.
         recordExecution(scheduleId = "schedule-Z", sharedId = "other-group")
 
+        val config = LimitConfig(includeSharedEvents = true)
         assertFalse(
-            evaluator.isOverLimit(schedule(id = "schedule-A", limit = 1U, sharedId = "group-1"))
+            evaluator.isOverLimit(
+                schedule(id = "schedule-A", limit = 1U, sharedId = "group-1", limitConfig = config)
+            )
+        )
+    }
+
+    @Test
+    public fun testInheritsNamedSchedulesPreExistingHistory(): TestResult = runTest {
+        // schedule-A recorded history before it was ever part of a group (e.g.
+        // backfilled), so its events carry no shared_id. schedule-B is created
+        // pointing its shared_id at schedule-A's own ID, to pick up that
+        // history. The cross-field match (schedule_id <-> shared_id) is what
+        // makes this work, since schedule-A's events have no shared_id to
+        // match against directly.
+        recordExecution(scheduleId = "schedule-A", sharedId = null, count = 3)
+
+        val config = LimitConfig(includeSharedEvents = true)
+        assertTrue(
+            evaluator.isOverLimit(
+                schedule(id = "schedule-B", limit = 3U, sharedId = "schedule-A", limitConfig = config)
+            )
+        )
+        assertFalse(
+            evaluator.isOverLimit(
+                schedule(id = "schedule-B", limit = 4U, sharedId = "schedule-A", limitConfig = config)
+            )
         )
     }
 
@@ -136,6 +179,7 @@ public class LedgerLimitEvaluatorTest {
         recordExecution(scheduleId = "schedule-B", sharedId = "group-1")
 
         val config = LimitConfig(
+            includeSharedEvents = true,
             exclude = ExclusionSet(listOf(ExclusionRule(source = LedgerSource.OtherSchedules)))
         )
 
@@ -200,6 +244,7 @@ public class LedgerLimitEvaluatorTest {
                   "limit": 3,
                   "ledger_config": { "shared_id": "group-1" },
                   "limit_config": {
+                    "include_shared_events": true,
                     "exclude": {
                       "or": [
                         {
@@ -216,6 +261,7 @@ public class LedgerLimitEvaluatorTest {
 
         assertEquals(3U, schedule.limit)
         assertEquals("group-1", schedule.ledgerConfig?.sharedId)
+        assertTrue(schedule.limitConfig?.includeSharedEvents == true)
         assertEquals(
             ExclusionRule(
                 source = LedgerSource.OwnSchedule,
@@ -251,6 +297,7 @@ public class LedgerLimitEvaluatorTest {
             limit = 2U,
             sharedId = "group-1",
             limitConfig = LimitConfig(
+                includeSharedEvents = true,
                 exclude = ExclusionSet(
                     listOf(ExclusionRule(source = LedgerSource.OtherSchedules))
                 )

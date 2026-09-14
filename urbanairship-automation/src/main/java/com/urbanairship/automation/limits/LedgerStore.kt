@@ -52,12 +52,15 @@ internal interface LedgerStoreInterface {
     ): Boolean
 
     /**
-     * Fetches the events eligible for a schedule's limit evaluation: every
-     * event recorded under the schedule's own ID, plus every event recorded
-     * under the schedule's current shared group ID (if any).
+     * Fetches every event recorded under [scheduleId], plus — when [sharedId]
+     * is non-null — every event recorded under it, matched against either
+     * `schedule_id` or `shared_id`. Callers evaluating a schedule's limit pass
+     * `null` here unless that schedule opted into
+     * `limit_config.include_shared_events`, so a schedule's own payload alone
+     * determines what it can see.
      *
      * @param scheduleId The evaluating schedule's ID.
-     * @param sharedId The schedule's current shared group ID, if any.
+     * @param sharedId The shared group ID to also fetch, if any.
      * @return The eligible events, oldest first.
      */
     suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent>

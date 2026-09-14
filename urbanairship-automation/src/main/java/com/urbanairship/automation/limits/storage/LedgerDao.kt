@@ -27,14 +27,19 @@ internal interface LedgerDao {
     suspend fun insertAll(events: List<LedgerEventEntity>)
 
     /**
-     * Fetches the events recorded under [scheduleId] or [sharedId], oldest
-     * first. A null [sharedId] matches no row — `sharedId = NULL` is never true
-     * in SQL — which narrows the query to the schedule's own events. Ties on
+     * Fetches the events recorded under [scheduleId], oldest first, plus —
+     * when [sharedId] is non-null — events recorded under it, matched against
+     * either their `scheduleId` or `sharedId`. The `scheduleId` side of that
+     * match is what lets a named schedule's pre-existing history (recorded
+     * with no `sharedId` at all) be picked up. A null [sharedId] narrows the
+     * query to the schedule's own events; callers rely on this to keep a
+     * schedule's own payload the sole determinant of what it can see. Ties on
      * timestamp fall back to insert order.
      */
     @Query(
         "SELECT * FROM ledger_events " +
-            "WHERE scheduleId = :scheduleId OR sharedId = :sharedId " +
+            "WHERE scheduleId = :scheduleId " +
+            "OR (:sharedId IS NOT NULL AND (scheduleId = :sharedId OR sharedId = :sharedId)) " +
             "ORDER BY timestamp ASC, id ASC"
     )
     suspend fun getEvents(scheduleId: String, sharedId: String?): List<LedgerEventEntity>

@@ -11,11 +11,12 @@ import com.urbanairship.json.optionalField
 /**
  * Ledger configuration parsed off a schedule's `ledger_config` payload.
  *
- * The [sharedId] pools a schedule's ledger events with other schedules that
- * share the same group, so a group-wide limit can be evaluated across all of
- * them. It is stamped onto every event the schedule records at record time and
- * is never rewritten, so events stay with the group they were recorded under
- * even if the schedule's config later changes.
+ * [sharedId] is stamped onto every event the schedule records, at record time,
+ * and is never rewritten, so events stay with the group they were recorded
+ * under even if the schedule's config later changes. Recording is
+ * unconditional — a schedule with [sharedId] set tags its events with it
+ * regardless of whether it reads that group's history back itself. Whether it
+ * does is decided by [LimitConfig.includeSharedEvents], not by this field.
  */
 internal data class LedgerConfig(
     val sharedId: String? = null
