@@ -6,11 +6,11 @@ import com.urbanairship.Airship
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
+import com.urbanairship.actions.SuspendingAction
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.inAppAutomation
 import com.urbanairship.json.JsonValue
-import kotlinx.coroutines.runBlocking
 
 /**
  * Action to cancel automation schedules.
@@ -33,7 +33,7 @@ public class CancelSchedulesAction
 @JvmOverloads
 constructor(
     private val automationGetter: () -> InAppAutomation = { Airship.inAppAutomation }
-) : Action() {
+) : SuspendingAction() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when(arguments.situation) {
@@ -45,25 +45,23 @@ constructor(
         }
     }
 
-    override fun perform(arguments: ActionArguments): ActionResult {
+    override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
         val args = Arguments.fromJson(arguments.value.toJsonValue())
         val automation = automationGetter.invoke()
 
-        runBlocking {
-            if (args.cancelAll) {
-                automation.cancelSchedulesWith(AutomationSchedule.ScheduleType.ACTIONS)
-                return@runBlocking
-            }
+        if (args.cancelAll) {
+            automation.cancelSchedulesWith(AutomationSchedule.ScheduleType.ACTIONS)
+            return ActionResult.newEmptyResult()
+        }
 
-            args.groups?.let {
-                for (item in it) {
-                    automation.cancelSchedules(item)
-                }
+        args.groups?.let {
+            for (item in it) {
+                automation.cancelSchedules(item)
             }
+        }
 
-            args.scheduleIDs?.let {
-                automation.cancelSchedules(it)
-            }
+        args.scheduleIDs?.let {
+            automation.cancelSchedules(it)
         }
 
         return ActionResult.newEmptyResult()

@@ -532,7 +532,9 @@ public abstract class com/urbanairship/actions/Action {
 	public fun onFinish (Lcom/urbanairship/actions/ActionArguments;Lcom/urbanairship/actions/ActionResult;)V
 	public fun onStart (Lcom/urbanairship/actions/ActionArguments;)V
 	public abstract fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public fun performSuspending (Lcom/urbanairship/actions/ActionArguments;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun run (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public final fun runSuspending (Lcom/urbanairship/actions/ActionArguments;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun shouldRunOnMainThread ()Z
 }
 
@@ -957,6 +959,12 @@ public final class com/urbanairship/actions/SubscriptionListAction : com/urbanai
 
 public final class com/urbanairship/actions/SubscriptionListAction$Companion {
 	public final fun getDEFAULT_NAMES ()Ljava/util/Set;
+}
+
+public abstract class com/urbanairship/actions/SuspendingAction : com/urbanairship/actions/Action {
+	public fun <init> ()V
+	public final fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public abstract fun performSuspending (Lcom/urbanairship/actions/ActionArguments;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/urbanairship/actions/ToastAction : com/urbanairship/actions/Action {

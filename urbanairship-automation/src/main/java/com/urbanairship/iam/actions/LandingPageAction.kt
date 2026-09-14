@@ -9,6 +9,7 @@ import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
+import com.urbanairship.actions.SuspendingAction
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.inAppAutomation
@@ -22,7 +23,6 @@ import com.urbanairship.util.Clock
 import androidx.core.os.BundleCompat
 import com.urbanairship.util.UriUtils
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
 
 /**
  * Schedules a landing page to display ASAP.
@@ -47,7 +47,7 @@ public class LandingPageAction internal constructor(
     private val scheduleExtender: ScheduleExtender? = null,
     private val borderRadius: Float,
     private val clock: Clock = Clock.DEFAULT_CLOCK
-) : Action() {
+) : SuspendingAction() {
 
     /**
      * Default constructor
@@ -88,7 +88,7 @@ public class LandingPageAction internal constructor(
         }
     }
 
-    override fun perform(arguments: ActionArguments): ActionResult {
+    override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
         val pushMessage: PushMessage? = BundleCompat.getParcelable(arguments.metadata, ActionArguments.PUSH_MESSAGE_METADATA, PushMessage::class.java)
         val messageID = pushMessage?.sendId
         val args = LandingPageArgs.fromJson(arguments.value.toJsonValue(), allowListChecker)
@@ -125,7 +125,7 @@ public class LandingPageAction internal constructor(
 
         scheduleExtender?.let { schedule = it.invoke(arguments, schedule) }
 
-        runBlocking { scheduler.invoke(schedule) }
+        scheduler.invoke(schedule)
 
         return ActionResult.newEmptyResult()
     }

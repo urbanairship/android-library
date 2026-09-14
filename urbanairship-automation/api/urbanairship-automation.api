@@ -398,7 +398,7 @@ public final class com/urbanairship/iam/SuppressionResult$Suppress : com/urbanai
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/urbanairship/iam/actions/CancelSchedulesAction : com/urbanairship/actions/Action {
+public final class com/urbanairship/iam/actions/CancelSchedulesAction : com/urbanairship/actions/SuspendingAction {
 	public static final field Companion Lcom/urbanairship/iam/actions/CancelSchedulesAction$Companion;
 	public fun <init> ()V
 	public fun <init> (Lkotlin/jvm/functions/Function0;)V
@@ -408,7 +408,7 @@ public final class com/urbanairship/iam/actions/CancelSchedulesAction : com/urba
 	public static final fun getDEFAULT_NAMES ()Ljava/util/Set;
 	public static final fun getGROUPS ()Ljava/lang/String;
 	public static final fun getIDS ()Ljava/lang/String;
-	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public fun performSuspending (Lcom/urbanairship/actions/ActionArguments;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/urbanairship/iam/actions/CancelSchedulesAction$Companion {
@@ -418,7 +418,7 @@ public final class com/urbanairship/iam/actions/CancelSchedulesAction$Companion 
 	public final fun getIDS ()Ljava/lang/String;
 }
 
-public final class com/urbanairship/iam/actions/LandingPageAction : com/urbanairship/actions/Action {
+public final class com/urbanairship/iam/actions/LandingPageAction : com/urbanairship/actions/SuspendingAction {
 	public static final field Companion Lcom/urbanairship/iam/actions/LandingPageAction$Companion;
 	public fun <init> ()V
 	public fun <init> (F)V
@@ -426,21 +426,21 @@ public final class com/urbanairship/iam/actions/LandingPageAction : com/urbanair
 	public synthetic fun <init> (FLkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
 	public static final fun getDEFAULT_NAMES ()Ljava/util/Set;
-	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public fun performSuspending (Lcom/urbanairship/actions/ActionArguments;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/urbanairship/iam/actions/LandingPageAction$Companion {
 	public final fun getDEFAULT_NAMES ()Ljava/util/Set;
 }
 
-public final class com/urbanairship/iam/actions/ScheduleAction : com/urbanairship/actions/Action {
+public final class com/urbanairship/iam/actions/ScheduleAction : com/urbanairship/actions/SuspendingAction {
 	public static final field Companion Lcom/urbanairship/iam/actions/ScheduleAction$Companion;
 	public fun <init> ()V
 	public fun <init> (Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
 	public static final fun getDEFAULT_NAMES ()Ljava/util/Set;
-	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public fun performSuspending (Lcom/urbanairship/actions/ActionArguments;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/urbanairship/iam/actions/ScheduleAction$Companion {

@@ -299,11 +299,11 @@ public open class ActionRunRequest {
                     UALog.i( "Action $name will not be run. Registry predicate rejected the arguments: $arguments")
                     return@async  ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS)
                 } else {
-                    return@async  entry.getActionForSituation(situation).run(arguments)
+                    return@async entry.getActionForSituation(situation).runSuspending(arguments)
                 }
             }
 
-            action?.let { return@async  it.run(arguments) }
+            action?.let { return@async it.runSuspending(arguments) }
 
             ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND)
         }.await()

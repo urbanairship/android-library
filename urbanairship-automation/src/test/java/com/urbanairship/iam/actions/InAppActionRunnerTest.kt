@@ -200,4 +200,61 @@ public class InAppActionRunnerTest {
         runCurrent()
         assertTrue("run() must return once the action completes", job.isCompleted)
     }
+
+    @Test
+    public fun testRunActionsInParallel(): TestResult = runTest {
+        // run(actions, state) fans each action out with async {} + awaitAll(), so two actions
+        // must run concurrently rather than waiting on each other in sequence.
+        val gateFoo = CompletableDeferred<Unit>()
+        val gateBar = CompletableDeferred<Unit>()
+        var fooStarted = false
+        var barStarted = false
+
+        val mockFoo: ActionRunRequest = mockk {
+            every { setValue(JsonValue.wrap(1)) } returns this
+            every { setSituation(Action.Situation.AUTOMATION) } returns this
+            every { setMetadata(any()) } returns this
+            coEvery { runSuspending() } coAnswers {
+                fooStarted = true
+                gateFoo.await()
+                mockk(relaxed = true)
+            }
+        }
+        val mockBar: ActionRunRequest = mockk {
+            every { setValue(JsonValue.wrap(2)) } returns this
+            every { setSituation(Action.Situation.AUTOMATION) } returns this
+            every { setMetadata(any()) } returns this
+            coEvery { runSuspending() } coAnswers {
+                barStarted = true
+                gateBar.await()
+                mockk(relaxed = true)
+            }
+        }
+
+        val layoutData: LayoutData = mockk()
+        every { analytics.customEventContext(layoutData) } returns mockk(relaxed = true)
+
+        val runner = InAppActionRunner(
+            analytics = analytics,
+            trackPermissionResults = false,
+            actionRequestFactory = { name -> if (name == "foo") mockFoo else mockBar }
+        )
+
+        val job = launch {
+            runner.run(mapOf("foo" to JsonValue.wrap(1), "bar" to JsonValue.wrap(2)), layoutData)
+        }
+        runCurrent()
+
+        assertTrue("foo should have started", fooStarted)
+        assertTrue("bar should have started concurrently, without waiting on foo", barStarted)
+        assertFalse(job.isCompleted)
+
+        gateFoo.complete(Unit)
+        runCurrent()
+        assertFalse("run() must still wait on bar", job.isCompleted)
+
+        gateBar.complete(Unit)
+        runCurrent()
+        assertTrue(job.isCompleted)
+    }
 }
