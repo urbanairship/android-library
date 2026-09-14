@@ -429,8 +429,11 @@ internal sealed class SharedGroupMatch : JsonSerializable {
     data object Current : SharedGroupMatch()
 
     /**
-     * Events NOT recorded under the evaluating schedule's current shared group,
-     * including events recorded with no shared group at all.
+     * The complement of [Current] — matches whatever that doesn't. When the
+     * schedule has a current shared group, that's every event whose
+     * `sharedId` differs, including events recorded with no shared group at
+     * all. When the schedule has no current shared group, [Current] already
+     * matches events recorded with none, so this matches none of them.
      */
     data object NotCurrent : SharedGroupMatch()
 
