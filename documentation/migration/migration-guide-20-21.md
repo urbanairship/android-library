@@ -1,8 +1,5 @@
 # Airship Android SDK 20.x to 21.x Migration Guide
 
-> **Note**
-> This guide is a work in progress and will be updated as SDK 21.0 development continues.
-
 This guide outlines the changes required when migrating your app from SDK 20.x to SDK 21.x.
 
 ## Breaking changes
@@ -50,6 +47,11 @@ Because `Duration` is a Kotlin value class and cannot be expressed from Java, ev
 | `ScopedSubscriptionListMutation.newSubscribeMutation(…, timestamp: Long)`              | `(…, timestamp: Instant)`                           |
 | `ScopedSubscriptionListMutation.newUnsubscribeMutation(…, timestamp: Long)`            | `(…, timestamp: Instant)`                           |
 | `AttributeEditor.setAttribute(String, String, Date?, JsonMap)`                         | `setAttribute(String, String, Instant?, JsonMap)`   |
+| `ContactChannel.Email.RegistrationInfo.Registered.commercialOptedIn: Long?`            | `: Instant?`                                        |
+| `ContactChannel.Email.RegistrationInfo.Registered.commercialOptedOut: Long?`           | `: Instant?`                                        |
+| `ContactChannel.Email.RegistrationInfo.Registered.transactionalOptedIn: Long?`         | `: Instant?`                                        |
+| `ContactChannel.Email.RegistrationInfo.Registered.transactionalOptedOut: Long?`        | `: Instant?`                                        |
+| `JsonMap.isoDateAsMilliseconds(String, Long?): Long?`                                  | `JsonMap.isoDateAsInstant(String, Instant?): Instant?` |
 
 `EmailRegistrationOptions` previously used `-1` to mean "not set"; this is now `null`. Its factory methods, `commercialOptions` and `options`, now take `Instant?` instead of `Date?`. Callers holding a `Date` should pass `date.toInstant()`.
 
@@ -67,6 +69,31 @@ Because `Duration` is a Kotlin value class and cannot be expressed from Java, ev
 | `AutomationSchedule.interval: ULong?` (seconds)            | `interval: Duration?`                      | `intervalSeconds: Long?` (read-only)                                                           |
 | `AutomationSchedule.Builder.setInterval(Long?)` (seconds)  | `setInterval(Duration?)`                   | `setIntervalSeconds(Long?)`                                                                    |
 
+### Layout event types are renamed from `IN_APP_*` to `LAYOUT_*`
+
+The event types that Scenes and other layout-backed experiences emit were named `IN_APP_*`, which read as though they were specific to in-app messages. They now use a `LAYOUT_*` prefix on both `EventType` (analytics) and `EventAutomationTriggerType` (automation triggers). The rename is identical on both, and the enclosing enum is otherwise unchanged:
+
+| Before                     | After                      |
+|----------------------------|----------------------------|
+| `IN_APP_BUTTON_TAP`        | `LAYOUT_BUTTON_TAP`        |
+| `IN_APP_FORM_DISPLAY`      | `LAYOUT_FORM_DISPLAY`      |
+| `IN_APP_FORM_RESULT`       | `LAYOUT_FORM_RESULT`       |
+| `IN_APP_GESTURE`           | `LAYOUT_GESTURE`           |
+| `IN_APP_PAGE_ACTION`       | `LAYOUT_PAGE_ACTION`       |
+| `IN_APP_PAGE_SWIPE`        | `LAYOUT_PAGE_SWIPE`        |
+| `IN_APP_PAGE_VIEW`         | `LAYOUT_PAGE_VIEW`         |
+| `IN_APP_PAGER_COMPLETED`   | `LAYOUT_PAGER_COMPLETED`   |
+| `IN_APP_PAGER_SUMMARY`     | `LAYOUT_PAGER_SUMMARY`     |
+| `IN_APP_PERMISSION_RESULT` | `LAYOUT_PERMISSION_RESULT` |
+
+`IN_APP_DISPLAY` and `IN_APP_RESOLUTION` keep their names on both enums — those really are in-app message events.
+
+This affects apps that read `AirshipEventData.type` from an analytics event listener, or that build an `EventAutomationTrigger` for one of these types. The reporting values sent to Airship are unchanged.
+
+### `AutomationSchedule.editGracePeriodDays` is now `Long?`
+
+`editGracePeriodDays` was typed `ULong?`, which is awkward from Java and inconsistent with the rest of the schedule API. It is now `Long?`, on both the property and `AutomationSchedule.Builder.setEditGracePeriodDays`.
+
 ### Removed: `PushManager` extension functions
 
 The previously deprecated `PushManagerExtensions` file has been removed. Callers that explicitly referenced the extensions by name will need to update to use the replacement methods on directly on `PushManager`.
@@ -75,6 +102,18 @@ The previously deprecated `PushManagerExtensions` file has been removed. Callers
 |-------------------------------------------------------------------|----------------------------------------------------------------|
 | `PushManager.pushNotificationStatusFlow` (extension)              | `PushManager.pushNotificationStatusFlow` (property)            |
 | `PushManager.enableUserNotifications(promptFallback)` (extension) | `PushManager.enableUserNotifications(promptFallback)` (member) |
+
+### `PushProvider.getRegistrationToken` is now suspend
+
+`PushProvider` is a public extension point, so this affects any app that ships a custom provider (a custom ADM/FCM bridge, for example). Registration now runs in a coroutine rather than blocking the job thread, so the override must be marked `suspend`:
+
+| Before                                                         | After                                                                  |
+|----------------------------------------------------------------|------------------------------------------------------------------------|
+| `override fun getRegistrationToken(context: Context): String?` | `override suspend fun getRegistrationToken(context: Context): String?` |
+
+`PushManager.performPushRegistration` is now suspend as a result.
+
+Because Kotlin `suspend` functions cannot be implemented from Java, a custom `PushProvider` written in Java must be converted to Kotlin.
 
 ### Consistent data class copy visibility
 
@@ -136,6 +175,7 @@ These were public but are SDK plumbing, and are now `@RestrictTo(LIBRARY_GROUP)`
 * `com.urbanairship.util.CachedList`
 * `AirshipLayout.layoutInfo` (`LayoutInfo` was restricted already).
 * `AirshipEmbeddedInfo`'s constructor.
+* `FeatureFlag`'s deprecated 3-arg constructor, `FeatureFlag(Boolean, Boolean, JsonMap?)`. Obtain flags from `FeatureFlagManager.flag` or `FeatureFlagManager.flagAsPendingResult` instead.
 
 `@RestrictTo` now also covers nested types and overrides of already-restricted APIs. None of that is reachable from app code except `MessageWebViewClient`, when overriding `extendActionRequest` or `extendJavascriptEnvironment`. These are now considered internal with no public replacement.
 
@@ -146,6 +186,7 @@ Members that exposed internal types are no longer public:
 * `Event`'s `Clock` constructors — `Event()` is unchanged
 * `AutomationAudience`'s constructor, and `AutomationSchedule.Builder.setAudience` / `setCompoundAudience`
 * The `SyncPrefKey` constants on `LocaleManager` and `PushManager`
+* `MessageViewModel`'s `Inbox` constructor. The class stays public and its no-arg constructor is unchanged.
 
 Except `LandingPageAction`, reaching any of these required an internal type, so app code that compiled without suppressing `RestrictedApi` is unaffected.
 
