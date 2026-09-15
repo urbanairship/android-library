@@ -6,6 +6,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.view.ViewGroup.MarginLayoutParams
 import android.widget.Checkable
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -15,12 +16,14 @@ import com.urbanairship.android.layout.model.PagerIndicatorModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ShapeView
+import com.urbanairship.android.layout.widget.ShrinkableView
+import kotlin.math.min
 import com.urbanairship.R as CoreR
 
 internal class PagerIndicatorView(
     context: Context,
     private val model: PagerIndicatorModel
-) : LinearLayout(context), BaseView {
+) : LinearLayout(context), BaseView, ShrinkableView {
 
     init {
         orientation = HORIZONTAL
@@ -62,18 +65,36 @@ internal class PagerIndicatorView(
         }
     }
 
+    /** Dots give where a stated length can't, so a row short of width narrows them rather than
+     * dropping them. */
+    override fun isShrinkable(): Boolean = true
+
     /**
-     * Lays the dots out square, at the height the item stated or at [DEFAULT_DOT_SIZE_DP].
+     * Lays the dots out square, at the height the item stated or at [DEFAULT_DOT_SIZE_DP], and no
+     * wider between them than the width on offer.
      *
      * A shape draws into the bounds it is given and reports no size of its own, so dots take
      * theirs from the row. An item that states `auto` leaves the row taking its height from the
      * dots in turn, and the pair of them settle at nothing: `100% x auto` drew six 1px dots.
+     *
+     * The width they add up to is a demand the row has to meet out of something. Asking for more
+     * than it has leaves it with nothing to take it from, and a row that can't fit its content
+     * drops what isn't a stated length — which is the dots.
      */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val size = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+        var size = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
             MeasureSpec.getSize(heightMeasureSpec)
         } else {
             ResourceUtils.dpToPx(context, DEFAULT_DOT_SIZE_DP).toInt()
+        }
+
+        if (childCount > 0 && MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED) {
+            val spacing = (0 until childCount).sumOf {
+                val lp = getChildAt(it).layoutParams as MarginLayoutParams
+                lp.marginStart + lp.marginEnd
+            }
+            val room = MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd - spacing
+            size = min(size, (room / childCount).coerceAtLeast(0))
         }
 
         for (i in 0 until childCount) {

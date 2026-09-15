@@ -35,6 +35,9 @@ internal class PagerIndicatorModel(
 
     private val indicatorViewIds = HashMap<Int, Int>()
 
+    /** Dots narrow to the room a row has, so a stack above can take its overflow out of them. */
+    override var isShrinkable: Boolean = true
+
     val announcePage: Boolean
         get() = viewInfo.automatedAccessibilityActions?.any {
             it.type == AutomatedAccessibilityActionType.ANNOUNCE
