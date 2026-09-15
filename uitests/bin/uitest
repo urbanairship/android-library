@@ -75,6 +75,20 @@ repo_slug() {
   git -C "$REPO_ROOT" remote get-url origin | sed -E 's#.*github\.com[:/]##; s#\.git$##'
 }
 
+# This repo is mirrored to the public urbanairship/android-library, and the workflow guards every
+# job on the dev repo so the sweep never runs there. That guard cannot cover a local invocation:
+# publish-report and prune-reports force-push to the Pages branch of whatever `origin` resolves to,
+# so from a clone of the mirror they would put screenshot reports on the public docs site.
+require_reports_repo() {
+  local slug expected
+  slug=$(repo_slug)
+  expected=$(cfg '.reports.repo')
+  if [ "$slug" != "$expected" ]; then
+    echo "refusing: reports may only be published to $expected, but origin is $slug" >&2
+    exit 2
+  fi
+}
+
 sha256_of() {
   if command -v sha256sum >/dev/null 2>&1; then
     sha256sum "$1" | cut -d' ' -f1
@@ -559,6 +573,7 @@ pages_wait_built() {
 }
 
 cmd_publish_report() {
+  require_reports_repo
   local pr="$1"
   if [ -z "$pr" ] || ! [[ "$pr" =~ ^[0-9]+$ ]]; then
     echo "usage: uitest publish-report <pr-number>"
@@ -579,6 +594,7 @@ cmd_publish_report() {
 }
 
 cmd_prune_reports() {
+  require_reports_repo
   pages_checkout
   pages_prune
   pages_index

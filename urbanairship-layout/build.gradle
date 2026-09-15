@@ -11,6 +11,10 @@ description = "Airship Layout Rendering Library"
 def wantsScreenshots = gradle.startParameter.taskNames.any { it.contains('uitestRun') } ||
         project.hasProperty('thomasScreenshots')
 
+def thomasFixturesDir = file("$rootDir/devapp/src/main/assets/sample_layouts/Scenes")
+def thomasShotsDir = file("$rootDir/uitests/build/shots")
+def thomasConfigFile = file("$rootDir/uitests/config.json")
+
 android {
     compileSdk rootProject.compileSdkVersion
 
@@ -24,19 +28,44 @@ android {
             includeAndroidResources = true
             returnDefaultValues = true
 
+            // Only the debug task ever captures. Declaring the same output directory on both the
+            // debug and release tasks would put two tasks in conflict over it.
             all { test ->
-                if (wantsScreenshots) {
-                    test.filter.includeTestsMatching '*SceneScreenshotTest*'
-                    test.systemProperty 'roborazzi.test.record', 'true'
-                    test.systemProperty 'thomas.fixtures.dir', "$rootDir/devapp/src/main/assets/sample_layouts/Scenes"
-                    test.systemProperty 'thomas.shots.dir', "$rootDir/uitests/build/shots"
-                    test.systemProperty 'thomas.config', "$rootDir/uitests/config.json"
-                    // Native-graphics rendering holds a full-size bitmap per scene, which the
-                    // default test heap is not sized for.
-                    test.maxHeapSize = '4g'
-                } else {
+                if (!wantsScreenshots || test.name != 'testDebugUnitTest') {
                     test.filter.excludeTestsMatching '*SceneScreenshotTest*'
+                    return
                 }
+
+                test.filter.includeTestsMatching '*SceneScreenshotTest*'
+                test.systemProperty 'roborazzi.test.record', 'true'
+                test.systemProperty 'thomas.fixtures.dir', thomasFixturesDir.path
+                test.systemProperty 'thomas.shots.dir', thomasShotsDir.path
+                test.systemProperty 'thomas.config', thomasConfigFile.path
+                // Native-graphics rendering holds a full-size bitmap per scene, which the
+                // default test heap is not sized for.
+                test.maxHeapSize = '4g'
+
+                // The scenes and the skip list reach the test as system properties, which Gradle
+                // cannot see, so without these it reports UP-TO-DATE after a fixture edit and
+                // silently captures nothing — and the screenshots, its real product, were an
+                // undeclared output, so a build-cache hit would skip the capture and leave the
+                // directory empty.
+                test.inputs.dir(thomasFixturesDir)
+                        .withPropertyName('thomasFixtures')
+                        // A fixture's path decides its category and its screenshot filename.
+                        .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+                        .optional(true)
+                test.inputs.file(thomasConfigFile)
+                        .withPropertyName('thomasConfig')
+                        .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.NONE)
+                        .optional(true)
+                test.outputs.dir(thomasShotsDir).withPropertyName('thomasShots')
+
+                // Never served from the build cache. The whole premise is that these bytes came
+                // out of this renderer on this machine; a restored set would assert that without
+                // having rendered anything, and cross-environment pixel equality is precisely
+                // what this suite has not yet established.
+                test.outputs.cacheIf { false }
             }
         }
     }

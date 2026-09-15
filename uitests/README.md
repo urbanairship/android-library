@@ -14,6 +14,17 @@ open uitests/build/report/index.html
 
 `uitestRun` captures the screenshots and then hands off to `uitest finish`, which writes provenance, pulls the baselines for the base branch, diffs, and builds the report. It exits with the *diff* status, so a run with visual changes still leaves you a report to look at.
 
+Re-running is incremental and needs no flags. The capture task declares the fixture directory and `config.json` as inputs and `build/shots/` as its output, so editing a scene re-captures, and a run with nothing changed skips straight to the diff in a few seconds. The paths reach the test JVM as system properties, whose *values* Gradle tracks but whose *contents* it cannot see, which is why those declarations are there — without them a fixture edit reports `UP-TO-DATE` and silently captures nothing. The task is also explicitly never served from the build cache: the point of a screenshot is that these bytes came out of this renderer, and a cache hit would assert that without having rendered anything.
+
+To render a single scene while iterating, filter the test directly — the name is the screenshot filename without `__p0.png`:
+
+```sh
+./gradlew :urbanairship-layout:testDebugUnitTest -PthomasScreenshots --console=plain \
+  --tests '*SceneScreenshotTest.capture[modal___icons]'
+```
+
+That writes one PNG. Do not follow it with a diff: the other shots are absent, so every one of them would report `gone`.
+
 Individual steps, if you want them one at a time:
 
 ```
@@ -95,6 +106,8 @@ It also only sees what was rendered. A fixture whose content renders blank (see 
 ## Baselines and reports
 
 **Nothing image-shaped is ever committed.** The public `android-library` repo mirrors this one, so baseline PNGs in git would land in every customer checkout, forever. Baselines live as workflow artifacts instead.
+
+**The suite never runs on the public mirror.** Every job in the workflow is guarded on `github.repository == 'urbanairship/android-library-dev'`. That is not only about keeping reports off the public Pages site: the `THOMAS_LAYOUTS_DEPLOY_KEY` secret that fetches the fixtures does not exist there, so a run would fail at the fetch anyway. `publish-report` and `prune-reports` carry a second, independent check — they force-push to the Pages branch of whatever `origin` resolves to, which no workflow guard can cover, so they refuse unless `origin` matches `reports.repo` in `config.json`.
 
 - **Pulling.** `uitest baseline-pull` downloads the newest `baselines-robolectric-<sdk>` artifact from the base branch's runs (`gh auth login` required; `UITEST_BASELINE_BRANCH` overrides the branch, `UITEST_BASELINE_RUN` pins a specific run). Exit 0 means pulled, exit 3 means the branch has no completed run yet — a bootstrap, where everything is reported as `new` and the check does not fail. Every other failure, including an expired or broken artifact, is a hard failure: a run that could not fetch its baselines must never report "no diffs".
 - **Promotion on merge.** A merge into `main` that touches rendering publishes new baselines. `uitest promote-baselines <merge-sha>` reuses the merged PR's own passing screenshots when they were taken against the base as it was at merge time — it requires `provenance.baseSha == <merge-sha>^` and refuses otherwise, so a PR that fell behind its base cannot promote a stale render. Refusal is the signal to capture a fresh set instead.
