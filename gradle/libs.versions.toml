@@ -82,7 +82,7 @@ snameYaml = '2.5'
 # Test
 google-truth = '1.4.5'
 junit = '4.13.2'
-robolectric = '4.16'
+robolectric = '4.17'
 roborazzi = '1.74.0'
 turbine = '1.2.1'
 mockk = '1.14.6'
