@@ -1,0 +1,35 @@
+{
+  "robolectric": {
+    "sdk": 35,
+    "qualifiers": "w411dp-h891dp-xhdpi"
+  },
+  "roborazzi": {
+    "version": "1.74.0"
+  },
+  "diff": {
+    "threshold": 0.1,
+    "antialiasing": true
+  },
+  "odiff": {
+    "version": "4.5.0",
+    "checksums": {
+      "odiff-macos-arm64": "3c681171c158f95e7e62d636ddd00c33e8f971c23c85239c6192b72d76ad665b",
+      "odiff-macos-x64": "73e565e2a777b653fa0ceb90c138dec1c396c990913fdc1221fe8b01fa70c171",
+      "odiff-linux-x64": "2eb5a7f44df925d93b451898de8bf213f0aac270a9781187746097ed7cd45324",
+      "odiff-linux-arm64": "245ad45851da200cfdd361374618fca22781919faaca255aed1c93b883beb476"
+    }
+  },
+  "baselines": {
+    "branch": "main",
+    "workflow": "thomas-screenshot-tests.yml"
+  },
+  "reports": {
+    "branch": "gh-pages",
+    "directory": "ui-tests",
+    "repo": "urbanairship/android-library-dev"
+  },
+  "sweep": {
+    "fixtures": "devapp/src/main/assets/sample_layouts/Scenes",
+    "skip": {}
+  }
+}

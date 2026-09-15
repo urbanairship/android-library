@@ -172,3 +172,57 @@ tasks.named("dependencyUpdates").configure {
         isNonStable(it.candidate.version)
     }
 }
+
+// Thomas screenshot tests. Gradle owns capture (Roborazzi under Robolectric); the
+// uitests shell harness owns everything after it. The harness never calls Gradle
+// back, so these are plain `bash` execs -- a nested ./gradlew would contend with
+// this build for the daemon and the build lock.
+def uitestExec = { String taskName, String summary, List<String> command ->
+    tasks.register(taskName, Exec) {
+        group = 'verification'
+        description = summary
+        workingDir rootDir
+        commandLine(['bash', './uitests/bin/uitest'] + command)
+    }
+}
+
+// CI-facing variants, whose subcommand argument comes from a project property.
+def uitestArgExec = { String taskName, String summary, String subcommand, String propertyName ->
+    tasks.register(taskName, Exec) {
+        group = 'verification'
+        description = summary
+        workingDir rootDir
+        def value = providers.gradleProperty(propertyName)
+        commandLine 'bash', './uitests/bin/uitest', subcommand
+        doFirst {
+            if (!value.present) {
+                throw new GradleException("$taskName requires -P$propertyName=<value>")
+            }
+            args value.get()
+        }
+    }
+}
+
+uitestExec('uitestDoctor', 'Verifies the screenshot test toolchain and that the Scene fixtures are present.', ['doctor'])
+uitestExec('uitestFinish', 'Records provenance for a capture, then pulls baselines, diffs and reports.', ['finish'])
+uitestExec('uitestSetBaseline', 'Promotes the last capture into the local baseline cache.', ['set-baseline'])
+uitestExec('uitestBaselinePull', 'Downloads the newest baselines artifact for the base branch.', ['baseline-pull'])
+uitestExec('uitestDiff', 'Pixel-diffs the last capture against the pulled baselines.', ['diff'])
+uitestExec('uitestReport', 'Builds the screenshot report and PR summary from the last diff.', ['report'])
+uitestExec('uitestPruneReports', 'Removes published reports for pull requests that are no longer open.', ['prune-reports'])
+
+uitestArgExec('uitestPublishReport', 'Publishes the last report to the private Pages site (-Ppr=<number>).', 'publish-report', 'pr')
+uitestArgExec('uitestPromoteBaselines', "Reuses a merged pull request's screenshots as the new baselines (-Psha=<merge sha>).", 'promote-baselines', 'sha')
+
+// Capture has to finish before `uitest finish` runs, and a failed capture must never
+// be blessed: as a `finalizedBy` the finish step would still run and write the
+// `.complete` marker over a partial capture, so the order is a dependency instead.
+tasks.named('uitestFinish').configure {
+    dependsOn ':urbanairship-layout:testDebugUnitTest'
+}
+
+tasks.register('uitestRun') {
+    group = 'verification'
+    description = 'Captures the Thomas screenshots, then diffs them and builds the report.'
+    dependsOn ':urbanairship-layout:testDebugUnitTest', 'uitestFinish'
+}
