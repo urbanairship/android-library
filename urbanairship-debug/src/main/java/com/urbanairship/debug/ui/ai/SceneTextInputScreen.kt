@@ -101,6 +101,14 @@ internal fun SceneTextInputScreen(
     }
     DisposableEffect(Unit) { onDispose { viewModel.onDisappear() } }
 
+    // Autosave: persist whenever any input — including the schema tree — changes.
+    val currentState = viewModel.currentState()
+    LaunchedEffect(currentState) { viewModel.store.saveLastSession(currentState) }
+
+    // Keep the resolved-context preview live: refetch whenever the context mode or items change,
+    // not only when Run inference is pressed.
+    LaunchedEffect(viewModel.contextMode, viewModel.contextItems) { viewModel.fetchContext() }
+
     var showingSchemaEditor by remember { mutableStateOf(false) }
 
     DebugScreen(title = "Scene Text Input", navigation = TopBarNavigation.Back(onNavigateUp)) {
@@ -209,10 +217,8 @@ internal fun SceneTextInputScreen(
 
             item {
                 Section(title = "Assembled Prompt") {
-                    AirshipDebugAIPromptPreview(
-                        instructions = viewModel.assembledInstructions,
-                        prompt = viewModel.assembledPrompt
-                    )
+                    val (instructions, prompt) = viewModel.assembledPromptPreview
+                    AirshipDebugAIPromptPreview(instructions = instructions, prompt = prompt)
                 }
             }
 
@@ -227,24 +233,28 @@ internal fun SceneTextInputScreen(
             item {
                 Section(title = "Result") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        when {
-                            viewModel.isRunning -> RunningRow("Running…")
-                            viewModel.result is SceneTextInputResult.Output -> {
-                                val output = viewModel.result as SceneTextInputResult.Output
-                                AirshipDebugCodeBlock(label = "Model output", text = output.raw)
-                                Column(modifier = Modifier.padding(top = 8.dp)) {
-                                    AirshipDebugCodeBlock(
-                                        label = "Projected form-state `ai` payload",
-                                        text = output.projected
-                                    )
+                        if (viewModel.isRunning) {
+                            RunningRow("Running…")
+                        } else {
+                            when (val result = viewModel.result) {
+                                is SceneTextInputResult.Output -> {
+                                    AirshipDebugCodeBlock(label = "Model output", text = result.raw)
+                                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                                        AirshipDebugCodeBlock(
+                                            label = "Projected form-state `ai` payload",
+                                            text = result.projected
+                                        )
+                                    }
                                 }
+
+                                SceneTextInputResult.NoOutput -> Text(
+                                    text = "No output — model unavailable or evaluation failed (see Model Status). Scenes fail open here.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFFE65100)
+                                )
+
+                                null -> Text("Not run yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            viewModel.result is SceneTextInputResult.NoOutput -> Text(
-                                text = "No output — model unavailable or evaluation failed (see Model Status). Scenes fail open here.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFE65100)
-                            )
-                            else -> Text("Not run yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -339,13 +349,16 @@ internal class SceneTextInputViewModel : ViewModel() {
         contextItems = state.contextItems
     }
 
-    suspend fun onAppear() {
+    fun onAppear() {
         store.loadLastSession()?.let(::apply)
-        fetchContext()
     }
 
     fun onDisappear() {
-        Airship.internalAi.setContextProvider(usage, null)
+        // Airship.internalAi blocks the calling thread until the SDK is ready; run it on a
+        // coroutine rather than directly in DisposableEffect's onDispose, which can't suspend.
+        viewModelScope.launch {
+            Airship.internalAi.setContextProvider(usage, null)
+        }
     }
 
     fun observeAvailability() {
@@ -463,13 +476,16 @@ internal class SceneTextInputViewModel : ViewModel() {
         return trimmed.ifEmpty { userText }
     }
 
-    /** The exact system instructions the current inputs would send. */
-    val assembledInstructions: String
-        get() = TextInputInferenceEvaluation(makePreviewRequest()).instructions()
-
-    /** The rendered user prompt (fenced user text + resolved context) the current inputs would send. */
-    val assembledPrompt: String
-        get() = TextInputInferenceEvaluation(makePreviewRequest()).prompt(context ?: EvaluationContext.EMPTY)
+    /**
+     * The exact instructions + rendered prompt the current inputs would send, from one
+     * evaluation instance so both share the same random fence tag — building them separately
+     * would give each its own tag and show a mismatched pair.
+     */
+    val assembledPromptPreview: Pair<String, String>
+        get() {
+            val evaluation = TextInputInferenceEvaluation(makePreviewRequest())
+            return evaluation.instructions() to evaluation.prompt(context ?: EvaluationContext.EMPTY)
+        }
 
     private fun makePreviewRequest(): ThomasAIInferenceRequest =
         ThomasAIInferenceRequest(prompt = prompt, text = userText, outputSchema = schemaRoot.build())

@@ -96,6 +96,14 @@ internal fun IaaSuppressionScreen(
     LaunchedEffect(Unit) { viewModel.onAppear() }
     DisposableEffect(Unit) { onDispose { viewModel.onDisappear() } }
 
+    // Autosave: persist whenever any input changes.
+    val currentState = viewModel.currentState()
+    LaunchedEffect(currentState) { viewModel.store.saveLastSession(currentState) }
+
+    // Keep the resolved-context preview live: refetch whenever the context mode or items change,
+    // not only when Evaluate is pressed.
+    LaunchedEffect(viewModel.contextMode, viewModel.contextItems) { viewModel.fetchContext() }
+
     DebugScreen(title = "IAX AI Suppression", navigation = TopBarNavigation.Back(onNavigateUp)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
@@ -184,37 +192,31 @@ internal fun IaaSuppressionScreen(
             item {
                 Section(title = "Result") {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        when {
-                            viewModel.isRunning -> RunningRow("Evaluating…")
-                            viewModel.result is SuppressionResult.Completed -> {
-                                val completed = viewModel.result as SuppressionResult.Completed
-                                Column {
+                        if (viewModel.isRunning) {
+                            RunningRow("Evaluating…")
+                        } else {
+                            when (val result = viewModel.result) {
+                                is SuppressionResult.Completed -> Column {
                                     Text(
-                                        text = if (completed.allow) "Allowed" else "Blocked",
+                                        text = if (result.allow) "Allowed" else "Blocked",
                                         style = MaterialTheme.typography.titleSmall,
-                                        color = if (completed.allow) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+                                        color = if (result.allow) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
                                     )
                                     Text(
-                                        text = completed.reason,
+                                        text = result.reason,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
+
+                                is SuppressionResult.Skipped ->
+                                    Text("Skipped: ${result.reason}", color = Color(0xFFE65100))
+
+                                is SuppressionResult.Failed ->
+                                    Text(result.message, color = MaterialTheme.colorScheme.error)
+
+                                null -> Text("Not evaluated yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-
-                            viewModel.result is SuppressionResult.Skipped ->
-                                Text(
-                                    "Skipped: ${(viewModel.result as SuppressionResult.Skipped).reason}",
-                                    color = Color(0xFFE65100)
-                                )
-
-                            viewModel.result is SuppressionResult.Failed ->
-                                Text(
-                                    (viewModel.result as SuppressionResult.Failed).message,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-
-                            else -> Text("Not evaluated yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -338,13 +340,16 @@ internal class IaaSuppressionViewModel : ViewModel() {
         contextItems = state.contextItems
     }
 
-    suspend fun onAppear() {
+    fun onAppear() {
         store.loadLastSession()?.let(::apply)
-        fetchContext()
     }
 
     fun onDisappear() {
-        Airship.internalAi.setContextProvider(usage, null)
+        // Airship.internalAi blocks the calling thread until the SDK is ready; run it on a
+        // coroutine rather than directly in DisposableEffect's onDispose, which can't suspend.
+        viewModelScope.launch {
+            Airship.internalAi.setContextProvider(usage, null)
+        }
     }
 
     suspend fun fetchContext() {

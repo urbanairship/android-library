@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
@@ -30,8 +31,7 @@ import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.iam.ai.inAppMessageSuppression
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 /**
@@ -132,10 +132,8 @@ internal interface AiRootScreenViewModel {
 }
 
 internal class DefaultAiRootScreenViewModel(
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+    private val dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AiRootScreenViewModel, ViewModel() {
-
-    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private var availabilityState by mutableStateOf<Map<String, ModelAvailability>>(emptyMap())
     override val availabilityByUsage: Map<String, ModelAvailability>
@@ -148,10 +146,14 @@ internal class DefaultAiRootScreenViewModel(
         }
     }
 
+    // Every collector runs on viewModelScope's default dispatcher (Main.immediate) so the
+    // read-modify-write below is never touched by two threads at once, and so the collectors are
+    // cancelled automatically in onCleared() instead of leaking for the process's lifetime.
+    // flowOn keeps the *upstream* work (not this collect block) off the main thread.
     private fun <Subject> observe(usage: Usage<Subject>) {
         val updates = Airship.internalAi.gatedModel(usage)?.availabilityUpdates ?: return
-        scope.launch {
-            updates.collect { availability ->
+        viewModelScope.launch {
+            updates.flowOn(dispatcher).collect { availability ->
                 availabilityState = availabilityState + (usage.rawValue to availability)
             }
         }
