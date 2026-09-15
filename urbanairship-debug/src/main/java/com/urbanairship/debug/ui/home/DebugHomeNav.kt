@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.urbanairship.debug.ui.DebugScreen
+import com.urbanairship.debug.ui.ai.aiNav
 import com.urbanairship.debug.ui.appinfo.appInfoNav
 import com.urbanairship.debug.ui.automations.automationNav
 import com.urbanairship.debug.ui.channel.channelNav
@@ -80,4 +81,5 @@ internal fun NavGraphBuilder.airshipDebugNav(
     featureFlagNav(navController = navController)
     channelNav(navController)
     contactsNav(navController)
+    aiNav(navController)
 }

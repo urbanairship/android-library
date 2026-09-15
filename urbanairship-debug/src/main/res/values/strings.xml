@@ -50,6 +50,9 @@
     <string name="ua_debug_app_info_title">App Info</string>
     <string name="ua_debug_app_info_desc">View application info</string>
 
+    <string name="ua_debug_ai_title">AI Debug</string>
+    <string name="ua_debug_ai_desc">Try AI usages with custom inputs and context</string>
+
     //
     // Device info screens
     //
