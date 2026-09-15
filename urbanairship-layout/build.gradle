@@ -8,8 +8,11 @@ description = "Airship Layout Rendering Library"
 // the unit test run that ci.yml and merge.yml trigger on every PR and merge, so it is excluded
 // unless explicitly asked for. Keyed off the requested task names rather than a -P flag so that
 // `./gradlew uitestRun` just works; startParameter is a configuration-cache-safe input.
-def wantsScreenshots = gradle.startParameter.taskNames.any { it.contains('uitestRun') } ||
-        project.hasProperty('thomasScreenshots')
+// uitestFinish counts too: it depends on this task and then blesses whatever is in the shots
+// directory, so running it without capturing would stamp fresh provenance onto a previous run.
+def wantsScreenshots = gradle.startParameter.taskNames.any {
+    it.contains('uitestRun') || it.contains('uitestFinish')
+} || project.hasProperty('thomasScreenshots')
 
 def thomasFixturesDir = file("$rootDir/devapp/src/main/assets/sample_layouts/Scenes")
 def thomasShotsDir = file("$rootDir/uitests/build/shots")
@@ -63,6 +66,12 @@ android {
                         .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.NONE)
                         .optional(true)
                 test.outputs.dir(thomasShotsDir).withPropertyName('thomasShots')
+
+                // Gradle does not clear a task's output directory, and this one sits outside the
+                // project build dir. Stale contents are not merely untidy: a deleted fixture would
+                // leave its PNG behind and keep reporting `ok` instead of `gone`, and a `.complete`
+                // left by an earlier green run would let set-baseline bless a partial capture.
+                test.doFirst { thomasShotsDir.deleteDir() }
 
                 // Never served from the build cache. The whole premise is that these bytes came
                 // out of this renderer on this machine; a restored set would assert that without

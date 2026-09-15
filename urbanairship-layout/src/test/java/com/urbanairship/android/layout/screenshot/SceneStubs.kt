@@ -71,6 +71,12 @@ internal object SceneStubs {
             "web_view" -> stubs += Stubs.WEB_VIEW
         }
 
+        // A view override carries a bare `{value, when_state_matches}` with no `type` of its own,
+        // so the cases above never see it and `MediaModel.resolveUrl` would hand the real remote
+        // URL to the renderer. An `.svg` there is routed to a WebView and draws nothing, leaving a
+        // blank screenshot whose manifest still claims the images were placeholders.
+        entries["view_overrides"]?.let { entries["view_overrides"] = rewriteOverrides(it, stubs) }
+
         if (entries.remove("automated_actions") != null) {
             stubs += Stubs.AUTO_ADVANCE
         }
@@ -83,6 +89,26 @@ internal object SceneStubs {
         val builder = JsonMap.newBuilder()
         entries.forEach { (key, value) -> builder.put(key, rewriteValue(value, stubs)) }
         return builder.build()
+    }
+
+    /**
+     * Points every `url` and `url_selectors` anywhere under a `view_overrides` block at the
+     * placeholder, whatever shape the override wraps them in.
+     */
+    private fun rewriteOverrides(node: JsonValue, stubs: MutableSet<String>): JsonValue = when {
+        node.isJsonList -> JsonValue.wrap(node.optList().list.map { rewriteOverrides(it, stubs) })
+        node.isJsonMap -> {
+            val entries = node.optMap().map.toMutableMap()
+            if (entries["url"]?.isString == true) {
+                stubs += Stubs.IMAGES
+                entries["url"] = JsonValue.wrap(PLACEHOLDER_URL)
+            }
+            entries["url_selectors"]?.let { entries["url_selectors"] = rewriteSelectors(it) }
+            val builder = JsonMap.newBuilder()
+            entries.forEach { (key, value) -> builder.put(key, rewriteOverrides(value, stubs)) }
+            JsonValue.wrap(builder.build())
+        }
+        else -> node
     }
 
     /** A media node can carry per-locale or per-orientation URLs; all of them get the placeholder. */

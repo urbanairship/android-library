@@ -65,13 +65,18 @@ fixture_by_shot = {}
 
 def manifest_key(entry):
     """The `<category>__<stem>` prefix the capture task names this fixture's screenshots with."""
-    if entry.get("category") and entry.get("stem"):
-        return f"{entry['category']}__{entry['stem']}"
+    # Prefer the name the capture task already wrote. Deriving it here duplicates that naming and
+    # the two disagree on whitespace runs: the task collapses `\s+` to one `_`, so a fixture with
+    # two spaces would lose its stub notes and source path off its card.
+    name = entry.get("name")
+    if name:
+        return re.sub(r"__p\d+$", "", name)
     fixture = entry.get("fixture") or ""
     parts = fixture.replace("\\", "/").split("/")
     if len(parts) < 2:
         return None
-    stem = re.sub(r"\.[^.]+$", "", parts[-1]).replace(" ", "_")
+    stem = re.sub(r"\.[^.]+$", "", parts[-1])
+    stem = re.sub(r"\s+", "_", stem)
     return f"{parts[-2].lower()}__{stem}"
 
 

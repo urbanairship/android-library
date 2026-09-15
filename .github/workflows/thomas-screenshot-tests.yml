@@ -40,7 +40,10 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Keyed on the event too, because the weekly job dispatches a run on the branch it is itself
+  # running from. Without it that dispatch lands in the schedule's own group and cancels it
+  # mid-prune, so the weekly tidy-up would never finish.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:

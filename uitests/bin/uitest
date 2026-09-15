@@ -358,6 +358,7 @@ cmd_promote_baselines() {
     return 1
   fi
   rm -rf "$SHOTS_DIR"
+  mkdir -p "$(dirname "$SHOTS_DIR")"
   mv "$tmp/shots" "$SHOTS_DIR"
   rm -rf "$tmp"
   updated=$(mktemp)
@@ -387,6 +388,13 @@ cmd_diff() {
       echo "bootstrap: no mint on $BASELINE_BRANCH (or $BASELINE_DEFAULT_BRANCH) yet - reporting every screenshot as new"
       mkdir -p "$BASELINE_DIR"
       UITEST_DIFF_REPORT_ONLY=1
+    elif [ "$pull_status" -ne 0 ] && [ -n "${UITEST_DIFF_REPORT_ONLY:-}" ]; then
+      # A mint run is the one that replaces the baselines, so it must not be stopped by their
+      # absence. An expired artifact would otherwise deadlock the branch permanently: the run
+      # whose job is to publish fresh baselines fails for want of the stale ones, skipping the
+      # upload, and every push after it repeats that.
+      echo "no baselines to compare against, and this run mints them - reporting every screenshot as new"
+      mkdir -p "$BASELINE_DIR"
     elif [ "$pull_status" -ne 0 ]; then
       echo "hint: uitest set-baseline promotes the current shots locally"
       exit 2

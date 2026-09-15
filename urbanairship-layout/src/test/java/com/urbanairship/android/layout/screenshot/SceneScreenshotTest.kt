@@ -53,24 +53,24 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
+/** Stated here rather than inline so the annotation and the drift check cannot disagree. */
+private const val QUALIFIERS = "w411dp-h891dp-xhdpi"
+
 /**
  * Renders every Thomas scene fixture and writes a PNG for the visual-diff harness (`uitests/`).
  *
  * Excluded from the ordinary unit test run — see `wantsScreenshots` in the module's build.gradle —
  * because a full sweep is far too slow to sit in the check that runs on every PR and merge.
  *
- * The presentation identity is pinned rather than inherited: the Robolectric SDK level and the
- * display qualifiers below are what every baseline is captured against, so changing either
- * invalidates the whole baseline set. Keep `robolectric.sdk` in `uitests/config.json` in step with
- * the level here — that is what names the baseline artifact.
+ * The presentation identity is pinned rather than inherited: the SDK level and the qualifiers are
+ * what every baseline is captured against, so changing either invalidates the whole set. Both are
+ * restated in `uitests/config.json` for the harness, and [config] fails the run if they drift.
  *
- * 32 is a ceiling rather than a preference, and it is Robolectric's: 4.16's native graphics has no
- * text measurement at 33 or above, which fails as `UnsatisfiedLinkError` in
- * `MeasuredText.nGetExtent`. Independent of the Roborazzi version. Robolectric 4.17 does render at
- * 35, but it fails ~1469 of this repo's existing tests, so raising the ceiling means migrating the
- * whole repo first.
+ * 35 is a ceiling rather than a preference. Robolectric's native graphics has no text measurement
+ * above it — 36 fails as `UnsatisfiedLinkError` in `MeasuredText.nGetExtent` — and that is
+ * independent of the Roborazzi version.
  *
- * 32 is at least past `Build.VERSION_CODES.R`, so the renderer takes its modern window-size path
+ * Being past `Build.VERSION_CODES.R` means the renderer takes its modern window-size path
  * (`ResourceUtils.getWindowHeightPixels`) rather than the pre-30 `displayMetrics` fallback. That
  * path still resolves to the full display here, because Robolectric reports no system bar insets,
  * so `ignore_safe_area` makes no difference to a capture and safe-area geometry goes unexercised.
@@ -78,7 +78,7 @@ import org.robolectric.annotation.GraphicsMode
 @OptIn(ExperimentalCoroutinesApi::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @RunWith(ParameterizedRobolectricTestRunner::class)
-@Config(sdk = [32], qualifiers = "w411dp-h891dp-xhdpi")
+@Config(sdk = [35], qualifiers = QUALIFIERS)
 internal class SceneScreenshotTest(
     private val name: String,
     private val fixture: ThomasFixture,
@@ -198,6 +198,15 @@ internal class SceneScreenshotTest(
         check(roborazzi == resolved) {
             "roborazzi.version is $roborazzi in $name but the build resolves $resolved; " +
                 "update the config or the version catalog to match"
+        }
+
+        // Qualifiers decide the capture's pixel dimensions but, unlike the SDK, do not appear in
+        // the baseline label. Drifting them would silently reuse the same artifact name for a
+        // different geometry and turn the next diff into 122 size mismatches.
+        val qualifiers = config.opt("robolectric").optMap().opt("qualifiers").string
+        check(qualifiers == QUALIFIERS) {
+            "robolectric.qualifiers is $qualifiers in $name but the capture runs at " +
+                "$QUALIFIERS; update @Config(qualifiers = ...) or the config to match"
         }
 
         return config
