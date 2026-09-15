@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.screenshot
 
 import android.app.Application
+import android.os.Build
 import android.os.Looper
 import android.view.ContextThemeWrapper
 import android.view.View
@@ -28,6 +29,7 @@ import com.urbanairship.android.layout.ui.ThomasBannerView
 import com.urbanairship.android.layout.ui.ThomasEmbeddedView
 import com.urbanairship.android.layout.view.ModalView
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
@@ -180,9 +182,23 @@ internal class SceneScreenshotTest(
     }
 
     /** A fixture the config pins as unsupported, with the reason it gives. */
-    private fun skipReason(): String? {
+    private fun skipReason(): String? =
+        config().opt("sweep").optMap().opt("skip").optMap().opt(fixture.path).string
+
+    /**
+     * `@Config` needs a compile-time constant, so the SDK level is stated twice: here and as
+     * `robolectric.sdk` in `config.json`, which is what names the baseline artifact. Drift between
+     * them would label a set of captures with an API level they were not taken at, so it fails the
+     * run rather than going unnoticed.
+     */
+    private fun config(): JsonMap {
         val config = JsonValue.parseString(ScreenshotPaths.config.readText()).optMap()
-        return config.opt("sweep").optMap().opt("skip").optMap().opt(fixture.path).string
+        val declared = config.opt("robolectric").optMap().opt("sdk").getInt(0)
+        check(declared == Build.VERSION.SDK_INT) {
+            "robolectric.sdk is $declared in ${ScreenshotPaths.config.name} but the capture runs " +
+                "at API ${Build.VERSION.SDK_INT}; update @Config(sdk = ...) or the config to match"
+        }
+        return config
     }
 
     private class Target(val root: View, val width: Int, val height: Int)
