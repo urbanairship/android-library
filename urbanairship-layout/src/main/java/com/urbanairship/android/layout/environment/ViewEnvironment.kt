@@ -22,4 +22,7 @@ public interface ViewEnvironment {
     public fun webViewClientFactory(): Factory<AirshipWebViewClient>
     public fun imageCache(): ImageCache?
     public val isIgnoringSafeAreas: Boolean
+
+    /** The DSL version the layout being rendered states. */
+    public val layoutVersion: Int
 }

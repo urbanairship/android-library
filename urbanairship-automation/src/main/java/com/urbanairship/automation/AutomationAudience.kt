@@ -16,7 +16,7 @@ import java.util.Objects
 /**
  * Automation audience selector.
  */
-public class AutomationAudience(
+public class AutomationAudience internal constructor(
     /**
      * Audience selector.
      */

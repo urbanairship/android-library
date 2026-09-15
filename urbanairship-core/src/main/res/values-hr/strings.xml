@@ -57,6 +57,7 @@
     <!-- General -->
     <string name="ua_refresh">Osvježi</string>
     <string name="ua_open">Otvori</string>
+    <string name="ua_back">Prethodno</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Oceni</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Ne hvala</string>

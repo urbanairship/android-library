@@ -18,6 +18,7 @@ import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.Network
+import java.time.Instant
 import kotlin.collections.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -238,7 +239,7 @@ internal data class InAppRemoteData(
                     val content = value.requireMap()
                     val created = content[CREATED]?.string?.let {
                         try {
-                            DateUtils.parseIso8601(it)
+                            DateUtils.parseIso8601(it).toEpochMilli()
                         } catch (ex: Exception) {
                             null
                         }
@@ -270,7 +271,7 @@ internal data class InAppRemoteData(
 
     data class Payload(
         val data: Data,
-        val timestamp: Long,
+        val timestamp: Instant,
         val remoteDataInfo: RemoteDataInfo? = null
     )
 
@@ -310,7 +311,7 @@ internal data class InAppRemoteData(
                 REMOTE_INFO_METADATA_KEY to payload.remoteDataInfo
             ).toJsonValue()
 
-            val data = Data.fromJson(payload.data, payload.timestamp).copyWithUpdateSchedules { local ->
+            val data = Data.fromJson(payload.data, payload.timestamp.toEpochMilli()).copyWithUpdateSchedules { local ->
                 val result = local.copyWith(metadata = metadata)
 
                 when(result.data) {

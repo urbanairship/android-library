@@ -32,6 +32,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
+import java.time.Instant
 import java.util.TimeZone
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
@@ -170,7 +171,7 @@ public class AirshipChannel internal constructor(
         }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
+            override fun onForeground(timestamp: Instant) {
                 updateRegistration()
             }
         })
@@ -208,6 +209,10 @@ public class AirshipChannel internal constructor(
         }
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onAirshipReady() {
         updateRegistration()
     }
@@ -240,6 +245,10 @@ public class AirshipChannel internal constructor(
     override val jobActions: List<String>
         get() = listOf(ACTION_UPDATE_CHANNEL)
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!isRegistrationAllowed) {
             UALog.d { "Channel registration is currently disabled." }

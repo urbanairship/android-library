@@ -4,6 +4,7 @@ package com.urbanairship.analytics
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,7 +16,7 @@ public class AppBackgroundEventTest {
 
     @Test
     public fun testEventData() {
-        val event = AppBackgroundEvent(100)
+        val event = AppBackgroundEvent(Instant.ofEpochMilli(100))
 
         val conversionData = ConversionData("send id", " send metadata", "last metadata")
         val eventData = event.getEventData(context, conversionData)

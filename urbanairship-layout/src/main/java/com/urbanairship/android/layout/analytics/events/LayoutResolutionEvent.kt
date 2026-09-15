@@ -80,6 +80,30 @@ public class LayoutResolutionEvent(
             )
         }
 
+        /**
+         * A variant experiment resolved this schedule to its own no-message arm. Distinct
+         * from [control], which is the (unrelated) global holdout mechanism — the two are
+         * recorded identically in the ledger (both `holdout`), but reported separately here.
+         */
+        public fun variantControl(): LayoutResolutionEvent {
+            return LayoutResolutionEvent(
+                ResolutionData(
+                    resolutionType = ResolutionData.ResolutionType.VariantControl,
+                    displayTime = 0.seconds
+                )
+            )
+        }
+
+        /** A variant experiment resolved this device to a sibling schedule's arm. */
+        public fun variantMiss(): LayoutResolutionEvent {
+            return LayoutResolutionEvent(
+                ResolutionData(
+                    resolutionType = ResolutionData.ResolutionType.VariantMiss,
+                    displayTime = 0.seconds
+                )
+            )
+        }
+
         public fun audienceExcluded(): LayoutResolutionEvent {
             return LayoutResolutionEvent(
                 ResolutionData(
@@ -88,6 +112,25 @@ public class LayoutResolutionEvent(
                 )
             )
         }
+
+        public fun appSuppressed(): LayoutResolutionEvent {
+            return LayoutResolutionEvent(
+                ResolutionData(
+                    resolutionType = ResolutionData.ResolutionType.AppSuppressed,
+                    displayTime = 0.seconds
+                )
+            )
+        }
+
+        public fun aiSuppressed(): LayoutResolutionEvent {
+            return LayoutResolutionEvent(
+                ResolutionData(
+                    resolutionType = ResolutionData.ResolutionType.AiSuppressed,
+                    displayTime = 0.seconds
+                )
+            )
+        }
+
     }
 
 
@@ -138,7 +181,11 @@ public class LayoutResolutionEvent(
                 private const val TIMED_OUT = "timed_out"
                 private const val INTERRUPTED = "interrupted"
                 private const val CONTROL = "control"
+                private const val VARIANT_CONTROL = "variant_control"
+                private const val VARIANT_MISS = "variant_miss"
                 private const val AUDIENCE_EXCLUDED = "audience_check_excluded"
+                private const val APP_SUPPRESSED = "app_suppressed"
+                private const val AI_SUPPRESSED = "ai_suppressed"
             }
             data class ButtonTap(val identifier: String, val description: String) : ResolutionType() {
 
@@ -163,8 +210,20 @@ public class LayoutResolutionEvent(
             data object Control : ResolutionType() {
                 override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to CONTROL).toJsonValue()
             }
+            data object VariantControl : ResolutionType() {
+                override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to VARIANT_CONTROL).toJsonValue()
+            }
+            data object VariantMiss : ResolutionType() {
+                override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to VARIANT_MISS).toJsonValue()
+            }
             data object AudienceExcluded: ResolutionType() {
                 override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to AUDIENCE_EXCLUDED).toJsonValue()
+            }
+            data object AppSuppressed : ResolutionType() {
+                override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to APP_SUPPRESSED).toJsonValue()
+            }
+            data object AiSuppressed : ResolutionType() {
+                override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to AI_SUPPRESSED).toJsonValue()
             }
         }
     }

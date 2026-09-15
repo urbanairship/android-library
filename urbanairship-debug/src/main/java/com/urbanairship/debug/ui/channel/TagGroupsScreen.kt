@@ -77,7 +77,7 @@ private fun ScreenContent(
                 value = viewModel.tag.value,
                 onValueChange = { viewModel.tag.value = it.trim()},
                 label = { Text("Tag") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
             )
 
             TextField(
@@ -87,7 +87,7 @@ private fun ScreenContent(
                 value = viewModel.group.value,
                 onValueChange = { viewModel.group.value = it.trim()},
                 label = { Text("Group") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
             )
 
             Button(

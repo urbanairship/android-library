@@ -305,7 +305,7 @@ public class AirshipChannelTest {
         verify {
             mockBatchUpdateManager.addUpdate(
                 subscriptions = eq(listOf(
-                    SubscriptionListMutation.newSubscribeMutation("some list", testClock.currentTimeMillis)
+                    SubscriptionListMutation.newSubscribeMutation("some list", testClock.currentTime)
                 ))
             )
         }
@@ -318,7 +318,7 @@ public class AirshipChannelTest {
         verify {
             mockBatchUpdateManager.addUpdate(
                 subscriptions = eq(listOf(
-                    SubscriptionListMutation.newSubscribeMutation("some list", testClock.currentTimeMillis)
+                    SubscriptionListMutation.newSubscribeMutation("some list", testClock.currentTime)
                 ))
             )
         }
@@ -339,7 +339,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testTrackLiveUpdate(): TestResult = runTest {
-        val liveUpdateMutation = LiveUpdateMutation.Remove("name", testClock.currentTimeMillis)
+        val liveUpdateMutation = LiveUpdateMutation.Remove("name", testClock.currentTime)
         channel.trackLiveUpdateMutation(liveUpdateMutation)
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
@@ -358,7 +358,7 @@ public class AirshipChannelTest {
         verify {
             mockBatchUpdateManager.addUpdate(
                 attributes = eq(listOf(
-                    AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTimeMillis)
+                    AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTime)
                 ))
             )
         }
@@ -371,7 +371,7 @@ public class AirshipChannelTest {
         verify {
             mockBatchUpdateManager.addUpdate(
                 attributes = eq(listOf(
-                    AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTimeMillis)
+                    AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTime)
                 ))
             )
         }

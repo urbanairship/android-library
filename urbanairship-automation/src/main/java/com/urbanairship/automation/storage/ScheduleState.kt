@@ -29,6 +29,8 @@ public enum class ScheduleState(public val value: Int) {
     // Schedule is either expired or at its execution limit
     FINISHED(4);
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public fun fromValue(value: Int): ScheduleState? {
             return entries.firstOrNull { it.value == value }

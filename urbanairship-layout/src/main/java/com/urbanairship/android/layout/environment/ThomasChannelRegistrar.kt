@@ -8,7 +8,6 @@ import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions
 import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.contacts.SmsRegistrationOptions
 import com.urbanairship.util.Clock
-import java.util.Date
 
 internal class ThomasChannelRegistrar(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
@@ -44,7 +43,7 @@ internal class ThomasChannelRegistrar(
     }
 
     private fun registerEmail(channelRegistration: ThomasChannelRegistration.Email) {
-        val now = Date(clock.currentTimeMillis())
+        val now = clock.now()
 
         val options = when(channelRegistration.options) {
             is ThomasEmailRegistrationOptions.Commercial -> {

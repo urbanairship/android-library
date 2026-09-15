@@ -18,6 +18,10 @@
     <!-- Thomas Layouts -->
     <string name="layout_viewer_title">Layout Viewer</string>
 
+    <!-- Embedded AI -->
+    <string name="embedded_ai_title">Embedded AI</string>
+    <string name="embedded_ai_subtitle">Rank pending embedded content with the model</string>
+
     <!-- Message Center Indicator -->
     <string name="view">View</string>
 

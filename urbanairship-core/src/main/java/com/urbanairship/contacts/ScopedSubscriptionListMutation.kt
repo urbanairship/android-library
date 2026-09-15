@@ -12,6 +12,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 
 /**
  * Defines a scoped subscription list mutation.
@@ -66,6 +67,8 @@ public class ScopedSubscriptionListMutation internal constructor(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val KEY_ACTION = "action"
@@ -86,7 +89,7 @@ public class ScopedSubscriptionListMutation internal constructor(
         public fun newSubscribeMutation(
             listId: String,
             scope: Scope,
-            timestamp: Long
+            timestamp: Instant
         ): ScopedSubscriptionListMutation {
             return ScopedSubscriptionListMutation(
                 action = ACTION_SUBSCRIBE,
@@ -99,7 +102,7 @@ public class ScopedSubscriptionListMutation internal constructor(
         public fun newUnsubscribeMutation(
             listId: String,
             scope: Scope,
-            timestamp: Long
+            timestamp: Instant
         ): ScopedSubscriptionListMutation {
             return ScopedSubscriptionListMutation(
                 action = ACTION_UNSUBSCRIBE,

@@ -553,7 +553,7 @@ internal class PagerModel(
             // the page display and can be used to determine the progress value for the
             // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
-                navigationActionTimer = object : Timer(action.delay.inWholeMilliseconds) {
+                navigationActionTimer = object : Timer(action.delay) {
                     override fun onFinish() {
                         // Clean up the progress timer and this navigation action timer.
                         scheduledJob?.cancel()
@@ -593,7 +593,7 @@ internal class PagerModel(
     }
 
     private fun scheduleAutomatedAction(action: AutomatedAction) {
-        val timer = object : Timer(action.delay.inWholeMilliseconds) {
+        val timer = object : Timer(action.delay) {
             override fun onFinish() {
                 automatedActionsTimers.remove(this)
 
@@ -672,7 +672,7 @@ internal class PagerModel(
         report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = environment.displayTimer.time.milliseconds,
+                displayTime = environment.displayTimer.time,
                 context = layoutState.reportingContext()
             )
         )

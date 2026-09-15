@@ -14,8 +14,7 @@ import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
-import android.os.Build
-import android.text.Html
+import androidx.core.text.HtmlCompat
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -27,7 +26,6 @@ import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.annotation.IntRange
-import androidx.annotation.RequiresApi
 import androidx.appcompat.R as AppCompatR
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.SwitchCompat
@@ -287,16 +285,6 @@ internal object LayoutUtils {
 
     /** Applies a ripple effect and tint list to handle various interactions with an ImageButton button.  */
     fun applyImageButtonRippleAndTint(view: ImageButton, radii: FloatArray?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            applyImageButtonRippleAndTintApi23(view, radii)
-        } else {
-            applyImageButtonRippleAndTintCompat(view, radii)
-        }
-    }
-
-    /** Applies a ripple effect to the view's foreground and sets a disabled color for API 23 and above.  */
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private fun applyImageButtonRippleAndTintApi23(view: ImageButton, radii: FloatArray?) {
         // Sets the view's foreground to a ripple drawable
         view.foreground = generateRippleDrawable(view.context, radii)
 
@@ -313,16 +301,6 @@ internal object LayoutUtils {
         view.imageTintList = compatStateList
     }
 
-    /** Applies a compat tap effect that is similar to a ripple, and disabled/hover colors for API 22 and below.  */
-    private fun applyImageButtonRippleAndTintCompat(view: ImageButton, radii: FloatArray?) {
-        // Discard source pixels that don't overlap the destination pixels
-        view.imageTintMode = PorterDuff.Mode.SRC_ATOP
-
-        // Using transparent as the color means no tint unless the image is pressed or disabled
-        val compatStateList = pressedColorStateList(Color.TRANSPARENT)
-
-        view.imageTintList = compatStateList
-    }
 
     fun applyLabel(
         textView: TextView,
@@ -352,7 +330,7 @@ internal object LayoutUtils {
         val isMarkdownEnabled = markdownOptions.isEnabled
 
         if (isMarkdownEnabled) {
-            val html = Html.fromHtml(text.markdownToHtml())
+            val html = HtmlCompat.fromHtml(text.markdownToHtml(), HtmlCompat.FROM_HTML_MODE_LEGACY)
             textView.setHtml(context, html, markdownOptions)
         } else {
             textView.text = text

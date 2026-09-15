@@ -1,0 +1,591 @@
+public final class com/urbanairship/preferencecenter/OpenPreferenceCenterAction : com/urbanairship/actions/Action {
+	public static final field Companion Lcom/urbanairship/preferencecenter/OpenPreferenceCenterAction$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/concurrent/Callable;)V
+	public synthetic fun <init> (Ljava/util/concurrent/Callable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
+	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public fun shouldRunOnMainThread ()Z
+}
+
+public final class com/urbanairship/preferencecenter/OpenPreferenceCenterAction$Companion {
+	public final fun getDEFAULT_NAMES ()Ljava/util/Set;
+}
+
+public final class com/urbanairship/preferencecenter/PreferenceCenter : com/urbanairship/AirshipComponent {
+	public static final field Companion Lcom/urbanairship/preferencecenter/PreferenceCenter$Companion;
+	public static final field EXTRA_PREFERENCE_CENTER_ID Ljava/lang/String;
+	public static final field VIEW_PREFERENCE_CENTER_INTENT_ACTION Ljava/lang/String;
+	public final fun getConfig (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getConfigPendingResult (Ljava/lang/String;)Lcom/urbanairship/PendingResult;
+	public final fun getOpenListener ()Lcom/urbanairship/preferencecenter/PreferenceCenter$OnOpenListener;
+	public final fun open (Ljava/lang/String;)V
+	public final fun setOpenListener (Lcom/urbanairship/preferencecenter/PreferenceCenter$OnOpenListener;)V
+	public static final fun shared ()Lcom/urbanairship/preferencecenter/PreferenceCenter;
+}
+
+public final class com/urbanairship/preferencecenter/PreferenceCenter$Companion {
+	public final fun parsePreferenceCenterId (Landroid/content/Intent;)Ljava/lang/String;
+	public final fun shared ()Lcom/urbanairship/preferencecenter/PreferenceCenter;
+}
+
+public abstract interface class com/urbanairship/preferencecenter/PreferenceCenter$OnOpenListener {
+	public abstract fun onOpenPreferenceCenter (Ljava/lang/String;)Z
+}
+
+public final class com/urbanairship/preferencecenter/PreferenceCenterKt {
+	public static final fun getPreferenceCenter (Lcom/urbanairship/Airship;)Lcom/urbanairship/preferencecenter/PreferenceCenter;
+}
+
+public final class com/urbanairship/preferencecenter/data/Button : android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lcom/urbanairship/preferencecenter/data/Button;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Button;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Button;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActions ()Ljava/util/Map;
+	public final fun getContentDescription ()Ljava/lang/String;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/preferencecenter/data/CommonDisplay {
+	public static final field Companion Lcom/urbanairship/preferencecenter/data/CommonDisplay$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isEmpty ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/CommonDisplay$Companion {
+	public final fun getEMPTY ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+}
+
+public abstract class com/urbanairship/preferencecenter/data/Condition {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun evaluate (Lcom/urbanairship/preferencecenter/data/Condition$State;)Z
+	protected final fun jsonMapBuilder ()Lcom/urbanairship/json/JsonMap$Builder;
+}
+
+public final class com/urbanairship/preferencecenter/data/Condition$OptInStatus : com/urbanairship/preferencecenter/data/Condition {
+	public fun <init> (Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;)V
+	public final fun component1 ()Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;
+	public final fun copy (Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;)Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus;Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun evaluate (Lcom/urbanairship/preferencecenter/data/Condition$State;)Z
+	public final fun getStatus ()Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Condition$OptInStatus$Status : java/lang/Enum {
+	public static final field Companion Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status$Companion;
+	public static final field OPT_IN Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;
+	public static final field OPT_OUT Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getJsonValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;
+	public static fun values ()[Lcom/urbanairship/preferencecenter/data/Condition$OptInStatus$Status;
+}
+
+public final class com/urbanairship/preferencecenter/data/Condition$OptInStatus$Status$Companion {
+}
+
+public final class com/urbanairship/preferencecenter/data/Condition$State : android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/urbanairship/preferencecenter/data/Condition$State;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Condition$State;ZILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Condition$State;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun isOptedIn ()Z
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/preferencecenter/data/IconDisplay {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/IconDisplay;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/IconDisplay;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/IconDisplay;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getIcon ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/urbanairship/preferencecenter/data/Item {
+	public synthetic fun <init> (Ljava/lang/String;ZZZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun getConditions ()Ljava/util/List;
+	public abstract fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public abstract fun getId ()Ljava/lang/String;
+	protected final fun jsonMapBuilder ()Lcom/urbanairship/json/JsonMap$Builder;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$Alert : com/urbanairship/preferencecenter/data/Item {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/IconDisplay;Lcom/urbanairship/preferencecenter/data/Button;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/IconDisplay;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/Button;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/IconDisplay;Lcom/urbanairship/preferencecenter/data/Button;Ljava/util/List;)Lcom/urbanairship/preferencecenter/data/Item$Alert;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$Alert;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/IconDisplay;Lcom/urbanairship/preferencecenter/data/Button;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$Alert;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getButton ()Lcom/urbanairship/preferencecenter/data/Button;
+	public fun getConditions ()Ljava/util/List;
+	public fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun getIconDisplay ()Lcom/urbanairship/preferencecenter/data/IconDisplay;
+	public fun getId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ChannelSubscription : com/urbanairship/preferencecenter/data/Item {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)Lcom/urbanairship/preferencecenter/data/Item$ChannelSubscription;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ChannelSubscription;Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ChannelSubscription;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConditions ()Ljava/util/List;
+	public fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public fun getId ()Ljava/lang/String;
+	public final fun getSubscriptionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement : com/urbanairship/preferencecenter/data/Item {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;
+	public final fun component5 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;Ljava/lang/String;Ljava/util/List;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddPrompt ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;
+	public fun getConditions ()Ljava/util/List;
+	public fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun getEmptyLabel ()Ljava/lang/String;
+	public fun getId ()Ljava/lang/String;
+	public final fun getPlatform ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform;
+	public final fun getRemovePrompt ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun getContentDescription ()Ljava/lang/String;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public final fun component5 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun component6 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCancelButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun getCloseButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public final fun getDisplay ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;
+	public final fun getOnSubmit ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public final fun getSubmitButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt {
+	public fun <init> (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;)V
+	public final fun component1 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun copy (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddPrompt;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun getPrompt ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$AddChannelPrompt;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultMessage ()Ljava/lang/String;
+	public final fun getInvalidMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContentDescription ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContentDescription ()Ljava/lang/String;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/urbanairship/preferencecenter/data/Item$ContactManagement$Platform {
+	public synthetic fun <init> (Lcom/urbanairship/contacts/ChannelType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getChannelType ()Lcom/urbanairship/contacts/ChannelType;
+	public final fun getErrorMessages ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public final fun getResendOptions ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Email : com/urbanairship/preferencecenter/data/Item$ContactManagement$Platform {
+	public fun <init> (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;)V
+	public final fun component1 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;
+	public final fun copy (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Email;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Email;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Email;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRegistrationOptions ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Sms : com/urbanairship/preferencecenter/data/Item$ContactManagement$Platform {
+	public fun <init> (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;)V
+	public final fun component1 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;
+	public final fun copy (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Sms;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Sms;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$Platform$Sms;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRegistrationOptions ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getFooter ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun getErrorMessages ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public abstract fun getResendOptions ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+	public final fun getType ()Ljava/lang/String;
+	public abstract fun toJson ()Lcom/urbanairship/json/JsonMap;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email : com/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/urbanairship/json/JsonMap;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+	public final fun component5 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Email;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddressLabel ()Ljava/lang/String;
+	public fun getErrorMessages ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public final fun getPlaceholder ()Ljava/lang/String;
+	public final fun getProperties ()Lcom/urbanairship/json/JsonMap;
+	public fun getResendOptions ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+	public fun hashCode ()I
+	public fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms : com/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+	public final fun component5 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RegistrationOptions$Sms;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCountryLabel ()Ljava/lang/String;
+	public fun getErrorMessages ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ErrorMessages;
+	public final fun getPhoneLabel ()Ljava/lang/String;
+	public fun getResendOptions ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+	public final fun getSenders ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public final fun component5 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun component6 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCancelButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun getCloseButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public final fun getDisplay ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$PromptDisplay;
+	public final fun getOnSubmit ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public final fun getSubmitButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt {
+	public fun <init> (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;)V
+	public final fun component1 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public final fun copy (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemovePrompt;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$IconButton;
+	public final fun getPrompt ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$RemoveChannelPrompt;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions {
+	public fun <init> (ILjava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public final fun copy (ILjava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;ILjava/lang/String;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ResendOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getButton ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$LabeledButton;
+	public final fun getInterval ()I
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getOnSuccess ()Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$ActionableMessage;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactManagement$SmsSenderInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$SmsSenderInfo;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$SmsSenderInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactManagement$SmsSenderInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDialingCode ()Ljava/lang/String;
+	public final fun getDisplayName ()Ljava/lang/String;
+	public final fun getPlaceholderText ()Ljava/lang/String;
+	public final fun getSenderId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Lcom/urbanairship/json/JsonMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactSubscription : com/urbanairship/preferencecenter/data/Item {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)Lcom/urbanairship/preferencecenter/data/Item$ContactSubscription;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactSubscription;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactSubscription;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConditions ()Ljava/util/List;
+	public fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public fun getId ()Ljava/lang/String;
+	public final fun getScopes ()Ljava/util/Set;
+	public final fun getSubscriptionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup : com/urbanairship/preferencecenter/data/Item {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)Lcom/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getComponents ()Ljava/util/List;
+	public fun getConditions ()Ljava/util/List;
+	public fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public fun getId ()Ljava/lang/String;
+	public final fun getSubscriptionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup$Component {
+	public fun <init> (Ljava/util/Set;Lcom/urbanairship/preferencecenter/data/CommonDisplay;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun copy (Ljava/util/Set;Lcom/urbanairship/preferencecenter/data/CommonDisplay;)Lcom/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup$Component;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup$Component;Ljava/util/Set;Lcom/urbanairship/preferencecenter/data/CommonDisplay;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Item$ContactSubscriptionGroup$Component;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun getScopes ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Options {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/urbanairship/preferencecenter/data/Options;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Options;ZILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Options;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMergeChannelDataToContact ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/PreferenceCenterConfig {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Lcom/urbanairship/preferencecenter/data/Options;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Lcom/urbanairship/preferencecenter/data/Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/data/Options;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Lcom/urbanairship/preferencecenter/data/Options;)Lcom/urbanairship/preferencecenter/data/PreferenceCenterConfig;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/PreferenceCenterConfig;Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Lcom/urbanairship/preferencecenter/data/Options;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/PreferenceCenterConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun getHasChannelSubscriptions ()Z
+	public final fun getHasContactManagement ()Z
+	public final fun getHasContactSubscriptions ()Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getOptions ()Lcom/urbanairship/preferencecenter/data/Options;
+	public final fun getSections ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/urbanairship/preferencecenter/data/Section {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun getConditions ()Ljava/util/List;
+	public abstract fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public abstract fun getId ()Ljava/lang/String;
+	public abstract fun getItems ()Ljava/util/List;
+	protected final fun jsonMapBuilder ()Lcom/urbanairship/json/JsonMap$Builder;
+}
+
+public final class com/urbanairship/preferencecenter/data/Section$Common : com/urbanairship/preferencecenter/data/Section {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)Lcom/urbanairship/preferencecenter/data/Section$Common;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Section$Common;Ljava/lang/String;Ljava/util/List;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Section$Common;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConditions ()Ljava/util/List;
+	public fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public fun getId ()Ljava/lang/String;
+	public fun getItems ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/data/Section$SectionBreak : com/urbanairship/preferencecenter/data/Section {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;)Lcom/urbanairship/preferencecenter/data/Section$SectionBreak;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/data/Section$SectionBreak;Ljava/lang/String;Lcom/urbanairship/preferencecenter/data/CommonDisplay;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/data/Section$SectionBreak;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConditions ()Ljava/util/List;
+	public fun getDisplay ()Lcom/urbanairship/preferencecenter/data/CommonDisplay;
+	public fun getId ()Ljava/lang/String;
+	public fun getItems ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

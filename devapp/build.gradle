@@ -6,6 +6,24 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// Keys for the sample models: local.properties (gitignored) wins, else the environment.
+// Both empty means the devapp registers no AI model, so scenes take their non-AI path.
+def readKey = { String property, String environment ->
+    def local = rootProject.file('local.properties')
+    if (local.exists()) {
+        def properties = new Properties()
+        local.withInputStream { properties.load(it) }
+        def key = properties.getProperty(property)
+        if (key?.trim()) {
+            return key.trim()
+        }
+    }
+    return System.getenv(environment)?.trim() ?: ''
+}
+
+def openAiApiKey = readKey('openai.apiKey', 'OPENAI_API_KEY')
+def geminiApiKey = readKey('gemini.apiKey', 'GEMINI_API_KEY')
+
 android {
     namespace = 'com.urbanairship.devapp'
 
@@ -19,6 +37,9 @@ android {
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "OPENAI_API_KEY", "\"${openAiApiKey}\""
+        buildConfigField "String", "GEMINI_API_KEY", "\"${geminiApiKey}\""
     }
 
     buildFeatures {
@@ -32,7 +53,7 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // Not published, so we can safely use default signing
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
     }
 
@@ -140,6 +161,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.truth)
 
     // Robolectric / Mockito
+    testImplementation(libs.junit)
     testImplementation(libs.robolectric.core)
     androidTestImplementation(libs.robolectric.annotations)
 
@@ -152,4 +174,31 @@ dependencies {
 def googleServicesFile = rootProject.file('devapp/google-services.json')
 if (googleServicesFile.exists()) {
     apply plugin: 'com.google.gms.google-services'  // Google Play services Gradle plugin
+}
+
+// Fetches the pinned Thomas Scene fixtures from urbanairship/thomas-layouts
+// into src/main/assets/sample_layouts/Scenes (see scripts/fetch-layouts.sh).
+tasks.register('fetchLayouts', Exec) {
+    workingDir rootDir
+    commandLine 'bash', './scripts/fetch-layouts.sh'
+}
+
+// Warn-only reminder to fetch the Scene fixtures if they are missing. Never
+// fails the build: the devapp must build without access to thomas-layouts
+// (the Scene list just shows empty).
+tasks.named('preBuild').configure {
+    // Only the captured File is used at execution time, keeping the check
+    // compatible with the configuration cache.
+    def scenesDir = file('src/main/assets/sample_layouts/Scenes')
+    doFirst {
+        def sceneCount = 0
+        if (scenesDir.exists()) {
+            scenesDir.eachFileRecurse(groovy.io.FileType.FILES) {
+                if (it.name != '.gitkeep') sceneCount++
+            }
+        }
+        if (sceneCount == 0) {
+            logger.warn("warning: Thomas Scene fixtures not found. Run './gradlew :devapp:fetchLayouts' to populate them. The devapp will still build, but the Thomas Scene list will be empty.")
+        }
+    }
 }

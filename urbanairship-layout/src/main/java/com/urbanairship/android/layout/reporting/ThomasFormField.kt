@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.reporting
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.ai.ThomasAIInferenceOutcome
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.FormInputType
@@ -14,8 +15,9 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import java.time.Instant as JavaInstant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -36,7 +38,9 @@ public sealed class ThomasFormField<T>(
     internal data class Result<T>(
         val value: T,
         val channels: List<ThomasChannelRegistration>? = null,
-        val attributes: Map<AttributeName, AttributeValue>? = null
+        val attributes: Map<AttributeName, AttributeValue>? = null,
+        /** Set only on a text input whose payload asked for AI inference. */
+        val aiInference: ThomasAIInferenceOutcome? = null
     )
 
     internal val status: ThomasFormFieldStatus<T>
@@ -119,7 +123,8 @@ public sealed class ThomasFormField<T>(
         val smsLocale: SmsLocale? = null,
         override val identifier: String,
         override val originalValue: String?,
-        override val fieldType: FieldType<String>
+        override val fieldType: FieldType<String>,
+        val isRedacted: Boolean = false
     ) : ThomasFormField<String>(when(textInput) {
         FormInputType.EMAIL -> Type.EMAIL
         FormInputType.SMS -> Type.SMS
@@ -128,6 +133,27 @@ public sealed class ThomasFormField<T>(
 
         override fun jsonValue(): JsonValue? {
             return State(originalValue ?: "", smsLocale).toJsonValue()
+        }
+
+        override fun formData(withState: Boolean): JsonMap {
+            val builder = JsonMap.newBuilder()
+            builder.put(KEY_TYPE, type)
+            if (withState) {
+                builder.put(KEY_STATUS, status.toJson(type))
+                builder.put(KEY_VALUE, JsonValue.wrapOpt(originalValue))
+            } else {
+                val valid = status as? ThomasFormFieldStatus.Valid<String>
+                if (isRedacted) {
+                    builder.put(KEY_VALUE, JsonValue.wrap(REDACTED_VALUE))
+                    builder.put(KEY_IS_REDACTED, JsonValue.wrap(true))
+                } else {
+                    builder.put(KEY_VALUE, JsonValue.wrapOpt(valid?.result?.value ?: originalValue))
+                }
+                // Reported here and nowhere else. A redacted field still reports what the
+                // model derived — redaction hides the text, not the inference.
+                builder.put(KEY_AI_INFERENCE, valid?.result?.aiInference?.reported)
+            }
+            return builder.build()
         }
 
         internal companion object {
@@ -242,6 +268,9 @@ public sealed class ThomasFormField<T>(
         private const val KEY_TYPE: String = "type"
         private const val KEY_VALUE: String = "value"
         private const val KEY_STATUS: String = "status"
+        private const val KEY_IS_REDACTED: String = "is_redacted"
+        private const val KEY_AI_INFERENCE: String = "ai_inference"
+        private const val REDACTED_VALUE: String = "REDACTED"
         private const val KEY_SCORE_ID: String = "score_id"
         private const val KEY_CHILDREN: String = "children"
         private const val KEY_RESPONSE_TYPE: String = "response_type"
@@ -301,7 +330,7 @@ public sealed class ThomasFormField<T>(
         private val taskSleeper: TaskSleeper = TaskSleeper.default
     ) {
 
-        private var lastAttemptTimestamp: Long? = null
+        private var lastAttemptTimestamp: JavaInstant? = null
         private var fetchJob: Deferred<PendingResult<T>>? = null
         private var nextBackOff: Duration? = null
 
@@ -367,7 +396,7 @@ public sealed class ThomasFormField<T>(
             val nextBackOff = nextBackOff ?: return
             val lastAttemptTimestamp = lastAttemptTimestamp ?: return
 
-            val remaining = nextBackOff - (clock.currentTimeMillis() - lastAttemptTimestamp).milliseconds
+            val remaining = nextBackOff - (clock.now() - lastAttemptTimestamp)
             if (remaining.isPositive()) {
                 taskSleeper.sleep(remaining)
             }
@@ -375,7 +404,7 @@ public sealed class ThomasFormField<T>(
 
         private fun processResult(result: PendingResult<T>): PendingResult<T> {
             _resultsFlow.update { result }
-            lastAttemptTimestamp = clock.currentTimeMillis()
+            lastAttemptTimestamp = clock.now()
 
             nextBackOff = if (result.isError) {
                 nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF
@@ -451,6 +480,7 @@ internal sealed class ThomasFormFieldStatus<T> {
                     KEY_TYPE to type,
                     KEY_VALUE to JsonValue.wrap(result.value)
                 ))
+                builder.put(KEY_AI, result.aiInference?.stateProjection)
             }
         }
 
@@ -465,5 +495,6 @@ internal sealed class ThomasFormFieldStatus<T> {
         private const val KEY_TYPE = "type"
         private const val KEY_RESULT = "result"
         private const val KEY_VALUE = "value"
+        private const val KEY_AI = "ai"
     }
 }

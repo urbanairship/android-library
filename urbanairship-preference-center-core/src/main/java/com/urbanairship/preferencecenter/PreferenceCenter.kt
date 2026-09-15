@@ -225,6 +225,10 @@ public class PreferenceCenter internal constructor(
         return pendingResult
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onAirshipDeepLink(uri: Uri): Boolean {
         val paths = uri.pathSegments
         return if (DEEP_LINK_HOST == uri.encodedAuthority && paths.size == 1) {

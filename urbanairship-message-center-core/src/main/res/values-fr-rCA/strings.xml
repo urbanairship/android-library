@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Modifier la liste</string>
+    <string name="ua_leave_edit_mode">Arrêter de modifier la liste</string>
+    <string name="ua_announce_enter_edit_mode">Modification de la liste des messages</string>
+    <string name="ua_announce_leave_edit_mode">Affichage de la liste des messages</string>
+    <string name="ua_mark_unread">Marquer comme non lu</string>
+    <string name="ua_mark_all_read">Tout marquer comme lu</string>
+    <string name="ua_delete_all">Tout supprimer</string>
+    <string name="ua_description_mark_read">Marquer le message comme lu</string>
+    <string name="ua_description_mark_unread">Marquer le message comme non lu</string>
+    <string name="ua_description_mark_all_read">Marquer tous les messages comme lus</string>
+    <string name="ua_description_delete_all">Supprimer tous les messages</string>
+    <string name="ua_description_delete">Supprimer le message</string>
+    <string name="ua_description_message_list_pane">Liste des messages</string>
+    <string name="ua_description_message_pane">Contenu du message</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">

@@ -149,7 +149,7 @@ public class RemoteDataUrlFactoryTest {
             get() = throw RuntimeException("Not implemented")
 
 
-        override fun getRegistrationToken(context: Context): String {
+        override suspend fun getRegistrationToken(context: Context): String {
             throw RuntimeException("Not implemented")
         }
 

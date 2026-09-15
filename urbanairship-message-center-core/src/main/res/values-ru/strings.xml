@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Редактировать список</string>
+    <string name="ua_leave_edit_mode">Завершить редактирование списка</string>
+    <string name="ua_announce_enter_edit_mode">Редактирование списка сообщений</string>
+    <string name="ua_announce_leave_edit_mode">Просмотр списка сообщений</string>
+    <string name="ua_mark_unread">Отметить как непрочитанное</string>
+    <string name="ua_mark_all_read">Отметить все как прочитанные</string>
+    <string name="ua_delete_all">Удалить все</string>
+    <string name="ua_description_mark_read">Отметить сообщение как прочитанное</string>
+    <string name="ua_description_mark_unread">Отметить сообщение как непрочитанное</string>
+    <string name="ua_description_mark_all_read">Отметить все сообщения как прочитанные</string>
+    <string name="ua_description_delete_all">Удалить все сообщения</string>
+    <string name="ua_description_delete">Удалить сообщение</string>
+    <string name="ua_description_message_list_pane">Список сообщений</string>
+    <string name="ua_description_message_pane">Содержимое сообщения</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">

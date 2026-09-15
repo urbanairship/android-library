@@ -16,6 +16,9 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.annotations.VisibleForTesting
 
 /** Display content for banner in-app message. */
@@ -57,9 +60,10 @@ public class Banner @VisibleForTesting internal constructor(
      */
     public val borderRadius: Float = 0f,
     /**
-     * The banner display duration. Default to 15 seconds
+     * The banner display duration. Defaults to 15 seconds.
      */
-    public val durationMs: Long = DEFAULT_DURATION_MS,
+    @get:JvmSynthetic
+    public val duration: Duration = DEFAULT_DURATION,
     /**
      * The optional banner placement. [Placement]
      */
@@ -70,7 +74,25 @@ public class Banner @VisibleForTesting internal constructor(
     public val actions: JsonMap? = null
 ) : JsonSerializable {
 
-    /** Returns a copy of the Banner display content with the provided changes. */
+    /**
+     * The banner display duration in milliseconds.
+     *
+     * Provided for Java callers, which cannot express a [Duration]. [duration] is the
+     * source of truth; this is derived from it.
+     */
+    public val durationMs: Long
+        get() = duration.inWholeMilliseconds
+
+    /**
+     * Returns a copy of the Banner display content with the provided changes.
+     *
+     * Java callers, which cannot express a [Duration], get this as `copy(...)` with a
+     * `long durationMs` in place of [duration] — see `copyWithDurationMs`. Java sees the
+     * partial overloads that stop before the duration (`copy()` through
+     * `copy(heading … borderRadius)`), plus the all-argument `long durationMs` form; the
+     * overloads in between contain a [Duration] and are name-mangled on the JVM. To change
+     * `placement` or `actions` from Java, pass every argument.
+     */
     @JvmOverloads
     public fun copy(
         heading: InAppMessageTextInfo? = this.heading,
@@ -82,7 +104,7 @@ public class Banner @VisibleForTesting internal constructor(
         backgroundColor: InAppMessageColor = this.backgroundColor,
         dismissButtonColor: InAppMessageColor = this.dismissButtonColor,
         borderRadius: Float = this.borderRadius,
-        durationMs: Long = this.durationMs,
+        duration: Duration = this.duration,
         placement: Placement = this.placement,
         actions: JsonMap? = this.actions
     ): Banner = Banner(
@@ -95,7 +117,48 @@ public class Banner @VisibleForTesting internal constructor(
         backgroundColor = backgroundColor,
         dismissButtonColor = dismissButtonColor,
         borderRadius = borderRadius,
-        durationMs = durationMs,
+        duration = duration,
+        placement = placement,
+        actions = actions
+    )
+
+    /**
+     * Java-facing [copy], taking the display duration in milliseconds.
+     *
+     * Exposed to Java as `copy(...)`. The [Duration]-based [copy] overloads that include the
+     * duration are name-mangled on the JVM and so unreachable from Java; this provides the
+     * equivalent using `long` milliseconds. [duration] remains the source of truth.
+     *
+     * Java must pass every argument, as Kotlin default values are not available across the
+     * `@JvmName` boundary. Kotlin callers should use [copy]; this cannot be hidden from Kotlin,
+     * as `@Deprecated(HIDDEN)` marks the method `ACC_SYNTHETIC` and Java cannot reference a
+     * synthetic member, which would leave Java with no way to set the duration at all.
+     */
+    @JvmName("copy")
+    public fun copyWithDurationMs(
+        heading: InAppMessageTextInfo? = this.heading,
+        body: InAppMessageTextInfo? = this.body,
+        media: InAppMessageMediaInfo? = this.media,
+        buttons: List<InAppMessageButtonInfo>? = this.buttons,
+        buttonLayoutType: InAppMessageButtonLayoutType = this.buttonLayoutType,
+        template: Template = this.template,
+        backgroundColor: InAppMessageColor = this.backgroundColor,
+        dismissButtonColor: InAppMessageColor = this.dismissButtonColor,
+        borderRadius: Float = this.borderRadius,
+        durationMs: Long = this.durationMs,
+        placement: Placement = this.placement,
+        actions: JsonMap? = this.actions
+    ): Banner = copy(
+        heading = heading,
+        body = body,
+        media = media,
+        buttons = buttons,
+        buttonLayoutType = buttonLayoutType,
+        template = template,
+        backgroundColor = backgroundColor,
+        dismissButtonColor = dismissButtonColor,
+        borderRadius = borderRadius,
+        duration = durationMs.milliseconds,
         placement = placement,
         actions = actions
     )
@@ -149,10 +212,18 @@ public class Banner @VisibleForTesting internal constructor(
     }
 
     public companion object {
+        /** Default banner display duration. */
+        @get:JvmSynthetic
+        public val DEFAULT_DURATION: Duration = 15.seconds
+
         /**
-         * Default duration in milliseconds.
+         * Default banner display duration in milliseconds.
+         *
+         * Provided for Java callers, which cannot express a [Duration]. Derived from
+         * [DEFAULT_DURATION] so the value is defined in exactly one place.
          */
-        public const val DEFAULT_DURATION_MS: Long = 15000L
+        @JvmField
+        public val DEFAULT_DURATION_MS: Long = DEFAULT_DURATION.inWholeMilliseconds
 
         /**
          * Maximum number of buttons supported by a banner.
@@ -192,7 +263,8 @@ public class Banner @VisibleForTesting internal constructor(
                 placement = content[PLACEMENT_KEY]?.let(Placement::fromJson) ?: Placement.BOTTOM,
                 template = content[TEMPLATE_KEY]?.let(Template::fromJson)
                     ?: Template.MEDIA_LEFT,
-                durationMs = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS),
+                // The `duration` field is encoded in milliseconds.
+                duration = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS).milliseconds,
                 backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
                 dismissButtonColor = content[DISMISS_BUTTON_COLOR_KEY]?.let(InAppMessageColor::fromJson)
@@ -222,7 +294,7 @@ public class Banner @VisibleForTesting internal constructor(
         BUTTON_LAYOUT_KEY to buttonLayoutType,
         PLACEMENT_KEY to placement,
         TEMPLATE_KEY to template,
-        DURATION_KEY to durationMs,
+        DURATION_KEY to duration.inWholeMilliseconds,
         BACKGROUND_COLOR_KEY to backgroundColor,
         DISMISS_BUTTON_COLOR_KEY to dismissButtonColor,
         BORDER_RADIUS_KEY to borderRadius,
@@ -246,7 +318,7 @@ public class Banner @VisibleForTesting internal constructor(
         if (backgroundColor != other.backgroundColor) return false
         if (dismissButtonColor != other.dismissButtonColor) return false
         if (borderRadius != other.borderRadius) return false
-        if (durationMs != other.durationMs) return false
+        if (duration != other.duration) return false
         if (placement != other.placement) return false
         return actions == other.actions
     }
@@ -261,7 +333,7 @@ public class Banner @VisibleForTesting internal constructor(
         result = 31 * result + backgroundColor.hashCode()
         result = 31 * result + dismissButtonColor.hashCode()
         result = 31 * result + borderRadius.hashCode()
-        result = 31 * result + durationMs.hashCode()
+        result = 31 * result + duration.hashCode()
         result = 31 * result + placement.hashCode()
         result = 31 * result + actions.hashCode()
         return result

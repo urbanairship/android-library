@@ -8,6 +8,7 @@ import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
+import java.time.Instant
 
 internal class PreparedTrigger(
     internal val scheduleId: String,
@@ -16,8 +17,8 @@ internal class PreparedTrigger(
     triggerData: TriggerData,
     trigger: AutomationTrigger,
     isActive: Boolean = false,
-    startDate: ULong?,
-    endDate: ULong?,
+    startDate: Instant?,
+    endDate: Instant?,
     priority: Int,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
@@ -73,8 +74,8 @@ internal class PreparedTrigger(
 
     internal fun update(
         trigger: AutomationTrigger,
-        startDate: ULong?,
-        endDate: ULong?,
+        startDate: Instant?,
+        endDate: Instant?,
         priority: Int
     ) {
         this.trigger = trigger
@@ -104,12 +105,13 @@ internal class PreparedTrigger(
             triggerExecutionType = executionType,
             triggerInfo = TriggeringInfo(
                 context = DeferredTriggerContext(trigger.type, trigger.goal, event),
-                date = clock.currentTimeMillis())
+                date = clock.now(),
+                triggerId = trigger.id)
             )
     }
 
     private fun isWithinDateRange() : Boolean {
-        val now = clock.currentTimeMillis().toULong()
+        val now = clock.now()
         if (startDate?.let { it > now } == true) {
             return false
         }

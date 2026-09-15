@@ -27,5 +27,6 @@ internal class EventViewModel(private val repository: EventRepository) : ViewMod
 }
 
 internal class EventViewModelFactory(private val eventRepository: EventRepository) : ViewModelProvider.NewInstanceFactory() {
+    @Suppress("UNCHECKED_CAST") // Factory creates EventViewModel which is T; safe cast
     override fun <T : ViewModel> create(modelClass: Class<T>): T = EventViewModel(eventRepository) as T
 }

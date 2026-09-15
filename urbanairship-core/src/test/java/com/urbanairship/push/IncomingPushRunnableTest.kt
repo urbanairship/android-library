@@ -490,39 +490,6 @@ public class IncomingPushRunnableTest {
      * Test that when a push is delivered pre-Oreo the notification settings are drawn
      * from our notification channel compat layer.
      */
-    @Test
-    @Config(sdk = [25])
-    @Suppress("DEPRECATION") // We're testing old Notification APIs
-    public fun testDeliverPushPreOreo(): TestResult = runTest {
-        every { pushManager.isPushEnabled } returns true
-        every { pushManager.isOptIn } returns true
-        every { pushManager.isUniqueCanonicalId("testPushID") } returns true
-
-        // Create a channel and set some non-default values
-        val channelCompat = NotificationChannelCompat(
-            TEST_NOTIFICATION_CHANNEL_ID,
-            "Test Notification Channel",
-            NotificationManager.IMPORTANCE_HIGH
-        )
-        channelCompat.sound = Uri.parse("cool://sound")
-        channelCompat.enableVibration(true)
-        channelCompat.enableLights(true)
-        channelCompat.lightColor = 123
-
-        every { mockChannelRegistry.getNotificationChannelSync(TEST_NOTIFICATION_CHANNEL_ID) } returns channelCompat
-        notificationProvider.notification = createNotification()
-
-        pushRunnable.run()
-
-        val notification = requireNotNull(notificationProvider.notification)
-
-        Assert.assertEquals(notification.sound, channelCompat.sound)
-        Assert.assertEquals(NotificationManager.IMPORTANCE_HIGH, channelCompat.importance)
-        Assert.assertEquals(
-            notification.defaults and Notification.DEFAULT_VIBRATE, Notification.DEFAULT_VIBRATE
-        )
-        Assert.assertEquals(notification.ledARGB, channelCompat.lightColor)
-    }
 
     /**
      * Test remote data notifications
@@ -580,6 +547,28 @@ public class IncomingPushRunnableTest {
         verify { notificationManager.notify("testNotificationTag", TEST_NOTIFICATION_ID, notificationProvider.notification!!) }
         verify { pushManager.onPushReceived(message, true) }
         verify { pushManager.onNotificationPosted(message, TEST_NOTIFICATION_ID, "testNotificationTag") }
+    }
+
+    /**
+     * The channel is looked up by the id the notification was built with, not the one the
+     * provider declared in its arguments — the two can differ, and only the former is what the
+     * system will post against.
+     */
+    @Test
+    public fun testNotificationChannelReadFromNotification(): TestResult = runTest {
+        every { pushManager.isPushEnabled } returns true
+        every { pushManager.isOptIn } returns true
+        every { pushManager.isUniqueCanonicalId("testPushID") } returns true
+
+        // createNotification() builds against "some-channel", while the provider's arguments
+        // declare TEST_NOTIFICATION_CHANNEL_ID.
+        notificationProvider.notification = createNotification()
+        notificationProvider.tag = "testNotificationTag"
+
+        pushRunnable.run()
+
+        verify { mockChannelRegistry.getNotificationChannelSync("some-channel") }
+        verify(exactly = 0) { mockChannelRegistry.getNotificationChannelSync(TEST_NOTIFICATION_CHANNEL_ID) }
     }
 
     private fun createNotification(): Notification = NotificationCompat

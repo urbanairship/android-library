@@ -13,6 +13,7 @@ import com.urbanairship.iam.adapter.fullscreen.FullscreenDisplayDelegate
 import com.urbanairship.iam.adapter.html.HtmlDisplayDelegate
 import com.urbanairship.iam.adapter.layout.AirshipLayoutDisplayDelegate
 import com.urbanairship.iam.adapter.modal.ModalDisplayDelegate
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.content.InAppMessageDisplayContent.BannerContent
@@ -25,7 +26,8 @@ private typealias AdapterBuilder = (Context, InAppMessage, AirshipCachedAssets) 
 internal class DisplayAdapterFactory(
     private val context: Context,
     private val networkMonitor: NetworkMonitor,
-    private val activityMonitor: ActivityMonitor
+    private val activityMonitor: ActivityMonitor,
+    private val ai: InternalAirshipAi? = null
 ) {
     private val customAdapters = mutableMapOf<CustomDisplayAdapterType, AdapterBuilder>()
     var messageContentExtender: InAppMessageContentExtender? = null
@@ -82,7 +84,8 @@ internal class DisplayAdapterFactory(
                 priority = priority,
                 messageExtras = extendedMessage.extras,
                 activityMonitor = activityMonitor,
-                actionRunner = actionRunner
+                actionRunner = actionRunner,
+                ai = ai
             )
             else -> null
         } ?: return null

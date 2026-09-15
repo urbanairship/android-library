@@ -4,8 +4,10 @@ package com.urbanairship.util.timer
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,7 +20,7 @@ public class ManualTimer(
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : Timer {
     private val _isStarted = MutableStateFlow(false)
-    private val startDate = MutableStateFlow<Long?>(null)
+    private val startDate = MutableStateFlow<Instant?>(null)
     private var elapsed: Duration = 0.seconds
 
     override val time: Duration
@@ -30,7 +32,7 @@ public class ManualTimer(
     override fun start() {
         if (_isStarted.value) { return }
 
-        startDate.update { clock.currentTimeMillis() }
+        startDate.update { clock.now() }
         _isStarted.update { true }
     }
 
@@ -44,6 +46,6 @@ public class ManualTimer(
 
     private fun currentSessionTime(): Duration {
         val date = startDate.value ?: return 0.seconds
-        return (clock.currentTimeMillis() - date).milliseconds
+        return clock.now() - date
     }
 }

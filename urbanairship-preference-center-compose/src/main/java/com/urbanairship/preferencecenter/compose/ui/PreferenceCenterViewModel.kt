@@ -43,6 +43,7 @@ import com.urbanairship.preferencecenter.data.evaluate
 import com.urbanairship.preferencecenter.util.CONTACT_DATA_TIMEOUT
 import com.urbanairship.preferencecenter.util.airshipFailIfSlowToStart
 import com.urbanairship.preferencecenter.util.airshipScanConcat
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -627,7 +628,7 @@ internal class DefaultPreferenceCenterViewModel(
     }
 
     private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> =
-        contact.subscriptions.airshipFailIfSlowToStart(
+        contact.subscriptionListsFlow.airshipFailIfSlowToStart(
             timeout = CONTACT_DATA_TIMEOUT,
             message = "Timed out waiting for contact subscriptions."
         )
@@ -636,7 +637,7 @@ internal class DefaultPreferenceCenterViewModel(
         return subscriptionsResult.getOrNull() ?: emptyMap()
     }
 
-    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts
+    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.contactChannelsFlow
         .airshipFailIfSlowToStart(
             timeout = CONTACT_DATA_TIMEOUT,
             message = "Timed out waiting for contact channels."
@@ -731,7 +732,7 @@ internal val ContactChannel.isOptedIn: Boolean
                         info.commercialOptedOut == null -> info.commercialOptedIn != null
                         // If opted in and out are both non-null, check to see if opted in is more recent
                         info.commercialOptedIn != null && info.commercialOptedOut != null ->
-                            (info.commercialOptedIn ?: 0) > (info.commercialOptedOut ?: 0)
+                            (info.commercialOptedIn ?: Instant.EPOCH) > (info.commercialOptedOut ?: Instant.EPOCH)
                         // Not opted in
                         else -> false
                     }

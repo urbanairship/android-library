@@ -34,7 +34,7 @@ public abstract class ScopedSubscriptionListEditor
             ScopedSubscriptionListMutation.newSubscribeMutation(
                 listId = trimmed,
                 scope = scope,
-                timestamp = clock.currentTimeMillis()
+                timestamp = clock.now()
             )
         )
         return this
@@ -73,7 +73,7 @@ public abstract class ScopedSubscriptionListEditor
             ScopedSubscriptionListMutation.newUnsubscribeMutation(
                 listId = trimmedListId,
                 scope = scope,
-                timestamp = clock.currentTimeMillis()
+                timestamp = clock.now()
             )
         )
         return this

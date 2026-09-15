@@ -5,9 +5,13 @@ import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.http.RequestResult
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -58,9 +62,9 @@ public class ChannelSubscriptionsTest {
             mockAudienceOverridesProvider.channelOverrides("some channel")
         } returns AudienceOverrides.Channel(
             subscriptions = listOf(
-                SubscriptionListMutation.newSubscribeMutation("five", 100),
-                SubscriptionListMutation.newUnsubscribeMutation("four", 100),
-                SubscriptionListMutation.newUnsubscribeMutation("one", 100)
+                SubscriptionListMutation.newSubscribeMutation("five", Instant.ofEpochMilli(100)),
+                SubscriptionListMutation.newUnsubscribeMutation("four", Instant.ofEpochMilli(100)),
+                SubscriptionListMutation.newUnsubscribeMutation("one", Instant.ofEpochMilli(100))
             )
         )
 
@@ -102,7 +106,7 @@ public class ChannelSubscriptionsTest {
             mockAudienceOverridesProvider.channelOverrides("some channel")
         } returns AudienceOverrides.Channel(
             subscriptions = listOf(
-                SubscriptionListMutation.newUnsubscribeMutation("one", 100)
+                SubscriptionListMutation.newUnsubscribeMutation("one", Instant.ofEpochMilli(100))
             )
         )
 
@@ -110,7 +114,7 @@ public class ChannelSubscriptionsTest {
             mockAudienceOverridesProvider.channelOverrides("some other channel")
         } returns AudienceOverrides.Channel(
             subscriptions = listOf(
-                SubscriptionListMutation.newUnsubscribeMutation("six", 100)
+                SubscriptionListMutation.newUnsubscribeMutation("six", Instant.ofEpochMilli(100))
             )
         )
 
@@ -134,7 +138,7 @@ public class ChannelSubscriptionsTest {
             mockAudienceOverridesProvider.channelOverrides("some channel")
         } returns AudienceOverrides.Channel(
             subscriptions = listOf(
-                SubscriptionListMutation.newUnsubscribeMutation("one", 100)
+                SubscriptionListMutation.newUnsubscribeMutation("one", Instant.ofEpochMilli(100))
             )
         )
 
@@ -143,14 +147,14 @@ public class ChannelSubscriptionsTest {
         coVerify(exactly = 1) { mockClient.getSubscriptionLists("some channel") }
 
         // Move clock up 1 millis before cache expires
-        testClock.currentTimeMillis += 10 * 60 * 1000 - 1
+        testClock.currentTime += (10 * 60 * 1000 - 1).milliseconds
 
         // Still cached
         assertEquals(setOf("two", "three"), subscriptions.fetchSubscriptionLists("some channel").getOrNull())
         coVerify(exactly = 1) { mockClient.getSubscriptionLists("some channel") }
 
         // expire
-        testClock.currentTimeMillis += 1
+        testClock.currentTime += (1).milliseconds
         assertEquals(setOf("two", "three"), subscriptions.fetchSubscriptionLists("some channel").getOrNull())
         coVerify(exactly = 2) { mockClient.getSubscriptionLists("some channel") }
     }

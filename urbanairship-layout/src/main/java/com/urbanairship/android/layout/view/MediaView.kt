@@ -29,12 +29,14 @@ import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ThomasImageSizeResolver
+import com.urbanairship.android.layout.util.hasContentSizedAncestor
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
@@ -47,11 +49,13 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.intellij.lang.annotations.Language
+import com.urbanairship.android.layout.util.isLayoutRtl
 
 /**
  * Media view.
@@ -105,6 +109,8 @@ internal class MediaView(
     private var lastMediaUrl: String? = null
     private var webContentLoader: Runnable? = null
     private var imageContentLoader: ((String) -> Unit)? = null
+
+    private val mediaFit: MediaFit = model.viewInfo.mediaFit
 
     val isNonInteractiveVideo: Boolean =
         model.viewInfo.mediaType.isPlayable &&
@@ -234,6 +240,107 @@ internal class MediaView(
 
     /** Media views are always shrinkable. */
     override fun isShrinkable(): Boolean = true
+
+    /**
+     * Sizes an image to the box the item asked for, to the box its parent has to offer, or to the
+     * image's own shape at the width it was offered.
+     *
+     * Cropping is what you do to fit an image into a box, and only a length the author wrote makes
+     * a box. A maximum an auto-sized ancestor reached by measuring its own children is not one:
+     * that number is the siblings' extent, and this view is one of the siblings it came from.
+     *
+     * Reads the image for its ratio and never for a pixel count, which each platform decodes at a
+     * scale of its own. iOS asks the same question in `shouldShowMediaWhole`, web in `autoMedia`.
+     *
+     * `center` is left as it was. The platforms each mean something different by it, and the DSL
+     * has it deprecated, so there is nothing here to align it to.
+     */
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val drawable = imageView?.drawable
+        val mediaWidth = drawable?.intrinsicWidth ?: 0
+        val mediaHeight = drawable?.intrinsicHeight ?: 0
+        if (mediaFit == MediaFit.CENTER || mediaWidth <= 0 || mediaHeight <= 0) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            return
+        }
+
+        val ratio = mediaWidth.toFloat() / mediaHeight.toFloat()
+        val statedWidth = statedLength(widthMeasureSpec, itemProperties?.size?.width)
+        val statedHeight = statedLength(heightMeasureSpec, itemProperties?.size?.height)
+        val offeredWidth = offered(widthMeasureSpec)
+        val offeredHeight = offered(heightMeasureSpec)
+
+        var width: Float
+        var height: Float
+        if (statedWidth == null && statedHeight == null) {
+            val ceilingWidth = ceiling(widthMeasureSpec, horizontal = true)
+            val ceilingHeight = ceiling(heightMeasureSpec, horizontal = false)
+
+            if (ceilingWidth != null || ceilingHeight != null) {
+                // A box to crop into, so take the whole of it. An axis with no ceiling of its own
+                // has nothing to take, and follows the ratio.
+                width = ceilingWidth?.toFloat() ?: (ceilingHeight!! * ratio)
+                height = ceilingHeight?.toFloat() ?: (width / ratio)
+            } else {
+                // No box, so the image's own shape at the width it was offered. Scaling up to that
+                // width is the point: `center_inside` promises never to crop, not never to grow.
+                var w = (offeredWidth ?: mediaWidth).toFloat()
+                var h = w / ratio
+
+                // A stack rations what it has among its children and lays out what it gave, so
+                // ignoring the allowance cuts the image off rather than keeping it whole. Scale to
+                // it instead: smaller is what an over-full stack costs, cropped is not.
+                if (offeredHeight != null && h > offeredHeight) {
+                    h = offeredHeight.toFloat()
+                    w = h * ratio
+                }
+
+                width = w
+                height = h
+            }
+        } else {
+            // A stated length is a length. The axis left `auto` follows the ratio, unless a real
+            // ceiling on it would be overrun — then the image is cropped into what there is.
+            val fromRatio = if (statedWidth != null) statedWidth / ratio else statedHeight!! * ratio
+            val ceilingOnAuto =
+                if (statedWidth != null) ceiling(heightMeasureSpec, horizontal = false)
+                else ceiling(widthMeasureSpec, horizontal = true)
+            val autoLength = ceilingOnAuto?.toFloat()?.takeIf { it < fromRatio } ?: fromRatio
+
+            width = statedWidth?.toFloat() ?: autoLength
+            height = statedHeight?.toFloat() ?: autoLength
+        }
+
+        super.onMeasure(
+            MeasureSpec.makeMeasureSpec(width.roundToInt().coerceAtLeast(0), MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(height.roundToInt().coerceAtLeast(0), MeasureSpec.EXACTLY)
+        )
+    }
+
+    /**
+     * The length the item stated on an axis, resolved, or null where it stated `auto`.
+     *
+     * Read from the item rather than the spec, because an `EXACTLY` spec is not by itself a
+     * statement: a stack that has settled its own length remeasures its children against it, and
+     * an item that stated `auto` is one of the children that length was measured from.
+     */
+    private fun statedLength(spec: Int, dimension: Size.Dimension?): Int? {
+        if (dimension == null || dimension.type == Size.DimensionType.AUTO) return null
+        return MeasureSpec.getSize(spec).takeIf { MeasureSpec.getMode(spec) == MeasureSpec.EXACTLY }
+    }
+
+    /** The room there is on an axis, or null where the view was measured unbounded. */
+    private fun offered(spec: Int): Int? =
+        MeasureSpec.getSize(spec).takeIf { MeasureSpec.getMode(spec) != MeasureSpec.UNSPECIFIED }
+
+    /**
+     * The maximum on an axis, where it is a box rather than a measurement.
+     *
+     * A maximum an ancestor measured out of its own content is slack on its way to sizing itself,
+     * or a ration of what it had to give out, so there is nothing there to crop into.
+     */
+    private fun ceiling(spec: Int, horizontal: Boolean): Int? =
+        offered(spec)?.takeIf { !hasContentSizedAncestor(horizontal) }
 
     private fun configureImageView(model: MediaModel) {
         val resolvedUrl = model.resolveUrl(currentState, ResourceUtils.isUiModeNight(context))
@@ -392,7 +499,6 @@ internal class MediaView(
         frameLayout.addView(progressBar, progressBarLayoutParams)
         wv.setBackgroundColor(Color.TRANSPARENT)
 
-        @Suppress("DEPRECATION")
         wv.settings.apply {
             mediaPlaybackRequiresUserGesture = false
 
@@ -400,13 +506,10 @@ internal class MediaView(
 
             if (ManifestUtils.shouldEnableLocalStorage(context)) {
                 domStorageEnabled = true
-                databaseEnabled = true
             }
 
             // Disallow all file and content access, which could pose a security risk if enabled.
             allowFileAccess = false
-            allowFileAccessFromFileURLs = false
-            allowUniversalAccessFromFileURLs = false
             allowContentAccess = false
         }
 
@@ -532,10 +635,9 @@ internal class MediaView(
             MediaFit.CENTER_INSIDE -> "object-fit: contain;"
             MediaFit.CENTER_CROP -> "object-fit: cover;"
             MediaFit.FIT_CROP -> {
-                val isRtl = LAYOUT_DIRECTION_RTL == layoutDirection
                 val horizontal = when (viewInfo.position.horizontal) {
-                    HorizontalPosition.START -> if (isRtl) "right" else "left"
-                    HorizontalPosition.END -> if (isRtl) "left" else "right"
+                    HorizontalPosition.START -> if (isLayoutRtl) "right" else "left"
+                    HorizontalPosition.END -> if (isLayoutRtl) "left" else "right"
                     HorizontalPosition.CENTER -> "center"
                 }
                 val vertical = when (viewInfo.position.vertical) {

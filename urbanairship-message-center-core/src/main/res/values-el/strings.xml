@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Επεξεργασία λίστας</string>
+    <string name="ua_leave_edit_mode">Διακοπή επεξεργασίας λίστας</string>
+    <string name="ua_announce_enter_edit_mode">Επεξεργασία λίστας μηνυμάτων</string>
+    <string name="ua_announce_leave_edit_mode">Προβολή λίστας μηνυμάτων</string>
+    <string name="ua_mark_unread">Επισήμανση ως μη αναγνωσμένο</string>
+    <string name="ua_mark_all_read">Επισήμανση όλων ως αναγνωσμένων</string>
+    <string name="ua_delete_all">Διαγραφή όλων</string>
+    <string name="ua_description_mark_read">Επισήμανση μηνύματος ως αναγνωσμένου</string>
+    <string name="ua_description_mark_unread">Επισήμανση μηνύματος ως μη αναγνωσμένου</string>
+    <string name="ua_description_mark_all_read">Επισήμανση όλων των μηνυμάτων ως αναγνωσμένων</string>
+    <string name="ua_description_delete_all">Διαγραφή όλων των μηνυμάτων</string>
+    <string name="ua_description_delete">Διαγραφή μηνύματος</string>
+    <string name="ua_description_message_list_pane">Λίστα μηνυμάτων</string>
+    <string name="ua_description_message_pane">Περιεχόμενο μηνύματος</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">Επισημάνθηκε 

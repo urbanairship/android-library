@@ -55,6 +55,7 @@
     <!-- General -->
     <string name="ua_refresh">更新</string>
     <string name="ua_open">開く</string>
+    <string name="ua_back">前へ</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">評価</string>
     <string name="ua_rate_app_action_default_rate_negative_button">いえ結構です</string>

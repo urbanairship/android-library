@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.property.ModalPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
@@ -9,6 +10,12 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 
+/**
+ * Modal presentation info.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ModalPresentation public constructor(
     public val defaultPlacement: ModalPlacement,
     public val placementSelectors: List<ModalPlacementSelector>?,
@@ -33,6 +40,8 @@ public class ModalPresentation public constructor(
             ?: defaultPlacement
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val KEY_PLACEMENT_SELECTORS = "placement_selectors"
         private const val KEY_DEFAULT_PLACEMENT = "default_placement"

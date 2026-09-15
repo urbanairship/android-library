@@ -42,6 +42,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionValue
 import com.urbanairship.actions.RateAppAction
+import com.urbanairship.automation.compose.AirshipEmbeddedCarousel
+import com.urbanairship.automation.compose.AirshipEmbeddedCarouselDefaults
 import com.urbanairship.devapp.AppRouterViewModel
 import com.urbanairship.devapp.Destination
 import com.urbanairship.messagecenter.Message
@@ -112,7 +114,20 @@ internal fun HomeScreen(
                         onTap = viewModel::togglePushStatus
                     )
 
-                    Spacer(Modifier.padding(bottom = 12.dp))
+                    Spacer(Modifier.height(16.dp))
+
+                    AirshipEmbeddedCarousel(
+                        embeddedId = "carousel",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        previousArrow = AirshipEmbeddedCarouselDefaults.previousArrow(),
+                        nextArrow = AirshipEmbeddedCarouselDefaults.nextArrow(),
+                        indicator = AirshipEmbeddedCarouselDefaults.dotsIndicator,
+                        placeholder = null
+                    )
+
+                    Spacer(Modifier.height(12.dp))
 
                     QuickSettingItem(
                         title = stringResource(R.string.channel_id),
@@ -149,6 +164,13 @@ internal fun HomeScreen(
                         title = stringResource(R.string.thomas_layouts),
                         subtitle = "Tap to preview layouts",
                         onClick = { onNavigate(QuickAccess.ThomasLayoutsHome) }
+                    )
+                    HorizontalDivider()
+
+                    QuickSettingItem(
+                        title = stringResource(R.string.embedded_ai_title),
+                        subtitle = stringResource(R.string.embedded_ai_subtitle),
+                        onClick = { onNavigate(QuickAccess.EmbeddedAi) }
                     )
                     HorizontalDivider()
 

@@ -10,6 +10,7 @@ import com.urbanairship.Platform
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
+import java.time.Instant
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -36,7 +37,7 @@ public interface DeviceInfoProvider {
     public val platform: Platform
     public val channelCreated: Boolean
     public val analyticsEnabled: Boolean
-    public val installDateMilliseconds: Long
+    public val installDate: Instant
     public val locale: Locale
 
     /** @hide */
@@ -67,8 +68,8 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
         ?.let { PackageInfoCompat.getLongVersionCode(it) }
         ?: -1
 
-    override val installDateMilliseconds: Long
-        get() = packageInfo?.firstInstallTime ?: 0
+    override val installDate: Instant
+        get() = packageInfo?.firstInstallTime?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
 
     override val isNotificationsOptedIn: Boolean
         get() = Airship.push.areNotificationsOptedIn()
@@ -156,8 +157,8 @@ internal class CachingDeviceInfoProvider(
         deviceInfoProviderImpl.analyticsEnabled
     }
 
-    private val cachedInstallDateMilliseconds = OneTimeValue {
-        deviceInfoProviderImpl.installDateMilliseconds
+    private val cachedInstallDate = OneTimeValue {
+        deviceInfoProviderImpl.installDate
     }
 
     private val cachedLocale = OneTimeValue {
@@ -182,8 +183,8 @@ internal class CachingDeviceInfoProvider(
         get() = cachedChannelCreated.getValue()
     override val analyticsEnabled: Boolean
         get() = cachedAnalyticsEnabled.getValue()
-    override val installDateMilliseconds: Long
-        get() = cachedInstallDateMilliseconds.getValue()
+    override val installDate: Instant
+        get() = cachedInstallDate.getValue()
     override val locale: Locale
         get() = cachedLocale.getValue()
 }

@@ -1,0 +1,448 @@
+public final class com/urbanairship/preferencecenter/compose/ui/ComposableSingletons$ContactAddDialogKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/ComposableSingletons$ContactAddDialogKt;
+	public fun <init> ()V
+	public final fun getLambda$-1706345373$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1463616424$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1675882348$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$297666613$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/ComposableSingletons$ContactConfirmationDialogsKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/ComposableSingletons$ContactConfirmationDialogsKt;
+	public fun <init> ()V
+	public final fun getLambda$-1305268358$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-792844139$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/ComposableSingletons$PreferenceCenterScreenKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/ComposableSingletons$PreferenceCenterScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-1442551917$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1487568830$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-1982897450$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-21196205$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-871806494$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1561809803$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/PreferenceCenterActivity : androidx/activity/ComponentActivity {
+	public static final field $stable I
+	public fun <init> ()V
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/PreferenceCenterDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/PreferenceCenterDefaults;
+	public final fun topBar (Ljava/lang/String;Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/PreferenceCenterScreenKt {
+	public static final fun PreferenceCenterContent (Lcom/urbanairship/preferencecenter/compose/ui/PreferenceCenterState;Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;II)V
+	public static final fun PreferenceCenterContent (Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;II)V
+	public static final fun PreferenceCenterScreen (Lcom/urbanairship/preferencecenter/compose/ui/PreferenceCenterState;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+	public static final fun PreferenceCenterScreen (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/PreferenceCenterState {
+	public static final field $stable I
+	public final fun getIdentifier ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/PreferenceCenterStateKt {
+	public static final fun rememberPreferenceCenterState (Ljava/lang/String;Landroidx/compose/runtime/Composer;I)Lcom/urbanairship/preferencecenter/compose/ui/PreferenceCenterState;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$AlertItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$AlertItemKt;
+	public fun <init> ()V
+	public final fun getLambda$1234064551$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$716800034$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$BaseSubscriptionItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$BaseSubscriptionItemKt;
+	public fun <init> ()V
+	public final fun getLambda$1414178939$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ChannelSubscriptionItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ChannelSubscriptionItemKt;
+	public fun <init> ()V
+	public final fun getLambda$1371575742$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$724966758$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ContactManagementItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ContactManagementItemKt;
+	public fun <init> ()V
+	public final fun getLambda$-573548547$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1202292763$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$186135010$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$871546144$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ContactSubscriptionGroupItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ContactSubscriptionGroupItemKt;
+	public fun <init> ()V
+	public final fun getLambda$-16964760$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$71577283$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ContactSubscriptionItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$ContactSubscriptionItemKt;
+	public fun <init> ()V
+	public final fun getLambda$-949823615$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$DescriptionItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$DescriptionItemKt;
+	public fun <init> ()V
+	public final fun getLambda$-968863698$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1007307463$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1736945154$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$694346899$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$SectionBreakItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$SectionBreakItemKt;
+	public fun <init> ()V
+	public final fun getLambda$2003909488$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$859977547$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$SectionItemKt {
+	public static final field INSTANCE Lcom/urbanairship/preferencecenter/compose/ui/item/ComposableSingletons$SectionItemKt;
+	public fun <init> ()V
+	public final fun getLambda$-281485506$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$843519993$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors$Companion;
+	public synthetic fun <init> (JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-0d7_KjU ()J
+	public final fun component10-0d7_KjU ()J
+	public final fun component11-0d7_KjU ()J
+	public final fun component12-0d7_KjU ()J
+	public final fun component13-0d7_KjU ()J
+	public final fun component14-0d7_KjU ()J
+	public final fun component15-0d7_KjU ()J
+	public final fun component16-0d7_KjU ()J
+	public final fun component17-0d7_KjU ()J
+	public final fun component18-0d7_KjU ()J
+	public final fun component19-0d7_KjU ()J
+	public final fun component2-0d7_KjU ()J
+	public final fun component20-0d7_KjU ()J
+	public final fun component21-0d7_KjU ()J
+	public final fun component22-0d7_KjU ()J
+	public final fun component23-0d7_KjU ()J
+	public final fun component24-0d7_KjU ()J
+	public final fun component25-0d7_KjU ()J
+	public final fun component26-0d7_KjU ()J
+	public final fun component27-0d7_KjU ()J
+	public final fun component28-0d7_KjU ()J
+	public final fun component29-0d7_KjU ()J
+	public final fun component3-0d7_KjU ()J
+	public final fun component30-0d7_KjU ()J
+	public final fun component31-0d7_KjU ()J
+	public final fun component32-0d7_KjU ()J
+	public final fun component33-0d7_KjU ()J
+	public final fun component34-0d7_KjU ()J
+	public final fun component35-0d7_KjU ()J
+	public final fun component36-0d7_KjU ()J
+	public final fun component37-0d7_KjU ()J
+	public final fun component38-0d7_KjU ()J
+	public final fun component39-0d7_KjU ()J
+	public final fun component4-0d7_KjU ()J
+	public final fun component40-0d7_KjU ()J
+	public final fun component41-0d7_KjU ()J
+	public final fun component42-0d7_KjU ()J
+	public final fun component43-0d7_KjU ()J
+	public final fun component44-0d7_KjU ()J
+	public final fun component45-0d7_KjU ()J
+	public final fun component46-0d7_KjU ()J
+	public final fun component47-0d7_KjU ()J
+	public final fun component48-0d7_KjU ()J
+	public final fun component49-0d7_KjU ()J
+	public final fun component5-0d7_KjU ()J
+	public final fun component6-0d7_KjU ()J
+	public final fun component7-0d7_KjU ()J
+	public final fun component8-0d7_KjU ()J
+	public final fun component9-0d7_KjU ()J
+	public final fun copy-7Ufrcmk (JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public static synthetic fun copy-7Ufrcmk$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJIILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccent-0d7_KjU ()J
+	public final fun getAlertButtonBackground-0d7_KjU ()J
+	public final fun getAlertButtonText-0d7_KjU ()J
+	public final fun getAlertDescriptionText-0d7_KjU ()J
+	public final fun getAlertIconTint-0d7_KjU ()J
+	public final fun getAlertTitleText-0d7_KjU ()J
+	public final fun getBackground-0d7_KjU ()J
+	public final fun getContactManagementAddButtonText-0d7_KjU ()J
+	public final fun getContactManagementDialogBackground-0d7_KjU ()J
+	public final fun getContactManagementDialogButtonLabelDisabled-0d7_KjU ()J
+	public final fun getContactManagementDialogButtonLabelNeutral-0d7_KjU ()J
+	public final fun getContactManagementDialogButtonLabelPositive-0d7_KjU ()J
+	public final fun getContactManagementDialogDescriptionText-0d7_KjU ()J
+	public final fun getContactManagementDialogInputBorderFocused-0d7_KjU ()J
+	public final fun getContactManagementDialogInputBorderUnfocused-0d7_KjU ()J
+	public final fun getContactManagementDialogInputLabelFocused-0d7_KjU ()J
+	public final fun getContactManagementDialogInputLabelUnfocused-0d7_KjU ()J
+	public final fun getContactManagementDialogTitleText-0d7_KjU ()J
+	public final fun getContactManagementItemActionText-0d7_KjU ()J
+	public final fun getContactManagementItemAddressText-0d7_KjU ()J
+	public final fun getContactManagementItemDeleteIconTint-0d7_KjU ()J
+	public final fun getContactManagementItemDescriptionText-0d7_KjU ()J
+	public final fun getContactManagementItemIconTint-0d7_KjU ()J
+	public final fun getContactManagementItemStatusText-0d7_KjU ()J
+	public final fun getContactManagementItemTitleText-0d7_KjU ()J
+	public final fun getDivider-0d7_KjU ()J
+	public final fun getError-0d7_KjU ()J
+	public final fun getItemDescriptionText-0d7_KjU ()J
+	public final fun getItemTitleText-0d7_KjU ()J
+	public final fun getLink-0d7_KjU ()J
+	public final fun getLoadingIndicator-0d7_KjU ()J
+	public final fun getSectionItemTitleText-0d7_KjU ()J
+	public final fun getSectionLabelBackground-0d7_KjU ()J
+	public final fun getSectionLabelText-0d7_KjU ()J
+	public final fun getSubscriptionSwitchCheckedThumbColor-0d7_KjU ()J
+	public final fun getSubscriptionSwitchCheckedTrackColor-0d7_KjU ()J
+	public final fun getSubscriptionSwitchUncheckedThumbColor-0d7_KjU ()J
+	public final fun getSubscriptionSwitchUncheckedTrackColor-0d7_KjU ()J
+	public final fun getSubscriptionTypeChipCheckMark-0d7_KjU ()J
+	public final fun getSubscriptionTypeChipChecked-0d7_KjU ()J
+	public final fun getSubscriptionTypeChipLabelText-0d7_KjU ()J
+	public final fun getSubscriptionTypeChipStroke-0d7_KjU ()J
+	public final fun getSubscriptionTypeChipSurface-0d7_KjU ()J
+	public final fun getSubscriptionTypeChipUnchecked-0d7_KjU ()J
+	public final fun getSurface-0d7_KjU ()J
+	public final fun getTitleText-0d7_KjU ()J
+	public final fun getTopBarBackground-0d7_KjU ()J
+	public final fun getTopBarIconTint-0d7_KjU ()J
+	public final fun getTopBarTitleText-0d7_KjU ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors$Companion {
+	public final fun darkDefaults-5r9EGqc (JJJJJJJJJ)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public static synthetic fun darkDefaults-5r9EGqc$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors$Companion;JJJJJJJJJILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public final fun lightDefaults-5r9EGqc (JJJJJJJJJ)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public static synthetic fun lightDefaults-5r9EGqc$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors$Companion;JJJJJJJJJILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens$Companion;
+	public synthetic fun <init> (Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;FFFFFFFLandroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;FFFFLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component10-D9Ej5fM ()F
+	public final fun component11-D9Ej5fM ()F
+	public final fun component12-D9Ej5fM ()F
+	public final fun component13-D9Ej5fM ()F
+	public final fun component14-D9Ej5fM ()F
+	public final fun component15 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component16-D9Ej5fM ()F
+	public final fun component17 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component18-D9Ej5fM ()F
+	public final fun component19-D9Ej5fM ()F
+	public final fun component2 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component20-D9Ej5fM ()F
+	public final fun component21-D9Ej5fM ()F
+	public final fun component22 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component23 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component24 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component25-D9Ej5fM ()F
+	public final fun component26 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component27 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component28 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component29 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component3 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component30 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component31 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component32-MYxV2XQ ()J
+	public final fun component33-MYxV2XQ ()J
+	public final fun component4 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component5 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component6-D9Ej5fM ()F
+	public final fun component7 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component8-D9Ej5fM ()F
+	public final fun component9-D9Ej5fM ()F
+	public final fun copy-ZkvJ9_o (Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;FFFFFFFLandroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;FFFFLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;JJ)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;
+	public static synthetic fun copy-ZkvJ9_o$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;FFFFFFFLandroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;FFFFLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;JJIILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlertIconPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getAlertIconSize-MYxV2XQ ()J
+	public final fun getAlertItemButtonPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getAlertItemDescriptionPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getAlertItemTitlePadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getContactManagementDialogDescriptionPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getContactManagementDialogFooterPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getContactManagementDialogInputMinHeight-D9Ej5fM ()F
+	public final fun getContactManagementDialogInputPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getContactManagementDialogPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getContactManagementDialogTitlePadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getContactManagementItemActionSpacing-D9Ej5fM ()F
+	public final fun getContactManagementItemDeleteIconSize-D9Ej5fM ()F
+	public final fun getContactManagementItemIconSize-D9Ej5fM ()F
+	public final fun getContactManagementItemIconSpacing-D9Ej5fM ()F
+	public final fun getContactManagementItemMinHeight-D9Ej5fM ()F
+	public final fun getContactManagementItemTitlePadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getDescriptionPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getErrorIconSize-MYxV2XQ ()J
+	public final fun getItemDescriptionPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getItemPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getItemTitlePadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getSubscriptionSwitchMinWidth-D9Ej5fM ()F
+	public final fun getSubscriptionSwitchPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getSubscriptionTypeChipCheckMarkOffsetX-D9Ej5fM ()F
+	public final fun getSubscriptionTypeChipCheckMarkOffsetY-D9Ej5fM ()F
+	public final fun getSubscriptionTypeChipCheckMarkPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getSubscriptionTypeChipCheckMarkSize-D9Ej5fM ()F
+	public final fun getSubscriptionTypeChipCheckMarkStroke-D9Ej5fM ()F
+	public final fun getSubscriptionTypeChipMinHeight-D9Ej5fM ()F
+	public final fun getSubscriptionTypeChipSpacing-D9Ej5fM ()F
+	public final fun getSubscriptionTypeChipStoke-D9Ej5fM ()F
+	public final fun getTitlePadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens$Companion {
+	public final fun defaults ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions$Companion;
+	public fun <init> (ZZ)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun copy (ZZ)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;ZZILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getShowSwitchIcons ()Z
+	public final fun getShowTitleItem ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions$Companion {
+	public final fun defaults ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes$Companion;
+	public fun <init> (Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;)V
+	public final fun component1 ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun component2 ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun component3 ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun component4 ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun component5 ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun copy (Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;Landroidx/compose/foundation/shape/CornerBasedShape;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContactManagementAddButton ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun getContactManagementDialog ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun getSectionLabel ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun getSubscriptionTypeChip ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public final fun getSubscriptionTypeChipCheckMark ()Landroidx/compose/foundation/shape/CornerBasedShape;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes$Companion {
+	public final fun defaults ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTheme {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;)V
+	public synthetic fun <init> (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public final fun component2 ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public final fun component3 ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;
+	public final fun component4 ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;
+	public final fun component5 ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;
+	public final fun component6 ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;
+	public final fun copy (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTheme;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTheme;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTheme;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDarkColors ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public final fun getDimens ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;
+	public final fun getLightColors ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;
+	public final fun getOptions ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;
+	public final fun getShapes ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;
+	public final fun getTypography ()Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterThemeKt {
+	public static final fun PreferenceCenterTheme (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterDimens;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterShapes;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterOptions;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterThemeManagerKt {
+	public static final fun getTheme (Lcom/urbanairship/preferencecenter/PreferenceCenter;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTheme;
+	public static final fun setTheme (Lcom/urbanairship/preferencecenter/PreferenceCenter;Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTheme;)V
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography$Companion;
+	public fun <init> (Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;)V
+	public final fun component1 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component10 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component11 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component12 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component13 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component14 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component15 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component16 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component17 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component18 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component19 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component2 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component3 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component4 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component5 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component6 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component7 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component8 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component9 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun copy (Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;
+	public static synthetic fun copy$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlertButtonLabel ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getAlertDescription ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getAlertTitle ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementButtonLabel ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementDialogDescription ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementDialogDropdownItem ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementDialogInputHint ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementDialogInputLabel ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementDialogTitle ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementItemDescription ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getContactManagementItemTitle ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getDescription ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getItemDescription ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getItemTitle ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getSectionDescription ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getSectionLabel ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getSectionTitle ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getSubscriptionTypeChipLabel ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getTitle ()Landroidx/compose/ui/text/TextStyle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography$Companion {
+	public final fun defaults (Landroidx/compose/ui/text/font/FontFamily;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;
+	public static synthetic fun defaults$default (Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography$Companion;Landroidx/compose/ui/text/font/FontFamily;ILjava/lang/Object;)Lcom/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterTypography;
+}
+

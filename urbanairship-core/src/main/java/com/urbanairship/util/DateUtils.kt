@@ -5,6 +5,7 @@ import androidx.annotation.RestrictTo
 import java.text.ParseException
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -66,7 +67,7 @@ public object DateUtils {
     private val lock = Any()
 
     /**
-     * Parses an ISO 8601 timestamp into epoch milliseconds.
+     * Parses an ISO 8601 timestamp into an [Instant].
      *
      * Accepted forms (UTC unless a zone is specified):
      *  - `2024`, `2024-01`, `2024-01-15`
@@ -80,7 +81,7 @@ public object DateUtils {
      * @throws ParseException if the timestamp cannot be parsed.
      */
     @Throws(ParseException::class)
-    public fun parseIso8601(timeStamp: String?): Long {
+    public fun parseIso8601(timeStamp: String?): Instant {
         if (timeStamp.isNullOrEmpty()) {
             throw ParseException("Unable to parse null or empty timestamp", -1)
         }
@@ -92,7 +93,7 @@ public object DateUtils {
                 val position = ParsePosition(0)
                 val parsed = format.parse(normalized, position)
                 if (parsed != null && position.index == normalized.length) {
-                    return parsed.time
+                    return parsed.toInstant()
                 }
             }
         }
@@ -110,12 +111,12 @@ public object DateUtils {
         }
 
     /**
-     * Parses an RFC 7231 HTTP-date into epoch milliseconds.
+     * Parses an RFC 7231 HTTP-date into an [Instant].
      *
      * @throws ParseException if the input is null, empty, or not a recognized HTTP-date.
      */
     @Throws(ParseException::class)
-    public fun parseHttpDate(timeStamp: String?): Long {
+    public fun parseHttpDate(timeStamp: String?): Instant {
         if (timeStamp.isNullOrEmpty()) {
             throw ParseException("Unable to parse null or empty HTTP-date", -1)
         }
@@ -124,7 +125,7 @@ public object DateUtils {
                 val position = ParsePosition(0)
                 val parsed = format.parse(timeStamp, position)
                 if (parsed != null && position.index == timeStamp.length) {
-                    return parsed.time
+                    return parsed.toInstant()
                 }
             }
         }
@@ -134,7 +135,7 @@ public object DateUtils {
     /**
      * Parses an ISO 8601 timestamp, returning [defaultValue] if parsing fails.
      */
-    public fun parseIso8601(timeStamp: String?, defaultValue: Long): Long {
+    public fun parseIso8601(timeStamp: String?, defaultValue: Instant): Instant {
         return try {
             parseIso8601(timeStamp)
         } catch (_: ParseException) {
@@ -145,14 +146,14 @@ public object DateUtils {
     /**
      * Creates an ISO 8601 timestamp in UTC, e.g. `2024-01-15T12:00:00Z`.
      *
-     * @param milliseconds Epoch milliseconds.
+     * @param instant The instant to format.
      * @param includeMillis If true, appends fractional seconds, e.g. `2024-01-15T12:00:00.123Z`.
      */
     @JvmOverloads
     @JvmStatic
-    public fun createIso8601TimeStamp(milliseconds: Long, includeMillis: Boolean = false): String {
+    public fun createIso8601TimeStamp(instant: Instant, includeMillis: Boolean = false): String {
         val format = if (includeMillis) FORMAT_WITH_MILLIS else FORMAT_NO_MILLIS
-        return synchronized(lock) { format.format(Date(milliseconds)) }
+        return synchronized(lock) { format.format(Date(instant.toEpochMilli())) }
     }
 
     private fun format(pattern: String): SimpleDateFormat =

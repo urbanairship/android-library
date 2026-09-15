@@ -22,6 +22,8 @@ import com.urbanairship.push.PushProvider
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ChannelRegistrationPayload private constructor(builder: Builder) : JsonSerializable {
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public enum class DeviceType(
         private val value: String
     ) : JsonSerializable {
@@ -64,7 +66,10 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
 
     /**
      * Builds the ChannelRegistrationPayload
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Builder {
         internal var optIn: Boolean = false
         public var backgroundEnabled: Boolean = false

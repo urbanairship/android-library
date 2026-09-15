@@ -5,6 +5,7 @@ import com.urbanairship.BaseTestCase
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.FormatterUtils.toSecondsString
+import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Assert.assertEquals
@@ -17,7 +18,7 @@ public class AirshipEventDataTest : BaseTestCase() {
         val event = AirshipEventData(
             id = UUID.randomUUID().toString(),
             sessionId = UUID.randomUUID().toString(),
-            timeMs = 1000L,
+            timestamp = Instant.ofEpochMilli(1000),
             body = jsonMapOf("foo" to "bar").toJsonValue(),
             type = EventType.SCREEN_TRACKING
         )
@@ -26,7 +27,7 @@ public class AirshipEventDataTest : BaseTestCase() {
             {
                 "event_id": "${event.id}",
                 "type": "${event.type.reportingName}",
-                "time": "${event.timeMs.milliseconds.toSecondsString()}",
+                "time": "${event.timestamp.toSecondsString()}",
                 "data": {
                     "session_id": "${event.sessionId}",
                     "foo": "bar"

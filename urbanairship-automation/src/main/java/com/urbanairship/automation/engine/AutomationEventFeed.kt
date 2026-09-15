@@ -4,12 +4,10 @@ package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.Platform
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.EventType
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.EventAutomationTriggerType
-import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -240,91 +238,91 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.IN_APP_BUTTON_TAP -> {
+                    EventType.LAYOUT_BUTTON_TAP -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_BUTTON_TAP,
+                                triggerType = EventAutomationTriggerType.LAYOUT_BUTTON_TAP,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_PERMISSION_RESULT -> {
+                    EventType.LAYOUT_PERMISSION_RESULT -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_PERMISSION_RESULT,
+                                triggerType = EventAutomationTriggerType.LAYOUT_PERMISSION_RESULT,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_FORM_DISPLAY -> {
+                    EventType.LAYOUT_FORM_DISPLAY -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_FORM_DISPLAY,
+                                triggerType = EventAutomationTriggerType.LAYOUT_FORM_DISPLAY,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_FORM_RESULT -> {
+                    EventType.LAYOUT_FORM_RESULT -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_FORM_RESULT,
+                                triggerType = EventAutomationTriggerType.LAYOUT_FORM_RESULT,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_GESTURE -> {
+                    EventType.LAYOUT_GESTURE -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_GESTURE,
+                                triggerType = EventAutomationTriggerType.LAYOUT_GESTURE,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_PAGER_COMPLETED -> {
+                    EventType.LAYOUT_PAGER_COMPLETED -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType =  EventAutomationTriggerType.IN_APP_PAGER_COMPLETED,
+                                triggerType =  EventAutomationTriggerType.LAYOUT_PAGER_COMPLETED,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_PAGER_SUMMARY -> {
+                    EventType.LAYOUT_PAGER_SUMMARY -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_PAGER_SUMMARY,
+                                triggerType = EventAutomationTriggerType.LAYOUT_PAGER_SUMMARY,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_PAGE_SWIPE -> {
+                    EventType.LAYOUT_PAGE_SWIPE -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_PAGE_SWIPE,
+                                triggerType = EventAutomationTriggerType.LAYOUT_PAGE_SWIPE,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_PAGE_VIEW -> {
+                    EventType.LAYOUT_PAGE_VIEW -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_PAGE_VIEW,
+                                triggerType = EventAutomationTriggerType.LAYOUT_PAGE_VIEW,
                                 data = this.data
                             )
                         )
                     }
 
-                    EventType.IN_APP_PAGE_ACTION -> {
+                    EventType.LAYOUT_PAGE_ACTION -> {
                         listOf(
                             AutomationEvent.Event(
-                                triggerType = EventAutomationTriggerType.IN_APP_PAGE_ACTION,
+                                triggerType = EventAutomationTriggerType.LAYOUT_PAGE_ACTION,
                                 data = this.data
                             )
                         )

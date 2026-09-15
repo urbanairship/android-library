@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ai.DefaultThomasAIInference
+import com.urbanairship.android.layout.ai.ThomasAIInference
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.ModelFactoryException
@@ -37,8 +39,9 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
+import java.time.Instant
 import java.util.Objects
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -79,6 +82,7 @@ public class EmbeddedLayout(
     private val externalListener: ThomasListenerInterface = args.listener
     private val imageCache: ImageCache? = args.imageCache
     private val actionRunner: ThomasActionRunner = args.actionRunner
+    private val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(args.ai)
 
 
     private val reporter: Reporter = ExternalReporter(externalListener)
@@ -119,7 +123,7 @@ public class EmbeddedLayout(
             return null
         }
 
-        val timer = DisplayTimer(activity, 0)
+        val timer = DisplayTimer(activity)
 
         val presentation = (payload.presentation as? EmbeddedPresentation)
         if (presentation == null) {
@@ -136,13 +140,13 @@ public class EmbeddedLayout(
         })
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
-                super.onForeground(time)
+            override fun onForeground(timestamp: Instant) {
+                super.onForeground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, true)
             }
 
-            override fun onBackground(time: Long) {
-                super.onBackground(time)
+            override fun onBackground(timestamp: Instant) {
+                super.onBackground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, false)
             }
         })
@@ -152,7 +156,8 @@ public class EmbeddedLayout(
             activityMonitor,
             webViewClientFactory,
             imageCache,
-            false // Embedded views never ignore safe areas?
+            false, // Embedded views never ignore safe areas?
+            payload.version
         )
 
         val viewModelProvider = ViewModelProvider(EmbeddedViewModelStoreOwner)
@@ -164,7 +169,8 @@ public class EmbeddedLayout(
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = actionRunner,
-                displayTimer = timer
+                displayTimer = timer,
+                aiInference = aiInference
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,
@@ -256,7 +262,7 @@ public class EmbeddedLayout(
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = (displayTimer?.time ?: 0).milliseconds,
+                displayTime = displayTimer?.time ?: Duration.ZERO,
                 context = state
             )
         )

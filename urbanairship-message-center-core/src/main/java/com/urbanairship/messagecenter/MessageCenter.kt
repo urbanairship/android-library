@@ -13,6 +13,7 @@ import com.urbanairship.Predicate
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -43,7 +44,13 @@ public constructor(
     private val privacyManager: PrivacyManager,
     public val inbox: Inbox,
     private val pushManager: PushManager,
-    dispatcher: CoroutineDispatcher
+    dispatcher: CoroutineDispatcher,
+    /**
+     * Injected rather than reached through `Airship`: the view layer builds Thomas layouts,
+     * and resolving the manager from a layout host waits on takeoff.
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val ai: InternalAirshipAi? = null
 ) : JobAwareAirshipComponent(context, dataStore) {
 
     private val job = SupervisorJob()
@@ -99,7 +106,8 @@ public constructor(
         channel: AirshipChannel,
         pushManager: PushManager,
         analytics: Analytics,
-        meteredUsage: AirshipMeteredUsage
+        meteredUsage: AirshipMeteredUsage,
+        ai: InternalAirshipAi? = null
     ) : this(
         context = context,
         dataStore = dataStore,
@@ -115,7 +123,8 @@ public constructor(
             JobDispatcher.shared(context).scheduleInboxUpdateJob(reason)
         },
         pushManager = pushManager,
-        dispatcher = Dispatchers.IO
+        dispatcher = Dispatchers.IO,
+        ai = ai
     )
 
 
@@ -159,6 +168,10 @@ public constructor(
             ACTION_UPDATE_INBOX
         )
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return inbox.performUpdate().fold(
             onSuccess = { if (it) JobResult.SUCCESS else JobResult.RETRY },
@@ -175,7 +188,11 @@ public constructor(
         pushManager.removePushListener(pushListener)
     }
 
-    /** The inbox user. */
+    /**
+     * The inbox user.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val user: User
         get() = inbox.user
 
@@ -246,6 +263,10 @@ public constructor(
 
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onAirshipDeepLink(uri: Uri): Boolean {
         if (DEEP_LINK_HOST == uri.encodedAuthority) {
             val paths = uri.pathSegments

@@ -6,10 +6,8 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushNotificationStatus
-import com.urbanairship.push.pushNotificationStatusFlow
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +34,6 @@ public class ConditionStateMonitorTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val mockPushManager = mockk<PushManager> {
-        mockkStatic(PushManager::pushNotificationStatusFlow)
         every { this@mockk.pushNotificationStatusFlow } returns stateFlow
     }
 

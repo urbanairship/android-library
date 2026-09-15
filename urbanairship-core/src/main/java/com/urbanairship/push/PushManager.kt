@@ -2,7 +2,6 @@
 package com.urbanairship.push
 
 import android.content.Context
-import android.os.Build
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.XmlRes
@@ -46,6 +45,7 @@ import com.urbanairship.push.notifications.AirshipNotificationProvider
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import com.urbanairship.push.notifications.NotificationProvider
+import java.time.Instant
 import java.util.concurrent.ExecutorService
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
@@ -84,11 +84,9 @@ public open class PushManager @VisibleForTesting internal constructor(
         NotificationChannelRegistry(context, config.configOptions)
 
     /**
-     * Sets the notification provider used to build notifications from a push message
+     * The notification provider used to build notifications from a push message.
      *
      * If `null`, notification will not be displayed.
-     *
-     * @param notificationProvider The notification provider
      *
      * @see com.urbanairship.push.notifications.NotificationProvider
      * @see com.urbanairship.push.notifications.AirshipNotificationProvider
@@ -96,6 +94,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     public var notificationProvider: NotificationProvider =
         AirshipNotificationProvider(context, config.configOptions, notificationChannelRegistry)
+
     private val actionGroupMap = mutableMapOf<String, NotificationActionButtonGroup>()
 
     public var notificationListener: NotificationListener? = null
@@ -114,6 +113,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public var pushProvider: PushProvider? = null
         private set
+
     private var isPushManagerEnabled: Boolean? = null
 
     @Volatile
@@ -136,9 +136,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     private var isAirshipReady = false
 
     /**
-     * Sets a predicate that determines if a notification should be presented in the foreground or not.
-     *
-     * @param foregroundNotificationDisplayPredicate The display predicate.
+     * Optional `Predicate` that determines if a notification should be presented in the foreground.
      */
     @Volatile
     public var foregroundNotificationDisplayPredicate: Predicate<PushMessage>? = null
@@ -159,11 +157,9 @@ public open class PushManager @VisibleForTesting internal constructor(
             ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons)
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            actionGroupMap.putAll(
-                ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides)
-            )
-        }
+        actionGroupMap.putAll(
+            ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides)
+        )
 
         this.statusObserver = PushNotificationStatusObserver(pushNotificationStatus)
     }
@@ -206,6 +202,10 @@ public open class PushManager @VisibleForTesting internal constructor(
         shared(context)
     )
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public override fun init() {
         super.init()
         airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
@@ -275,7 +275,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         privacyManager.addListener { checkPermission() }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
+            override fun onForeground(timestamp: Instant) {
                 checkPermission()
             }
         })
@@ -408,6 +408,10 @@ public open class PushManager @VisibleForTesting internal constructor(
     override val jobActions: List<String>
         get() = listOf(ACTION_UPDATE_PUSH_REGISTRATION, ACTION_DISPLAY_NOTIFICATION)
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return JobResult.SUCCESS
@@ -832,7 +836,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @return `true` if push registration either succeeded or is not possible on this device. `false` if
      * registration failed and should be retried.
      */
-    public fun performPushRegistration(updateChannelOnChange: Boolean = true): JobResult {
+    public suspend fun performPushRegistration(updateChannelOnChange: Boolean = true): JobResult {
         shouldDispatchUpdateTokenJob = false
 
         val provider = pushProvider ?: run {
@@ -1100,15 +1104,15 @@ public open class PushManager @VisibleForTesting internal constructor(
 
         private const val KEY_PREFIX: String = "com.urbanairship.push"
 
-        public val USER_NOTIFICATIONS_ENABLED_KEY: SyncPrefKey<Boolean> =
+        internal val USER_NOTIFICATIONS_ENABLED_KEY: SyncPrefKey<Boolean> =
             SyncPrefKey.boolean("$KEY_PREFIX.USER_NOTIFICATIONS_ENABLED")
-        public val PUSH_DELIVERY_TYPE: SyncPrefKey<String> =
+        internal val PUSH_DELIVERY_TYPE: SyncPrefKey<String> =
             SyncPrefKey.string("$KEY_PREFIX.PUSH_DELIVERY_TYPE")
-        public val PROVIDER_CLASS_KEY: SyncPrefKey<String> =
+        internal val PROVIDER_CLASS_KEY: SyncPrefKey<String> =
             SyncPrefKey.string("com.urbanairship.application.device.PUSH_PROVIDER")
-        public val PUSH_TOKEN_KEY: SyncPrefKey<String> =
+        internal val PUSH_TOKEN_KEY: SyncPrefKey<String> =
             SyncPrefKey.string("$KEY_PREFIX.REGISTRATION_TOKEN_KEY")
-        public val REQUEST_PERMISSION_KEY: SyncPrefKey<Boolean> =
+        internal val REQUEST_PERMISSION_KEY: SyncPrefKey<Boolean> =
             SyncPrefKey.boolean("$KEY_PREFIX.REQUEST_PERMISSION_KEY")
         private const val UA_NOTIFICATION_BUTTON_GROUP_PREFIX: String = "ua_"
         private val PUSH_TOKEN_REGISTRATION_TIMEOUT = 10.seconds

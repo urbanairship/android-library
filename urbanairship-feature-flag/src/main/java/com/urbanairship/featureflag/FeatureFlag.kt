@@ -2,6 +2,7 @@
 
 package com.urbanairship.featureflag
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -43,13 +44,10 @@ public class FeatureFlag private constructor(
 ) : JsonSerializable {
 
     /**
-     * Public constructor.
-     *
-     * @deprecated Applications should not create a flag directly, instead request a flag
-     *      via [FeatureFlagManager.flag] or [FeatureFlagManager.flagAsPendingResult].
+     * Constructor for internal use only.
+     * @hide
      */
-    @Deprecated("Applications should not create a flag directly, instead request a flag " +
-            "via FeatureFlagManager.flag or FeatureFlagManager.flagAsPendingResult")
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(isEligible: Boolean, exists: Boolean, variables: JsonMap?) :
             this("", isEligible, exists, null, variables)
 
@@ -137,7 +135,7 @@ public class FeatureFlag private constructor(
 
         /**
          * Parses a `JsonValue` as a `FeatureFlag`.
-         * @throws `JsonException`
+         * @throws JsonException
          */
         @JvmStatic
         @Throws(JsonException::class)

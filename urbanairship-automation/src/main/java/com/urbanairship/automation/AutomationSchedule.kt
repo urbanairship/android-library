@@ -2,11 +2,14 @@
 
 package com.urbanairship.automation
 
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.isInAppMessage
 import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
+import com.urbanairship.automation.limits.LedgerConfig
+import com.urbanairship.automation.limits.LimitConfig
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -16,10 +19,14 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
+import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.VersionUtils
+import java.time.Instant
 import java.util.Objects
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.annotations.VisibleForTesting
 
 /**
@@ -48,13 +55,13 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val limit: UInt? = null,
     /**
-     * The schedule start time in ms.
+     * The schedule start time.
      */
-    public val startDate: ULong? = null,
+    public val startDate: Instant? = null,
     /**
-     * The schedule end time in ms.
+     * The schedule end time.
      */
-    public val endDate: ULong? = null,
+    public val endDate: Instant? = null,
     /**
      * The audience.
      */
@@ -69,9 +76,12 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val delay: AutomationDelay? = null,
     /**
-     * The interval in seconds.
+     * The interval to wait after an execution before the schedule can execute again.
+     *
+     * Java callers, which cannot express a [Duration], should read [intervalSeconds].
      */
-    public val interval: ULong? = null,
+    @get:JvmSynthetic
+    public val interval: Duration? = null,
     /**
      * Schedule data
      */
@@ -84,7 +94,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     /**
      * The edit grace period in days.
      */
-    public val editGracePeriodDays: ULong? = null,
+    public val editGracePeriodDays: Long? = null,
 
     internal val metadata: JsonValue? = null,
     internal val frequencyConstraintIds: List<String>? = null,
@@ -93,11 +103,29 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val reportingContext: JsonValue? = null,
     internal val productId: String? = null,
     internal val minSDKVersion: String? = null,
-    internal val created: ULong = System.currentTimeMillis().toULong(),
+    internal val created: Instant = Clock.DEFAULT_CLOCK.now(),
     internal val queue: String? = null,
     internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null,
-    internal val sendMetadata: String? = null
+    internal val sendMetadata: String? = null,
+    internal val ledgerConfig: LedgerConfig? = null,
+    internal val limitConfig: LimitConfig? = null,
+    /**
+     * Makes this schedule one arm of an Experiment Groups variant experiment. Null for
+     * schedules that aren't part of one. Independent of [bypassHoldoutGroups], which applies
+     * to the (unrelated) global holdout mechanism.
+     */
+    internal val variantAudience: VariantAudience? = null,
+    internal val aiSuppression: AutomationAiSuppression? = null
 ) : JsonSerializable {
+
+    /**
+     * The interval in whole seconds.
+     *
+     * Provided for Java callers, which cannot express a [Duration]. [interval] is the source of
+     * truth; this is derived from it.
+     */
+    public val intervalSeconds: Long?
+        get() = interval?.inWholeSeconds
 
     /**
      * Schedule builder.
@@ -110,14 +138,14 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private var group: String? = schedule.group
         private var priority: Int? = schedule.priority
         private var limit: UInt? = schedule.limit
-        private var startDate: ULong? = schedule.startDate
-        private var endDate: ULong? = schedule.endDate
+        private var startDate: Instant? = schedule.startDate
+        private var endDate: Instant? = schedule.endDate
         private var audience: AutomationAudience? = schedule.audience
         private var compoundAudience: AutomationCompoundAudience? = schedule.compoundAudience
         private var delay: AutomationDelay? = schedule.delay
-        private var interval: ULong? = schedule.interval
+        private var interval: Duration? = schedule.interval
         private var data: ScheduleData = schedule.data
-        private var editGracePeriodDays: ULong? = schedule.editGracePeriodDays
+        private var editGracePeriodDays: Long? = schedule.editGracePeriodDays
 
         // Internal
         private val identifier: String = schedule.identifier
@@ -128,11 +156,15 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private val reportingContext: JsonValue? = schedule.reportingContext
         private val productId: String? = schedule.productId
         private val minSDKVersion: String? = schedule.minSDKVersion
-        private val created: ULong = schedule.created
+        private val created: Instant = schedule.created
         private val queue: String? = schedule.queue
         private val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = schedule.additionalAudienceCheckOverrides
         private val bypassHoldoutGroups: Boolean? = schedule.bypassHoldoutGroups
         private val sendMetadata: String? = schedule.sendMetadata
+        private val ledgerConfig: LedgerConfig? = schedule.ledgerConfig
+        private val limitConfig: LimitConfig? = schedule.limitConfig
+        private val variantAudience: VariantAudience? = schedule.variantAudience
+        private val aiSuppression: AutomationAiSuppression? = schedule.aiSuppression
 
         /**
          * Set the triggers.
@@ -176,8 +208,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param startDate The start date.
          * @return The builder object.
          */
-        public fun setStartDate(startDate: Long?): Builder = apply {
-            this.startDate = startDate?.toULong()
+        public fun setStartDate(startDate: Instant?): Builder = apply {
+            this.startDate = startDate
         }
 
         /**
@@ -185,8 +217,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param endDate The end date.
          * @return The builder object.
          */
-        public fun setEndDate(endDate: Long?): Builder = apply {
-            this.endDate = endDate?.toULong()
+        public fun setEndDate(endDate: Instant?): Builder = apply {
+            this.endDate = endDate
         }
 
         /**
@@ -194,7 +226,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param audience The audience.
          * @return The builder object.
          */
-        public fun setAudience(audience: AutomationAudience?): Builder = apply {
+        internal fun setAudience(audience: AutomationAudience?): Builder = apply {
             this.audience = audience
         }
 
@@ -203,7 +235,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param audience The compoundAudience audience.
          * @return The builder object.
          */
-        public fun setCompoundAudience(audience: AutomationCompoundAudience?): Builder = apply {
+        internal fun setCompoundAudience(audience: AutomationCompoundAudience?): Builder = apply {
             this.compoundAudience = audience
         }
 
@@ -221,8 +253,22 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param interval The interval.
          * @return The builder object.
          */
-        public fun setInterval(interval: Long?): Builder = apply {
-            this.interval = interval?.toULong()
+        @JvmSynthetic
+        public fun setInterval(interval: Duration?): Builder = apply {
+            this.interval = interval
+        }
+
+        /**
+         * Set the interval, in whole seconds.
+         *
+         * Provided for Java callers, which cannot express a [Duration]. In seconds because the
+         * `Long` this replaces was, so an existing Java call keeps its meaning.
+         *
+         * @param intervalSeconds The interval in seconds.
+         * @return The builder object.
+         */
+        public fun setIntervalSeconds(intervalSeconds: Long?): Builder = apply {
+            this.interval = intervalSeconds?.seconds
         }
 
         /**
@@ -240,7 +286,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @return The builder object.
          */
         public fun setEditGracePeriodDays(editGracePeriodDays: Long?): Builder = apply {
-            this.editGracePeriodDays = editGracePeriodDays?.toULong()
+            this.editGracePeriodDays = editGracePeriodDays
         }
 
         /**
@@ -273,7 +319,11 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 created = created,
                 queue = queue,
                 additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
-                sendMetadata = sendMetadata
+                sendMetadata = sendMetadata,
+                ledgerConfig = ledgerConfig,
+                limitConfig = limitConfig,
+                variantAudience = variantAudience,
+                aiSuppression = aiSuppression
             )
         }
     }
@@ -285,7 +335,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
 
     internal fun copyWith(
         group: String? = null,
-        endDate: ULong? = null,
+        endDate: Instant? = null,
         metadata: JsonValue? = null): AutomationSchedule {
         return AutomationSchedule(
             identifier = identifier,
@@ -312,7 +362,11 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             created = created,
             queue = queue,
             additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
-            sendMetadata = sendMetadata
+            sendMetadata = sendMetadata,
+            ledgerConfig = ledgerConfig,
+            limitConfig = limitConfig,
+            variantAudience = variantAudience,
+            aiSuppression = aiSuppression
         )
     }
 
@@ -412,6 +466,10 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val QUEUE = "queue"
         private const val ADDITIONAL_AUDIENCE_CHECK_OVERRIDES = "additional_audience_check_overrides"
         private const val SEND_METADATA = "send_metadata"
+        private const val LEDGER_CONFIG = "ledger_config"
+        private const val LIMIT_CONFIG = "limit_config"
+        private const val VARIANT_AUDIENCE = "variant_audience"
+        private const val AI_SUPPRESSION = "ai_suppression"
 
         @Throws(
             JsonException::class,
@@ -420,9 +478,9 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         fun fromJson(value: JsonValue): AutomationSchedule {
             val content = value.requireMap()
 
-            fun parseDate(value: JsonValue?): ULong? {
+            fun parseDate(value: JsonValue?): Instant? {
                 val string = value?.optString() ?: return null
-                return DateUtils.parseIso8601(string).toULong()
+                return DateUtils.parseIso8601(string)
             }
 
             val created = parseDate(content[CREATED])
@@ -442,7 +500,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 audience = content[AUDIENCE]?.let(AutomationAudience::fromJson),
                 compoundAudience = content[COMPOUND_AUDIENCE]?.let(AutomationCompoundAudience::fromJson),
                 delay = content[DELAY]?.let(AutomationDelay.Companion::fromJson),
-                interval = content.optionalField(INTERVAL),
+                // The interval field is encoded in seconds.
+                interval = content.optionalField<Long>(INTERVAL)?.seconds,
                 campaigns = content[CAMPAIGNS],
                 reportingContext = content[REPORTING_CONTEXT],
                 productId = content[PRODUCT_ID]?.requireString(),
@@ -457,7 +516,11 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 created = created,
                 additionalAudienceCheckOverrides = content[ADDITIONAL_AUDIENCE_CHECK_OVERRIDES]
                     ?.let(AdditionalAudienceCheckOverrides::fromJson),
-                sendMetadata = content.optionalField(SEND_METADATA)
+                sendMetadata = content.optionalField(SEND_METADATA),
+                ledgerConfig = content[LEDGER_CONFIG]?.let(LedgerConfig::fromJson),
+                limitConfig = content[LIMIT_CONFIG]?.let(LimitConfig::fromJson),
+                variantAudience = content[VARIANT_AUDIENCE]?.let { VariantAudience.fromJson(it.requireMap()) },
+                aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)
             )
         }
     }
@@ -471,25 +534,29 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(METADATA, metadata)
         .putOpt(PRIORITY, priority)
         .putOpt(LIMIT, limit?.toInt())
-        .putOpt(START, startDate?.toLong()?.let(DateUtils::createIso8601TimeStamp))
-        .putOpt(END, endDate?.toLong()?.let(DateUtils::createIso8601TimeStamp))
+        .putOpt(START, startDate?.let(DateUtils::createIso8601TimeStamp))
+        .putOpt(END, endDate?.let(DateUtils::createIso8601TimeStamp))
         .putOpt(AUDIENCE, audience)
         .putOpt(COMPOUND_AUDIENCE, compoundAudience)
         .putOpt(DELAY, delay)
-        .putOpt(INTERVAL, interval?.toLong())
+        .putOpt(INTERVAL, interval?.inWholeSeconds)
         .putOpt(CAMPAIGNS, campaigns)
         .putOpt(METADATA, metadata)
         .putOpt(PRODUCT_ID, productId)
         .putOpt(BYPASS_HOLDOUT_GROUPS, bypassHoldoutGroups)
-        .putOpt(EDIT_GRACE_PERIOD_DAYS, editGracePeriodDays?.toLong())
+        .putOpt(EDIT_GRACE_PERIOD_DAYS, editGracePeriodDays)
         .putOpt(FREQUENCY_CONSTRAINT_IDS, frequencyConstraintIds)
         .putOpt(MESSAGE_TYPE, messageType)
         .putOpt(REPORTING_CONTEXT, reportingContext)
         .putOpt(MIN_SDK_VERSION, minSDKVersion)
         .putOpt(QUEUE, queue)
-        .put(CREATED, created.toLong().let(DateUtils::createIso8601TimeStamp))
+        .put(CREATED, created.let(DateUtils::createIso8601TimeStamp))
         .putOpt(ADDITIONAL_AUDIENCE_CHECK_OVERRIDES, additionalAudienceCheckOverrides)
         .putOpt(SEND_METADATA, sendMetadata)
+        .putOpt(LEDGER_CONFIG, ledgerConfig)
+        .putOpt(LIMIT_CONFIG, limitConfig)
+        .putOpt(VARIANT_AUDIENCE, variantAudience)
+        .putOpt(AI_SUPPRESSION, aiSuppression)
         .build()
         .toJsonValue()
 
@@ -524,6 +591,10 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (queue != other.queue) return false
         if (metadata != other.metadata) return false
         if (sendMetadata != other.sendMetadata) return false
+        if (ledgerConfig != other.ledgerConfig) return false
+        if (limitConfig != other.limitConfig) return false
+        if (variantAudience != other.variantAudience) return false
+        if (aiSuppression != other.aiSuppression) return false
         return endDate == other.endDate
     }
 
@@ -531,11 +602,12 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         return Objects.hash(identifier, triggers, group, priority, limit, startDate, audience,
             compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
-            minSDKVersion, created, queue, metadata, sendMetadata, endDate)
+            minSDKVersion, created, queue, metadata, sendMetadata, ledgerConfig, limitConfig,
+            variantAudience, aiSuppression, endDate)
     }
 }
 
-internal fun AutomationSchedule.updateOrCreate(data: AutomationScheduleData?, timestamp: Long): AutomationScheduleData {
+internal fun AutomationSchedule.updateOrCreate(data: AutomationScheduleData?, timestamp: Instant): AutomationScheduleData {
     if (data == null) {
         return AutomationScheduleData(
             schedule = this,
@@ -557,6 +629,26 @@ internal fun AutomationSchedule.isInAppMessageType(): Boolean {
         is AutomationSchedule.ScheduleData.Actions -> false
         is AutomationSchedule.ScheduleData.Deferred -> data.deferred.isInAppMessage()
         is AutomationSchedule.ScheduleData.InAppMessageData -> true
+    }
+}
+
+internal fun AutomationSchedule.isNewSchedule(sinceDate: Instant, lastSDKVersion: String?): Boolean {
+    if (created > sinceDate) {
+        return true
+    }
+
+    val minSDKVersion = minSDKVersion ?: return false
+
+    // We can skip checking if the min_sdk_version is newer than the current SDK version since
+    // remote-data will filter them out. This flag is only a hint to the SDK to treat a schedule with
+    // an older created timestamp as a new schedule.
+
+    // If we do not have a last SDK version, then we are coming from an SDK older than
+    // 16.2.0. Check for a min SDK version newer or equal to 16.2.0.
+    return if (lastSDKVersion == null) {
+        VersionUtils.isVersionNewerOrEqualTo("16.2.0", minSDKVersion)
+    } else {
+        VersionUtils.isVersionNewer(lastSDKVersion, minSDKVersion)
     }
 }
 
@@ -586,6 +678,3 @@ internal fun isNewSchedule(
         VersionUtils.isVersionNewer(lastSDKVersion, minSDKVersion)
     }
 }
-
-internal fun AutomationSchedule.isNewSchedule(sinceDate: Long, lastSDKVersion: String?): Boolean =
-    isNewSchedule(created, minSDKVersion, sinceDate, lastSDKVersion)

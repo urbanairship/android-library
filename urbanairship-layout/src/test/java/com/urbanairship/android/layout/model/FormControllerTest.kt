@@ -36,6 +36,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -67,7 +68,7 @@ public class FormControllerTest {
         every { register(any()) } returns Unit
     }
     private val mockDisplayTimer: DisplayTimer = mockk {
-        every { time } returns System.currentTimeMillis()
+        every { time } returns System.currentTimeMillis().milliseconds
     }
     private val testEventHandler = spyk(LayoutEventHandler(testScope))
     private val mockEnv: ModelEnvironment = mockk(relaxed = true) {

@@ -5,11 +5,15 @@ import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.http.RequestResult
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.mapNotNull
@@ -38,7 +42,7 @@ public class ContactChannelsProviderTest {
     }
 
     private val contactIdUpdate = MutableStateFlow<String?>(null)
-    private val clock = TestClock().apply { currentTimeMillis = 0 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(0) }
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -105,14 +109,14 @@ public class ContactChannelsProviderTest {
 //        provider.contactChannels.test {
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("foo", namedUserId = null, isStable = true, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("foo", namedUserId = null, isStable = true, resolveDate = 0)
 //            assertEquals(fooResponseChannels + fooChannelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("bar", namedUserId = null, isStable = false, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("bar", namedUserId = null, isStable = false, resolveDate = 0)
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("bar", namedUserId = null, isStable = true, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("bar", namedUserId = null, isStable = true, resolveDate = 0)
 //            assertEquals(barResponseChannels + barChannelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
 //            ensureAllEventsConsumed()
 //
@@ -148,16 +152,16 @@ public class ContactChannelsProviderTest {
 //        provider.contactChannels.test {
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDate = 0)
 //
 //            assertEquals(firstResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
 //            ensureAllEventsConsumed()
 //
-//            clock.currentTimeMillis += 10.minutes.inWholeMilliseconds - 1
+//            clock.currentTime += (10.minutes.inWholeMilliseconds - 1).milliseconds
 //            advanceTimeBy(10.minutes.inWholeMilliseconds - 1)
 //
 //            ensureAllEventsConsumed()
-//            clock.currentTimeMillis += 1
+//            clock.currentTime += (1).milliseconds
 //            advanceTimeBy( 1)
 //
 //            assertEquals(secondResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
@@ -193,7 +197,7 @@ public class ContactChannelsProviderTest {
 //        provider.contactChannels.test {
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDate = 0)
 //
 //            assertEquals(firstResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
 //            ensureAllEventsConsumed()
@@ -229,12 +233,12 @@ public class ContactChannelsProviderTest {
 //        provider.contactChannels.test {
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDate = 0)
 //
 //            assertEquals(firstResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
 //            ensureAllEventsConsumed()
 //
-//            clock.currentTimeMillis += 10.minutes.inWholeMilliseconds
+//            clock.currentTime += (10.minutes.inWholeMilliseconds).milliseconds
 //            advanceTimeBy(10.minutes.inWholeMilliseconds)
 //
 //            assertEquals(firstResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
@@ -265,12 +269,12 @@ public class ContactChannelsProviderTest {
 //        provider.contactChannels.test {
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDate = 0)
 //
 //            assertTrue(this.awaitItem().isFailure)
 //            ensureAllEventsConsumed()
 //
-//            clock.currentTimeMillis += 10.seconds.inWholeMilliseconds
+//            clock.currentTime += (10.seconds.inWholeMilliseconds).milliseconds
 //            advanceTimeBy(10.seconds)
 //
 //            assertEquals(secondResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
@@ -304,10 +308,10 @@ public class ContactChannelsProviderTest {
 //        provider.contactChannels.test {
 //            ensureAllEventsConsumed()
 //
-//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
+//            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDate = 0)
 //            assertTrue(this.awaitItem().isFailure)
 //
-//            clock.currentTimeMillis += 90.seconds.inWholeMilliseconds
+//            clock.currentTime += (90.seconds.inWholeMilliseconds).milliseconds
 //            advanceTimeBy(90.seconds)
 //            assertEquals(response + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
 //

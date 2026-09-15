@@ -16,6 +16,11 @@ import com.urbanairship.json.jsonMapOf
  * Display content for Scenes and Surveys.
  */
 public class AirshipLayout private constructor(
+    /**
+     * The parsed layout, for internal rendering.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val layoutInfo: LayoutInfo,
     private val jsonValue: JsonValue //TODO: make LayoutInfo serializable and remove that field
 ) : JsonSerializable, Parcelable {
@@ -49,6 +54,7 @@ public class AirshipLayout private constructor(
 
     internal fun validate(): Boolean = Thomas.isValid(layoutInfo)
     internal fun isEmbedded(): Boolean = layoutInfo.isEmbedded
+    internal fun isBanner(): Boolean = layoutInfo.isBanner
 
     override fun toJsonValue(): JsonValue = jsonValue
     override fun toString(): String = toJsonValue().toString()

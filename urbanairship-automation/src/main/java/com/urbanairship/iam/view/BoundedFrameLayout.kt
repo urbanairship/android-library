@@ -2,11 +2,9 @@
 package com.urbanairship.iam.view
 
 import android.content.Context
-import android.os.Build
 import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.annotation.MainThread
-import androidx.annotation.RequiresApi
 
 /** FrameLayout that supports max width. */
 internal class BoundedFrameLayout @JvmOverloads constructor(
@@ -32,7 +30,6 @@ internal class BoundedFrameLayout @JvmOverloads constructor(
      * @param borderRadius The border radius.
      */
     @MainThread
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     fun setClipPathBorderRadius(borderRadius: Float) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
     }

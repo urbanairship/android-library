@@ -57,7 +57,7 @@ public class AirshipConfigOptionsTest {
         )
         Assert.assertTrue(production.inProduction)
         Assert.assertFalse(production.analyticsEnabled)
-        Assert.assertEquals(2700, production.backgroundReportingIntervalMS)
+        Assert.assertEquals(2700, production.backgroundReportingIntervalMs)
         Assert.assertFalse(production.autoLaunchApplication)
         Assert.assertTrue(production.channelCreationDelayEnabled)
         Assert.assertFalse(production.channelCaptureEnabled)
@@ -132,7 +132,7 @@ public class AirshipConfigOptionsTest {
         Assert.assertTrue(defaultConfig.urlAllowListScopeJavaScriptInterface.isEmpty())
         Assert.assertTrue(defaultConfig.urlAllowListScopeOpenUrl.isEmpty())
 
-        Assert.assertEquals(24.hours.inWholeMilliseconds, defaultConfig.backgroundReportingIntervalMS)
+        Assert.assertEquals(24.hours.inWholeMilliseconds, defaultConfig.backgroundReportingIntervalMs)
 
         Assert.assertEquals(0, defaultConfig.notificationIcon.toLong())
         Assert.assertEquals(0, defaultConfig.notificationLargeIcon.toLong())

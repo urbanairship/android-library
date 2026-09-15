@@ -30,6 +30,7 @@ import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import kotlin.math.roundToInt
+import com.urbanairship.R as CoreR
 
 /**
  * Banner view.
@@ -42,7 +43,7 @@ internal open class BannerView(
     BannerDismissLayout.Listener {
 
     /** In-app message display timer. */
-    internal val timer: Timer = object : Timer(displayContent.durationMs) {
+    internal val timer: Timer = object : Timer(displayContent.duration) {
         override fun onFinish() {
             dismiss(true)
             val listener = listener
@@ -134,7 +135,7 @@ internal open class BannerView(
 
         // Banner View
         val bannerView = view.findViewById<LinearLayout>(R.id.banner)
-        ViewCompat.setBackground(bannerView, createBannerBackground())
+        bannerView.background = createBannerBackground()
         if (displayContent.borderRadius > 0) {
 
             BorderRadius.applyBorderRadiusPadding(
@@ -188,7 +189,7 @@ internal open class BannerView(
         val bannerPull = view.findViewById<View>(R.id.banner_pull)
         val drawable = DrawableCompat.wrap(bannerPull.background).mutate()
         DrawableCompat.setTint(drawable, displayContent.dismissButtonColor.color)
-        ViewCompat.setBackground(bannerPull, drawable)
+        bannerPull.background = drawable
 
         // Handle window insets
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
@@ -249,22 +250,24 @@ internal open class BannerView(
 
     /**
      * Helper method to remove the view from the parent.
+     *
+     * Note: We are no longer able to announce the banner is dismissed via TalkBack, because the
+     * announceForAccessibility method is deprecated. When focus returns to the app after the banner
+     * is dismissed, TalkBack will announce whatever has just gained focus, so there is still some
+     * indication that the banner has been dismissed.
      */
     @MainThread
     private fun removeSelf() {
-        announceForAccessibility(context.getString(com.urbanairship.R.string.ua_in_app_dismiss_accessibility_announce))
         val group = this.parent as? ViewGroup ?: return
         group.removeView(this)
         subView = null
     }
 
     override fun onWindowVisibilityChanged(visibility: Int) {
-        if (subView != null) { return }
+        if (subView != null) return
 
         if (visibility == VISIBLE && !isDismissed) {
             val view = onCreateView(LayoutInflater.from(context), this)
-            announceForAccessibility(context.getString(com.urbanairship.R.string.ua_in_app_display_accessibility_announce))
-
             if (applyLegacyWindowInsetFix) {
                 applyLegacyWindowInsetFix(view)
             }
@@ -276,6 +279,9 @@ internal open class BannerView(
             }
             subView = view
             onResume()
+
+            // Update pane title to trigger TalkBack to announce the banner is displayed
+            ViewCompat.setAccessibilityPaneTitle(this, context.getString(CoreR.string.ua_in_app_display_accessibility_announce))
         }
     }
 
@@ -383,7 +389,7 @@ internal open class BannerView(
                 bottom = resources.getDimensionPixelSize(resourceId)
             }
         }
-        ViewCompat.setPaddingRelative(view, 0, top, 0, bottom)
+        view.setPaddingRelative(0, top, 0, bottom)
     }
 
     companion object {

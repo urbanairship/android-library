@@ -25,7 +25,7 @@ public class LayoutPermissionResultEvent(
         endingStatus = endingStatus.value
     )
 
-    override val eventType: EventType = EventType.IN_APP_PERMISSION_RESULT
+    override val eventType: EventType = EventType.LAYOUT_PERMISSION_RESULT
     override val data: JsonSerializable = reportData
 
     private data class PermissionResultData(

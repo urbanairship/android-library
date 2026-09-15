@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
@@ -180,6 +181,74 @@ public class ThomasFormFieldTest {
         assertEquals(ThomasFormField.FieldType.just(
             value = value
         ), ThomasFormField.FieldType.Instant(ThomasFormField.Result(value)))
+    }
+
+    @Test
+    public fun testRedactInputEventPayload() {
+        val field = TextInput(
+            textInput = FormInputType.TEXT,
+            identifier = "secret",
+            originalValue = "sensitive data",
+            fieldType = ThomasFormField.FieldType.just("sensitive data"),
+            isRedacted = true
+        )
+
+        val children = setOf(field)
+        val form = ThomasFormField.Form(
+            identifier = "form",
+            responseType = null,
+            children = children,
+            fieldType = ThomasFormField.FieldType.just(children)
+        )
+
+        val eventJson = form.toJsonValue(withState = false)
+
+        @Language("json")
+        val expected = """
+            {
+              "form": {
+                "type": "form",
+                "children": {
+                  "secret": {
+                    "type": "text_input",
+                    "value": "REDACTED",
+                    "is_redacted": true
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+
+        assertEquals(JsonValue.parseString(expected), eventJson)
+    }
+
+    @Test
+    public fun testRedactInputStatePayloadPreservesRealValue() {
+        val field = TextInput(
+            textInput = FormInputType.TEXT,
+            identifier = "secret",
+            originalValue = "sensitive data",
+            fieldType = ThomasFormField.FieldType.just("sensitive data"),
+            isRedacted = true
+        )
+
+        val formData = field.formData(withState = true)
+        assertEquals(JsonValue.wrap("sensitive data"), formData["value"])
+    }
+
+    @Test
+    public fun testRedactInputFalseEmitsRealValue() {
+        val field = TextInput(
+            textInput = FormInputType.TEXT,
+            identifier = "field",
+            originalValue = "real value",
+            fieldType = ThomasFormField.FieldType.just("real value"),
+            isRedacted = false
+        )
+
+        val formData = field.formData(withState = false)
+        assertEquals(JsonValue.wrap("real value"), formData["value"])
+        assertEquals(null, formData["is_redacted"])
     }
 
     public companion object {

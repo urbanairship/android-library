@@ -11,12 +11,17 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -41,7 +46,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationRemoteDataSubscriberTest {
-    private val clock = TestClock().apply { currentTimeMillis = 1000 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(1000) }
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -53,6 +58,7 @@ public class AutomationRemoteDataSubscriberTest {
 
     private val engine: AutomationEngineInterface = mockk {
         coEvery { this@mockk.getSchedules() } returns emptyList()
+        coJustRun { this@mockk.reconcileLedger() }
     }
 
     private val frequencyLimitManager: FrequencyLimitManager = mockk {
@@ -102,11 +108,11 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(appSchedules, emptyList()),
-                    clock.currentTimeMillis()
+                    clock.now()
                 ),
                 RemoteDataSource.CONTACT to InAppRemoteData.Payload(
                     InAppRemoteData.Data(contactSchedules, emptyList()),
-                    clock.currentTimeMillis()
+                    clock.now()
                 )
             )
         )
@@ -151,14 +157,14 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val firstUpdateSchedules = makeSchedules(RemoteDataSource.APP, 4)
         val firstUpdate = InAppRemoteData(
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(firstUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis(),
+                    clock.now(),
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -179,7 +185,7 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(secondUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis() + 100,
+                    clock.now() + 100.milliseconds,
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -207,14 +213,14 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val firstUpdateSchedules = makeSchedules(RemoteDataSource.APP, 4)
         val firstUpdate = InAppRemoteData(
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(firstUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis(),
+                    clock.now(),
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -243,7 +249,7 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(secondUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis() + 100
+                    clock.now() + 100.milliseconds
                 )
             )
         )
@@ -265,14 +271,14 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val schedules = makeSchedules(RemoteDataSource.APP, 4)
         val update = InAppRemoteData(
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(schedules, emptyList()),
-                    clock.currentTimeMillis(),
+                    clock.now(),
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -305,7 +311,7 @@ public class AutomationRemoteDataSubscriberTest {
             source = RemoteDataSource.APP
         )
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val schedules = makeSchedules(RemoteDataSource.APP, 4).map {
             it.copyWith(metadata =  jsonMapOf(InAppRemoteData.REMOTE_INFO_METADATA_KEY to remoteDataInfo).toJsonValue())
@@ -318,7 +324,7 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     data = InAppRemoteData.Data(schedules, listOf()),
-                    timestamp = clock.currentTimeMillis(),
+                    timestamp = clock.now(),
                     remoteDataInfo = remoteDataInfo
                 )
             )
@@ -352,7 +358,7 @@ public class AutomationRemoteDataSubscriberTest {
                     payload = mapOf(
                         RemoteDataSource.APP to InAppRemoteData.Payload(
                             data = InAppRemoteData.Data(updatedSchedules, emptyList()),
-                            timestamp = clock.currentTimeMillis(),
+                            timestamp = clock.now(),
                             remoteDataInfo = updatedRemoteDataInfo
                         )
                     )
@@ -369,7 +375,7 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
         val schedules = makeSchedules(RemoteDataSource.APP, 4)
 
         coJustRun { engine.upsertSchedules(schedules) }
@@ -386,7 +392,7 @@ public class AutomationRemoteDataSubscriberTest {
                     payload = mapOf(
                         RemoteDataSource.APP to InAppRemoteData.Payload(
                             data = InAppRemoteData.Data(schedules, emptyList()),
-                            timestamp = clock.currentTimeMillis(),
+                            timestamp = clock.now(),
                             remoteDataInfo = remoteDataInfo
                         )
                     )
@@ -408,7 +414,7 @@ public class AutomationRemoteDataSubscriberTest {
                     payload = mapOf(
                         RemoteDataSource.APP to InAppRemoteData.Payload(
                             data = InAppRemoteData.Data(schedules, emptyList()),
-                            timestamp = clock.currentTimeMillis() + 1,
+                            timestamp = clock.now() + 1.milliseconds,
                             remoteDataInfo = remoteDataInfo
                         )
                     )
@@ -437,11 +443,11 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     data = InAppRemoteData.Data(listOf(), appConstraints),
-                    timestamp = clock.currentTimeMillis()
+                    timestamp = clock.now()
                 ),
                 RemoteDataSource.CONTACT to InAppRemoteData.Payload(
                     data = InAppRemoteData.Data(listOf(), contactConstraints),
-                    timestamp = clock.currentTimeMillis()
+                    timestamp = clock.now()
                 )
             )
         )
@@ -460,12 +466,12 @@ public class AutomationRemoteDataSubscriberTest {
     @Test
     public fun testFailedScheduleRetriedOnSDKUpdate(): TestResult = runTest {
         coEvery { engine.upsertSchedules(any()) } just runs
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val scheduleA = makeSchedule(RemoteDataSource.APP)
         val failedB = FailedScheduleRecord(
             identifier = "failed_schedule_B",
-            createdDate = clock.currentTimeMillis(),
+            createdDate = clock.currentTime.toEpochMilli(),
             minSDKVersion = null
         )
 
@@ -505,12 +511,12 @@ public class AutomationRemoteDataSubscriberTest {
     @Test
     public fun testFailedScheduleRecoveredOnServerFix(): TestResult = runTest {
         coEvery { engine.upsertSchedules(any()) } just runs
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val scheduleA = makeSchedule(RemoteDataSource.APP)
         val failedB = FailedScheduleRecord(
             identifier = "failed_schedule_B",
-            createdDate = clock.currentTimeMillis(),
+            createdDate = clock.currentTime.toEpochMilli(),
             minSDKVersion = null
         )
 
@@ -528,7 +534,7 @@ public class AutomationRemoteDataSubscriberTest {
         val scheduleB = makeSchedule(RemoteDataSource.APP, identifier = failedB.identifier)
 
         updatesFlow.emit(
-            makeUpdate(listOf(scheduleA, scheduleB), emptyList(), timestamp = clock.currentTimeMillis() + 100)
+            makeUpdate(listOf(scheduleA, scheduleB), emptyList(), timestamp = clock.currentTime.plusMillis(100))
         )
         advanceUntilIdle()
 
@@ -539,12 +545,12 @@ public class AutomationRemoteDataSubscriberTest {
     @Test
     public fun testFailedScheduleRemovedFromRemoteData(): TestResult = runTest {
         coEvery { engine.upsertSchedules(any()) } just runs
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val scheduleA = makeSchedule(RemoteDataSource.APP)
         val failedB = FailedScheduleRecord(
             identifier = "failed_schedule_B",
-            createdDate = clock.currentTimeMillis(),
+            createdDate = clock.currentTime.toEpochMilli(),
             minSDKVersion = null
         )
 
@@ -559,7 +565,7 @@ public class AutomationRemoteDataSubscriberTest {
 
         // B is gone from remote data entirely, so we stop tracking it and never schedule it.
         updatesFlow.emit(
-            makeUpdate(listOf(scheduleA), emptyList(), timestamp = clock.currentTimeMillis() + 100)
+            makeUpdate(listOf(scheduleA), emptyList(), timestamp = clock.currentTime.plusMillis(100))
         )
         advanceUntilIdle()
 
@@ -574,14 +580,14 @@ public class AutomationRemoteDataSubscriberTest {
     @Test
     public fun testSamePayloadWithFailuresSkipsAutomations(): TestResult = runTest {
         coEvery { engine.upsertSchedules(any()) } just runs
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val update = makeUpdate(
             schedules = listOf(makeSchedule(RemoteDataSource.APP)),
             failedSchedules = listOf(
                 FailedScheduleRecord(
                     identifier = "failed_schedule_B",
-                    createdDate = clock.currentTimeMillis(),
+                    createdDate = clock.currentTime.toEpochMilli(),
                     minSDKVersion = null
                 )
             )
@@ -605,7 +611,7 @@ public class AutomationRemoteDataSubscriberTest {
     private fun makeUpdate(
         schedules: List<AutomationSchedule>,
         failedSchedules: List<FailedScheduleRecord>,
-        timestamp: Long = clock.currentTimeMillis()
+        timestamp: Instant = clock.now()
     ): InAppRemoteData {
         return InAppRemoteData(
             payload = mapOf(
@@ -626,7 +632,7 @@ public class AutomationRemoteDataSubscriberTest {
         source: RemoteDataSource,
         count: Int = Random.nextInt(1, 10),
         minSDKVersion: String? = null,
-        created: Long = clock.currentTimeMillis()
+        created: Instant = clock.now()
     ) : List<AutomationSchedule> {
         return (0 until count)
             .map { makeSchedule(source, minSDKVersion, created) }
@@ -635,7 +641,7 @@ public class AutomationRemoteDataSubscriberTest {
     private fun makeSchedule(
         source: RemoteDataSource,
         minSDKVersion: String? = null,
-        created: Long = clock.currentTimeMillis(),
+        created: Instant = clock.now(),
         identifier: String = UUID.randomUUID().toString()
     ) : AutomationSchedule {
         val remoteDataInfo = RemoteDataInfo(
@@ -648,7 +654,7 @@ public class AutomationRemoteDataSubscriberTest {
             identifier = identifier,
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
             triggers = listOf(AutomationTrigger.activeSession(1u)),
-            created = created.toULong(),
+            created = created,
             metadata = jsonMapOf(InAppRemoteData.REMOTE_INFO_METADATA_KEY to remoteDataInfo).toJsonValue(),
             minSDKVersion = minSDKVersion
         )
@@ -660,5 +666,83 @@ public class AutomationRemoteDataSubscriberTest {
             ?.get(InAppRemoteData.REMOTE_INFO_METADATA_KEY)
             ?.let { RemoteDataInfo(it) }
             ?.source
+    }
+
+    /**
+     * Ledger cleanup runs once per update, after the schedules missing from the
+     * listing have been synced — so retention sees the post-sync schedule set.
+     */
+    @Test
+    public fun testReconcileLedgerRunsAfterUpdate(): TestResult = runTest {
+        val appSchedules = makeSchedules(source = RemoteDataSource.APP)
+        val data = InAppRemoteData(
+            payload = mapOf(
+                RemoteDataSource.APP to InAppRemoteData.Payload(
+                    InAppRemoteData.Data(appSchedules, emptyList()),
+                    clock.now()
+                )
+            )
+        )
+
+        coJustRun { engine.upsertSchedules(any()) }
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(data)
+        advanceUntilIdle()
+
+        coVerify(timeout = 2000, exactly = 1) { engine.reconcileLedger() }
+        coVerifyOrder {
+            engine.upsertSchedules(appSchedules)
+            engine.reconcileLedger()
+        }
+    }
+
+    /**
+     * A failed cleanup must not tear down the subscription: the next update
+     * still syncs and still reconciles.
+     */
+    @Test
+    public fun testReconcileLedgerErrorIsSwallowed(): TestResult = runTest {
+        val firstSchedules = makeSchedules(source = RemoteDataSource.APP)
+
+        coJustRun { engine.upsertSchedules(any()) }
+        coJustRun { engine.stopSchedules(any()) }
+        coEvery { engine.reconcileLedger() } throws IllegalStateException("reconcile failed")
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(firstSchedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        // Created after the clock moves, so the second update reads as newer
+        // than the source info the first one stored.
+        clock.currentTime = clock.currentTime.plusMillis(1)
+        val secondSchedules = makeSchedules(source = RemoteDataSource.APP)
+
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(secondSchedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(timeout = 2000) { engine.upsertSchedules(secondSchedules) }
+        coVerify(exactly = 2) { engine.reconcileLedger() }
     }
 }

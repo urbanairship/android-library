@@ -13,6 +13,7 @@ import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.coVerifySequence
 import io.mockk.mockk
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,7 +47,7 @@ public class LiveUpdateProcessorTest {
         coEvery { dao.getState(eq("name")) } returns LiveUpdateState(
             name = "name",
             type = "type",
-            timestamp = 0,
+            timestamp = Instant.ofEpochMilli(0),
             dismissalDate = null,
             isActive = false
         )
@@ -57,7 +58,7 @@ public class LiveUpdateProcessorTest {
                     name = "name",
                     type = "type",
                     content = content,
-                    timestamp = 0,
+                    timestamp = Instant.ofEpochMilli(0),
                     dismissalTimestamp = null
                 )
             )
@@ -80,7 +81,7 @@ public class LiveUpdateProcessorTest {
                         LiveUpdateState(
                             name = "name",
                             type = "type",
-                            timestamp = 0,
+                            timestamp = Instant.ofEpochMilli(0),
                             dismissalDate = null,
                             isActive = true
                         )
@@ -89,7 +90,7 @@ public class LiveUpdateProcessorTest {
                         LiveUpdateContent(
                             name = "name",
                             content = content,
-                            timestamp = 0,
+                            timestamp = Instant.ofEpochMilli(0),
                         )
                     )
                 )
@@ -101,14 +102,14 @@ public class LiveUpdateProcessorTest {
 
     @Test
     public fun testUpdateVerifiesTimestamps(): TestResult = runTest(testDispatcher) {
-        fun testContent(value: Int, timestamp: Long) = LiveUpdateContent(
+        fun testContent(value: Int, timestamp: Instant) = LiveUpdateContent(
             name = "name",
             content = jsonMapOf("foo" to value),
             timestamp = timestamp
         )
-        val initialContent = testContent(0, 0L)
-        val staleContent = testContent(2, 50L)
-        val updatedContent = testContent(3, 100L)
+        val initialContent = testContent(0, Instant.EPOCH)
+        val staleContent = testContent(2, Instant.ofEpochMilli(50))
+        val updatedContent = testContent(3, Instant.ofEpochMilli(100))
 
         // Initial mocks
         coEvery { dao.get(eq("name")) } returns LiveUpdateStateWithContent(
@@ -190,20 +191,20 @@ public class LiveUpdateProcessorTest {
         val initialState = LiveUpdateState(
                 name = "name",
                 type = "type",
-                timestamp = 0,
+                timestamp = Instant.ofEpochMilli(0),
                 dismissalDate = null,
                 isActive = true
             )
         val initialContent = LiveUpdateContent(
                 name = "name",
                 content = initial,
-                timestamp = 0,
+                timestamp = Instant.ofEpochMilli(0),
             )
         val initialLiveUpdate = LiveUpdateStateWithContent(initialState, initialContent)
 
         val updatedContent = initialContent.copy(
             content = updated,
-            timestamp = 10,
+            timestamp = Instant.ofEpochMilli(10),
         )
 
         coEvery { dao.get(eq("name")) } returns initialLiveUpdate
@@ -213,7 +214,7 @@ public class LiveUpdateProcessorTest {
                 Operation.Update(
                     name = "name",
                     content = updated,
-                    timestamp = 10,
+                    timestamp = Instant.ofEpochMilli(10),
                 )
             )
 
@@ -239,18 +240,18 @@ public class LiveUpdateProcessorTest {
         val state = LiveUpdateState(
             name = "name",
             type = "type",
-            timestamp = 0,
+            timestamp = Instant.ofEpochMilli(0),
             dismissalDate = null,
             isActive = true
         )
         val content = LiveUpdateContent(
             name = "name",
             content = jsonMapOf("foo" to "bar"),
-            timestamp = 0,
+            timestamp = Instant.ofEpochMilli(0),
         )
         val liveUpdate = LiveUpdateStateWithContent(state = state, content = content)
 
-        val stopTime = 10L
+        val stopTime = Instant.ofEpochMilli(10)
         val stopState = state.copy(
             isActive = false,
             timestamp = stopTime
@@ -293,14 +294,14 @@ public class LiveUpdateProcessorTest {
         val initialState = LiveUpdateState(
             name = "name",
             type = "type",
-            timestamp = 0,
-            dismissalDate = 1000,
+            timestamp = Instant.ofEpochMilli(0),
+            dismissalDate = Instant.ofEpochMilli(1000),
             isActive = false
         )
         val initialContent = LiveUpdateContent(
             name = "name",
             content = jsonMapOf("foo" to "bar"),
-            timestamp = 0,
+            timestamp = Instant.ofEpochMilli(0),
         )
         val initialLiveUpdate = LiveUpdateStateWithContent(initialState, initialContent)
 
@@ -311,14 +312,14 @@ public class LiveUpdateProcessorTest {
         val updatedState = startedState.copy()
         val updatedContent = startedContent.copy(
             content = jsonMapOf("fizz" to "buzz"),
-            timestamp = 10
+            timestamp = Instant.ofEpochMilli(10)
         )
         val updatedLiveUpdate = LiveUpdateStateWithContent(updatedState, updatedContent)
 
-        val stoppedState = updatedState.copy(isActive = false, timestamp = 20, dismissalDate = 2000)
+        val stoppedState = updatedState.copy(isActive = false, timestamp = Instant.ofEpochMilli(20), dismissalDate = Instant.ofEpochMilli(2000))
         val stoppedContent = updatedContent.copy(
             content = jsonMapOf("slim" to "none"),
-            timestamp = 20
+            timestamp = Instant.ofEpochMilli(20)
         )
 
         // Mock initial state
@@ -442,7 +443,7 @@ public class LiveUpdateProcessorTest {
         )
 
         processor.channelUpdates.test {
-            processor.enqueue(Operation.ClearAll(timestamp = 300))
+            processor.enqueue(Operation.ClearAll(timestamp = Instant.ofEpochMilli(300)))
             advanceUntilIdle()
 
             val mutations = listOf(awaitItem(), awaitItem()).map { it.toJsonValue().optMap() }
@@ -463,14 +464,14 @@ public class LiveUpdateProcessorTest {
         state = LiveUpdateState(
             name = name,
             type = "type",
-            timestamp = timestamp,
+            timestamp = Instant.ofEpochMilli(timestamp),
             dismissalDate = null,
             isActive = true
         ),
         content = LiveUpdateContent(
             name = name,
             content = jsonMapOf("foo" to "bar"),
-            timestamp = timestamp
+            timestamp = Instant.ofEpochMilli(timestamp)
         )
     )
 }

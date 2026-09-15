@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Upraviť zoznam</string>
+    <string name="ua_leave_edit_mode">Ukončiť úpravu zoznamu</string>
+    <string name="ua_announce_enter_edit_mode">Upravuje sa zoznam správ</string>
+    <string name="ua_announce_leave_edit_mode">Zobrazuje sa zoznam správ</string>
+    <string name="ua_mark_unread">Označiť ako neprečítané</string>
+    <string name="ua_mark_all_read">Označiť všetko ako prečítané</string>
+    <string name="ua_delete_all">Odstrániť všetko</string>
+    <string name="ua_description_mark_read">Označiť správu ako prečítanú</string>
+    <string name="ua_description_mark_unread">Označiť správu ako neprečítanú</string>
+    <string name="ua_description_mark_all_read">Označiť všetky správy ako prečítané</string>
+    <string name="ua_description_delete_all">Odstrániť všetky správy</string>
+    <string name="ua_description_delete">Odstrániť správu</string>
+    <string name="ua_description_message_list_pane">Zoznam správ</string>
+    <string name="ua_description_message_pane">Obsah správy</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">Bola označená 

@@ -8,10 +8,11 @@ import com.urbanairship.Airship
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 
 internal class AppForegroundEvent(
-    timeMilliseconds: Long
-) : Event(timeMilliseconds = timeMilliseconds) {
+    timestamp: Instant
+) : Event(timestamp = timestamp) {
 
     override val type: EventType = EventType.APP_FOREGROUND
 

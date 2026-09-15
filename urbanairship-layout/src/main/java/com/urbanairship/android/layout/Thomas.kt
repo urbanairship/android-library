@@ -9,10 +9,10 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.display.DisplayArgsLoader
 import com.urbanairship.android.layout.display.DisplayException
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.display.DisplayRequest
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
-import com.urbanairship.android.layout.ui.BannerLayout
 import com.urbanairship.android.layout.ui.ModalActivity
 import com.urbanairship.android.layout.util.Factory
 import com.urbanairship.android.layout.util.ImageCache
@@ -62,6 +62,8 @@ public object Thomas {
         imageCache: ImageCache? = null,
         webViewClientFactory: Factory<AirshipWebViewClient>? = null,
         embeddedViewManager: AirshipEmbeddedViewManager,
+        bannerViewManager: AirshipBannerViewManager,
+        ai: InternalAirshipAi?,
     ): DisplayRequest {
         if (!isValid(payload)) {
             throw DisplayException("Payload is not valid: " + payload.presentation)
@@ -88,9 +90,8 @@ public object Thomas {
                 }
             }
             is BannerPresentation -> {
-                { context: Context, args: DisplayArgs ->
-                    val layoutBanner = BannerLayout(context, args)
-                    layoutBanner.display()
+                { _: Context, args: DisplayArgs ->
+                    bannerViewManager.addPending(args, priority, extras)
                 }
             }
             is EmbeddedPresentation -> {
@@ -110,6 +111,7 @@ public object Thomas {
             actionRunner = actionRunner,
             imageCache = imageCache,
             webViewClientFactory = webViewClientFactory,
+            ai = ai,
             onDisplay = callback
         )
     }

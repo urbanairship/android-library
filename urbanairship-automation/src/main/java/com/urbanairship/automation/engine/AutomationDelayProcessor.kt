@@ -11,8 +11,9 @@ import com.urbanairship.automation.AutomationDelay
 import com.urbanairship.automation.ExecutionWindowProcessor
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import java.time.Instant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -26,8 +27,8 @@ import kotlinx.coroutines.yield
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface AutomationDelayProcessorInterface {
-    suspend fun preprocess(delay: AutomationDelay?, triggerDate: Long)
-    suspend fun process(delay: AutomationDelay?, triggerDate: Long)
+    suspend fun preprocess(delay: AutomationDelay?, triggerDate: Instant)
+    suspend fun process(delay: AutomationDelay?, triggerDate: Instant)
     @MainThread
     fun areConditionsMet(delay: AutomationDelay?): Boolean
 }
@@ -44,7 +45,7 @@ internal class AutomationDelayProcessor(
         private val PREPROCESS_DELAY_ALLOWANCE = 30.seconds
 
     }
-    override suspend fun preprocess(delay: AutomationDelay?, triggerDate: Long) {
+    override suspend fun preprocess(delay: AutomationDelay?, triggerDate: Instant) {
         if (delay == null) {
             return
         }
@@ -67,7 +68,7 @@ internal class AutomationDelayProcessor(
 
     override suspend fun process(
         delay: AutomationDelay?,
-        triggerDate: Long
+        triggerDate: Instant
     ) = withContext(Dispatchers.Main.immediate) {
         ensureActive()
 
@@ -140,9 +141,9 @@ internal class AutomationDelayProcessor(
         return executionWindowProcessor.isActive(window)
     }
 
-    private fun remainingDelay(delay: AutomationDelay, triggerDate: Long): Duration {
+    private fun remainingDelay(delay: AutomationDelay, triggerDate: Instant): Duration {
         val delayDuration = delay.seconds?.seconds ?: return 0.seconds
-        val elapsed = (clock.currentTimeMillis() - triggerDate).milliseconds
+        val elapsed = clock.now() - triggerDate
         return (delayDuration - elapsed).coerceAtLeast(Duration.ZERO)
     }
 }

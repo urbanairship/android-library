@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Rediger liste</string>
+    <string name="ua_leave_edit_mode">Stop redigering af liste</string>
+    <string name="ua_announce_enter_edit_mode">Redigerer meddelelsesliste</string>
+    <string name="ua_announce_leave_edit_mode">Viser meddelelsesliste</string>
+    <string name="ua_mark_unread">Marker som ulæst</string>
+    <string name="ua_mark_all_read">Marker alle som læst</string>
+    <string name="ua_delete_all">Slet alle</string>
+    <string name="ua_description_mark_read">Marker meddelelse som læst</string>
+    <string name="ua_description_mark_unread">Marker meddelelse som ulæst</string>
+    <string name="ua_description_mark_all_read">Marker alle meddelelser som læst</string>
+    <string name="ua_description_delete_all">Slet alle meddelelser</string>
+    <string name="ua_description_delete">Slet meddelelse</string>
+    <string name="ua_description_message_list_pane">Meddelelsesliste</string>
+    <string name="ua_description_message_pane">Meddelelsesindhold</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">Markerede 

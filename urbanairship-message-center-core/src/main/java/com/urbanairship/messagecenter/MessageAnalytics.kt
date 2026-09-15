@@ -17,6 +17,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
@@ -80,7 +82,7 @@ internal class MessageAnalytics(
         event: LayoutEvent, layoutContext: LayoutData?
     ) {
         scope.launch {
-            val now = clock.currentTimeMillis()
+            val now = clock.now()
 
             if (event is InAppDisplayEvent) {
                 var history = displayHistoryStore.get(messageId.identifier)
@@ -135,7 +137,7 @@ internal class MessageAnalytics(
         }
     }
 
-    override fun recordImpression(date: Long): Boolean {
+    override fun recordImpression(date: Instant): Boolean {
         if (!shouldRecordImpression()) {
             return false
         }
@@ -158,7 +160,7 @@ internal class MessageAnalytics(
     private fun shouldRecordImpression(): Boolean {
         val lastImpression = historyState.value?.lastImpression ?: return true
 
-        return (clock.currentTimeMillis() - lastImpression.date) >= IMPRESSION_SESSION_LENGTH.inWholeMilliseconds
+        return (clock.now() - lastImpression.date) >= IMPRESSION_SESSION_LENGTH
     }
 
     private companion object {

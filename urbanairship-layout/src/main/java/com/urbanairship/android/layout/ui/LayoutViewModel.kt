@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.ModelFactory
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.ThomasModelFactory
 import com.urbanairship.android.layout.environment.LayoutState
+import com.urbanairship.android.layout.ai.ThomasAIInference
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
@@ -28,14 +29,16 @@ internal class LayoutViewModel : ViewModel() {
         displayTimer: DisplayTimer,
         actionRunner: ThomasActionRunner,
         layoutState: LayoutState = LayoutState.EMPTY,
-        stateStorage: LayoutStateStorage? = null
+        stateStorage: LayoutStateStorage? = null,
+        aiInference: ThomasAIInference? = null
     ): ModelEnvironment =
         environment ?: ModelEnvironment(
             layoutState = layoutState,
             reporter = reporter,
             actionsRunner = actionRunner,
             displayTimer = displayTimer,
-            stateStorage = stateStorage
+            stateStorage = stateStorage,
+            aiInference = aiInference
         ).also {
             environment = it
         }

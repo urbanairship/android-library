@@ -21,5 +21,6 @@ internal class PushViewModel(repository: PushRepository) : ViewModel() {
 }
 
 internal class PushViewModelFactory(private val pushRepository: PushRepository) : ViewModelProvider.NewInstanceFactory() {
+    @Suppress("UNCHECKED_CAST") // Factory creates PushViewModel which is T; safe cast
     override fun <T : ViewModel> create(modelClass: Class<T>): T = PushViewModel(pushRepository) as T
 }

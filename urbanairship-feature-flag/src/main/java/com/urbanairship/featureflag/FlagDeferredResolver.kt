@@ -16,8 +16,10 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
@@ -32,7 +34,7 @@ internal class FlagDeferredResolver(
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) {
     private val pendingTasks: MutableMap<String, Deferred<Result<DeferredFlag>>> = mutableMapOf()
-    private val backOffIntervals: MutableMap<String, Long> = mutableMapOf()
+    private val backOffIntervals: MutableMap<String, Instant> = mutableMapOf()
 
     suspend fun resolve(request: DeferredRequest, flagInfo: FeatureFlagInfo): Result<DeferredFlag> {
         val requestId = listOf(flagInfo.name, flagInfo.id, flagInfo.lastUpdated, request.contactId ?: "", request.uri.toString())
@@ -84,7 +86,7 @@ internal class FlagDeferredResolver(
 
     private suspend fun fetchFlag(request: DeferredRequest, requestId: String, info: FeatureFlagInfo, allowRetry: Boolean): Result<DeferredFlag> {
         backOffIntervals[requestId]?.let {
-            val remaining = (it - clock.currentTimeMillis()).milliseconds
+            val remaining = it - clock.now()
             if (remaining.isPositive()) {
                 delay(remaining)
             }
@@ -108,7 +110,7 @@ internal class FlagDeferredResolver(
             is DeferredResult.RetriableError -> {
                 val backOff = result.retryAfter ?: DEFAULT_BACKOFF
                 if (!allowRetry || backOff > IMMEDIATE_BACKOFF_RETRY) {
-                    backOffIntervals[requestId] = clock.currentTimeMillis() + backOff.inWholeMilliseconds
+                    backOffIntervals[requestId] = clock.now() + backOff
                     return Result.failure(FeatureFlagEvaluationException.ConnectionError(
                         statusCode = result.statusCode,
                         errorDescription = if (!allowRetry) {

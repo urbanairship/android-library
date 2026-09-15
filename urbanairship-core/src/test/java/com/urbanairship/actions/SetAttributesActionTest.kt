@@ -10,6 +10,7 @@ import com.urbanairship.contacts.Contact
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import java.util.Date
 import io.mockk.every
 import io.mockk.mockk
@@ -28,7 +29,7 @@ public class SetAttributesActionTest {
 
     private val channel: AirshipChannel = mockk()
     private val contact: Contact = mockk()
-    private val clock = TestClock().apply { currentTimeMillis = 1000 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(1000) }
 
     private val action: SetAttributesAction = SetAttributesAction(
         { channel },
@@ -51,7 +52,7 @@ public class SetAttributesActionTest {
         // Named User attributes
         val namedUserSet = JSONObject()
         namedUserSet.put("named_user_attribute_1", 4.99)
-        namedUserSet.put("named_user_attribute_2", Date(clock.currentTimeMillis).time)
+        namedUserSet.put("named_user_attribute_2", clock.currentTime.toEpochMilli())
 
         val namedUserRemove = JSONArray(arrayOf("useless", "not_needed"))
 
@@ -95,7 +96,7 @@ public class SetAttributesActionTest {
         // Named User attributes
         val namedUserSet = JSONObject()
         namedUserSet.put("named_user_attribute_1", 4.99)
-        namedUserSet.put("named_user_attribute_2", Date(clock.currentTimeMillis).time)
+        namedUserSet.put("named_user_attribute_2", clock.currentTime.toEpochMilli())
 
         val namedUserRemove = JSONArray(arrayOf("useless", "not_needed"))
 
@@ -152,7 +153,7 @@ public class SetAttributesActionTest {
         // Named User attributes
         val namedUserSet = JSONObject()
         namedUserSet.put("named_user_attribute_1", 4.99)
-        namedUserSet.put("named_user_attribute_2", Date(clock.currentTimeMillis).time)
+        namedUserSet.put("named_user_attribute_2", clock.currentTime.toEpochMilli())
 
         val namedUserRemove = JSONArray(arrayOf("useless", "not_needed"))
 
@@ -184,7 +185,7 @@ public class SetAttributesActionTest {
         // Named User attributes
         val namedUserSet = JSONObject()
         namedUserSet.put("named_user_attribute_1", 4.99)
-        namedUserSet.put("named_user_attribute_2", Date(clock.currentTimeMillis).time)
+        namedUserSet.put("named_user_attribute_2", clock.currentTime.toEpochMilli())
 
         val namedUserRemove = JSONArray(arrayOf("useless", "not_needed"))
 
@@ -219,7 +220,7 @@ public class SetAttributesActionTest {
         // Named User attributes
         val namedUserSet = JSONObject()
         namedUserSet.put("named_user_attribute_1", 4.99)
-        namedUserSet.put("named_user_attribute_2", Date(clock.currentTimeMillis).time)
+        namedUserSet.put("named_user_attribute_2", clock.currentTime.toEpochMilli())
 
         val namedUserRemove = JSONArray(arrayOf("useless", "not_needed"))
 
@@ -271,16 +272,16 @@ public class SetAttributesActionTest {
 
         val expectedAttributeMutations = setOf(
             AttributeMutation.newSetAttributeMutation(
-                "channel_attribute_1", JsonValue.wrap(1), 1000
+                "channel_attribute_1", JsonValue.wrap(1), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newSetAttributeMutation(
-                "channel_attribute_2", JsonValue.wrap("value2"), 1000
+                "channel_attribute_2", JsonValue.wrap("value2"), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "nothing", 1000
+                "nothing", Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "not_important", 1000
+                "not_important", Instant.ofEpochMilli(1000)
             )
         )
 
@@ -303,7 +304,7 @@ public class SetAttributesActionTest {
         // Named User attributes
         val namedUserSet = JSONObject()
         namedUserSet.put("named_user_attribute_1", 4.99)
-        namedUserSet.put("named_user_attribute_2", Date(clock.currentTimeMillis).time)
+        namedUserSet.put("named_user_attribute_2", clock.currentTime.toEpochMilli())
 
         val namedUserRemove = JSONArray(arrayOf("useless", "not_needed"))
 
@@ -322,16 +323,16 @@ public class SetAttributesActionTest {
 
         val expectedAttributeMutations = setOf(
             AttributeMutation.newSetAttributeMutation(
-                "named_user_attribute_1", JsonValue.wrap(4.99), 1000
+                "named_user_attribute_1", JsonValue.wrap(4.99), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newSetAttributeMutation(
-                "named_user_attribute_2", JsonValue.wrap(1000), 1000
+                "named_user_attribute_2", JsonValue.wrap(1000), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "useless", 1000
+                "useless", Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "not_needed", 1000
+                "not_needed", Instant.ofEpochMilli(1000)
             )
         )
 
@@ -364,7 +365,7 @@ public class SetAttributesActionTest {
         // Named User attributes
         val namedUserSet = JSONObject()
         namedUserSet.put("named_user_attribute_1", 4.99)
-        namedUserSet.put("named_user_attribute_2", Date(clock.currentTimeMillis).time)
+        namedUserSet.put("named_user_attribute_2", clock.currentTime.toEpochMilli())
 
         val namedUserRemove = JSONArray(arrayOf("useless", "not_needed"))
 
@@ -384,28 +385,28 @@ public class SetAttributesActionTest {
 
         val expectedAttributeMutations = setOf(
             AttributeMutation.newSetAttributeMutation(
-                "channel_attribute_1", JsonValue.wrap(1), 1000
+                "channel_attribute_1", JsonValue.wrap(1), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newSetAttributeMutation(
-                "channel_attribute_2", JsonValue.wrap("value2"), 1000
+                "channel_attribute_2", JsonValue.wrap("value2"), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "nothing", 1000
+                "nothing", Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "not_important", 1000
+                "not_important", Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newSetAttributeMutation(
-                "named_user_attribute_1", JsonValue.wrap(4.99), 1000
+                "named_user_attribute_1", JsonValue.wrap(4.99), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newSetAttributeMutation(
-                "named_user_attribute_2", JsonValue.wrap(1000), 1000
+                "named_user_attribute_2", JsonValue.wrap(1000), Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "useless", 1000
+                "useless", Instant.ofEpochMilli(1000)
             ),
             AttributeMutation.newRemoveAttributeMutation(
-                "not_needed", 1000
+                "not_needed", Instant.ofEpochMilli(1000)
             )
         )
 
@@ -534,7 +535,7 @@ public class SetAttributesActionTest {
                     "some_custom_key" to "custom_value",
                     "exp" to 1012
                 )),
-                timestamp = 1000
+                timestamp = Instant.ofEpochMilli(1000)
             )
         )
 
@@ -576,7 +577,7 @@ public class SetAttributesActionTest {
                 jsonValue = JsonValue.wrap(mapOf(
                     "some_custom_key" to "custom_value"
                 )),
-                timestamp = 1000
+                timestamp = Instant.ofEpochMilli(1000)
             )
         )
 
@@ -622,7 +623,7 @@ public class SetAttributesActionTest {
                     "nested" to mapOf("foo" to "bar"),
                     "exp" to 1012
                 )),
-                timestamp = 1000
+                timestamp = Instant.ofEpochMilli(1000)
             ),
         )
 
@@ -666,7 +667,7 @@ public class SetAttributesActionTest {
                 jsonValue = JsonValue.wrap(mapOf(
                     "nested" to mapOf("foo" to "bar")
                 )),
-                timestamp = 1000
+                timestamp = Instant.ofEpochMilli(1000)
             ),
         )
 

@@ -6,19 +6,21 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.TimeTypeConverters
+import java.time.Instant
 
 /**
  * @hide
  */
 @Entity(tableName = "cacheItems")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@TypeConverters(JsonTypeConverters::class)
+@TypeConverters(JsonTypeConverters::class, TimeTypeConverters::class)
 public data class CacheEntity(
     @PrimaryKey val key: String,
     val appVersion: String,
     val sdkVersion: String,
-    val expireOn: Long,
+    val expireOn: Instant,
     val data: JsonValue
 ) {
-    public fun isExpired(timestamp: Long): Boolean = timestamp > expireOn
+    public fun isExpired(timestamp: Instant): Boolean = timestamp > expireOn
 }

@@ -126,16 +126,20 @@ public data class LayoutEventContext(
 public fun LayoutEventContext.Companion.makeContext(
     reportingContext: JsonValue?,
     experimentResult: ExperimentResult?,
+    variantAudienceReportingContext: JsonMap? = null,
     layoutContext: LayoutData?,
     displayContext: LayoutEventContext.Display?
 ) : LayoutEventContext? {
+    val experimentReportingData = experimentResult?.allEvaluatedExperimentsMetadata.orEmpty() +
+            listOfNotNull(variantAudienceReportingContext)
+
     val result = LayoutEventContext(
         pager = makePagerContext(layoutContext),
         button = makeButtonContext(layoutContext),
         form = makeFormContext(layoutContext),
         display = displayContext,
         reportingContext = reportingContext,
-        experimentReportingData = experimentResult?.allEvaluatedExperimentsMetadata
+        experimentReportingData = experimentReportingData.ifEmpty { null }
     )
 
     if (!result.isValid()) {

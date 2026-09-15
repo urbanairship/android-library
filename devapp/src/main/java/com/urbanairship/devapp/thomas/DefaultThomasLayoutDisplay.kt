@@ -1,6 +1,7 @@
 package com.urbanairship.devapp.thomas
 
 import android.content.Context
+import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.DefaultActionRunner
@@ -12,6 +13,7 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.banner.BannerViewManager
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
@@ -21,15 +23,20 @@ import com.urbanairship.json.jsonMapOf
 
 internal class DefaultThomasLayoutDisplay private constructor() {
 
-    fun display(context: Context, info: LayoutInfo) {
+    fun display(context: Context, info: LayoutInfo, priority: Int = 0) {
         Thomas.prepareDisplay(
             payload = info,
-            priority = 0,
+            priority = priority,
             extras = emptyJsonMap(),
             activityMonitor = GlobalActivityMonitor.shared(context),
             listener = thomasListener,
             actionRunner = actionRunner,
-            embeddedViewManager = EmbeddedViewManager
+            embeddedViewManager = EmbeddedViewManager,
+            bannerViewManager = BannerViewManager,
+            // The viewer is a layout host like any other, so it has to supply the AI manager
+            // or a scene's `ai_inference` never runs. Safe to read here: a preview is only
+            // ever displayed from a tap, long after takeoff.
+            ai = if (Airship.isFlying) Airship.internalAi else null
         ).display(context)
     }
 

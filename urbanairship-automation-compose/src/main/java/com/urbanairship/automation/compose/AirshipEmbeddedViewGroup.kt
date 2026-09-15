@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedFilter
 import com.urbanairship.embedded.AirshipEmbeddedSelection
 
 /**
@@ -18,6 +19,9 @@ import com.urbanairship.embedded.AirshipEmbeddedSelection
  * @param embeddedId The embedded ID.
  * @param modifier The modifier to be applied to the layout.
  * @param selection The [AirshipEmbeddedSelection] that controls how instances are ordered.
+ * @param filterInstances Optional [AirshipEmbeddedFilter] deciding which instances are eligible.
+ *   Applied before [selection], so an excluded instance never becomes a child. Remember the
+ *   lambda: an unstable one re-subscribes on every recomposition.
  * @param content The `Composable` that will display the list of embedded view content.
  */
 @Composable
@@ -25,11 +29,12 @@ public fun AirshipEmbeddedViewGroup(
     embeddedId: String,
     modifier: Modifier = Modifier,
     selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+    filterInstances: AirshipEmbeddedFilter? = null,
     content: @Composable BoxScope.(embeddedViews: List<EmbeddedViewItem>) -> Unit
 ) {
     AirshipEmbeddedViewGroup(
         modifier = modifier,
-        state = rememberAirshipEmbeddedViewGroupState(embeddedId, selection),
+        state = rememberAirshipEmbeddedViewGroupState(embeddedId, selection, filterInstances),
         content = content
     )
 }

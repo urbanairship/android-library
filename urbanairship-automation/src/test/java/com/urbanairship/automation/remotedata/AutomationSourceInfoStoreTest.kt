@@ -7,6 +7,7 @@ import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.remotedata.RemoteDataSource
+import java.time.Instant
 import java.util.UUID
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
@@ -23,7 +24,7 @@ public class AutomationSourceInfoStoreTest {
 
     @Test
     public fun testAppStoreIgnoreContactID(): TestResult = runTest {
-        val sourceInfo = AutomationSourceInfo(null, clock.currentTimeMillis(), "17.9.9")
+        val sourceInfo = AutomationSourceInfo(null, clock.now(), "17.9.9")
         infoStore.setSourceInfo(sourceInfo, RemoteDataSource.APP, "foo")
 
         assertEquals(sourceInfo, infoStore.getSourceInfo(RemoteDataSource.APP, null))
@@ -33,7 +34,7 @@ public class AutomationSourceInfoStoreTest {
 
     @Test
     public fun testContactStoreRespectsContactID(): TestResult = runTest {
-        val sourceInfo = AutomationSourceInfo(null, clock.currentTimeMillis(), "17.9.9")
+        val sourceInfo = AutomationSourceInfo(null, clock.now(), "17.9.9")
         infoStore.setSourceInfo(sourceInfo, RemoteDataSource.CONTACT, "foo")
 
         assertNull(infoStore.getSourceInfo(RemoteDataSource.CONTACT, null))
@@ -45,7 +46,7 @@ public class AutomationSourceInfoStoreTest {
     public fun testFailedSchedulesRoundTrip(): TestResult = runTest {
         val sourceInfo = AutomationSourceInfo(
             remoteDataInfo = null,
-            payloadTimestamp = clock.currentTimeMillis(),
+            payloadTimestamp = clock.now(),
             airshipSDKVersion = "17.9.9",
             failedSchedules = listOf(
                 FailedScheduleRecord("foo", 100L, "18.0.0"),
@@ -60,7 +61,7 @@ public class AutomationSourceInfoStoreTest {
 
     @Test
     public fun testNoFailedSchedulesRoundTripsAsNull(): TestResult = runTest {
-        val sourceInfo = AutomationSourceInfo(null, clock.currentTimeMillis(), "17.9.9")
+        val sourceInfo = AutomationSourceInfo(null, clock.now(), "17.9.9")
 
         infoStore.setSourceInfo(sourceInfo, RemoteDataSource.APP, null)
 
@@ -85,6 +86,6 @@ public class AutomationSourceInfoStoreTest {
             listOf(FailedScheduleRecord("foo", 100L, null)),
             parsed?.failedSchedules
         )
-        assertEquals(100L, parsed?.payloadTimestamp)
+        assertEquals(Instant.ofEpochMilli(100L), parsed?.payloadTimestamp)
     }
 }

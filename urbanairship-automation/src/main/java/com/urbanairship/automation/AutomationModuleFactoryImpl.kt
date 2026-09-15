@@ -10,6 +10,7 @@ import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.android.layout.analytics.DefaultMessageDisplayHistoryStore
@@ -27,7 +28,10 @@ import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
+import com.urbanairship.automation.limits.AutomationLedger
 import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.limits.LedgerLimitEvaluator
+import com.urbanairship.automation.limits.LedgerStore
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
 import com.urbanairship.automation.remotedata.AutomationSourceInfoStore
@@ -88,7 +92,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
         cache: AirshipCache,
-        audienceEvaluator: AudienceEvaluator
+        audienceEvaluator: AudienceEvaluator,
+        ai: InternalAirshipAi
     ): Module {
         val metrics = ApplicationMetrics(
             context = context,
@@ -102,6 +107,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val activityMonitor = GlobalActivityMonitor.shared(context)
         val displayCoordinatorManager = DisplayCoordinatorManager(dataStore, activityMonitor)
         val frequencyLimits = FrequencyLimitManager(context, runtimeConfig)
+        // A single store shared by the recorder, the limit evaluator, and the
+        // backfill, so limit reads reliably see what was written.
+        val ledgerStore = LedgerStore(context, runtimeConfig)
+        val ledger = AutomationLedger(ledgerStore)
+        val limitEvaluator = LedgerLimitEvaluator(ledgerStore)
         val automationStore = SerialAccessAutomationStore(
             AutomationStore.createDatabase(context, runtimeConfig)
         )
@@ -127,18 +137,21 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             displayAdapterFactory = DisplayAdapterFactory(
                 context,
                 NetworkMonitor.shared(context),
-                activityMonitor
+                activityMonitor,
+                ai
             ),
-            analyticsFactory = analyticsFactory
+            analyticsFactory = analyticsFactory,
+            ai = ai
         )
 
         // Execution
-        val actionExecutor = ActionAutomationExecutor()
+        val actionExecutor = ActionAutomationExecutor(ledger = ledger)
         val messageExecutor = InAppMessageAutomationExecutor(
             context = context,
             assetManager = assetManager,
             analyticsFactory = analyticsFactory,
-            scheduleConditionsChangedNotifier = scheduleConditionNotifier
+            scheduleConditionsChangedNotifier = scheduleConditionNotifier,
+            ledger = ledger
         )
 
         val engine = AutomationEngine(
@@ -160,7 +173,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                     cache = cache
                 ),
                 queueConfigSupplier = { runtimeConfig.remoteConfig.iaaConfig?.retryingQueue },
-                audienceEvaluator = audienceEvaluator
+                audienceEvaluator = audienceEvaluator,
+                ledger = ledger
             ),
             scheduleConditionsChangedNotifier = scheduleConditionNotifier,
             eventsFeed = AutomationEventFeed(
@@ -175,9 +189,13 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 executionWindowProcessor = ExecutionWindowProcessor(context)),
             automationStoreMigrator = AutomationStoreMigrator(
                 legacyDatabase = AutomationDatabase.createDatabase(context, runtimeConfig),
-                automationStore
+                store = automationStore,
+                ledgerStore = ledgerStore,
+                dataStore = dataStore
             ),
-            eventsHistory = eventsHistory
+            eventsHistory = eventsHistory,
+            ledger = ledger,
+            limitEvaluator = limitEvaluator
         )
 
         val automation = InAppAutomation(

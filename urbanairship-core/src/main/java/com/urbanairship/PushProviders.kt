@@ -180,6 +180,8 @@ public open class PushProviders @VisibleForTesting protected constructor(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val FCM_PUSH_PROVIDER_CLASS = "com.urbanairship.push.fcm.FcmPushProvider"

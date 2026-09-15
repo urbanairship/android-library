@@ -56,6 +56,7 @@
     <!-- General -->
     <string name="ua_refresh">Yenile</string>
     <string name="ua_open">Açık</string>
+    <string name="ua_back">Önceki</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Oran</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Hayır teşekkürler</string>

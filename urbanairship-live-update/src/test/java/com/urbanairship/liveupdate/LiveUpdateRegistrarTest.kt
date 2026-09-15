@@ -21,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifySequence
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -47,7 +48,7 @@ public class LiveUpdateRegistrarTest {
     private val processor: LiveUpdateProcessor = mockk(relaxed = true)
     private val notificationManager: NotificationManagerCompat = mockk(relaxed = true)
     private val notificationTimeoutCompat: NotificationTimeoutCompat = mockk(relaxed = true)
-    private val clock: TestClock = TestClock().apply { currentTimeMillis = NOW }
+    private val clock: TestClock = TestClock().apply { currentTime = Instant.ofEpochMilli(NOW) }
 
     /** Stands in for the processor's callback channel so tests can drive handler callbacks. */
     private val handlerCallbacks = MutableSharedFlow<LiveUpdateProcessor.HandlerCallback>()
@@ -207,10 +208,10 @@ public class LiveUpdateRegistrarTest {
                     name = NAME,
                     type = TYPE,
                     isActive = true,
-                    timestamp = NOW - MAX_INACTIVITY_MS - 1,
+                    timestamp = Instant.ofEpochMilli(NOW - MAX_INACTIVITY_MS - 1),
                     dismissalDate = DISMISS_TIMESTAMP
                 ),
-                content = LiveUpdateContent(name = NAME, content = CONTENT, timestamp = NOW)
+                content = LiveUpdateContent(name = NAME, content = CONTENT, timestamp = Instant.ofEpochMilli(NOW))
             )
         )
         givenActiveNotificationTags()
@@ -290,7 +291,7 @@ public class LiveUpdateRegistrarTest {
         advanceUntilIdle()
 
         verify {
-            processor.enqueue(eq(Operation.Stop(NAME, CONTENT, NOW, null)))
+            processor.enqueue(eq(Operation.Stop(NAME, CONTENT, Instant.ofEpochMilli(NOW), null)))
             notificationManager.cancel("$TYPE:$NAME", 1010)
         }
     }
@@ -302,7 +303,7 @@ public class LiveUpdateRegistrarTest {
         handlerCallbacks.emit(callback(LiveUpdateEvent.START))
         advanceUntilIdle()
 
-        verify { processor.enqueue(eq(Operation.Stop(NAME, CONTENT, NOW, null))) }
+        verify { processor.enqueue(eq(Operation.Stop(NAME, CONTENT, Instant.ofEpochMilli(NOW), null))) }
     }
 
     private fun callback(event: LiveUpdateEvent) = LiveUpdateProcessor.HandlerCallback(
@@ -331,7 +332,7 @@ public class LiveUpdateRegistrarTest {
                 content = LiveUpdateContent(
                     name = NAME,
                     content = CONTENT,
-                    timestamp = lastActivityAt
+                    timestamp = Instant.ofEpochMilli(lastActivityAt)
                 )
             )
         )
@@ -346,8 +347,8 @@ public class LiveUpdateRegistrarTest {
     private companion object {
         private const val NAME = "name"
         private const val TYPE = "type"
-        private const val TIMESTAMP = 1000L
-        private const val DISMISS_TIMESTAMP = 9000L
+        private val TIMESTAMP: Instant = Instant.ofEpochMilli(1000)
+        private val DISMISS_TIMESTAMP: Instant = Instant.ofEpochMilli(9000)
         private val CONTENT = jsonMapOf("foo" to "bar")
 
         /** Well clear of the inactivity window, so "recent" and "stale" are unambiguous. */

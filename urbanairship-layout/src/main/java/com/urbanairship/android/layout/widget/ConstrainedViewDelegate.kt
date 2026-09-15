@@ -70,6 +70,21 @@ public class ConstrainedViewDelegate internal constructor(
                 }
             }
 
+            // Children are measured inside this view's padding, so the sizes gathered above
+            // exclude it. Add it back before constraining, or the view ends up exactly as
+            // large as its content and then squeezes the child by the padding when it lays
+            // out (e.g. a border stroke, which is applied as padding on the view).
+            //
+            // An `auto` length is the content plus the border, not the content with the border
+            // eaten out of it -- which is also how iOS sizes it, where a placement border is a
+            // `padding(strokeWidth)` wrapped around the content once it has been measured.
+            if (wrapContentWidth) {
+                maxWidth += view.paddingLeft + view.paddingRight
+            }
+            if (wrapContentHeight) {
+                maxHeight += view.paddingTop + view.paddingBottom
+            }
+
             val constrainedWidth = constrainDimension(size.minWidth, size.maxWidth, widthSize, maxWidth)
             val constrainedHeight = constrainDimension(size.minHeight, size.maxHeight, heightSize, maxHeight)
 

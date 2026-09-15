@@ -13,9 +13,10 @@ import com.urbanairship.automation.limits.storage.OccurrenceEntity
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -56,7 +57,7 @@ internal class FrequencyLimitManager(
                 info.occurrences.sortWith(OccurrenceEntity.Comparator())
 
                 val occurrenceTimestamp = info.occurrences[info.occurrences.size - info.constraint.count].timeStamp
-                val elapsed = (clock.currentTimeMillis() - occurrenceTimestamp).milliseconds
+                val elapsed = clock.now() - occurrenceTimestamp
                 return@any elapsed <= info.constraint.range
             }
         }
@@ -81,7 +82,7 @@ internal class FrequencyLimitManager(
             return
         }
 
-        val time = clock.currentTimeMillis()
+        val time = clock.now()
 
         lock.withLock {
             constraintIDs.forEach {

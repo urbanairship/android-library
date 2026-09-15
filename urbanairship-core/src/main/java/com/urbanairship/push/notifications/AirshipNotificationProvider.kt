@@ -4,7 +4,6 @@ package com.urbanairship.push.notifications
 import android.app.Notification
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.os.Build
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -122,30 +121,8 @@ public open class AirshipNotificationProvider internal constructor(
 
         message.summary?.let { builder.setSubText(it) }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            applyDeprecatedSettings(context, message, builder)
-        }
-
         val notification = onExtendBuilder(context, builder, arguments).build()
         return NotificationResult.notification(notification)
-    }
-
-    @Suppress("deprecation")
-    private fun applyDeprecatedSettings(
-        context: Context,
-        message: PushMessage,
-        builder: NotificationCompat.Builder
-    ) {
-        var defaults = Notification.DEFAULT_SOUND or Notification.DEFAULT_VIBRATE
-
-        message.getSound(context)?.let {
-            builder.setSound(it)
-
-            // Remove the Notification.DEFAULT_SOUND flag
-            defaults = defaults and Notification.DEFAULT_SOUND.inv()
-        }
-
-        builder.setDefaults(defaults)
     }
 
     override fun onNotificationCreated(

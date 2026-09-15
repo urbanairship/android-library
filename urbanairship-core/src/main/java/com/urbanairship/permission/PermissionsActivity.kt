@@ -20,6 +20,10 @@ import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.util.Clock
 import com.urbanairship.util.getParcelableExtraCompat
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Activity that requests permissions.
@@ -105,7 +109,7 @@ public class PermissionsActivity public constructor(
         currentRequest = PermissionRequest(
             permission = permission,
             startShowRationale = beforeShowRationale,
-            startTime = clock.currentTimeMillis(),
+            startTime = clock.now(),
             resultReceiver = resultReceiver
         )
 
@@ -118,7 +122,7 @@ public class PermissionsActivity public constructor(
         currentRequest = null
 
         val afterShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(this, request.permission)
-        val time = clock.currentTimeMillis() - request.startTime
+        val time = clock.now() - request.startTime
         UALog.v(
             "Received permission result: permission ${request.permission}, " +
                     "shouldShowRequestPermissionRationale before: ${request.startShowRationale}, " +
@@ -131,7 +135,7 @@ public class PermissionsActivity public constructor(
             bundle.putString(PERMISSION_STATUS_EXTRA, PermissionStatus.GRANTED.name)
         } else {
             bundle.putString(PERMISSION_STATUS_EXTRA, PermissionStatus.DENIED.name)
-            if (time <= SILENT_DISMISS_MAX_TIME_MS && !afterShowRationale && !request.startShowRationale) {
+            if (time <= SILENT_DISMISS_MAX_TIME && !afterShowRationale && !request.startShowRationale) {
                 bundle.putBoolean(SILENTLY_DENIED_EXTRA, true)
             }
         }
@@ -143,10 +147,12 @@ public class PermissionsActivity public constructor(
     private class PermissionRequest(
         val permission: String,
         val startShowRationale: Boolean,
-        val startTime: Long,
+        val startTime: Instant,
         val resultReceiver: ResultReceiver
     )
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val PERMISSION_EXTRA = "PERMISSION_EXTRA"
@@ -157,7 +163,7 @@ public class PermissionsActivity public constructor(
         // The only way to know about a silent dismiss if both before and after showRationale are false. However
         // on Android 11+ you can press back to skip or touch outside which will result in a none silent false/false.
         // This amount of time is not a guarantee to catch all but it helps reduce the number false positives.
-        private const val SILENT_DISMISS_MAX_TIME_MS: Long = 2000
+        private val SILENT_DISMISS_MAX_TIME = 2.seconds
 
         @MainThread
         public fun requestPermission(

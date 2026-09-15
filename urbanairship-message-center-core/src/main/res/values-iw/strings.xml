@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">עריכת רשימה</string>
+    <string name="ua_leave_edit_mode">הפסקת עריכת רשימה</string>
+    <string name="ua_announce_enter_edit_mode">עריכת רשימת הודעות</string>
+    <string name="ua_announce_leave_edit_mode">צפייה ברשימת הודעות</string>
+    <string name="ua_mark_unread">סמן כלא נקרא</string>
+    <string name="ua_mark_all_read">סמן הכל כנקרא</string>
+    <string name="ua_delete_all">מחק הכל</string>
+    <string name="ua_description_mark_read">סמן הודעה כנקראה</string>
+    <string name="ua_description_mark_unread">סמן הודעה כלא נקראה</string>
+    <string name="ua_description_mark_all_read">סמן את כל ההודעות כנקראות</string>
+    <string name="ua_description_delete_all">מחק את כל ההודעות</string>
+    <string name="ua_description_delete">מחק הודעה</string>
+    <string name="ua_description_message_list_pane">רשימת הודעות</string>
+    <string name="ua_description_message_pane">תוכן ההודעה</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">סומנה הודעה 

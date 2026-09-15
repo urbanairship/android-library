@@ -10,6 +10,9 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -57,7 +60,7 @@ public class AirshipCache(
         val stored = store.getEntryWithKey(key) ?: return null
         if (stored.appVersion != appVersion ||
             stored.sdkVersion != sdkVersion ||
-            stored.isExpired(clock.currentTimeMillis())) {
+            stored.isExpired(clock.now())) {
             store.deleteItemWithKey(key)
             return null
         }
@@ -81,7 +84,7 @@ public class AirshipCache(
                 appVersion = appVersion,
                 sdkVersion = sdkVersion,
                 data = value.toJsonValue(),
-                expireOn = clock.currentTimeMillis() + ttl.inWholeMilliseconds
+                expireOn = clock.now() + ttl
             )
         )
     }
@@ -89,7 +92,7 @@ public class AirshipCache(
     internal suspend fun deleteExpired(
         appVersion: String = this.appVersion,
         sdkVersion: String = this.sdkVersion,
-        timestamp: Long = clock.currentTimeMillis()
+        timestamp: Instant = clock.now()
     ) {
         store.deleteExpired(
             appVersion = appVersion,

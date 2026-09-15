@@ -98,8 +98,8 @@ internal data class ContactManagementItem(
                 btn.contentDescription?.let { contentDescription = it }
 
                 setOnClickListener {
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        onAddClick(adapterPosition)
+                    if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                        onAddClick(bindingAdapterPosition)
                     }
                 }
             }
@@ -163,7 +163,7 @@ internal data class ContactManagementItem(
                     icon.setImageResource(itemIcon(item))
                     text.text = channel.maskedAddress
                     delete.run {
-                        setOnClickListener { onRemoveClick(adapterPosition, channel) }
+                        setOnClickListener { onRemoveClick(bindingAdapterPosition, channel) }
                         item.removePrompt.button.contentDescription?.let { contentDescription = it }
                     }
 
@@ -179,7 +179,7 @@ internal data class ContactManagementItem(
 
                     //  Set up resend label
                     resend.isVisible = if (state.showResendButton) {
-                        info.setOnClickListener { onResendClick(adapterPosition, channel) }
+                        info.setOnClickListener { onResendClick(bindingAdapterPosition, channel) }
                         resend.text = resendOptions.button.text
                         true
                     } else {

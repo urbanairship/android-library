@@ -11,6 +11,7 @@ import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Clock
+import java.time.Instant
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.coEvery
@@ -62,7 +63,7 @@ public class FeatureFlagDeferredResolverTest {
             clock = clock)
         )
 
-        every { clock.currentTimeMillis() } returns 1
+        every { clock.now() } returns Instant.ofEpochMilli(1)
 
         subject = FlagDeferredResolver(cache, coreResolver, clock, testDispatcher)
         Dispatchers.setMain(testDispatcher)
@@ -424,7 +425,7 @@ public class FeatureFlagDeferredResolverTest {
         assertEquals(expected, valueFirst?.getOrNull())
         assertEquals(1, resolveCount)
 
-        every { clock.currentTimeMillis() } returns 70000
+        every { clock.now() } returns Instant.ofEpochMilli(70000)
 
         val next = subject.resolve(request, info)
         assertEquals(expected, next.getOrNull())
@@ -451,8 +452,8 @@ public class FeatureFlagDeferredResolverTest {
     ): FeatureFlagInfo {
         return FeatureFlagInfo(
             id = "test-id",
-            created = 1L,
-            lastUpdated = 2L,
+            created = Instant.ofEpochMilli(1),
+            lastUpdated = Instant.ofEpochMilli(2),
             name = name,
             reportingContext = jsonMapOf(),
             audience = null,

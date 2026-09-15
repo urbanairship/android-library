@@ -16,6 +16,7 @@ import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
 
 import java.text.ParseException
+import java.time.Instant
 import java.util.Objects
 
 internal enum class ExperimentType(val jsonValue: String) {
@@ -174,8 +175,8 @@ internal data class Experiment(
     val id: String,
     val type: ExperimentType,
     val resolutionType: ResolutionType,
-    val created: Long,
-    val lastUpdated: Long,
+    val created: Instant,
+    val lastUpdated: Instant,
     val reportingMetadata: JsonMap,
     val audience: AudienceSelector,
     val compoundAudienceSelector: ExperimentCompoundAudience? = null,
@@ -244,7 +245,7 @@ internal data class Experiment(
         }
     }
 
-    fun isActive(date: Long): Boolean {
+    fun isActive(date: Instant): Boolean {
         return timeCriteria?.meets(date) ?: true
     }
 }

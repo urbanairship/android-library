@@ -55,6 +55,7 @@
     <!-- General -->
     <string name="ua_refresh">รีเฟรช</string>
     <string name="ua_open">เปิด</string>
+    <string name="ua_back">ก่อนหน้า</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">ประเมิน</string>
     <string name="ua_rate_app_action_default_rate_negative_button">ไม่เป็นไร ขอบคุณ</string>

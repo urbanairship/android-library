@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">編輯清單</string>
+    <string name="ua_leave_edit_mode">停止編輯清單</string>
+    <string name="ua_announce_enter_edit_mode">正在編輯訊息清單</string>
+    <string name="ua_announce_leave_edit_mode">正在檢視訊息清單</string>
+    <string name="ua_mark_unread">標記為未讀</string>
+    <string name="ua_mark_all_read">全部標記為已讀</string>
+    <string name="ua_delete_all">全部刪除</string>
+    <string name="ua_description_mark_read">將訊息標記為已讀</string>
+    <string name="ua_description_mark_unread">將訊息標記為未讀</string>
+    <string name="ua_description_mark_all_read">將所有訊息標記為已讀</string>
+    <string name="ua_description_delete_all">刪除所有訊息</string>
+    <string name="ua_description_delete">刪除訊息</string>
+    <string name="ua_description_message_list_pane">訊息清單</string>
+    <string name="ua_description_message_pane">訊息內容</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="other">已將 

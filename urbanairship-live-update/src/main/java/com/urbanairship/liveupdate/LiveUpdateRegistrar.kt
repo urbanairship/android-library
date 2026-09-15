@@ -1,5 +1,6 @@
 package com.urbanairship.liveupdate
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
@@ -23,6 +24,8 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
 import com.urbanairship.util.PendingIntentCompat
+import com.urbanairship.util.minus
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.hours
@@ -43,7 +46,7 @@ internal class LiveUpdateRegistrar(
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
     private val processor: LiveUpdateProcessor = LiveUpdateProcessor(dao),
     private val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(context),
-    private val notificationTimeoutCompat: NotificationTimeoutCompat = NotificationTimeoutCompat(context),
+    private val notificationTimeoutCompat: NotificationTimeoutCompat = NotificationTimeoutCompat(),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     /** Dispatcher that handler callbacks are invoked on. Injectable so tests can drive them. */
     private val handlerDispatcher: CoroutineDispatcher = Dispatchers.Default,
@@ -78,8 +81,8 @@ internal class LiveUpdateRegistrar(
         name: String,
         type: String,
         content: JsonMap,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) {
         val handler = handlers[type]
@@ -103,8 +106,8 @@ internal class LiveUpdateRegistrar(
     fun update(
         name: String,
         content: JsonMap,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) = processor.enqueue(
         Operation.Update(
@@ -119,8 +122,8 @@ internal class LiveUpdateRegistrar(
     fun stop(
         name: String,
         content: JsonMap?,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) = processor.enqueue(
         Operation.Stop(
@@ -132,12 +135,12 @@ internal class LiveUpdateRegistrar(
         )
     )
 
-    fun cancel(name: String, timestamp: Long = System.currentTimeMillis()) =
+    fun cancel(name: String, timestamp: Instant = Clock.DEFAULT_CLOCK.now()) =
         processor.enqueue(
             Operation.Cancel(name = name, timestamp = timestamp)
         )
 
-    fun clearAll(timestamp: Long = System.currentTimeMillis()) =
+    fun clearAll(timestamp: Instant = Clock.DEFAULT_CLOCK.now()) =
         processor.enqueue(
             Operation.ClearAll(timestamp = timestamp)
         )
@@ -181,14 +184,14 @@ internal class LiveUpdateRegistrar(
      */
     fun endStaleLiveUpdates() {
         scope.launch {
-            val now = clock.currentTimeMillis()
+            val now = clock.now()
 
             // Cheap, local checks first. The notification snapshot is only read once we know
             // something is actually stale, which also means it can never be captured before the
             // query that decides which Live Updates we care about.
             val stale = dao.getAllActive().filter { (state, content) ->
                 handlers[state.type] is NotificationLiveUpdateHandler &&
-                        now - lastActivityAt(state, content) > MAX_INACTIVITY.inWholeMilliseconds
+                        now - lastActivityAt(state, content) > MAX_INACTIVITY
             }
 
             if (stale.isEmpty()) {
@@ -211,7 +214,7 @@ internal class LiveUpdateRegistrar(
                 .forEach { (state, content) ->
                     UALog.v {
                         "Ending stale Live Update '${state.name}': inactive for " +
-                                "${now - lastActivityAt(state, content)}ms with no notification " +
+                                "${now - lastActivityAt(state, content)} with no notification " +
                                 "displayed (tag=${notificationTag(state.type, state.name)})."
                     }
                     stop(state.name, content?.content, state.timestamp, state.dismissalDate)
@@ -220,8 +223,8 @@ internal class LiveUpdateRegistrar(
     }
 
     /** The last time we heard anything at all about this Live Update. */
-    private fun lastActivityAt(state: LiveUpdateState, content: LiveUpdateContent?): Long =
-        maxOf(state.timestamp, content?.timestamp ?: 0L)
+    private fun lastActivityAt(state: LiveUpdateState, content: LiveUpdateContent?): Instant =
+        maxOf(state.timestamp, content?.timestamp ?: Instant.EPOCH)
 
     private suspend fun handleCallback(callback: HandlerCallback) {
         val (action, update, message) = callback
@@ -316,7 +319,7 @@ internal class LiveUpdateRegistrar(
             return
         }
 
-        stop(update.name, update.content, clock.currentTimeMillis(), null, message)
+        stop(update.name, update.content, clock.now(), null, message)
     }
 
     private fun postNotification(
@@ -328,7 +331,7 @@ internal class LiveUpdateRegistrar(
     ): NotificationResult? {
         // Set dismissal time on the notification, if the live update specifies one.
         update.dismissalTime?.let { dismissalTime ->
-            notificationTimeoutCompat.setTimeoutAt(builder, dismissalTime, update.name)
+            notificationTimeoutCompat.setTimeoutAt(builder, dismissalTime)
         }
 
         val notification = builder.build()
@@ -348,8 +351,11 @@ internal class LiveUpdateRegistrar(
             notification.contentIntent?.let { original ->
                 contentIntent.putExtra(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT, original)
             }
-            // Set our content intent.
-            notification.contentIntent = PendingIntentCompat.getActivity(context, 0, contentIntent, 0)
+            // Set our content intent. Immutable: the recipient only needs to send it back,
+            // never to fill it in.
+            notification.contentIntent = PendingIntentCompat.getActivity(
+                context, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         val deleteIntent = LiveUpdateNotificationReceiver.deleteIntent(context, update.name)
@@ -357,8 +363,11 @@ internal class LiveUpdateRegistrar(
         notification.deleteIntent?.let { original ->
             deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, original)
         }
-        // Set our delete intent.
-        notification.deleteIntent = PendingIntentCompat.getBroadcast(context, 0, deleteIntent, 0)
+        // Set our delete intent. Immutable: the recipient only needs to send it back,
+        // never to fill it in.
+        notification.deleteIntent = PendingIntentCompat.getBroadcast(
+            context, 0, deleteIntent, PendingIntent.FLAG_IMMUTABLE
+        )
 
         UALog.d("Posting live update notification for: ${update.name}")
 

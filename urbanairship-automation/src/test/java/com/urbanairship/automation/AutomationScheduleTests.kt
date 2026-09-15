@@ -4,15 +4,20 @@ import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.CompoundAudienceSelector
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.deferred.DeferredAutomationData
+import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationScheduleTests {
@@ -64,17 +69,17 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(AudienceSelector.newBuilder().build()),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
-            editGracePeriodDays = 7U,
+            editGracePeriodDays = 7L,
             metadata = jsonMapOf().toJsonValue(),
             frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type"
@@ -140,12 +145,12 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(
                 audienceSelector = AudienceSelector
                     .newBuilder()
@@ -154,9 +159,9 @@ public class AutomationScheduleTests {
                     .build(),
                 missBehavior = AutomationAudience.MissBehavior.CANCEL),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
-            editGracePeriodDays = 7U,
+            editGracePeriodDays = 7L,
             metadata = jsonMapOf().toJsonValue(),
             frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type"
@@ -230,17 +235,17 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(AudienceSelector.newBuilder().build()),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
-            editGracePeriodDays = 7U,
+            editGracePeriodDays = 7L,
             metadata = jsonMapOf().toJsonValue(),
             frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type",
@@ -325,12 +330,12 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = null,
             compoundAudience = AutomationCompoundAudience(
                 selector = CompoundAudienceSelector.Atomic(
@@ -339,9 +344,9 @@ public class AutomationScheduleTests {
                 missBehavior = AutomationAudience.MissBehavior.SKIP
             ),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
-            editGracePeriodDays = 7U,
+            editGracePeriodDays = 7L,
             metadata = jsonMapOf().toJsonValue(),
             frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type",
@@ -389,11 +394,198 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             sendMetadata = "base64-send-metadata"
         )
 
         verify(json, expected)
+    }
+
+    @Test
+    public fun testParseLedgerConfig() {
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [
+                   {
+                       "type": "custom_event_count",
+                       "goal": 1,
+                       "id": "json-id"
+                   }
+               ],
+               "type": "actions",
+               "actions": {
+                   "foo": "bar"
+               },
+               "ledger_config": {
+                   "shared_id": "group-42"
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        val expected = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(
+                AutomationTrigger.Event(
+                    EventAutomationTrigger(
+                        id = "json-id",
+                        type = EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+                        goal = 1.0,
+                        predicate = null
+                    )
+                )
+            ),
+            created = Instant.ofEpochMilli(1703073600000),
+            ledgerConfig = LedgerConfig(sharedId = "group-42")
+        )
+
+        verify(json, expected)
+    }
+
+    @Test
+    public fun testParseVariantAudience() {
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [
+                   {
+                       "type": "custom_event_count",
+                       "goal": 1,
+                       "id": "json-id"
+                   }
+               ],
+               "type": "actions",
+               "actions": {
+                   "foo": "bar"
+               },
+               "variant_audience": {
+                   "audience_hash": {
+                       "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
+                       "num_hash_buckets": 16384,
+                       "hash_identifier": "contact",
+                       "hash_algorithm": "farm_hash"
+                   },
+                   "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 8191 },
+                   "holdout_subset": { "min_hash_bucket": 8192, "max_hash_bucket": 9999 },
+                   "reporting_context": { "experiment": "exp-1" }
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        val expected = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(
+                AutomationTrigger.Event(
+                    EventAutomationTrigger(
+                        id = "json-id",
+                        type = EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+                        goal = 1.0,
+                        predicate = null
+                    )
+                )
+            ),
+            created = Instant.ofEpochMilli(1703073600000),
+            variantAudience = VariantAudience.fromJson(
+                JsonValue.parseString(
+                    """
+                    {
+                        "audience_hash": {
+                            "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
+                            "num_hash_buckets": 16384,
+                            "hash_identifier": "contact",
+                            "hash_algorithm": "farm_hash"
+                        },
+                        "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 8191 },
+                        "holdout_subset": { "min_hash_bucket": 8192, "max_hash_bucket": 9999 },
+                        "reporting_context": { "experiment": "exp-1" }
+                    }
+                    """.trimIndent()
+                ).requireMap()
+            )
+        )
+
+        verify(json, expected)
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsUnreadableVariantAudience() {
+        // A variant experiment this version can't evaluate must take the schedule with it
+        // rather than leave a schedule that displays to everyone.
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [],
+               "type": "actions",
+               "actions": { "foo": "bar" },
+               "variant_audience": {
+                   "audience_hash": {
+                       "hash_prefix": "prefix:",
+                       "num_hash_buckets": 16384,
+                       "hash_identifier": "contact",
+                       "hash_algorithm": "some_future_algorithm"
+                   },
+                   "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 8191 }
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        AutomationSchedule.fromJson(JsonValue.parseString(json))
+    }
+
+    @Test
+    public fun testNewBuilderKeepsAiSuppression() {
+        // Builder is public API: editing a schedule through it must not quietly drop
+        // fields the editor never touched.
+        val schedule = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(),
+            created = Instant.ofEpochMilli(1703073600000),
+            aiSuppression = AutomationAiSuppression(
+                condition = "the user rents trucks",
+                subjectHints = mapOf("surface" to "home"),
+                missBehavior = AutomationAudience.MissBehavior.CANCEL
+            )
+        )
+
+        assertEquals(schedule, schedule.newBuilder().build())
+        assertEquals(
+            schedule.aiSuppression,
+            schedule.newBuilder().setGroup("edited").build().aiSuppression
+        )
+    }
+
+    @Test
+    public fun testMalformedSubjectHintDropsTheHintNotTheSchedule() {
+        // A parse failure here costs the whole automation, because
+        // AutomationRemoteDataAccess and AutomationStore both map a throwing schedule to null.
+        // Hints are the softest part of the payload, so a bad one must not take the rest.
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [],
+               "type": "actions",
+               "actions": { "foo": "bar" },
+               "ai_suppression": {
+                   "condition": "the user rents trucks",
+                   "subject_hints": { "surface": "home", "count": 3 }
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        val schedule = AutomationSchedule.fromJson(JsonValue.parseString(json))
+
+        assertEquals("test_schedule", schedule.identifier)
+        assertEquals(
+            mapOf("surface" to "home"),
+            schedule.aiSuppression?.subjectHints
+        )
     }
 
     private fun verify(json: String, expected: AutomationSchedule) {

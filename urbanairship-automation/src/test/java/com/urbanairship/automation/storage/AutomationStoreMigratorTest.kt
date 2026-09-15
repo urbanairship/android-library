@@ -2,6 +2,7 @@ package com.urbanairship.automation.storage
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationAudience
@@ -16,6 +17,11 @@ import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
+import com.urbanairship.automation.limits.LedgerEvent
+import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.LedgerScope
+import com.urbanairship.automation.limits.LedgerStoreInterface
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonMatcher
 import com.urbanairship.json.JsonPredicate
@@ -23,21 +29,28 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationStoreMigratorTest {
 
     private val legacyDb = AutomationDatabase.createInMemoryDatabase(ApplicationProvider.getApplicationContext())
     private val automationStore = AutomationStore.createInMemoryDatabase(ApplicationProvider.getApplicationContext())
-    private val migrator = AutomationStoreMigrator(legacyDb, automationStore)
+    private val ledger = TestLedgerStore()
+    private val clock = TestClock()
+    private val preferenceStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private val migrator = AutomationStoreMigrator(legacyDb, automationStore, ledger, preferenceStore, clock)
 
     private val predicate = JsonPredicate.newBuilder().addMatcher(
         JsonMatcher.newBuilder()
@@ -50,6 +63,7 @@ public class AutomationStoreMigratorTest {
     public fun after() {
         legacyDb.close()
         automationStore.close()
+        preferenceStore.tearDown()
     }
 
     @Test
@@ -60,10 +74,10 @@ public class AutomationStoreMigratorTest {
         val expected = AutomationScheduleData(
             schedule = AutomationSchedule(
                 identifier = "some-schedule",
-                interval = 0u,
+                interval = Duration.ZERO,
                 priority = 0,
                 limit = 0u,
-                editGracePeriodDays = 0u,
+                editGracePeriodDays = 0L,
                 triggers = listOf(
                     AutomationTrigger.Event(
                         trigger = EventAutomationTrigger(
@@ -84,14 +98,14 @@ public class AutomationStoreMigratorTest {
                     jsonMapOf("action" to "value").toJsonValue()
                 ),
                 bypassHoldoutGroups = false,
-                created = 0U
+                created = Instant.ofEpochMilli(0)
             ),
             scheduleState = AutomationScheduleState.IDLE,
-            scheduleStateChangeDate = 0,
+            scheduleStateChangeDate = Instant.ofEpochMilli(0),
             executionCount = 0,
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 0
+                date = Instant.ofEpochMilli(0)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -102,8 +116,8 @@ public class AutomationStoreMigratorTest {
 
     @Test
     public fun testConvertInAppSchedule(): TestResult = runTest {
-        val start = DateUtils.createIso8601TimeStamp(3000)
-        val end = DateUtils.createIso8601TimeStamp(5000)
+        val start = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))
+        val end = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(5000))
         val legacy = FullSchedule(
             ScheduleEntity().apply {
                 this.scheduleId = "some-schedule"
@@ -112,8 +126,8 @@ public class AutomationStoreMigratorTest {
                 this.limit = 1
                 this.priority = 2
                 this.triggeredTime = 100
-                this.scheduleStart = DateUtils.parseIso8601(start)
-                this.scheduleEnd =  DateUtils.parseIso8601(end)
+                this.scheduleStart = DateUtils.parseIso8601(start).toEpochMilli()
+                this.scheduleEnd =  DateUtils.parseIso8601(end).toEpochMilli()
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
                 this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "in_app_message"
@@ -177,8 +191,8 @@ public class AutomationStoreMigratorTest {
                 group = "some-group",
                 priority = 2,
                 limit = 1U,
-                startDate = DateUtils.parseIso8601(start).toULong(),
-                endDate = DateUtils.parseIso8601(end).toULong(),
+                startDate = DateUtils.parseIso8601(start),
+                endDate = DateUtils.parseIso8601(end),
                 audience = AutomationAudience(
                     audienceSelector = AudienceSelector.newBuilder().setNewUser(true).build()
                 ),
@@ -204,20 +218,20 @@ public class AutomationStoreMigratorTest {
                     )
 
                 ),
-                interval =  500U,
+                interval =  500.seconds,
                 data = makeScheduleData(),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
-                editGracePeriodDays = 10U,
+                editGracePeriodDays = 10L,
                 metadata = jsonMapOf("meta" to "data").toJsonValue(),
                 frequencyConstraintIds = listOf("constraint1", "constraint2"),
                 messageType = "cool inapp",
                 reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
                 productId = "cool-product",
-                created = 10000UL
+                created = Instant.ofEpochMilli(10000)
             ),
             scheduleState = AutomationScheduleState.EXECUTING,
-            scheduleStateChangeDate = 600,
+            scheduleStateChangeDate = Instant.ofEpochMilli(600),
             executionCount = 3,
             preparedScheduleInfo = PreparedScheduleInfo(
                 scheduleId = "some-schedule",
@@ -230,7 +244,7 @@ public class AutomationStoreMigratorTest {
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 100
+                date = Instant.ofEpochMilli(100)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -241,8 +255,8 @@ public class AutomationStoreMigratorTest {
 
     @Test
     public fun testConvertDeferredSchedule(): TestResult = runTest {
-        val start = DateUtils.createIso8601TimeStamp(3000)
-        val end = DateUtils.createIso8601TimeStamp(5000)
+        val start = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))
+        val end = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(5000))
         val legacy = FullSchedule(
             ScheduleEntity().apply {
                 this.scheduleId = "some-schedule"
@@ -251,8 +265,8 @@ public class AutomationStoreMigratorTest {
                 this.limit = 1
                 this.priority = 2
                 this.triggeredTime = 100
-                this.scheduleStart = DateUtils.parseIso8601(start)
-                this.scheduleEnd =  DateUtils.parseIso8601(end)
+                this.scheduleStart = DateUtils.parseIso8601(start).toEpochMilli()
+                this.scheduleEnd =  DateUtils.parseIso8601(end).toEpochMilli()
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
                 this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "deferred"
@@ -316,8 +330,8 @@ public class AutomationStoreMigratorTest {
                 group = "some-group",
                 priority = 2,
                 limit = 1U,
-                startDate = DateUtils.parseIso8601(start).toULong(),
-                endDate = DateUtils.parseIso8601(end).toULong(),
+                startDate = DateUtils.parseIso8601(start),
+                endDate = DateUtils.parseIso8601(end),
                 audience = AutomationAudience(
                     audienceSelector = AudienceSelector.newBuilder().setNewUser(true).build()
                 ),
@@ -343,20 +357,20 @@ public class AutomationStoreMigratorTest {
                     )
 
                 ),
-                interval =  500U,
+                interval =  500.seconds,
                 data = makeDeferredScheduleData(),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
-                editGracePeriodDays = 10U,
+                editGracePeriodDays = 10L,
                 metadata = jsonMapOf("meta" to "data").toJsonValue(),
                 frequencyConstraintIds = listOf("constraint1", "constraint2"),
                 messageType = "cool deferred",
                 reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
                 productId = "cool-product",
-                created = 10000UL
+                created = Instant.ofEpochMilli(10000)
             ),
             scheduleState = AutomationScheduleState.EXECUTING,
-            scheduleStateChangeDate = 600,
+            scheduleStateChangeDate = Instant.ofEpochMilli(600),
             executionCount = 3,
             preparedScheduleInfo = PreparedScheduleInfo(
                 scheduleId = "some-schedule",
@@ -369,7 +383,7 @@ public class AutomationStoreMigratorTest {
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 100
+                date = Instant.ofEpochMilli(100)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -380,8 +394,8 @@ public class AutomationStoreMigratorTest {
 
     @Test
     public fun testConvertActionsSchedule(): TestResult = runTest {
-        val start = DateUtils.createIso8601TimeStamp(3000)
-        val end = DateUtils.createIso8601TimeStamp(5000)
+        val start = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))
+        val end = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(5000))
         val legacy = FullSchedule(
             ScheduleEntity().apply {
                 this.scheduleId = "some-schedule"
@@ -390,8 +404,8 @@ public class AutomationStoreMigratorTest {
                 this.limit = 1
                 this.priority = 2
                 this.triggeredTime = 100
-                this.scheduleStart = DateUtils.parseIso8601(start)
-                this.scheduleEnd =  DateUtils.parseIso8601(end)
+                this.scheduleStart = DateUtils.parseIso8601(start).toEpochMilli()
+                this.scheduleEnd =  DateUtils.parseIso8601(end).toEpochMilli()
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
                 this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "actions"
@@ -455,8 +469,8 @@ public class AutomationStoreMigratorTest {
                 group = "some-group",
                 priority = 2,
                 limit = 1U,
-                startDate = DateUtils.parseIso8601(start).toULong(),
-                endDate = DateUtils.parseIso8601(end).toULong(),
+                startDate = DateUtils.parseIso8601(start),
+                endDate = DateUtils.parseIso8601(end),
                 audience = AutomationAudience(
                     audienceSelector = AudienceSelector.newBuilder().setNewUser(true).build()
                 ),
@@ -482,22 +496,22 @@ public class AutomationStoreMigratorTest {
                     )
 
                 ),
-                interval =  500U,
+                interval =  500.seconds,
                 data =  AutomationSchedule.ScheduleData.Actions(
                     jsonMapOf("action" to "value").toJsonValue()
                 ),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
-                editGracePeriodDays = 10U,
+                editGracePeriodDays = 10L,
                 metadata = jsonMapOf("meta" to "data").toJsonValue(),
                 frequencyConstraintIds = listOf("constraint1", "constraint2"),
                 messageType =  "cool actions",
                 reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
                 productId = "cool-product",
-                created = 10000UL
+                created = Instant.ofEpochMilli(10000)
             ),
             scheduleState = AutomationScheduleState.EXECUTING,
-            scheduleStateChangeDate = 600,
+            scheduleStateChangeDate = Instant.ofEpochMilli(600),
             executionCount = 3,
             preparedScheduleInfo = PreparedScheduleInfo(
                 scheduleId = "some-schedule",
@@ -510,7 +524,7 @@ public class AutomationStoreMigratorTest {
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 100
+                date = Instant.ofEpochMilli(100)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -528,10 +542,10 @@ public class AutomationStoreMigratorTest {
         val expected = AutomationScheduleData(
             schedule = AutomationSchedule(
                 identifier = "some-schedule",
-                interval = 0u,
+                interval = Duration.ZERO,
                 priority = 0,
                 limit = 0u,
-                editGracePeriodDays = 0u,
+                editGracePeriodDays = 0L,
                 triggers = listOf(
                     AutomationTrigger.Event(
                         trigger = EventAutomationTrigger(
@@ -552,14 +566,14 @@ public class AutomationStoreMigratorTest {
                     jsonMapOf("action" to "value").toJsonValue()
                 ),
                 bypassHoldoutGroups = false,
-                created = 0U
+                created = Instant.ofEpochMilli(0)
             ),
             scheduleState = AutomationScheduleState.IDLE,
-            scheduleStateChangeDate = 0,
+            scheduleStateChangeDate = Instant.ofEpochMilli(0),
             executionCount = 0,
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 0
+                date = Instant.ofEpochMilli(0)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -567,6 +581,304 @@ public class AutomationStoreMigratorTest {
         val migrated = requireNotNull(automationStore.getSchedule("some-schedule"))
         assert(automationStore.getSchedule("bad-schedule") == null)
         assertEquals(expected, migrated)
+    }
+
+    @Test
+    public fun testBackfillLedgerEvents() {
+        val timestamp = Instant.ofEpochMilli(1000)
+        val schedules = listOf(
+            scheduleData("a", 3),
+            scheduleData("b", 0),
+            scheduleData("c", 1)
+        )
+
+        val events = AutomationStoreMigrator.backfillLedgerEvents(schedules, timestamp)
+
+        // Only schedules with a non-zero legacy count are backfilled, each as a
+        // single execution/backfill event with no trigger or shared scope.
+        val expected = listOf(
+            LedgerEvent.Execution(
+                scheduleId = "a",
+                sharedId = null,
+                triggerId = null,
+                timestamp = timestamp,
+                count = 3,
+                result = LedgerExecutionResult.BACKFILL,
+                cancel = null
+            ),
+            LedgerEvent.Execution(
+                scheduleId = "c",
+                sharedId = null,
+                triggerId = null,
+                timestamp = timestamp,
+                count = 1,
+                result = LedgerExecutionResult.BACKFILL,
+                cancel = null
+            )
+        )
+
+        assertEquals(expected, events)
+    }
+
+    @Test
+    public fun testBackfillLedgerEventsSkipsZeroCounts() {
+        val events = AutomationStoreMigrator.backfillLedgerEvents(
+            listOf(scheduleData("a", 0)),
+            timestamp = Instant.ofEpochMilli(1)
+        )
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    public fun testBackfillLedgerEventsEmptyInput() {
+        val events = AutomationStoreMigrator.backfillLedgerEvents(emptyList(), timestamp = Instant.ofEpochMilli(1))
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    public fun testMigrationBackfillsLegacyExecutionCounts(): TestResult = runTest {
+        clock.currentTime = Instant.ofEpochMilli(5000)
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+
+        migrator.migrateData()
+
+        val migrated = requireNotNull(automationStore.getSchedule("legacy-1"))
+        assertEquals(5, migrated.executionCount)
+
+        assertEquals(
+            listOf(
+                LedgerEvent.Execution(
+                    scheduleId = "legacy-1",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = Instant.ofEpochMilli(5000),
+                    count = 5,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testMigrationDoesNotBackfillZeroCounts(): TestResult = runTest {
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 0))
+
+        migrator.migrateData()
+
+        // The schedule still migrates, but a zero count produces no backfill.
+        assertEquals(0, requireNotNull(automationStore.getSchedule("legacy-1")).executionCount)
+        assertTrue(ledger.recorded.isEmpty())
+    }
+
+    @Test
+    public fun testMigrationBackfillNotDuplicatedOnRerun(): TestResult = runTest {
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+
+        // Simulate a relaunch where the post-migration legacy delete had failed:
+        // the legacy row is present again, but the new store already holds the
+        // migrated schedule. Migration must move it without re-recording backfill.
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+        migrator.migrateData()
+
+        assertEquals(1, ledger.recorded.size)
+    }
+
+    @Test
+    public fun testCurrentStoreBackfillRecordsExistingCounts(): TestResult = runTest {
+        clock.currentTime = Instant.ofEpochMilli(7000)
+
+        // Schedules already in the current store from a pre-ledger SDK version,
+        // with no legacy store to migrate.
+        automationStore.upsertSchedules(listOf("current-1", "current-2", "current-3")) { id, _ ->
+            when (id) {
+                "current-1" -> scheduleData(id, 2)
+                "current-2" -> scheduleData(id, 0)
+                else -> scheduleData(id, 4)
+            }
+        }
+
+        migrator.migrateData()
+
+        // Only non-zero counts are backfilled. Store ordering isn't guaranteed,
+        // so compare sorted by schedule id.
+        assertEquals(
+            listOf(
+                LedgerEvent.Execution(
+                    scheduleId = "current-1",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = Instant.ofEpochMilli(7000),
+                    count = 2,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                ),
+                LedgerEvent.Execution(
+                    scheduleId = "current-3",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = Instant.ofEpochMilli(7000),
+                    count = 4,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            ),
+            ledger.recorded.sortedBy { it.scheduleId }
+        )
+    }
+
+    @Test
+    public fun testBackfillRetriedWhenRecordFails(): TestResult = runTest {
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+        ledger.failNextRecord = true
+
+        migrator.migrateData()
+
+        // The record failed, so nothing was backfilled and the run must not be
+        // marked complete — otherwise the counts are lost for good.
+        assertTrue(ledger.recorded.isEmpty())
+
+        // The schedule still migrated, so the next launch retries off the
+        // current store and recovers the count exactly once.
+        migrator.migrateData()
+
+        assertEquals(
+            listOf(
+                LedgerEvent.Execution(
+                    scheduleId = "legacy-1",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = clock.currentTime,
+                    count = 5,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            ),
+            ledger.recorded
+        )
+
+        // And a third launch does not double-count.
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+    }
+
+    /**
+     * [PreferenceStore] degrades a failed write to a no-op, so the completion
+     * flag can silently fail to persist. The next launch must still not record
+     * the counts a second time.
+     */
+    @Test
+    public fun testBackfillDoesNotDoubleRecordWhenFlagIsLost(): TestResult = runTest {
+        automationStore.upsertSchedules(listOf("current-1")) { id, _ -> scheduleData(id, 2) }
+
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+
+        // As if the flag write had been swallowed on the previous launch.
+        preferenceStore.remove(AutomationStoreMigrator.LEDGER_BACKFILL_COMPLETED_KEY)
+
+        migrator.migrateData()
+
+        assertEquals(1, ledger.recorded.size)
+    }
+
+    @Test
+    public fun testCurrentStoreBackfillRunsOnce(): TestResult = runTest {
+        automationStore.upsertSchedules(listOf("current-1")) { id, _ -> scheduleData(id, 2) }
+
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+
+        // A later launch — where the current store's counts now also include
+        // ledger-recorded executions — must not backfill a second time.
+        ledger.recorded.clear()
+        migrator.migrateData()
+        assertTrue(ledger.recorded.isEmpty())
+    }
+
+    private fun scheduleData(id: String, count: Int): AutomationScheduleData {
+        return AutomationScheduleData(
+            schedule = AutomationSchedule(
+                identifier = id,
+                triggers = emptyList(),
+                data = AutomationSchedule.ScheduleData.Actions(
+                    jsonMapOf("action" to "value").toJsonValue()
+                )
+            ),
+            scheduleState = AutomationScheduleState.IDLE,
+            scheduleStateChangeDate = Instant.ofEpochMilli(0),
+            executionCount = count,
+            triggerInfo = null,
+            triggerSessionId = UUID.randomUUID().toString()
+        )
+    }
+
+    private fun makeLegacySchedule(id: String, count: Int): FullSchedule {
+        return FullSchedule(
+            ScheduleEntity().apply {
+                this.scheduleId = id
+                this.scheduleType = "actions"
+                this.data = jsonMapOf("action" to "value").toJsonValue()
+                this.scheduleStart = -1
+                this.scheduleEnd = -1
+                this.count = count
+            },
+            listOf(
+                TriggerEntity().apply {
+                    this.goal = 100.0
+                    this.parentScheduleId = id
+                    this.isCancellation = false
+                    this.progress = 40.0
+                    this.triggerType = 8 // app init
+                }
+            )
+        )
+    }
+
+    private class TestLedgerStore : LedgerStoreInterface {
+        val recorded: MutableList<LedgerEvent> = mutableListOf()
+
+        /** Makes the next [recordEvents] throw, then clears itself. */
+        var failNextRecord: Boolean = false
+
+        override suspend fun recordEvents(events: List<LedgerEvent>) {
+            if (failNextRecord) {
+                failNextRecord = false
+                throw IllegalStateException("ledger unavailable")
+            }
+            recorded.addAll(events)
+        }
+
+        override suspend fun recordEventsUnless(
+            scheduleId: String,
+            sharedId: String?,
+            events: List<LedgerEvent>,
+            alreadyRecorded: (LedgerEvent) -> Boolean
+        ): Boolean {
+            if (recorded.any(alreadyRecorded)) {
+                return false
+            }
+            recordEvents(events)
+            return true
+        }
+
+        override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
+            emptyList()
+
+        override suspend fun hasEvents(scheduleId: String): Boolean =
+            recorded.any { it.scheduleId == scheduleId }
+
+        override suspend fun deleteEvents(scopes: List<LedgerScope>) {}
+
+        override suspend fun retainEvents(
+            liveScheduleIds: Set<String>,
+            liveSharedIds: Set<String>
+        ) {}
+
+        override suspend fun compact(now: Instant) {}
     }
 
     private fun makeSimpleLegacySchedule(): FullSchedule {

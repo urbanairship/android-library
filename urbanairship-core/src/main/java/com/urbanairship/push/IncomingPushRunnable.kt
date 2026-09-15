@@ -3,7 +3,6 @@ package com.urbanairship.push
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
@@ -20,7 +19,6 @@ import com.urbanairship.job.JobInfo
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.push.notifications.NotificationArguments
 import com.urbanairship.push.notifications.NotificationChannelCompat
-import com.urbanairship.push.notifications.NotificationChannelUtils
 import com.urbanairship.push.notifications.NotificationProvider
 import com.urbanairship.push.notifications.NotificationResult
 import com.urbanairship.util.PendingIntentCompat
@@ -177,16 +175,9 @@ internal class IncomingPushRunnable private constructor(
                 val notification = result.notification
                     ?: throw IllegalArgumentException("Invalid notification result. Missing notification.")
 
-                val notificationChannel = getNotificationChannel(push, notification, arguments)
+                val notificationChannel = getNotificationChannel(push, notification)
 
-                if (notificationChannel != null) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                        NotificationChannelUtils.applyLegacySettings(
-                            notification,
-                            notificationChannel
-                        )
-                    }
-                } else {
+                if (notificationChannel == null) {
                     UALog.e("Missing required notification channel. Notification will most likely not display.")
                 }
 
@@ -230,19 +221,11 @@ internal class IncomingPushRunnable private constructor(
 
     private fun getNotificationChannel(
         push: PushManager,
-        notification: Notification,
-        arguments: NotificationArguments
-    ): NotificationChannelCompat? {
-        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationCompat.getChannelId(notification)
-        } else {
-            arguments.notificationChannelId
-        }
-
-        return channelId?.let {
+        notification: Notification
+    ): NotificationChannelCompat? =
+        NotificationCompat.getChannelId(notification)?.let {
             push.notificationChannelRegistry.getNotificationChannelSync(it)
         }
-    }
 
     /**
      * Posts the notification

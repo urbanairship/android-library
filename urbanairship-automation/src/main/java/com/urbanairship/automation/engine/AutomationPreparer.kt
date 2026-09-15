@@ -6,14 +6,18 @@ import com.urbanairship.UALog
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
+import com.urbanairship.automation.AutomationAiSuppression
 import com.urbanairship.automation.isInAppMessageType
+import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.utils.RetryingQueue
 import com.urbanairship.deferred.DeferredRequest
@@ -31,7 +35,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 internal interface AutomationPreparerDelegate<DataIn, DataOut> {
-    suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : Result<DataOut>
+    suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : Result<DelegatePreparerResult<DataOut>>
     suspend fun cancelled(scheduleID: String)
 }
 
@@ -45,6 +49,7 @@ internal class AutomationPreparer internal constructor(
     private val remoteDataAccess: AutomationRemoteDataAccess,
     private val additionalAudienceResolver: AdditionalAudienceCheckerResolver,
     private val audienceEvaluator: AudienceEvaluator,
+    private val ledger: AutomationLedgerInterface,
     queueConfigSupplier: (() -> RetryingQueueConfig?)? = null,
     private val queues: Queues = Queues(queueConfigSupplier),
 ) {
@@ -64,7 +69,8 @@ internal class AutomationPreparer internal constructor(
     suspend fun prepare(
         schedule: AutomationSchedule,
         deferredContext: DeferredTriggerContext?,
-        triggerSessionId: String
+        triggerSessionId: String,
+        triggerId: String? = null
     ): SchedulePrepareResult {
         UALog.v { "Preparing ${schedule.identifier}" }
 
@@ -102,14 +108,16 @@ internal class AutomationPreparer internal constructor(
             if (audience != null) {
                 val result = audienceEvaluator.evaluate(
                     compoundAudience = audience,
-                    newEvaluationDate = schedule.created.toLong(),
+                    newEvaluationDate = schedule.created,
                     infoProvider = deviceInfoProvider
                 )
 
                 if (!result.isMatch) {
                     UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
+                    val behavior = schedule.effectiveAudienceMissBehavior
+                    recordPenalty(schedule, triggerId, behavior)
                     return@run RetryingQueue.Result.Success(
-                        result = schedule.audienceMissBehaviorResult(),
+                        result = behavior.toPrepareResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -122,15 +130,27 @@ internal class AutomationPreparer internal constructor(
                 return@run RetryingQueue.Result.Retry()
             }
 
+            val variantAudienceResult = resolveVariantAudience(schedule, deviceInfoProvider)
+
             prepareData(
                 prepareCache = prepareCache,
                 data = schedule.data,
                 schedule = schedule,
+                triggerId = triggerId,
+                aiSuppression = schedule.aiSuppression,
                 onDeferredRequest = {
                     deferredRequest(it, triggerContext = deferredContext, deviceInfoProvider)
                 },
-                onPrepareInfo = {
-                    prepareInfo(schedule, experimentResult, deviceInfoProvider, triggerSessionId)
+                onPrepareInfo = { aiSuppression ->
+                    prepareInfo(
+                        schedule,
+                        experimentResult,
+                        variantAudienceResult,
+                        deviceInfoProvider,
+                        triggerSessionId,
+                        triggerId,
+                        aiSuppression
+                    )
                 },
                 onPrepareSchedule = { info, data ->
                     prepareSchedule(info, data, frequencyChecker)
@@ -142,8 +162,11 @@ internal class AutomationPreparer internal constructor(
     private suspend fun prepareInfo(
         schedule: AutomationSchedule,
         experimentResult: ExperimentResult?,
+        variantAudienceResult: VariantAudienceResult?,
         deviceInfoProvider: DeviceInfoProvider,
-        triggerSessionId: String
+        triggerSessionId: String,
+        triggerId: String?,
+        aiSuppression: AutomationAiSuppression?
     ): Result<PreparedScheduleInfo> {
         val additionalAudienceCheckResult = additionalAudienceResolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
@@ -160,11 +183,15 @@ internal class AutomationPreparer internal constructor(
                 campaigns = schedule.campaigns,
                 contactId = deviceInfoProvider.getStableContactInfo().contactId,
                 experimentResult = experimentResult,
+                variantAudienceResult = variantAudienceResult,
                 reportingContext = schedule.reportingContext,
                 triggerSessionId = triggerSessionId,
                 additionalAudienceCheckResult = additionalAudienceCheckResult,
                 priority = schedule.priority ?: 0,
-                sendMetadata = schedule.sendMetadata
+                sendMetadata = schedule.sendMetadata,
+                ledgerSharedId = schedule.ledgerConfig?.sharedId,
+                triggerId = triggerId,
+                aiSuppression = aiSuppression
             )
         )
     }
@@ -201,14 +228,16 @@ internal class AutomationPreparer internal constructor(
         prepareCache: PrepareCache,
         data: AutomationSchedule.ScheduleData,
         schedule: AutomationSchedule,
+        triggerId: String?,
         onDeferredRequest: suspend (DeferredAutomationData) -> DeferredRequest,
-        onPrepareInfo: suspend () -> Result<PreparedScheduleInfo>,
+        aiSuppression: AutomationAiSuppression?,
+        onPrepareInfo: suspend (AutomationAiSuppression?) -> Result<PreparedScheduleInfo>,
         onPrepareSchedule: (PreparedScheduleInfo, PreparedScheduleData) -> PreparedSchedule,
     ): RetryingQueue.Result<SchedulePrepareResult> {
 
         when(data) {
             is AutomationSchedule.ScheduleData.Actions -> {
-                val info = onPrepareInfo().getOrElse {
+                val info = onPrepareInfo(aiSuppression).getOrElse {
                     UALog.e(it) { "Failed to prepare schedule data" }
                     return RetryingQueue.Result.Retry()
                 }
@@ -218,12 +247,12 @@ internal class AutomationPreparer internal constructor(
                         UALog.e(it) { "Failed to prepare actions" }
                         RetryingQueue.Result.Retry()
                     },
-                    onSuccess = {
-                        RetryingQueue.Result.Success(
-                            SchedulePrepareResult.Prepared(
-                                onPrepareSchedule(info, PreparedScheduleData.Action(it))
+                    onSuccess = { result ->
+                        settleDelegateOutcome(result, schedule, triggerId) { prepared ->
+                            RetryingQueue.Result.Success(
+                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.Action(prepared)))
                             )
-                        )
+                        }
                     }
                 )
             }
@@ -234,7 +263,7 @@ internal class AutomationPreparer internal constructor(
                     return RetryingQueue.Result.Success(SchedulePrepareResult.Skip)
                 }
 
-                val info = onPrepareInfo().getOrElse {
+                val info = onPrepareInfo(aiSuppression).getOrElse {
                     UALog.e(it) { "Failed to prepare schedule data" }
                     return RetryingQueue.Result.Retry()
                 }
@@ -244,12 +273,12 @@ internal class AutomationPreparer internal constructor(
                         UALog.e(it) { "Failed to prepare message" }
                         RetryingQueue.Result.Retry()
                     },
-                    onSuccess = {
-                        RetryingQueue.Result.Success(
-                            SchedulePrepareResult.Prepared(
-                                onPrepareSchedule(info, PreparedScheduleData.InAppMessage(it))
+                    onSuccess = { result ->
+                        settleDelegateOutcome(result, schedule, triggerId) { prepared ->
+                            RetryingQueue.Result.Success(
+                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.InAppMessage(prepared)))
                             )
-                        )
+                        }
                     }
                 )
             }
@@ -260,11 +289,15 @@ internal class AutomationPreparer internal constructor(
                     deferred = data.deferred,
                     deferredRequest = onDeferredRequest(data.deferred),
                     schedule = schedule,
-                    onResult = {
+                    triggerId = triggerId,
+                    onResult = { data, deferredAiSuppression ->
                         prepareData(
                             prepareCache = prepareCache,
-                            data = it,
+                            data = data,
                             schedule = schedule,
+                            triggerId = triggerId,
+                            // The deferred response wins when it carries its own config.
+                            aiSuppression = deferredAiSuppression ?: aiSuppression,
                             onDeferredRequest = onDeferredRequest,
                             onPrepareInfo = onPrepareInfo,
                             onPrepareSchedule = onPrepareSchedule,
@@ -272,6 +305,98 @@ internal class AutomationPreparer internal constructor(
                     }
                 )
             }
+        }
+    }
+
+    /**
+     * Records an outcome that ends an attempt with a miss behavior, when that
+     * behavior consumes budget. `PENALIZE` records `AUDIENCE_MISS`; `CANCEL`
+     * records `AUDIENCE_MISS` with `cancel = true`; `SKIP` records nothing.
+     *
+     * Used for both a failed audience check and an app suppression, which spend
+     * a schedule's budget the same way.
+     *
+     * @param behavior The behavior actually applied, which a deferred response or an
+     * app suppression may have decided. Passed in rather than read off the schedule so
+     * the ledger entry and the prepare result cannot disagree.
+     */
+    private suspend fun recordPenalty(
+        schedule: AutomationSchedule,
+        triggerId: String?,
+        behavior: AutomationAudience.MissBehavior
+    ) {
+        if (behavior == AutomationAudience.MissBehavior.SKIP) {
+            return
+        }
+
+        recordPenalized(
+            schedule = schedule,
+            triggerId = triggerId,
+            cancel = behavior == AutomationAudience.MissBehavior.CANCEL
+        )
+    }
+
+    /**
+     * Records the budget-consuming outcome every `PENALIZE` prepare result
+     * shares, so a penalty always reaches the ledger. Without an event the
+     * penalty spends nothing and the schedule can be penalized forever without
+     * ever reaching its limit.
+     *
+     * The schema has no result of its own for a give-up deferred timeout, so it
+     * lands in the same `AUDIENCE_MISS` bucket the miss behaviors use. That is
+     * safe on the axis that decides delivery — the result never affects whether
+     * an execution counts, only which executions an exclusion rule can
+     * subtract — but a rule excluding `audience_miss` does also exclude
+     * timeouts.
+     */
+    private suspend fun recordPenalized(
+        schedule: AutomationSchedule,
+        triggerId: String?,
+        cancel: Boolean
+    ) {
+        ledger.recordExecution(
+            scheduleId = schedule.identifier,
+            sharedId = schedule.ledgerConfig?.sharedId,
+            triggerId = triggerId,
+            result = LedgerExecutionResult.AUDIENCE_MISS,
+            cancel = cancel
+        )
+    }
+
+    /**
+     * Maps a delegate's outcome to a prepare result, recording the ones that
+     * spend the schedule's budget.
+     *
+     * A delegate can end an attempt with its own miss behavior — the app's
+     * `onCheckSuppression` does exactly that — which consumes budget the same
+     * way an audience miss does. Every delegate outcome routes through here, so
+     * such a path reaches the ledger without each delegate having to record for
+     * itself.
+     *
+     * @param onPrepared Wraps the delegate's data, which only the caller knows
+     * the shape of.
+     */
+    private suspend fun <DataOut> settleDelegateOutcome(
+        outcome: DelegatePreparerResult<DataOut>,
+        schedule: AutomationSchedule,
+        triggerId: String?,
+        onPrepared: (DataOut) -> RetryingQueue.Result<SchedulePrepareResult>
+    ): RetryingQueue.Result<SchedulePrepareResult> = when (outcome) {
+        is DelegatePreparerResult.Prepared -> onPrepared(outcome.data)
+
+        DelegatePreparerResult.Cancel -> {
+            recordPenalty(schedule, triggerId, AutomationAudience.MissBehavior.CANCEL)
+            RetryingQueue.Result.Success(SchedulePrepareResult.Cancel, ignoreReturnOrder = true)
+        }
+
+        DelegatePreparerResult.Skip -> {
+            recordPenalty(schedule, triggerId, AutomationAudience.MissBehavior.SKIP)
+            RetryingQueue.Result.Success(SchedulePrepareResult.Skip, ignoreReturnOrder = true)
+        }
+
+        DelegatePreparerResult.Penalize -> {
+            recordPenalty(schedule, triggerId, AutomationAudience.MissBehavior.PENALIZE)
+            RetryingQueue.Result.Success(SchedulePrepareResult.Penalize, ignoreReturnOrder = true)
         }
     }
 
@@ -292,12 +417,32 @@ internal class AutomationPreparer internal constructor(
         }
     }
 
+    private suspend fun resolveVariantAudience(
+        schedule: AutomationSchedule,
+        deviceInfoProvider: DeviceInfoProvider
+    ): VariantAudienceResult? {
+        val variantAudience = schedule.variantAudience?.takeIf { schedule.isInAppMessageType() }
+            ?: return null
+
+        return VariantAudienceResult(
+            outcome = variantAudience.resolve(
+                channelId = deviceInfoProvider.getChannelId(),
+                contactId = deviceInfoProvider.getStableContactInfo().contactId
+            ),
+            reportingContext = variantAudience.reportingContext
+        )
+    }
+
     private suspend fun prepareDeferred(
         prepareCache: PrepareCache,
         deferred: DeferredAutomationData,
         deferredRequest: DeferredRequest,
         schedule: AutomationSchedule,
-        onResult: suspend (AutomationSchedule.ScheduleData) -> RetryingQueue.Result<SchedulePrepareResult>
+        triggerId: String?,
+        onResult: suspend (
+            AutomationSchedule.ScheduleData,
+            AutomationAiSuppression?
+        ) -> RetryingQueue.Result<SchedulePrepareResult>
     ): RetryingQueue.Result<SchedulePrepareResult> {
         UALog.v { "Resolving deferred ${schedule.identifier}" }
 
@@ -323,6 +468,11 @@ internal class AutomationPreparer internal constructor(
                 if (deferred.retryOnTimeOut != false) {
                     RetryingQueue.Result.Retry()
                 } else {
+                    // Giving up penalizes the schedule, which spends budget the
+                    // same way an audience miss does. `recordAudienceMiss` is
+                    // not reusable here: this penalizes regardless of the
+                    // schedule's miss behavior, `SKIP` included.
+                    recordPenalized(schedule, triggerId, cancel = false)
                     RetryingQueue.Result.Success(
                         result = SchedulePrepareResult.Penalize,
                         ignoreReturnOrder = true
@@ -341,7 +491,10 @@ internal class AutomationPreparer internal constructor(
                                 UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
                                 RetryingQueue.Result.Retry()
                             } else {
-                                onResult(AutomationSchedule.ScheduleData.Actions(actions))
+                                onResult(
+                                    AutomationSchedule.ScheduleData.Actions(actions),
+                                    result.result.aiSuppression
+                                )
                             }
                         }
                         DeferredAutomationData.DeferredType.IN_APP_MESSAGE -> {
@@ -350,13 +503,20 @@ internal class AutomationPreparer internal constructor(
                                 UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
                                 RetryingQueue.Result.Retry()
                             } else {
-                                onResult(AutomationSchedule.ScheduleData.InAppMessageData(message))
+                                onResult(
+                                    AutomationSchedule.ScheduleData.InAppMessageData(message),
+                                    result.result.aiSuppression
+                                )
                             }
                         }
                     }
                 } else {
+                    // The deferred response wins when it provides its own behavior.
+                    val behavior = result.result.missBehavior
+                        ?: schedule.effectiveAudienceMissBehavior
+                    recordPenalty(schedule, triggerId, behavior)
                     RetryingQueue.Result.Success(
-                        result = schedule.audienceMissBehaviorResult(),
+                        result = behavior.toPrepareResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -365,13 +525,14 @@ internal class AutomationPreparer internal constructor(
     }
 }
 
-private fun AutomationSchedule.audienceMissBehaviorResult(): SchedulePrepareResult {
-    val result = compoundAudience?.missBehavior
+/**
+ * The effective miss behavior after combining compound and device audiences,
+ * defaulting to `penalize` when no behavior is configured.
+ */
+private val AutomationSchedule.effectiveAudienceMissBehavior: AutomationAudience.MissBehavior
+    get() = compoundAudience?.missBehavior
         ?: audience?.missBehavior
         ?: AutomationAudience.MissBehavior.PENALIZE
-
-    return result.toPrepareResult()
-}
 
 private fun AutomationSchedule.evaluateExperiments(): Boolean {
     return isInAppMessageType() && bypassHoldoutGroups != true

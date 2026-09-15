@@ -19,6 +19,7 @@ import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.util.VersionUtils
 import com.urbanairship.util.base64Decoded
 import com.urbanairship.util.getSha256Digest
+import java.time.Instant
 import java.util.Arrays
 
 /**
@@ -85,6 +86,8 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
             .toJsonValue()
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         // JSON keys
         private const val NEW_USER_KEY = "new_user"
@@ -237,6 +240,8 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public enum class MissBehavior(public val value: String) : JsonSerializable {
         /**
          * Cancel the message's schedule when the audience check fails.
@@ -322,7 +327,10 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
 
     /**
      * AudienceSelector builder.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Builder internal constructor() {
 
         internal var newUser: Boolean? = null
@@ -504,7 +512,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
      * Evaluation
      */
     public suspend fun evaluate(
-        newEvaluationDate: Long,
+        newEvaluationDate: Instant,
         infoProvider: DeviceInfoProvider,
         hashChecker: HashChecker,
     ): AirshipDeviceAudienceResult {
@@ -640,9 +648,9 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         return required.apply(version)
     }
 
-    private fun checkNewUser(infoProvider: DeviceInfoProvider, cutOffDate: Long): Boolean {
+    private fun checkNewUser(infoProvider: DeviceInfoProvider, cutOffDate: Instant): Boolean {
         val required = newUser ?: return true
-        return required == (infoProvider.installDateMilliseconds >= cutOffDate)
+        return required == (infoProvider.installDate >= cutOffDate)
     }
 
     private suspend fun checkHash(infoProvider: DeviceInfoProvider): Boolean {

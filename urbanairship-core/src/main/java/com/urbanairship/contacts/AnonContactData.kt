@@ -7,7 +7,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 
-@ConsistentCopyVisibility
 internal data class AnonContactData internal constructor(
     val tagGroups: Map<String, Set<String>> = emptyMap(),
     val attributes: Map<String, JsonValue> = emptyMap(),

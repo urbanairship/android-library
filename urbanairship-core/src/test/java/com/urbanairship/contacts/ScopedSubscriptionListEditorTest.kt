@@ -23,7 +23,7 @@ public class ScopedSubscriptionListEditorTest {
         editor.subscribe("some list", Scope.SMS).apply()
         val expected = listOf(
             ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.SMS, clock.currentTimeMillis
+                "some list", Scope.SMS, clock.currentTime
             )
         )
         Assert.assertEquals(expected, result)
@@ -34,7 +34,7 @@ public class ScopedSubscriptionListEditorTest {
         editor.unsubscribe("some list", Scope.APP).apply()
         val expected = listOf(
             ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "some list", Scope.APP, clock.currentTimeMillis
+                "some list", Scope.APP, clock.currentTime
             )
         )
         Assert.assertEquals(expected, result)
@@ -49,9 +49,9 @@ public class ScopedSubscriptionListEditorTest {
 
         val expected = listOf(
             ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "some list", Scope.APP, clock.currentTimeMillis
+                "some list", Scope.APP, clock.currentTime
             ), ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some other list", Scope.WEB, clock.currentTimeMillis
+                "some other list", Scope.WEB, clock.currentTime
             )
         )
 
@@ -67,13 +67,13 @@ public class ScopedSubscriptionListEditorTest {
 
         val expected = listOf(
             ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "some list", Scope.APP, clock.currentTimeMillis
+                "some list", Scope.APP, clock.currentTime
             ), ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "some list", Scope.SMS, clock.currentTimeMillis
+                "some list", Scope.SMS, clock.currentTime
             ), ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some other list", Scope.WEB, clock.currentTimeMillis
+                "some other list", Scope.WEB, clock.currentTime
             ), ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some other list", Scope.EMAIL, clock.currentTimeMillis
+                "some other list", Scope.EMAIL, clock.currentTime
             )
         )
 
@@ -89,7 +89,7 @@ public class ScopedSubscriptionListEditorTest {
 
         val expected = listOf(
             ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, clock.currentTimeMillis
+                "some list", Scope.APP, clock.currentTime
             )
         )
         Assert.assertEquals(expected, result)

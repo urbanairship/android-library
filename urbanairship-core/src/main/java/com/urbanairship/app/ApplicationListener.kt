@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.app
 
+import java.time.Instant
+
 /**
  * Listener for application foreground and backgrounds.
  */
@@ -9,14 +11,14 @@ public interface ApplicationListener {
     /**
      * Called when the app is foregrounded.
      *
-     * @param milliseconds Time in milliseconds when the foreground occurred.
+     * @param timestamp The time when the foreground occurred.
      */
-    public fun onForeground(milliseconds: Long)
+    public fun onForeground(timestamp: Instant)
 
     /**
      * Called when the app is backgrounded.
      *
-     * @param milliseconds Time in milliseconds when the background occurred.
+     * @param timestamp The time when the background occurred.
      */
-    public fun onBackground(milliseconds: Long)
+    public fun onBackground(timestamp: Instant)
 }

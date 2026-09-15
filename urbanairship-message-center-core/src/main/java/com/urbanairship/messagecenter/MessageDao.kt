@@ -33,7 +33,7 @@ public abstract class MessageDao {
 
     @VisibleForTesting
     internal val currentTimestamp: String
-        get() = DateUtils.createIso8601TimeStamp(queryClock.currentTimeMillis())
+        get() = DateUtils.createIso8601TimeStamp(queryClock.now())
 
     @VisibleForTesting
     internal suspend fun insert(message: MessageEntity) = try {

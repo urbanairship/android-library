@@ -126,14 +126,15 @@ public data class RemoteAirshipConfig(
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class ContactConfig(
-    public val foregroundIntervalMs: Long? = null,
-    public val channelRegistrationMaxResolveAgeMs: Long? = null
+    public val foregroundInterval: Duration? = null,
+    public val channelRegistrationMaxResolveAge: Duration? = null
 ) : JsonSerializable {
 
     @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
-        FOREGROUND_INTERVAL_MS_KEY to foregroundIntervalMs,
-        CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY to channelRegistrationMaxResolveAgeMs
+        FOREGROUND_INTERVAL_MS_KEY to foregroundInterval?.inWholeMilliseconds,
+        CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY to
+            channelRegistrationMaxResolveAge?.inWholeMilliseconds
     ).toJsonValue()
 
     /** @hide */
@@ -146,14 +147,15 @@ public data class ContactConfig(
         @Throws(JsonException::class)
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun fromJson(json: JsonValue): ContactConfig = ContactConfig(
-            foregroundIntervalMs = json.optMap().optionalField(FOREGROUND_INTERVAL_MS_KEY),
-            channelRegistrationMaxResolveAgeMs = json.optMap().optionalField(CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY)
+            foregroundInterval = json.optMap()
+                .optionalField<Long>(FOREGROUND_INTERVAL_MS_KEY)?.milliseconds,
+            channelRegistrationMaxResolveAge = json.optMap()
+                .optionalField<Long>(CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY)?.milliseconds
         )
     }
 }
 
 /** @hide */
-@ConsistentCopyVisibility
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class MeteredUsageConfig internal constructor(
     public val isEnabled: Boolean,

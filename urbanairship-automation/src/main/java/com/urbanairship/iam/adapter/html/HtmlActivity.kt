@@ -123,6 +123,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
             }
 
             @Deprecated("Deprecated in Java")
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onReceivedError(
                 view: WebView,
                 errorCode: Int,
@@ -138,7 +139,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
                 }
             }
         })
-        wv.setAlpha(0f)
+        wv.alpha = 0f
         wv.settings.setSupportMultipleWindows(true)
         wv.webChromeClient = AirshipWebChromeClient(this)
 

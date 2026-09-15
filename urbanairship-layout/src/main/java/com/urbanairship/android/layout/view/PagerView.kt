@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.os.Build
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -58,15 +57,16 @@ internal class PagerView(
                 // Iterate through each action provided
                 actions?.forEach { action ->
                     // Get the localized description
-                    val description = action.localizedContentDescription?.ref?.let {
-                        it.stringResource(context) ?: action.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit, should fail gracefully in parsing
-                    } ?: action.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit, should fail gracefully in parsing
+                    val localizedDescription = action.localizedContentDescription?.ref
+                        ?.stringResource(context)
+                        ?: action.localizedContentDescription?.fallback
+                        ?: "Unknown" // Should never be hit, should fail gracefully in parsing
 
                     ViewCompat.addAccessibilityAction(
                         // View to add accessibility action
                         host,
                         // Label surfaced to user by an accessibility service
-                        description
+                        localizedDescription
                     ) { _, _ ->
                         // Pass the current action to the onActionPerformed callback
                         onActionPerformed(action)
@@ -126,9 +126,7 @@ internal class PagerView(
 
     init {
         isFocusable = true
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            isFocusedByDefault = true
-        }
+        isFocusedByDefault = true
         addView(view, MATCH_PARENT, MATCH_PARENT)
         model.listener = modelListener
 

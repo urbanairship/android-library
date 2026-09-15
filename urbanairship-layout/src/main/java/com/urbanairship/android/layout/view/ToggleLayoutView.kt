@@ -74,6 +74,7 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
                 model.contentDescription(host.context)?.ifNotEmpty { info.contentDescription = it }
 
                 if (host.isEnabled) {
+                    @Suppress("DEPRECATION")
                     info.isChecked = model.isOn.value
                 }
 

@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ai.DefaultThomasAIInference
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.ModelFactoryException
@@ -23,7 +24,6 @@ import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.util.getActivity
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -55,7 +55,7 @@ public object ThomasLayoutViewFactory {
             return null
         }
 
-        val timer = DisplayTimer(activity, 0)
+        val timer = DisplayTimer(activity)
         viewToTimer.update { it + (viewId to timer) }
 
         val reportDismiss = {
@@ -76,7 +76,8 @@ public object ThomasLayoutViewFactory {
             activityMonitor = displayArgs.inAppActivityMonitor,
             webViewClientFactory = displayArgs.webViewClientFactory,
             imageCache = displayArgs.imageCache,
-            isIgnoringSafeAreas = false // Embedded views never ignore safe areas?
+            isIgnoringSafeAreas = false, // Embedded views never ignore safe areas?
+            layoutVersion = displayArgs.payload.version
         )
 
         val viewModelProvider = ViewModelProvider(SimpleViewModelStoreOwner)
@@ -89,7 +90,8 @@ public object ThomasLayoutViewFactory {
                 reporter = reporter,
                 actionRunner = displayArgs.actionRunner,
                 displayTimer = timer,
-                stateStorage = displayArgs.stateStorage?.let { LayoutStateStorage(it) }
+                stateStorage = displayArgs.stateStorage?.let { LayoutStateStorage(it) },
+                aiInference = DefaultThomasAIInference.create(displayArgs.ai)
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = displayArgs.payload.view,
@@ -137,7 +139,7 @@ public object ThomasLayoutViewFactory {
     }
 
     public fun calculateDisplayTime(viewId: String): Duration {
-        return viewToTimer.value[viewId]?.time?.milliseconds ?: Duration.ZERO
+        return viewToTimer.value[viewId]?.time ?: Duration.ZERO
     }
 
     private val presentation = EmbeddedPresentation(

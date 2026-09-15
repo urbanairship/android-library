@@ -156,6 +156,12 @@ internal class LinearLayoutView(
         val w = size.width
         val h = size.height
 
+        // Whether anything under this item supplies a length is the measuring pass's question, not
+        // ours. `WeightlessLinearLayout` answers it by handing the percentages no base, which leaves
+        // them to size to their own content — the same answer iOS and web give, the latter for free
+        // because a CSS percentage against an auto-height box resolves to `auto`. Zeroing the item
+        // here pre-empted that with the opposite answer, and did it first, so the item never got to
+        // measure at all.
         val (width, maxWidthPercent) = when (w.type) {
             AUTO -> MarginLayoutParams.WRAP_CONTENT to 0f
             ABSOLUTE -> dpToPx(context, w.getInt()).toInt() to 0f

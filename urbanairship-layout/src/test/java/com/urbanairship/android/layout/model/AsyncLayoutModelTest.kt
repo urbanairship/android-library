@@ -28,6 +28,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -63,7 +64,7 @@ public class AsyncLayoutModelTest {
         layoutState = mockLayoutState,
         reporter = mockk(relaxUnitFun = true),
         actionsRunner = mockk(relaxUnitFun = true),
-        displayTimer = mockk { every { time } returns System.currentTimeMillis() },
+        displayTimer = mockk { every { time } returns System.currentTimeMillis().milliseconds },
         modelScope = testScope,
         eventHandler = layoutEventHandler,
         viewIdResolver = ThomasViewIdResolver()

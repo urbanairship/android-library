@@ -52,6 +52,8 @@ public class NotificationProxyReceiver public constructor() : BroadcastReceiver(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private val ACTION_TIMEOUT: Duration = 9.seconds
     }

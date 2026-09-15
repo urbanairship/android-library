@@ -1,0 +1,419 @@
+public final class com/urbanairship/messagecenter/Inbox {
+	public final fun addListener (Lcom/urbanairship/messagecenter/InboxListener;)V
+	public final fun deleteAllMessages ()V
+	public final fun deleteMessages (Ljava/util/Set;)V
+	public final fun deleteMessages ([Ljava/lang/String;)V
+	public final fun fetchMessages (Landroid/os/Looper;Lcom/urbanairship/messagecenter/Inbox$FetchMessagesCallback;)Lcom/urbanairship/Cancelable;
+	public final fun fetchMessages (Lcom/urbanairship/messagecenter/Inbox$FetchMessagesCallback;)Lcom/urbanairship/Cancelable;
+	public final synthetic fun fetchMessages (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fetchMessages$default (Lcom/urbanairship/messagecenter/Inbox;Landroid/os/Looper;Lcom/urbanairship/messagecenter/Inbox$FetchMessagesCallback;ILjava/lang/Object;)Lcom/urbanairship/Cancelable;
+	public final synthetic fun getCount (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getCountPendingResult ()Lcom/urbanairship/PendingResult;
+	public final fun getInboxUpdated ()Lkotlinx/coroutines/flow/Flow;
+	public final synthetic fun getMessage (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final synthetic fun getMessageByUrl (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getMessageByUrlPendingResult (Ljava/lang/String;)Lcom/urbanairship/PendingResult;
+	public final synthetic fun getMessageIds (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getMessageIdsPendingResult ()Lcom/urbanairship/PendingResult;
+	public final fun getMessagePendingResult (Ljava/lang/String;)Lcom/urbanairship/PendingResult;
+	public final synthetic fun getMessages (Lcom/urbanairship/Predicate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getMessages$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final synthetic fun getMessagesFlow (Lcom/urbanairship/Predicate;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun getMessagesFlow$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun getMessagesPendingResult ()Lcom/urbanairship/PendingResult;
+	public final fun getMessagesPendingResult (Lcom/urbanairship/Predicate;)Lcom/urbanairship/PendingResult;
+	public static synthetic fun getMessagesPendingResult$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;ILjava/lang/Object;)Lcom/urbanairship/PendingResult;
+	public final synthetic fun getReadCount (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getReadCountPendingResult ()Lcom/urbanairship/PendingResult;
+	public final synthetic fun getReadMessages (Lcom/urbanairship/Predicate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getReadMessages$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getReadMessagesPendingResult ()Lcom/urbanairship/PendingResult;
+	public final fun getReadMessagesPendingResult (Lcom/urbanairship/Predicate;)Lcom/urbanairship/PendingResult;
+	public static synthetic fun getReadMessagesPendingResult$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;ILjava/lang/Object;)Lcom/urbanairship/PendingResult;
+	public final synthetic fun getUnreadCount (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getUnreadCountPendingResult ()Lcom/urbanairship/PendingResult;
+	public final synthetic fun getUnreadMessages (Lcom/urbanairship/Predicate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getUnreadMessages$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final synthetic fun getUnreadMessagesFlow (Lcom/urbanairship/Predicate;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun getUnreadMessagesFlow$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun getUnreadMessagesPendingResult ()Lcom/urbanairship/PendingResult;
+	public final fun getUnreadMessagesPendingResult (Lcom/urbanairship/Predicate;)Lcom/urbanairship/PendingResult;
+	public static synthetic fun getUnreadMessagesPendingResult$default (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/Predicate;ILjava/lang/Object;)Lcom/urbanairship/PendingResult;
+	public final fun markMessagesRead (Ljava/util/Set;)V
+	public final fun markMessagesRead ([Ljava/lang/String;)V
+	public final fun markMessagesUnread (Ljava/util/Set;)V
+	public final fun markMessagesUnread ([Ljava/lang/String;)V
+	public final fun removeListener (Lcom/urbanairship/messagecenter/InboxListener;)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/Inbox$FetchMessagesCallback {
+	public abstract fun onFinished (Z)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/InboxListener {
+	public abstract fun onInboxUpdated ()V
+}
+
+public final class com/urbanairship/messagecenter/Message : android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field Companion Lcom/urbanairship/messagecenter/Message$Companion;
+	public final fun delete ()V
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBodyUrl ()Ljava/lang/String;
+	public final fun getContentType ()Lcom/urbanairship/messagecenter/Message$ContentType;
+	public final fun getExpirationDate ()Ljava/time/Instant;
+	public final fun getExtras ()Ljava/util/Map;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getListIconUrl ()Ljava/lang/String;
+	public static final fun getSENT_DATE_COMPARATOR ()Ljava/util/Comparator;
+	public final fun getSentDate ()Ljava/time/Instant;
+	public final fun getSubtitle ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isDeleted ()Z
+	public final fun isExpired ()Z
+	public final fun isRead ()Z
+	public final fun isUnread ()Z
+	public final fun markRead ()V
+	public final fun markUnread ()V
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/messagecenter/Message$Companion {
+	public final fun getSENT_DATE_COMPARATOR ()Ljava/util/Comparator;
+}
+
+public abstract class com/urbanairship/messagecenter/Message$ContentType : android/os/Parcelable {
+	public static final field NATIVE_CONTENT_TYPE Ljava/lang/String;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/urbanairship/messagecenter/Message$ContentType$Html : com/urbanairship/messagecenter/Message$ContentType {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/Message$ContentType$Html;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/messagecenter/Message$ContentType$Native : com/urbanairship/messagecenter/Message$ContentType {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/urbanairship/messagecenter/Message$ContentType$Native;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/Message$ContentType$Native;IILjava/lang/Object;)Lcom/urbanairship/messagecenter/Message$ContentType$Native;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getVersion ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/messagecenter/Message$ContentType$Plain : com/urbanairship/messagecenter/Message$ContentType {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/Message$ContentType$Plain;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/messagecenter/Message$ContentType$Unknown : com/urbanairship/messagecenter/Message$ContentType {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/urbanairship/messagecenter/Message$ContentType$Unknown;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/Message$ContentType$Unknown;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/Message$ContentType$Unknown;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/messagecenter/MessageCenter : com/urbanairship/JobAwareAirshipComponent {
+	public static final field Companion Lcom/urbanairship/messagecenter/MessageCenter$Companion;
+	public static final field MESSAGE_DATA_SCHEME Ljava/lang/String;
+	public static final field VIEW_MESSAGE_CENTER_INTENT_ACTION Ljava/lang/String;
+	public static final field VIEW_MESSAGE_INTENT_ACTION Ljava/lang/String;
+	public final fun getInbox ()Lcom/urbanairship/messagecenter/Inbox;
+	public final fun getPredicate ()Lcom/urbanairship/Predicate;
+	public static final fun parseMessageId (Landroid/content/Intent;)Ljava/lang/String;
+	public final fun setOnShowMessageCenterListener (Lcom/urbanairship/messagecenter/MessageCenter$OnShowMessageCenterListener;)V
+	public final fun setPredicate (Lcom/urbanairship/Predicate;)V
+	public static final fun shared ()Lcom/urbanairship/messagecenter/MessageCenter;
+	public final fun showMessageCenter ()V
+	public final fun showMessageCenter (Ljava/lang/String;)V
+	public static synthetic fun showMessageCenter$default (Lcom/urbanairship/messagecenter/MessageCenter;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class com/urbanairship/messagecenter/MessageCenter$Companion {
+	public final fun parseMessageId (Landroid/content/Intent;)Ljava/lang/String;
+	public final fun shared ()Lcom/urbanairship/messagecenter/MessageCenter;
+}
+
+public abstract interface class com/urbanairship/messagecenter/MessageCenter$OnShowMessageCenterListener {
+	public abstract fun onShowMessageCenter (Ljava/lang/String;)Z
+}
+
+public final class com/urbanairship/messagecenter/MessageCenterKt {
+	public static final fun getMessageCenter (Lcom/urbanairship/Airship;)Lcom/urbanairship/messagecenter/MessageCenter;
+}
+
+public class com/urbanairship/messagecenter/actions/MessageCenterAction : com/urbanairship/actions/Action {
+	public static final field MESSAGE_ID_PLACEHOLDER Ljava/lang/String;
+	public fun <init> ()V
+	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
+	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public fun shouldRunOnMainThread ()Z
+}
+
+public final class com/urbanairship/messagecenter/animator/AnimatorExtensionsKt {
+	public static final fun animateFadeIn (Landroid/view/View;J)Landroid/view/ViewPropertyAnimator;
+	public static synthetic fun animateFadeIn$default (Landroid/view/View;JILjava/lang/Object;)Landroid/view/ViewPropertyAnimator;
+	public static final fun animateFadeOut (Landroid/view/View;J)Landroid/view/ViewPropertyAnimator;
+	public static synthetic fun animateFadeOut$default (Landroid/view/View;JILjava/lang/Object;)Landroid/view/ViewPropertyAnimator;
+	public static final fun getShortAnimTime (Landroid/view/View;)J
+	public static final fun getSlideInBottomAnimator (Landroid/view/View;)Landroid/animation/ObjectAnimator;
+	public static final fun getSlideOutBottomAnimator (Landroid/view/View;)Landroid/animation/ObjectAnimator;
+}
+
+public abstract class com/urbanairship/messagecenter/ui/view/MessageListAction {
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListAction$DeleteMessages : com/urbanairship/messagecenter/ui/view/MessageListAction {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/urbanairship/messagecenter/ui/view/MessageListAction$DeleteMessages;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/ui/view/MessageListAction$DeleteMessages;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/view/MessageListAction$DeleteMessages;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessages ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListAction$MarkMessagesRead : com/urbanairship/messagecenter/ui/view/MessageListAction {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/urbanairship/messagecenter/ui/view/MessageListAction$MarkMessagesRead;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/ui/view/MessageListAction$MarkMessagesRead;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/view/MessageListAction$MarkMessagesRead;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessages ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListAction$Refresh : com/urbanairship/messagecenter/ui/view/MessageListAction {
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/jvm/functions/Function0;
+	public final fun copy (Lkotlin/jvm/functions/Function0;)Lcom/urbanairship/messagecenter/ui/view/MessageListAction$Refresh;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/ui/view/MessageListAction$Refresh;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/view/MessageListAction$Refresh;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOnRefreshed ()Lkotlin/jvm/functions/Function0;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/urbanairship/messagecenter/ui/view/MessageListState {
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListState$Content : com/urbanairship/messagecenter/ui/view/MessageListState, android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> (Ljava/util/List;ZLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/List;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Z
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;ZLjava/lang/String;)Lcom/urbanairship/messagecenter/ui/view/MessageListState$Content;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/ui/view/MessageListState$Content;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/view/MessageListState$Content;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHighlightedMessageId ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isRefreshing ()Z
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListState$Error : com/urbanairship/messagecenter/ui/view/MessageListState {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/ui/view/MessageListState$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListState$Loading : com/urbanairship/messagecenter/ui/view/MessageListState {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/ui/view/MessageListState$Loading;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListViewModel : androidx/lifecycle/ViewModel {
+	public static final field Companion Lcom/urbanairship/messagecenter/ui/view/MessageListViewModel$Companion;
+	public fun <init> (Lcom/urbanairship/Predicate;Lcom/urbanairship/messagecenter/Inbox;)V
+	public synthetic fun <init> (Lcom/urbanairship/Predicate;Lcom/urbanairship/messagecenter/Inbox;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun deleteMessages (Ljava/util/List;)V
+	public static final fun factory ()Landroidx/lifecycle/ViewModelProvider$Factory;
+	public static final fun factory (Lcom/urbanairship/Predicate;)Landroidx/lifecycle/ViewModelProvider$Factory;
+	public final fun getStates ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun getStatesLiveData ()Landroidx/lifecycle/LiveData;
+	public final fun markMessagesRead (Ljava/util/List;)V
+	public final fun refreshInbox (Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun refreshInbox$default (Lcom/urbanairship/messagecenter/ui/view/MessageListViewModel;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public final fun setHighlighted (Lcom/urbanairship/messagecenter/Message;)V
+	public final fun setHighlighted (Ljava/lang/String;)V
+	public final fun setPredicate (Lcom/urbanairship/Predicate;)V
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListViewModel$Companion {
+	public final fun factory ()Landroidx/lifecycle/ViewModelProvider$Factory;
+	public final fun factory (Lcom/urbanairship/Predicate;)Landroidx/lifecycle/ViewModelProvider$Factory;
+	public static synthetic fun factory$default (Lcom/urbanairship/messagecenter/ui/view/MessageListViewModel$Companion;Lcom/urbanairship/Predicate;ILjava/lang/Object;)Landroidx/lifecycle/ViewModelProvider$Factory;
+}
+
+public abstract class com/urbanairship/messagecenter/ui/view/MessageViewAction {
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewAction$ErrorRetryClicked : com/urbanairship/messagecenter/ui/view/MessageViewAction {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/ui/view/MessageViewAction$ErrorRetryClicked;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewModel : androidx/lifecycle/ViewModel {
+	public static final field Companion Lcom/urbanairship/messagecenter/ui/view/MessageViewModel$Companion;
+	public fun <init> ()V
+	public final fun clearMessage ()V
+	public final fun deleteMessages ([Lcom/urbanairship/messagecenter/Message;)V
+	public static final fun factory ()Landroidx/lifecycle/ViewModelProvider$Factory;
+	public final fun getCurrentMessage ()Lcom/urbanairship/messagecenter/Message;
+	public final fun getStates ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun getStatesLiveData ()Landroidx/lifecycle/LiveData;
+	public final fun loadMessage (Ljava/lang/String;)V
+	public final fun markMessagesRead ([Lcom/urbanairship/messagecenter/Message;)V
+	public final fun subscribeForMessageUpdates ()Lcom/urbanairship/messagecenter/ui/view/SubscriptionCancellation;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewModel$Companion {
+	public final fun factory ()Landroidx/lifecycle/ViewModelProvider$Factory;
+}
+
+public abstract class com/urbanairship/messagecenter/ui/view/MessageViewState {
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewState$Empty : com/urbanairship/messagecenter/ui/view/MessageViewState {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Empty;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewState$Error : com/urbanairship/messagecenter/ui/view/MessageViewState {
+	public fun <init> (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;)V
+	public final fun component1 ()Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;
+	public final fun copy (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;)Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error;Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type : java/lang/Enum {
+	public static final field LOAD_FAILED Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;
+	public static final field UNAVAILABLE Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;
+	public static fun values ()[Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewState$Loading : com/urbanairship/messagecenter/ui/view/MessageViewState {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Loading;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent : com/urbanairship/messagecenter/ui/view/MessageViewState, android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> (Lcom/urbanairship/messagecenter/Message;Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content;)V
+	public final fun component1 ()Lcom/urbanairship/messagecenter/Message;
+	public final fun component2 ()Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content;
+	public final fun copy (Lcom/urbanairship/messagecenter/Message;Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content;)Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent;Lcom/urbanairship/messagecenter/Message;Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content;
+	public final fun getMessage ()Lcom/urbanairship/messagecenter/Message;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public abstract class com/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content : android/os/Parcelable {
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content$Html : com/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content$Html;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content$Native : com/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> (Lcom/urbanairship/iam/content/AirshipLayout;)V
+	public final fun component1 ()Lcom/urbanairship/iam/content/AirshipLayout;
+	public final fun copy (Lcom/urbanairship/iam/content/AirshipLayout;)Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content$Native;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content$Native;Lcom/urbanairship/iam/content/AirshipLayout;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/view/MessageViewState$MessageContent$Content$Native;
+	public final fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLayout ()Lcom/urbanairship/iam/content/AirshipLayout;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/view/SubscriptionCancellation {
+	public abstract fun cancel ()V
+}
+
+public class com/urbanairship/messagecenter/ui/widget/MessageWebView : com/urbanairship/webkit/NestedScrollAirshipWebView {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun loadMessage (Lcom/urbanairship/messagecenter/Message;)V
+}
+
+public class com/urbanairship/messagecenter/ui/widget/MessageWebViewClient : com/urbanairship/webkit/AirshipWebViewClient {
+	public fun <init> ()V
+}
+
+public final class com/urbanairship/messagecenter/util/ContextExtensionsKt {
+	public static final fun getActivity (Landroid/content/Context;)Landroid/app/Activity;
+}
+
+public final class com/urbanairship/messagecenter/util/FragmentExtensionsKt {
+	public static final fun setImportantForAccessibility (Landroidx/fragment/app/Fragment;Z)V
+}
+
+public final class com/urbanairship/messagecenter/util/ViewExtensionsKt {
+	public static final fun setTextOrHide (Landroid/widget/TextView;Ljava/lang/String;)V
+}
+

@@ -8,14 +8,18 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Date
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Interface used for modifying attributes.
  */
-public abstract class AttributeEditor protected constructor(private val clock: Clock) {
+public abstract class AttributeEditor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) protected constructor(
+    private val clock: Clock
+) {
 
     private val partialMutations: MutableList<PartialAttributeMutation> = mutableListOf()
 
@@ -122,8 +126,21 @@ public abstract class AttributeEditor protected constructor(private val clock: C
      *  - The key is empty or contains `#`.
      */
     @Throws(IllegalArgumentException::class)
-    public fun setAttribute(@Size(min = 1) attribute: String, date: Date): AttributeEditor {
-        val dateString = DateUtils.createIso8601TimeStamp(date.time)
+    public fun setAttribute(@Size(min = 1) attribute: String, date: Date): AttributeEditor =
+        setAttribute(attribute, date.toInstant())
+
+    /**
+     * Sets a date attribute.
+     *
+     *@param attribute The attribute. Must be greater must be greater than 1 character and not contain `#`.
+     * @param date The date attribute.
+     * @return The [AttributeEditor].
+     * @throws IllegalArgumentException if:
+     *  - The key is empty or contains `#`.
+     */
+    @Throws(IllegalArgumentException::class)
+    public fun setAttribute(@Size(min = 1) attribute: String, date: Instant): AttributeEditor {
+        val dateString = DateUtils.createIso8601TimeStamp(date)
         addMutation(attribute = attribute, value = JsonValue.wrap(dateString)).getOrThrow()
         return this
     }
@@ -160,8 +177,17 @@ public abstract class AttributeEditor protected constructor(private val clock: C
     /**
      * Sets a custom attribute with a JSON payload and optional expiration.
      *
+     * Unlike the other `setAttribute` overloads, this one has no `Date` counterpart. Both
+     * would erase to `setAttribute(String, String, <reference>, JsonMap)`, making a `null`
+     * expiration — the only way to say "no expiration" here — ambiguous to resolve. Callers
+     * with a `Date` should pass `date.toInstant()`.
+     *
+     * `@JvmOverloads` keeps `setAttribute(String, String, JsonMap)` available to Java. With
+     * the `Date?` overload gone, the generated three-argument form no longer clashes.
+     *
      * @param attribute The attribute.
      * @param instanceId The instance identifier.
+     * @param expiration The optional expiration.
      * @param json A JsonMap representing the custom payload.
      * @return The [AttributeEditor].
      * @throws IllegalArgumentException if:
@@ -174,14 +200,13 @@ public abstract class AttributeEditor protected constructor(private val clock: C
     public fun setAttribute(
         @Size(min = 1) attribute: String,
         @Size(min = 1) instanceId: String,
-        expiration: Date? = null,
+        expiration: Instant? = null,
         json: JsonMap
     ): AttributeEditor {
-        val now = clock.currentTimeMillis().milliseconds
+        val now = clock.now()
         if (expiration != null) {
-            val expMillis = expiration.time.milliseconds
-            val maxMillis = now + 731.days
-            require(!(expMillis <= now || expMillis > maxMillis)) {
+            val maxExpiration = now + 731.days
+            require(!(expiration <= now || expiration > maxExpiration)) {
                 "The expiration is invalid (more than 731 days or not in the future)."
             }
         }
@@ -192,8 +217,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
         // Build JSON payload with optional expiration
         val builder = JsonMap.newBuilder().putAll(json)
         if (expiration != null) {
-            val expSeconds = expiration.time.milliseconds.inWholeSeconds
-            builder.put(JSON_EXPIRY_KEY, expSeconds)
+            builder.put(JSON_EXPIRY_KEY, expiration.epochSecond)
         }
         val finalJson = builder.build().toJsonValue()
 
@@ -209,7 +233,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
             return
         }
 
-        val timestamp = clock.currentTimeMillis()
+        val timestamp = clock.now()
         val mutations: MutableList<AttributeMutation> = ArrayList()
         for (partial in partialMutations) {
             try {
@@ -251,7 +275,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
 
     private inner class PartialAttributeMutation(var key: String, var value: Any?) {
 
-        fun toMutation(timestamp: Long): AttributeMutation {
+        fun toMutation(timestamp: Instant): AttributeMutation {
             return if (value != null) {
                 AttributeMutation.newSetAttributeMutation(
                     key, JsonValue.wrapOpt(value), timestamp

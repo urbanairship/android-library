@@ -1,0 +1,192 @@
+package com.urbanairship.audience
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
+import junit.framework.TestCase.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+public class VariantAudienceTest {
+
+    // Same fixture as AudienceHashSelectorTest.testHash: this prefix/contactID
+    // combination resolves to bucket 9908 of 16384 via farm hash.
+    private fun variantAudience(
+        audienceSubset: Pair<Int, Int>,
+        holdoutSubset: Pair<Int, Int>? = null,
+        reportingContext: JsonMap? = null
+    ): VariantAudience {
+        val holdoutJson = holdoutSubset?.let {
+            """, "holdout_subset": { "min_hash_bucket": ${it.first}, "max_hash_bucket": ${it.second} }"""
+        } ?: ""
+
+        val reportingContextJson = reportingContext?.let {
+            """, "reporting_context": ${it.toJsonValue()}"""
+        } ?: ""
+
+        val json = """
+            {
+                "audience_hash": {
+                    "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
+                    "num_hash_buckets": 16384,
+                    "hash_identifier": "contact",
+                    "hash_algorithm": "farm_hash"
+                },
+                "audience_subset": { "min_hash_bucket": ${audienceSubset.first}, "max_hash_bucket": ${audienceSubset.second} }
+                $holdoutJson
+                $reportingContextJson
+            }
+        """.trimIndent()
+
+        return VariantAudience.fromJson(JsonValue.parseString(json).requireMap())
+    }
+
+    @Test
+    public fun testResolveMatched() {
+        val variantAudience = variantAudience(audienceSubset = 9908 to 9908)
+        assertEquals(VariantAudience.Outcome.MATCHED, variantAudience.resolve("", "contactId"))
+    }
+
+    @Test
+    public fun testResolveMatchedTakesPrecedenceOverHoldout() {
+        // Overlapping subsets shouldn't happen in practice, but a bucket that lands in both
+        // must resolve to MATCHED, never HOLDOUT.
+        val variantAudience = variantAudience(
+            audienceSubset = 9908 to 9908,
+            holdoutSubset = 9908 to 9908
+        )
+        assertEquals(VariantAudience.Outcome.MATCHED, variantAudience.resolve("", "contactId"))
+    }
+
+    @Test
+    public fun testResolveHoldout() {
+        val variantAudience = variantAudience(
+            audienceSubset = 0 to 0,
+            holdoutSubset = 9908 to 9908
+        )
+        assertEquals(VariantAudience.Outcome.HOLDOUT, variantAudience.resolve("", "contactId"))
+    }
+
+    @Test
+    public fun testResolveVariantMissWithHoldoutArm() {
+        val variantAudience = variantAudience(
+            audienceSubset = 0 to 0,
+            holdoutSubset = 1 to 1
+        )
+        assertEquals(VariantAudience.Outcome.VARIANT_MISS, variantAudience.resolve("", "contactId"))
+    }
+
+    @Test
+    public fun testResolveVariantMissWithoutHoldoutArm() {
+        val variantAudience = variantAudience(audienceSubset = 0 to 0)
+        assertEquals(VariantAudience.Outcome.VARIANT_MISS, variantAudience.resolve("", "contactId"))
+    }
+
+    @Test
+    public fun testReportingContext() {
+        val variantAudience = variantAudience(
+            audienceSubset = 9908 to 9908,
+            reportingContext = jsonMapOf("foo" to "bar")
+        )
+        assertEquals(jsonMapOf("foo" to "bar"), variantAudience.reportingContext)
+    }
+
+    @Test
+    public fun testReportingContextDefaultsToNull() {
+        assertNull(variantAudience(audienceSubset = 9908 to 9908).reportingContext)
+    }
+
+    @Test
+    public fun testReportingContextSurvivesEncoding() {
+        val variantAudience = variantAudience(
+            audienceSubset = 9908 to 9908,
+            reportingContext = jsonMapOf("foo" to "bar")
+        )
+        val encoded = VariantAudience.fromJson(variantAudience.toJsonValue().requireMap())
+        assertEquals(jsonMapOf("foo" to "bar"), encoded?.reportingContext)
+    }
+
+    @Test
+    public fun testIsDisplaySkipped() {
+        assertFalse(VariantAudience.Outcome.MATCHED.isDisplaySkipped)
+        assertTrue(VariantAudience.Outcome.HOLDOUT.isDisplaySkipped)
+        assertTrue(VariantAudience.Outcome.VARIANT_MISS.isDisplaySkipped)
+        assertTrue(VariantAudience.Outcome.Unknown("some_future_arm").isDisplaySkipped)
+    }
+
+    @Test
+    public fun testOutcomeFrom() {
+        assertEquals(VariantAudience.Outcome.MATCHED, VariantAudience.Outcome.from("matched"))
+        assertEquals(VariantAudience.Outcome.HOLDOUT, VariantAudience.Outcome.from("holdout"))
+        assertEquals(VariantAudience.Outcome.VARIANT_MISS, VariantAudience.Outcome.from("variant_miss"))
+    }
+
+    @Test
+    public fun testOutcomeFromKeepsAnUnrecognizedValue() {
+        val outcome = VariantAudience.Outcome.from("some_future_arm")
+        assertEquals(VariantAudience.Outcome.Unknown("some_future_arm"), outcome)
+        assertEquals("some_future_arm", outcome.json)
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsAnUnreadableHash() {
+        VariantAudience.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                    "audience_hash": {
+                        "hash_prefix": "prefix:",
+                        "num_hash_buckets": 16384,
+                        "hash_identifier": "contact",
+                        "hash_algorithm": "some_future_algorithm"
+                    },
+                    "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 1 }
+                }
+                """.trimIndent()
+            ).requireMap()
+        )
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsAMissingSubset() {
+        VariantAudience.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                    "audience_hash": {
+                        "hash_prefix": "prefix:",
+                        "num_hash_buckets": 16384,
+                        "hash_identifier": "contact",
+                        "hash_algorithm": "farm_hash"
+                    }
+                }
+                """.trimIndent()
+            ).requireMap()
+        )
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsANonMapSubset() {
+        VariantAudience.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                    "audience_hash": {
+                        "hash_prefix": "prefix:",
+                        "num_hash_buckets": 16384,
+                        "hash_identifier": "contact",
+                        "hash_algorithm": "farm_hash"
+                    },
+                    "audience_subset": "not a map"
+                }
+                """.trimIndent()
+            ).requireMap()
+        )
+    }
+}

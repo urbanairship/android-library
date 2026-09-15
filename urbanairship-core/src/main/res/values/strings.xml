@@ -61,7 +61,7 @@
     <!-- General -->
     <string name="ua_refresh">Refresh</string>
     <string name="ua_open">Open</string>
-    <string name="ua_back">Back</string> <!-- TODO: localize me! -->
+    <string name="ua_back">Back</string>
 
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Rate</string>

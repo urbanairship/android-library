@@ -17,6 +17,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import java.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -75,17 +76,17 @@ public class ChannelBatchUpdateManagerTest {
         )
 
         manager.addUpdate(
-            subscriptions = listOf(SubscriptionListMutation.newSubscribeMutation("some list", 100))
+            subscriptions = listOf(SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100)))
         )
 
         manager.addUpdate(
-            attributes = listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", 100))
+            attributes = listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", Instant.ofEpochMilli(100)))
         )
 
         val expectedPending = AudienceOverrides.Channel(
             listOf(TagGroupsMutation.newSetTagsMutation("some group", setOf("tag"))),
-            listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", 100)),
-            listOf(SubscriptionListMutation.newSubscribeMutation("some list", 100))
+            listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", Instant.ofEpochMilli(100))),
+            listOf(SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100)))
         )
 
         assertEquals(expectedPending, pendingAudienceDelegate.captured.invoke("anything"))
@@ -95,8 +96,8 @@ public class ChannelBatchUpdateManagerTest {
     public fun testClearPending(): TestResult = runTest {
         manager.addUpdate(
             tags = listOf(TagGroupsMutation.newSetTagsMutation("some group", setOf("tag"))),
-            subscriptions = listOf(SubscriptionListMutation.newSubscribeMutation("some list", 100)),
-            attributes = listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", 100))
+            subscriptions = listOf(SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100))),
+            attributes = listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", Instant.ofEpochMilli(100)))
         )
         assertTrue(manager.hasPending())
 
@@ -127,11 +128,11 @@ public class ChannelBatchUpdateManagerTest {
             attributeKey,
             jsonListOf(
                 listOf(
-                    AttributeMutation.newRemoveAttributeMutation("some attribute", 100),
-                    AttributeMutation.newRemoveAttributeMutation("some other attribute", 100)
+                    AttributeMutation.newRemoveAttributeMutation("some attribute", Instant.ofEpochMilli(100)),
+                    AttributeMutation.newRemoveAttributeMutation("some other attribute", Instant.ofEpochMilli(100))
                 ),
                 listOf(
-                    AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), 100)
+                    AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), Instant.ofEpochMilli(100))
                 )
             ).toJsonValue()
         )
@@ -141,11 +142,11 @@ public class ChannelBatchUpdateManagerTest {
             subscriptionKey,
             jsonListOf(
                 listOf(
-                    SubscriptionListMutation.newSubscribeMutation("some list", 100),
-                    SubscriptionListMutation.newUnsubscribeMutation("some other list", 100)
+                    SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100)),
+                    SubscriptionListMutation.newUnsubscribeMutation("some other list", Instant.ofEpochMilli(100))
                 ),
                 listOf(
-                    SubscriptionListMutation.newSubscribeMutation("some other list", 100)
+                    SubscriptionListMutation.newSubscribeMutation("some other list", Instant.ofEpochMilli(100))
                 )
             ).toJsonValue()
         )
@@ -182,14 +183,14 @@ public class ChannelBatchUpdateManagerTest {
                 TagGroupsMutation.newSetTagsMutation("some other group", setOf("tag"))
             ),
             listOf(
-                AttributeMutation.newRemoveAttributeMutation("some attribute", 100),
-                AttributeMutation.newRemoveAttributeMutation("some other attribute", 100),
-                AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), 100)
+                AttributeMutation.newRemoveAttributeMutation("some attribute", Instant.ofEpochMilli(100)),
+                AttributeMutation.newRemoveAttributeMutation("some other attribute", Instant.ofEpochMilli(100)),
+                AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), Instant.ofEpochMilli(100))
             ),
             listOf(
-                SubscriptionListMutation.newSubscribeMutation("some list", 100),
-                SubscriptionListMutation.newUnsubscribeMutation("some other list", 100),
-                SubscriptionListMutation.newSubscribeMutation("some other list", 100)
+                SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100)),
+                SubscriptionListMutation.newUnsubscribeMutation("some other list", Instant.ofEpochMilli(100)),
+                SubscriptionListMutation.newSubscribeMutation("some other list", Instant.ofEpochMilli(100))
             )
         )
 
@@ -213,24 +214,24 @@ public class ChannelBatchUpdateManagerTest {
 
         manager.addUpdate(
             attributes = listOf(
-                AttributeMutation.newRemoveAttributeMutation("some attribute", 100),
-                AttributeMutation.newRemoveAttributeMutation("some other attribute", 100),
-                AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), 100)
+                AttributeMutation.newRemoveAttributeMutation("some attribute", Instant.ofEpochMilli(100)),
+                AttributeMutation.newRemoveAttributeMutation("some other attribute", Instant.ofEpochMilli(100)),
+                AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), Instant.ofEpochMilli(100))
             )
         )
 
         manager.addUpdate(
             subscriptions = listOf(
-                SubscriptionListMutation.newSubscribeMutation("some list", 100),
-                SubscriptionListMutation.newUnsubscribeMutation("some other list", 100),
-                SubscriptionListMutation.newSubscribeMutation("some other list", 100)
+                SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100)),
+                SubscriptionListMutation.newUnsubscribeMutation("some other list", Instant.ofEpochMilli(100)),
+                SubscriptionListMutation.newSubscribeMutation("some other list", Instant.ofEpochMilli(100))
             )
         )
 
         manager.addUpdate(
             liveUpdates = listOf(
-                LiveUpdateMutation.Remove("some event", 100, 100),
-                LiveUpdateMutation.Set("some other event", 100, 100)
+                LiveUpdateMutation.Remove("some event", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100)),
+                LiveUpdateMutation.Set("some other event", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100))
             )
         )
 
@@ -252,16 +253,16 @@ public class ChannelBatchUpdateManagerTest {
                     TagGroupsMutation.newRemoveTagsMutation("some group", setOf("tag"))
                 ),
                 attributes = listOf(
-                    AttributeMutation.newRemoveAttributeMutation("some other attribute", 100),
-                    AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), 100)
+                    AttributeMutation.newRemoveAttributeMutation("some other attribute", Instant.ofEpochMilli(100)),
+                    AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), Instant.ofEpochMilli(100))
                 ),
                 subscriptions = listOf(
-                    SubscriptionListMutation.newSubscribeMutation("some list", 100),
-                    SubscriptionListMutation.newSubscribeMutation("some other list", 100)
+                    SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100)),
+                    SubscriptionListMutation.newSubscribeMutation("some other list", Instant.ofEpochMilli(100))
                 ),
                 liveUpdates = listOf(
-                    LiveUpdateMutation.Remove("some event", 100, 100),
-                    LiveUpdateMutation.Set("some other event", 100, 100)
+                    LiveUpdateMutation.Remove("some event", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100)),
+                    LiveUpdateMutation.Set("some other event", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100))
                 )
             )
         }
@@ -273,12 +274,12 @@ public class ChannelBatchUpdateManagerTest {
                     TagGroupsMutation.newRemoveTagsMutation("some group", setOf("tag"))
                 ),
                 attributes = listOf(
-                    AttributeMutation.newRemoveAttributeMutation("some other attribute", 100),
-                    AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), 100)
+                    AttributeMutation.newRemoveAttributeMutation("some other attribute", Instant.ofEpochMilli(100)),
+                    AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), Instant.ofEpochMilli(100))
                 ),
                 subscriptions = listOf(
-                    SubscriptionListMutation.newSubscribeMutation("some list", 100),
-                    SubscriptionListMutation.newSubscribeMutation("some other list", 100)
+                    SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(100)),
+                    SubscriptionListMutation.newSubscribeMutation("some other list", Instant.ofEpochMilli(100))
                 ),
             )
         }
@@ -385,7 +386,7 @@ public class ChannelBatchUpdateManagerTest {
         // onAfterWrite must fire inside the serial queue after writeInternal, not synchronously
         // when addUpdate returns. Verified by: after hasPending() drains the queue, the
         // hook has fired and the data is readable.
-        val set = LiveUpdateMutation.Set("event-a", 100, 100)
+        val set = LiveUpdateMutation.Set("event-a", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100))
         var callbackFired = false
         manager.onAfterWrite = { callbackFired = true }
 
@@ -401,7 +402,7 @@ public class ChannelBatchUpdateManagerTest {
         // updateRegistration calls could orphan SETs if a job ran and finished between the
         // KEEP dispatch and the async write completing. The onAfterWrite hook restores the
         // happens-before guarantee: dispatch only fires after the write commits.
-        val sets = (1..5).map { i -> LiveUpdateMutation.Set("event-$i", i.toLong(), i.toLong()) }
+        val sets = (1..5).map { i -> LiveUpdateMutation.Set("event-$i", Instant.ofEpochMilli(i.toLong()), Instant.ofEpochMilli(i.toLong())) }
 
         val uploadedLiveUpdates = mutableListOf<LiveUpdateMutation>()
         coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } coAnswers {
@@ -432,8 +433,8 @@ public class ChannelBatchUpdateManagerTest {
         // successful upload, destroying any mutation appended during the network round-trip.
         // Symptom for the customer: Live Updates stuck on START because their SET mutation
         // was wiped before it could be uploaded.
-        val setA = LiveUpdateMutation.Set("event-a", 100, 100)
-        val setB = LiveUpdateMutation.Set("event-b", 200, 200)
+        val setA = LiveUpdateMutation.Set("event-a", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100))
+        val setB = LiveUpdateMutation.Set("event-b", Instant.ofEpochMilli(200), Instant.ofEpochMilli(200))
 
         manager.addUpdate(liveUpdates = listOf(setA))
 

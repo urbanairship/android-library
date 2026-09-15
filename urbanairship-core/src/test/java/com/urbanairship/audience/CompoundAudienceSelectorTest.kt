@@ -10,6 +10,7 @@ import com.urbanairship.cache.AirshipCache
 import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -29,7 +30,7 @@ public class CompoundAudienceSelectorTest {
 
     @Before
     public fun setUp() {
-        every { infoProvider.installDateMilliseconds } returns 0
+        every { infoProvider.installDate } returns Instant.ofEpochMilli(0)
     }
 
     @Test
@@ -99,7 +100,7 @@ public class CompoundAudienceSelectorTest {
                 defaultAudience(false)
             )), false),
         ).forEach { (audience, expected) ->
-            assertEquals(audience.evaluate(0, infoProvider, hashChecker), AirshipDeviceAudienceResult(expected))
+            assertEquals(audience.evaluate(Instant.ofEpochMilli(0), infoProvider, hashChecker), AirshipDeviceAudienceResult(expected))
         }
     }
 
@@ -115,7 +116,7 @@ public class CompoundAudienceSelectorTest {
                 CompoundAudienceSelector.Atomic(requiresAnalytics),
                 CompoundAudienceSelector.Atomic(doesNotRequireAnalytics)
             )
-        ).evaluate(0, infoProvider, hashChecker)
+        ).evaluate(Instant.ofEpochMilli(0), infoProvider, hashChecker)
 
         assertTrue(result.isMatch)
     }
@@ -130,7 +131,7 @@ public class CompoundAudienceSelectorTest {
             listOf(
                 CompoundAudienceSelector.Atomic(requiresAnalytics),
             )
-        ).evaluate(0, infoProvider, hashChecker)
+        ).evaluate(Instant.ofEpochMilli(0), infoProvider, hashChecker)
 
         assertFalse(result.isMatch)
     }
@@ -138,14 +139,14 @@ public class CompoundAudienceSelectorTest {
     @Test
     public fun testEmptyOr(): TestResult = runTest {
         val selector = CompoundAudienceSelector.Or(emptyList())
-        val result = selector.evaluate(0, infoProvider, hashChecker)
+        val result = selector.evaluate(Instant.ofEpochMilli(0), infoProvider, hashChecker)
         assertFalse(result.isMatch)
     }
 
     @Test
     public fun testEmptyAnd(): TestResult = runTest {
         val selector = CompoundAudienceSelector.And(emptyList())
-        val result = selector.evaluate(0, infoProvider, hashChecker)
+        val result = selector.evaluate(Instant.ofEpochMilli(0), infoProvider, hashChecker)
         assertTrue(result.isMatch)
     }
 

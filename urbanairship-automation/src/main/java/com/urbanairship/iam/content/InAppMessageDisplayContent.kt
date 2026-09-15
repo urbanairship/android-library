@@ -17,6 +17,15 @@ public sealed class InAppMessageDisplayContent : JsonSerializable, Parcelable {
 
     public abstract fun validate(): Boolean
     public open fun isEmbedded(): Boolean = false
+
+    /**
+     * Whether this content is queued for a host to display, the way an
+     * embedded view is. A layout with a `banner` presentation goes through
+     * the same queue-and-wait-for-a-host mechanism as an embedded one: it can
+     * sit unshown for as long as the app goes without a banner host to show
+     * it in, or never show at all.
+     */
+    public open fun isBanner(): Boolean = false
     internal abstract val displayType: DisplayType
 
     /**
@@ -72,6 +81,7 @@ public sealed class InAppMessageDisplayContent : JsonSerializable, Parcelable {
     public data class AirshipLayoutContent(public val layout: AirshipLayout): InAppMessageDisplayContent() {
         override fun validate(): Boolean = layout.validate()
         override fun isEmbedded(): Boolean = layout.isEmbedded()
+        override fun isBanner(): Boolean = layout.isBanner()
         override val displayType: DisplayType = DisplayType.LAYOUT
         override fun toJsonValue(): JsonValue = layout.toJsonValue()
     }

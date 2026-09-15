@@ -95,52 +95,52 @@ public enum class EventAutomationTriggerType(internal val value: String) : JsonS
     /**
      * IAX button tap
      */
-    IN_APP_BUTTON_TAP("in_app_button_tap"),
+    LAYOUT_BUTTON_TAP("in_app_button_tap"),
 
     /**
      * IAX permission result
      */
-    IN_APP_PERMISSION_RESULT("in_app_permission_result"),
+    LAYOUT_PERMISSION_RESULT("in_app_permission_result"),
 
     /**
      * IAX form display
      */
-    IN_APP_FORM_DISPLAY("in_app_form_display"),
+    LAYOUT_FORM_DISPLAY("in_app_form_display"),
 
     /**
      * IAX form result
      */
-    IN_APP_FORM_RESULT("in_app_form_result"),
+    LAYOUT_FORM_RESULT("in_app_form_result"),
 
     /**
      * IAX gesture
      */
-    IN_APP_GESTURE("in_app_gesture"),
+    LAYOUT_GESTURE("in_app_gesture"),
 
     /**
      * IAX pager completed
      */
-    IN_APP_PAGER_COMPLETED("in_app_pager_completed"),
+    LAYOUT_PAGER_COMPLETED("in_app_pager_completed"),
 
     /**
      * IAX pager summary
      */
-    IN_APP_PAGER_SUMMARY("in_app_pager_summary"),
+    LAYOUT_PAGER_SUMMARY("in_app_pager_summary"),
 
     /**
      * IAX page swipe
      */
-    IN_APP_PAGE_SWIPE("in_app_page_swipe"),
+    LAYOUT_PAGE_SWIPE("in_app_page_swipe"),
 
     /**
      * IAX page view
      */
-    IN_APP_PAGE_VIEW("in_app_page_view"),
+    LAYOUT_PAGE_VIEW("in_app_page_view"),
 
     /**
      * IAX page action
      */
-    IN_APP_PAGE_ACTION("in_app_page_action");
+    LAYOUT_PAGE_ACTION("in_app_page_action");
 
     internal companion object {
 

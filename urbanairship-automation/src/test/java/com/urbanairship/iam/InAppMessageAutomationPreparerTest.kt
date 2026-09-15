@@ -1,6 +1,8 @@
 package com.urbanairship.iam
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.automation.AutomationAudience
+import com.urbanairship.automation.engine.DelegatePreparerResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.adapter.DisplayAdapter
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
@@ -19,6 +21,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.test.TestResult
@@ -53,7 +56,6 @@ public class InAppMessageAutomationPreparerTest {
 
     private val preparer = InAppMessageAutomationPreparer(assetsManager, coordinatorManager, adapterFactory, analyticsFactory)
 
-
     @Test
     public fun testPrepare(): TestResult = runTest {
         val cachedAsset: AirshipCachedAssets = mockk()
@@ -76,7 +78,7 @@ public class InAppMessageAutomationPreparerTest {
             Result.success(adapter)
         }
 
-        val result = preparer.prepare(message, preparedScheduleInfo).getOrThrow()
+        val result = (preparer.prepare(message, preparedScheduleInfo).getOrThrow() as DelegatePreparerResult.Prepared).data
         assertEquals(message, result.message)
         assertEquals(coordinator, result.displayCoordinator)
         assertEquals(adapter, result.displayAdapter)
@@ -111,6 +113,74 @@ public class InAppMessageAutomationPreparerTest {
         every { adapterFactory.makeAdapter(any(), any(), any(), any()) } returns Result.failure(IllegalArgumentException("failed"))
 
         assertTrue(preparer.prepare(message, preparedScheduleInfo).isFailure)
+    }
+
+    @Test
+    public fun testOnCheckSuppressionNotSet(): TestResult = runTest {
+        assertNull(preparer.onCheckSuppression)
+    }
+
+    @Test
+    public fun testOnCheckSuppressionShow(): TestResult = runTest {
+        val cachedAsset: AirshipCachedAssets = mockk()
+        coEvery { assetsManager.cacheAsset(any(), any()) } returns Result.success(cachedAsset)
+        every { coordinatorManager.displayCoordinator(any()) } returns mockk()
+        every { adapterFactory.makeAdapter(any(), any(), any(), any()) } returns Result.success(mockk())
+
+        preparer.onCheckSuppression = { _, _ -> SuppressionResult.Show }
+
+        val result = preparer.prepare(message, preparedScheduleInfo).getOrThrow()
+        assertTrue(result is DelegatePreparerResult.Prepared)
+    }
+
+    @Test
+    public fun testOnCheckSuppressionSkip(): TestResult = runTest {
+        preparer.onCheckSuppression = { _, _ -> SuppressionResult.Suppress(AutomationAudience.MissBehavior.SKIP) }
+
+        val result = preparer.prepare(message, preparedScheduleInfo).getOrThrow()
+        assertEquals(DelegatePreparerResult.Skip, result)
+    }
+
+    @Test
+    public fun testOnCheckSuppressionCancel(): TestResult = runTest {
+        preparer.onCheckSuppression = { _, _ -> SuppressionResult.Suppress(AutomationAudience.MissBehavior.CANCEL) }
+
+        val result = preparer.prepare(message, preparedScheduleInfo).getOrThrow()
+        assertEquals(DelegatePreparerResult.Cancel, result)
+    }
+
+    @Test
+    public fun testOnCheckSuppressionPenalize(): TestResult = runTest {
+        preparer.onCheckSuppression = { _, _ -> SuppressionResult.Suppress(AutomationAudience.MissBehavior.PENALIZE) }
+
+        val result = preparer.prepare(message, preparedScheduleInfo).getOrThrow()
+        assertEquals(DelegatePreparerResult.Penalize, result)
+    }
+
+    @Test
+    public fun testOnCheckSuppressionPassesMessageAndScheduleId(): TestResult = runTest {
+        var capturedMessage: InAppMessage? = null
+        var capturedScheduleId: String? = null
+
+        preparer.onCheckSuppression = { msg, id ->
+            capturedMessage = msg
+            capturedScheduleId = id
+            SuppressionResult.Suppress(AutomationAudience.MissBehavior.SKIP)
+        }
+
+        preparer.prepare(message, preparedScheduleInfo)
+
+        assertEquals(message, capturedMessage)
+        assertEquals(preparedScheduleInfo.scheduleId, capturedScheduleId)
+    }
+
+    @Test
+    public fun testOnCheckSuppressionFiresAnalytics(): TestResult = runTest {
+        preparer.onCheckSuppression = { _, _ -> SuppressionResult.Suppress(AutomationAudience.MissBehavior.SKIP) }
+
+        preparer.prepare(message, preparedScheduleInfo)
+
+        coVerify { analyticsFactory.makeAnalytics(message, preparedScheduleInfo) }
     }
 
     @Test

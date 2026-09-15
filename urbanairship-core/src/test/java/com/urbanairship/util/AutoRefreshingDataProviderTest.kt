@@ -5,6 +5,7 @@ package com.urbanairship.util
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.TestTaskSleeper
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
@@ -139,7 +140,7 @@ class AutoRefreshingDataProviderTest {
             assertEquals(600.seconds, sleeper.sleeps[1])
 
             // Expire the cache
-            clock.currentTimeMillis += 10.minutes.inWholeMilliseconds
+            clock.currentTime += (10.minutes.inWholeMilliseconds).milliseconds
 
             // Trigger another failure
             provider.onFetchResult = Result.failure(Exception("New Fail"))
@@ -163,7 +164,7 @@ class AutoRefreshingDataProviderTest {
             assertEquals(1, provider.fetchCount)
 
             // Expire the cache
-            clock.currentTimeMillis += 10.minutes.inWholeMilliseconds
+            clock.currentTime += (10.minutes.inWholeMilliseconds).milliseconds
 
             provider.onFetchResult = Result.failure(Exception("Silent Error"))
             continueFlow.emit(Unit)

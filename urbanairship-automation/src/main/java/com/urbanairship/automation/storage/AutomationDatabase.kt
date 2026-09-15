@@ -27,55 +27,57 @@ public abstract class AutomationDatabase public constructor() : RoomDatabase() {
 
     public abstract val scheduleDao: AutomationDao
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private val MIGRATION_1_2: Migration = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE schedules " + " ADD COLUMN campaigns TEXT")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE schedules " + " ADD COLUMN campaigns TEXT")
             }
         }
 
         private val MIGRATION_2_3: Migration = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "ALTER TABLE schedules " + " ADD COLUMN frequencyConstraintIds TEXT"
                 )
             }
         }
 
         private val MIGRATION_3_4: Migration = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "ALTER TABLE schedules " + " ADD COLUMN reportingContext TEXT"
                 )
             }
         }
 
         private val MIGRATION_4_5: Migration = object : Migration(4, 5) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "ALTER TABLE schedules " + " ADD COLUMN messageType TEXT"
                 )
-                database.execSQL(
+                db.execSQL(
                     "ALTER TABLE schedules " + " ADD COLUMN bypassHoldoutGroups INTEGER NOT NULL DEFAULT 0"
                 )
-                database.execSQL(
+                db.execSQL(
                     "ALTER TABLE schedules " + " ADD COLUMN newUserEvaluationDate INTEGER NOT NULL DEFAULT 0"
                 )
             }
         }
 
         private val MIGRATION_5_6: Migration = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "ALTER TABLE schedules " + " ADD COLUMN triggeredTime INTEGER NOT NULL DEFAULT -1"
                 )
             }
         }
 
         private val MIGRATION_6_7: Migration = object : Migration(6, 7) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     "ALTER TABLE schedules " + " ADD COLUMN productId TEXT"
                 )
             }

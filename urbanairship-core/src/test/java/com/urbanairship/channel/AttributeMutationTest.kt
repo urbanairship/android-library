@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,14 +21,14 @@ public class AttributeMutationTest {
         val mutation = AttributeMutation.newSetAttributeMutation(
             key = "expected_key",
             jsonValue = JsonValue.wrapOpt("expected_value"),
-            timestamp = 100
+            timestamp = Instant.ofEpochMilli(100)
         )
 
         val expected = jsonMapOf(
             "action" to "set",
             "value" to "expected_value",
             "key" to "expected_key",
-            "timestamp" to DateUtils.createIso8601TimeStamp(100, includeMillis = true)
+            "timestamp" to DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(100), includeMillis = true)
         )
 
         assertEquals(expected, mutation.toJsonValue().map)
@@ -35,12 +36,12 @@ public class AttributeMutationTest {
 
     @Test
     public fun testRemoveMutation() {
-        val mutation = AttributeMutation.newRemoveAttributeMutation("expected_key", 100)
+        val mutation = AttributeMutation.newRemoveAttributeMutation("expected_key", Instant.ofEpochMilli(100))
 
         val expected = jsonMapOf(
             "action" to "remove",
             "key" to "expected_key",
-            "timestamp" to DateUtils.createIso8601TimeStamp(100, includeMillis = true)
+            "timestamp" to DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(100), includeMillis = true)
         )
 
         assertEquals(expected, mutation.toJsonValue().map)

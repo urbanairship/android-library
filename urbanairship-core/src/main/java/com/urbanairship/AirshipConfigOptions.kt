@@ -19,7 +19,9 @@ import com.urbanairship.util.PropertiesConfigParser
 import com.urbanairship.util.XmlConfigParser
 import java.util.Properties
 import java.util.regex.Pattern
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -182,14 +184,35 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
     public val analyticsEnabled: Boolean
 
     /**
+     * Minimum delta between analytics uploads when adding location events while in the
+     * background.
+     *
+     * Defaults to 24 hours. Values below 1 minute or above 24 hours are accepted but logged
+     * as a warning.
+     */
+    @get:JvmSynthetic
+    public val backgroundReportingInterval: Duration
+
+    /**
      * Minimum delta in milliseconds between analytics uploads when
      * adding location events while in the background.
      *
-     *
-     * Defaults to 15 minutes.
+     * Retained as a `@JvmField` for Java callers, which cannot express a [Duration].
+     * [backgroundReportingInterval] is the source of truth; this is derived from it.
      */
     @JvmField
+    public val backgroundReportingIntervalMs: Long
+
+    /**
+     * Minimum delta in milliseconds between analytics uploads when
+     * adding location events while in the background.
+     */
+    @Deprecated(
+        "Renamed for casing consistency.",
+        ReplaceWith("backgroundReportingIntervalMs")
+    )
     public val backgroundReportingIntervalMS: Long
+        get() = backgroundReportingIntervalMs
 
     /**
      * Logger level when the application is in debug mode.
@@ -267,6 +290,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
      * - [FEATURE_FEATURE_FLAGS]
      * - [FEATURE_ANALYTICS]
      * - [FEATURE_PUSH]
+     * - [FEATURE_ON_DEVICE_AI]
      */
     @JvmField
     public val enabledFeatures: Feature
@@ -401,7 +425,8 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         this.isAllowListSet = builder.isAllowListSet
         this.inProduction = inProduction
         this.analyticsEnabled = builder.analyticsEnabled
-        this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS
+        this.backgroundReportingInterval = builder.backgroundReportingInterval
+        this.backgroundReportingIntervalMs = builder.backgroundReportingInterval.inWholeMilliseconds
         this.autoLaunchApplication = builder.autoLaunchApplication
         this.channelCreationDelayEnabled = builder.channelCreationDelayEnabled
         this.channelCaptureEnabled = builder.channelCaptureEnabled
@@ -442,15 +467,15 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
             "AirshipConfigOptions: $appSecret is not a valid $modeString app secret"
         }
 
-        if (backgroundReportingIntervalMS < MIN_BG_REPORTING_INTERVAL) {
+        if (backgroundReportingInterval < MIN_BG_REPORTING_INTERVAL) {
             UALog.w(
-                "AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.",
-                backgroundReportingIntervalMS
+                "AirshipConfigOptions - The backgroundReportingInterval %s may decrease battery life.",
+                backgroundReportingInterval
             )
-        } else if (backgroundReportingIntervalMS > MAX_BG_REPORTING_INTERVAL) {
+        } else if (backgroundReportingInterval > MAX_BG_REPORTING_INTERVAL) {
             UALog.w(
-                "AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.",
-                backgroundReportingIntervalMS
+                "AirshipConfigOptions - The backgroundReportingInterval %s may provide less detailed analytic reports.",
+                backgroundReportingInterval
             )
         }
     }
@@ -545,8 +570,8 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         public var analyticsEnabled: Boolean = true
             private set
 
-        /** The background reporting interval in milliseconds. */
-        public var backgroundReportingIntervalMS: Long = DEFAULT_BG_REPORTING_INTERVAL
+        /** The background reporting interval. */
+        public var backgroundReportingInterval: Duration = DEFAULT_BG_REPORTING_INTERVAL
             private set
 
         /** The logger level when the application is in debug mode. */
@@ -944,8 +969,10 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
                             configParser.getBoolean(name, analyticsEnabled)
                         )
 
-                        FIELD_BACKGROUND_REPORTING_INTERVAL_MS -> this.setBackgroundReportingIntervalMS(
-                            configParser.getLong(name, backgroundReportingIntervalMS)
+                        FIELD_BACKGROUND_REPORTING_INTERVAL_MS -> this.setBackgroundReportingIntervalMs(
+                            configParser.getLong(
+                                name, backgroundReportingInterval.inWholeMilliseconds
+                            )
                         )
 
                         FIELD_DEVELOPMENT_LOG_LEVEL -> this.setDevelopmentLogLevel(
@@ -1361,12 +1388,39 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         /**
          * Set the background reporting interval.
          *
-         * @param backgroundReportingIntervalMS The background reporting interval.
+         * @param backgroundReportingInterval The background reporting interval.
          * @return The config options builder.
          */
-        public fun setBackgroundReportingIntervalMS(backgroundReportingIntervalMS: Long): Builder {
-            this.backgroundReportingIntervalMS = backgroundReportingIntervalMS
+        @JvmSynthetic
+        public fun setBackgroundReportingInterval(backgroundReportingInterval: Duration): Builder {
+            this.backgroundReportingInterval = backgroundReportingInterval
             return this
+        }
+
+        /**
+         * Set the background reporting interval, in milliseconds.
+         *
+         * Provided for Java callers, which cannot express a [Duration].
+         *
+         * @param backgroundReportingIntervalMs The background reporting interval in milliseconds.
+         * @return The config options builder.
+         */
+        public fun setBackgroundReportingIntervalMs(backgroundReportingIntervalMs: Long): Builder {
+            return setBackgroundReportingInterval(backgroundReportingIntervalMs.milliseconds)
+        }
+
+        /**
+         * Set the background reporting interval, in milliseconds.
+         *
+         * @param backgroundReportingIntervalMS The background reporting interval in milliseconds.
+         * @return The config options builder.
+         */
+        @Deprecated(
+            "Renamed for casing consistency.",
+            ReplaceWith("setBackgroundReportingIntervalMs(backgroundReportingIntervalMS)")
+        )
+        public fun setBackgroundReportingIntervalMS(backgroundReportingIntervalMS: Long): Builder {
+            return setBackgroundReportingIntervalMs(backgroundReportingIntervalMS)
         }
 
         /**
@@ -1733,6 +1787,11 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         public const val FEATURE_MESSAGE_CENTER: String = "message_center"
 
         /**
+         * Maps to the feature [PrivacyManager.Feature.ON_DEVICE_AI] when used in the properties or xml config.
+         */
+        public const val FEATURE_ON_DEVICE_AI: String = "on_device_ai"
+
+        /**
          * Maps to the feature [PrivacyManager.Feature.ANALYTICS] when used in the properties or xml config.
          */
         public const val FEATURE_ANALYTICS: String = "analytics"
@@ -1774,12 +1833,12 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         private const val US_REMOTE_DATA_URL = "https://remote-data.urbanairship.com/"
         private const val US_WALLET_URL = "https://wallet-api.urbanairship.com"
 
-        private val MIN_BG_REPORTING_INTERVAL = 1.minutes.inWholeMilliseconds
-        private val MAX_BG_REPORTING_INTERVAL = 24.hours.inWholeMilliseconds
+        private val MIN_BG_REPORTING_INTERVAL = 1.minutes
+        private val MAX_BG_REPORTING_INTERVAL = 24.hours
 
         private val DEFAULT_PRODUCTION_LOG_LEVEL = LogLevel.ERROR
         private val DEFAULT_DEVELOPMENT_LOG_LEVEL = LogLevel.DEBUG
-        private val DEFAULT_BG_REPORTING_INTERVAL = 24.hours.inWholeMilliseconds
+        private val DEFAULT_BG_REPORTING_INTERVAL = 24.hours
 
         private val APP_CREDENTIAL_PATTERN: Pattern = Pattern.compile("^[a-zA-Z0-9\\-_]{22}$")
 

@@ -11,7 +11,7 @@ internal class InAppGestureEvent @VisibleForTesting constructor(
     override val data: JsonSerializable
 ) : LayoutEvent {
 
-    override val eventType: EventType = EventType.IN_APP_GESTURE
+    override val eventType: EventType = EventType.LAYOUT_GESTURE
 
     constructor(eventData: ReportingEvent.GestureData): this(data = eventData)
 }

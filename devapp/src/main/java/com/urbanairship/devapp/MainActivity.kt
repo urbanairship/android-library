@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.urbanairship.automation.compose.AirshipBannerHost
 import com.urbanairship.devapp.AppRouterViewModel.TopLevelDestination
 import com.urbanairship.google.PlayServicesUtils.handleAnyPlayServicesError
 import com.urbanairship.google.PlayServicesUtils.isGooglePlayStoreAvailable
@@ -81,19 +83,27 @@ class MainActivity : AppCompatActivity() {
                         }
                     },
                 ) { innerPadding ->
-                    NavDisplay(
+                    Box(
                         modifier = Modifier.fillMaxSize().padding(innerPadding)
-                            .consumeWindowInsets(innerPadding),
-                        backStack = backstack,
-                        onBack = appRouter::pop,
-                        entryDecorators = listOf(
-                            // Add the default decorators for managing scenes and saving state
-                            rememberSaveableStateHolderNavEntryDecorator(),
-                            // Then add the view model store decorator
-                            rememberViewModelStoreNavEntryDecorator()
-                        ),
-                        entryProvider = appRouter::navigationEntry
-                    )
+                            .consumeWindowInsets(innerPadding)
+                    ) {
+                        NavDisplay(
+                            modifier = Modifier.fillMaxSize(),
+                            backStack = backstack,
+                            onBack = appRouter::pop,
+                            entryDecorators = listOf(
+                                // Add the default decorators for managing scenes and saving state
+                                rememberSaveableStateHolderNavEntryDecorator(),
+                                // Then add the view model store decorator
+                                rememberViewModelStoreNavEntryDecorator()
+                            ),
+                            entryProvider = appRouter::navigationEntry
+                        )
+
+                        // Host for Thomas banners, displayed above the app content,
+                        // within the inset-padded content area.
+                        AirshipBannerHost(modifier = Modifier.fillMaxSize())
+                    }
                 }
             }
 

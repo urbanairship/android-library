@@ -57,6 +57,7 @@
     <!-- General -->
     <string name="ua_refresh">Rafraîchir</string>
     <string name="ua_open">Ouvrir</string>
+    <string name="ua_back">Précédent</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Taux</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Non merci</string>

@@ -1,0 +1,21 @@
+public final class com/urbanairship/push/adm/AdmHandlerBase : com/amazon/device/messaging/ADMMessageHandlerBase {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/push/adm/AdmHandlerJobBase : com/amazon/device/messaging/ADMMessageHandlerJobBase {
+	public fun <init> ()V
+}
+
+public final class com/urbanairship/push/adm/AdmPushProvider : com/urbanairship/AirshipVersionInfo, com/urbanairship/push/PushProvider {
+	public fun <init> ()V
+	public fun getAirshipVersion ()Ljava/lang/String;
+	public fun getDeliveryType ()Lcom/urbanairship/push/PushProvider$DeliveryType;
+	public fun getPackageVersion ()Ljava/lang/String;
+	public fun getPlatform ()Lcom/urbanairship/Platform;
+	public fun getRegistrationToken (Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isAvailable (Landroid/content/Context;)Z
+	public fun isSupported (Landroid/content/Context;)Z
+	public fun toString ()Ljava/lang/String;
+}
+

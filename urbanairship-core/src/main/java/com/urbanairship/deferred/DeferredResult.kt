@@ -17,14 +17,28 @@ import kotlin.time.Duration
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class DeferredResult<T> {
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Success<T>(public val result: T) : DeferredResult<T>()
+
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class RetriableError<T>(
         public val retryAfter: Duration? = null,
         public val statusCode: Int? = null,
         public val errorDescription: String? = null
     ) : DeferredResult<T>()
+
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class TimedOut<T>(public val statusCode: Int? = null) : DeferredResult<T>()
+
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class OutOfDate<T>(public val statusCode: Int? = null) : DeferredResult<T>()
+
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class NotFound<T>(public val statusCode: Int? = null) : DeferredResult<T>()
 }
 

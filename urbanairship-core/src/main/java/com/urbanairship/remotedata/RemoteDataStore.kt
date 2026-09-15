@@ -11,6 +11,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.DataManager
 import com.urbanairship.util.repeat
+import java.time.Instant
 
 /**
  * [DataManager] class for remote data.
@@ -70,7 +71,7 @@ internal class RemoteDataStore (
             for ((type, timestamp, data, remoteDataInfo) in payloads) {
                 val value = ContentValues()
                 value.put(COLUMN_NAME_TYPE, type)
-                value.put(COLUMN_NAME_TIMESTAMP, timestamp)
+                value.put(COLUMN_NAME_TIMESTAMP, timestamp.toEpochMilli())
                 value.put(COLUMN_NAME_DATA, data.toString())
                 if (remoteDataInfo != null) {
                     value.put(COLUMN_NAME_METADATA, remoteDataInfo.toJsonValue().toString())
@@ -159,7 +160,7 @@ internal class RemoteDataStore (
             try {
                 val payload = RemoteDataPayload(
                     cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE)),
-                    cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP)),
+                    Instant.ofEpochMilli(cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP))),
                     JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA))).optMap(),
                     parseRemoteDataInfo(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_METADATA)))
                 )

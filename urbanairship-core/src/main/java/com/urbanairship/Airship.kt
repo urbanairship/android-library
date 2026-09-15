@@ -11,6 +11,8 @@ import com.urbanairship.Airship.deepLink
 import com.urbanairship.Airship.onReady
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.DeepLinkListener
+import com.urbanairship.ai.AirshipAi
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -166,6 +168,19 @@ public object Airship {
         get() = requireReadyInstance().requireComponent()
 
     /**
+     * The shared [AirshipAi] instance.
+     *
+     * Gated by [PrivacyManager.Feature.ON_DEVICE_AI] — disabled, no model resolves and every
+     * evaluation is skipped.
+     *
+     * Access is thread-safe. This property will block until Airship is ready.
+     * @throws IllegalStateException if `takeOff` has not been called.
+     */
+    @JvmStatic
+    public val ai: AirshipAi
+        get() = requireReadyInstance().ai
+
+    /**
      * The shared [PrivacyManager] instance.
      *
      * Access is thread-safe. This property will block until Airship is ready.
@@ -206,6 +221,18 @@ public object Airship {
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val inputValidator: AirshipInputValidation.Validator
         get() = requireReadyInstance().inputValidator
+
+    /**
+     * The shared [InternalAirshipAi] instance, for SDK features that run evaluations.
+     *
+     * Access is thread-safe. This property will block until Airship is ready.
+     * @throws IllegalStateException if `takeOff` has not been called.
+     *
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val internalAi: InternalAirshipAi
+        get() = requireReadyInstance().ai
 
     /**
      * The shared [ImageLoader] instance.
@@ -295,7 +322,9 @@ public object Airship {
      *
      * Access is thread-safe. This property will block until Airship is ready.
      * @throws IllegalStateException if `takeOff` has not been called.
+     * @hide
      */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @JvmStatic
     public val runtimeConfig: AirshipRuntimeConfig
         get() = requireReadyInstance().runtimeConfig

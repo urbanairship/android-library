@@ -24,7 +24,6 @@ import androidx.annotation.RestrictTo
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.view.ViewCompat
 import androidx.core.view.doOnPreDraw
 import com.urbanairship.Fonts
 import com.urbanairship.UALog.d
@@ -76,7 +75,7 @@ internal object InAppViewUtils {
                 .setStrokeColor(strokeColor)
                 .setStrokeWidth(strokeWidthInDps)
                 .build()
-        ViewCompat.setBackground(button, background)
+        button.background = background
     }
 
     /**

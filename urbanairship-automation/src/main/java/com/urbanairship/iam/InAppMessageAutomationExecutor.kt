@@ -10,12 +10,16 @@ import com.urbanairship.actions.run
 import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.android.layout.assets.AssetCacheManager
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.engine.recordExecution
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
+import com.urbanairship.automation.limits.AutomationLedgerInterface
+import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import kotlinx.coroutines.CoroutineDispatcher
@@ -31,6 +35,7 @@ internal class InAppMessageAutomationExecutor(
     private val assetManager: AssetCacheManager,
     private val analyticsFactory: InAppMessageAnalyticsFactory,
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier,
+    private val ledger: AutomationLedgerInterface,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AutomationExecutorDelegate<PreparedInAppMessageData> {
 
@@ -90,6 +95,12 @@ internal class InAppMessageAutomationExecutor(
                 event = LayoutResolutionEvent.audienceExcluded(),
                 layoutContext = null
             )
+            // The attempt still resolved and still spends the schedule's budget,
+            // so it has to reach the ledger. Without an event the limit can
+            // never be reached and the schedule re-triggers forever. Nothing is
+            // displayed on this path, so suspending here costs no display
+            // guarantees.
+            ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.AUDIENCE_MISS)
             return@withContext ScheduleExecuteResult.FINISHED
         }
 
@@ -99,21 +110,72 @@ internal class InAppMessageAutomationExecutor(
 
         var result = ScheduleExecuteResult.FINISHED
 
+        val variantOutcome = preparedScheduleInfo.variantAudienceResult?.outcome
+
+        // Two unrelated checks (global holdout, and a variant experiment's own no-message
+        // arm) can both resolve to holdout for the same schedule at this same last-mile
+        // point; either one alone is sufficient, so check global holdout first and treat
+        // this as a single outcome rather than risk emitting both.
         if (preparedScheduleInfo.experimentResult?.isMatching == true) {
             UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} part of experiment." }
             data.analytics.recordEvent(
                 event = LayoutResolutionEvent.control(preparedScheduleInfo.experimentResult),
                 layoutContext = null
             )
+            ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
+        } else if (variantOutcome != null && variantOutcome.isDisplaySkipped) {
+            // Gated on the same property InAppMessageAutomationPreparer skips asset caching
+            // on, so the two can't disagree about which outcomes display.
+            UALog.i {
+                "Schedule ${preparedScheduleInfo.scheduleId} skipped display: ${variantOutcome.json}"
+            }
+            when (variantOutcome) {
+                VariantAudience.Outcome.HOLDOUT -> {
+                    data.analytics.recordEvent(
+                        event = LayoutResolutionEvent.variantControl(),
+                        layoutContext = null
+                    )
+                    // Identical to the global holdout mechanism in ledger terms; the two
+                    // diverge only in which resolution event they report.
+                    ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
+                }
+                // An outcome this version can't name still says the experiment resolved to
+                // something other than this schedule's message, which is what variant_miss
+                // reports — the weaker of the two skip claims, so it's the safe one.
+                VariantAudience.Outcome.VARIANT_MISS,
+                is VariantAudience.Outcome.Unknown -> {
+                    data.analytics.recordEvent(
+                        event = LayoutResolutionEvent.variantMiss(),
+                        layoutContext = null
+                    )
+                    ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.VARIANT_MISS)
+                }
+                // isDisplaySkipped already excluded it; listed so a new outcome won't compile
+                // until it picks a side here.
+                VariantAudience.Outcome.MATCHED -> Unit
+            }
         } else {
             try {
                 UALog.i { "Displaying message ${preparedScheduleInfo.scheduleId}" }
-                result = when(data.displayAdapter.display(context, data.analytics)) {
-                    DisplayResult.CANCEL -> ScheduleExecuteResult.CANCEL
+                val displayResult = data.displayAdapter.display(context, data.analytics)
+                result = when (displayResult) {
+                    DisplayResult.CANCEL, DisplayResult.DROPPED -> ScheduleExecuteResult.CANCEL
                     DisplayResult.FINISHED -> ScheduleExecuteResult.FINISHED
                 }
-                data.message.actions?.let {
-                    data.actionRunner.run(it.map, Action.Situation.AUTOMATION)
+
+                // A dropped display never appeared — the request was resolved
+                // out of its queue — so nothing that follows from having
+                // displayed should happen: it spent no budget, or a pooled group
+                // pays for a message nobody saw, and the message's actions
+                // belong to a display that did not occur. A cancel, by contrast,
+                // means it was displayed and then dismissed.
+                if (displayResult == DisplayResult.DROPPED) {
+                    UALog.i { "Display dropped ${preparedScheduleInfo.scheduleId}" }
+                } else {
+                    ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.SUCCEEDED)
+                    data.message.actions?.let {
+                        data.actionRunner.run(it.map, Action.Situation.AUTOMATION)
+                    }
                 }
             } catch (ex: Exception) {
                 UALog.e(ex) { "Failed to display message" }

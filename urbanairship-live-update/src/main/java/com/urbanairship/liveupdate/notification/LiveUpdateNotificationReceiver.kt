@@ -26,12 +26,6 @@ public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 LiveUpdateManager.shared().end(name)
                 UALog.v("Ended live updates for: $name")
             }
-            ACTION_NOTIFICATION_TIMEOUT -> {
-                // Stop updates for this live activity and cancel the notification, if one exists.
-                LiveUpdateManager.shared().end(name)
-                LiveUpdateManager.shared().cancel(name)
-                UALog.v("Timed out live updates for: $name")
-            }
             else -> UALog.w("Received unknown Live Update broadcast: $action")
         }
 
@@ -48,22 +42,30 @@ public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
     internal companion object {
         private const val ACTION_NOTIFICATION_DISMISSED =
             "com.urbanairship.liveupdate.NOTIFICATION_DISMISSED"
-        private const val ACTION_NOTIFICATION_TIMEOUT =
-            "com.urbanairship.liveupdate.NOTIFICATION_TIMEOUT"
-
         private const val EXTRA_ACTIVITY_NAME: String = "activity_name"
 
         internal fun deleteIntent(context: Context, name: String): Intent =
-            Intent(context, LiveUpdateNotificationReceiver::class.java)
-                .setAction(ACTION_NOTIFICATION_DISMISSED)
-                .putExtra(EXTRA_ACTIVITY_NAME, name)
-                .addCategory(name)
+            receiverIntent(context, ACTION_NOTIFICATION_DISMISSED, name)
 
-        internal fun timeoutCompatIntent(context: Context, name: String): Intent =
-            Intent(context, LiveUpdateNotificationReceiver::class.java)
-                .setAction(ACTION_NOTIFICATION_TIMEOUT)
-                .putExtra(EXTRA_ACTIVITY_NAME, name)
-                .addCategory(name)
+        /**
+         * Builds an intent targeting this receiver.
+         *
+         * These intents are wrapped in `PendingIntent`s that are handed to the notification
+         * manager, so they must never be implicit. The target component
+         * is set via the constructor, and the package is pinned as well so the intent cannot
+         * resolve outside this app even if the component were dropped.
+         *
+         * Built with discrete statements rather than a fluent chain so that the explicit
+         * targeting is unmistakable at the point of construction.
+         */
+        private fun receiverIntent(context: Context, action: String, name: String): Intent {
+            val intent = Intent(context, LiveUpdateNotificationReceiver::class.java)
+            intent.setPackage(context.packageName)
+            intent.action = action
+            intent.putExtra(EXTRA_ACTIVITY_NAME, name)
+            intent.addCategory(name)
+            return intent
+        }
     }
 }
 

@@ -1,0 +1,349 @@
+public final class com/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterDefaultsKt {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterDefaultsKt;
+	public fun <init> ()V
+	public final fun getLambda$-2111423830$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-2133148858$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-504136022$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-631936530$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-750829151$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterListScreenKt {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterListScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-732493649$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterMessageScreenKt {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterMessageScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-405816753$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$1333682757$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1620069162$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterStoriesViewKt {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/compose/ui/ComposableSingletons$MessageCenterStoriesViewKt;
+	public fun <init> ()V
+	public final fun getLambda$-1389810221$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-665914364$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1152405526$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1984751138$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$202386051$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterActivity : androidx/activity/ComponentActivity {
+	public static final field $stable I
+	public fun <init> ()V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/compose/ui/MessageCenterDefaults;
+	public final fun listTopBar (Ljava/lang/String;ZLandroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Landroidx/compose/material3/TopAppBarScrollBehavior;Landroidx/compose/runtime/Composer;II)V
+	public final fun listTopBarActions (Lcom/urbanairship/messagecenter/compose/ui/MessageCenterListState;Landroidx/compose/runtime/Composer;I)V
+	public final fun messageTopBar (Ljava/lang/String;Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Landroidx/compose/material3/TopAppBarScrollBehavior;Landroidx/compose/runtime/Composer;II)V
+	public final fun messageTopBarActions (Lcom/urbanairship/messagecenter/compose/ui/MessageCenterMessageState;ZLkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterListScreenKt {
+	public static final fun MessageCenterList (Lcom/urbanairship/messagecenter/compose/ui/MessageCenterListState;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+	public static final fun MessageCenterListScreen (Landroidx/compose/ui/Modifier;Lcom/urbanairship/messagecenter/compose/ui/MessageCenterListState;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterListState {
+	public static final field $stable I
+	public final fun isEditing ()Z
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterListStateKt {
+	public static final fun rememberMessageCenterListState (Lcom/urbanairship/Predicate;Ljava/lang/String;Landroidx/compose/runtime/Composer;II)Lcom/urbanairship/messagecenter/compose/ui/MessageCenterListState;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterMessageScreenKt {
+	public static final fun MessageCenterMessage (Lcom/urbanairship/messagecenter/compose/ui/MessageCenterMessageState;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+	public static final fun MessageCenterMessageScreen (Landroidx/compose/ui/Modifier;Lcom/urbanairship/messagecenter/compose/ui/MessageCenterMessageState;Lkotlin/jvm/functions/Function5;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterMessageState {
+	public static final field $stable I
+	public final fun getMessageId ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun setMessageId (Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterMessageStateKt {
+	public static final fun rememberMessageCenterMessageState (Ljava/lang/String;Landroidx/compose/runtime/Composer;II)Lcom/urbanairship/messagecenter/compose/ui/MessageCenterMessageState;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterScreenKt {
+	public static final fun MessageCenterScreen (Landroidx/compose/ui/Modifier;Lcom/urbanairship/messagecenter/compose/ui/MessageCenterState;ZLkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterState {
+	public static final field $stable I
+	public final fun clearMessage ()V
+	public final fun getListState ()Lcom/urbanairship/messagecenter/compose/ui/MessageCenterListState;
+	public final fun getMessageState ()Lcom/urbanairship/messagecenter/compose/ui/MessageCenterMessageState;
+	public final fun selectMessage (Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterStateKt {
+	public static final fun rememberMessageCenterState (Lcom/urbanairship/Predicate;Ljava/lang/String;Landroidx/compose/runtime/Composer;II)Lcom/urbanairship/messagecenter/compose/ui/MessageCenterState;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/MessageCenterThemeManagerKt {
+	public static final fun getTheme (Lcom/urbanairship/messagecenter/MessageCenter;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTheme;
+	public static final fun setTheme (Lcom/urbanairship/messagecenter/MessageCenter;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTheme;)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/CheckboxColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJJJJJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-0d7_KjU ()J
+	public final fun component10-0d7_KjU ()J
+	public final fun component11-0d7_KjU ()J
+	public final fun component12-0d7_KjU ()J
+	public final fun component2-0d7_KjU ()J
+	public final fun component3-0d7_KjU ()J
+	public final fun component4-0d7_KjU ()J
+	public final fun component5-0d7_KjU ()J
+	public final fun component6-0d7_KjU ()J
+	public final fun component7-0d7_KjU ()J
+	public final fun component8-0d7_KjU ()J
+	public final fun component9-0d7_KjU ()J
+	public final fun copy-2qZNXz8 (JJJJJJJJJJJJ)Lcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;
+	public static synthetic fun copy-2qZNXz8$default (Lcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;JJJJJJJJJJJJILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCheckedBorderColor-0d7_KjU ()J
+	public final fun getCheckedBoxColor-0d7_KjU ()J
+	public final fun getCheckedCheckmarkColor-0d7_KjU ()J
+	public final fun getDisabledBorderColor-0d7_KjU ()J
+	public final fun getDisabledCheckedBoxColor-0d7_KjU ()J
+	public final fun getDisabledIndeterminateBorderColor-0d7_KjU ()J
+	public final fun getDisabledIndeterminateBoxColor-0d7_KjU ()J
+	public final fun getDisabledUncheckedBorderColor-0d7_KjU ()J
+	public final fun getDisabledUncheckedBoxColor-0d7_KjU ()J
+	public final fun getUncheckedBorderColor-0d7_KjU ()J
+	public final fun getUncheckedBoxColor-0d7_KjU ()J
+	public final fun getUncheckedCheckmarkColor-0d7_KjU ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/ComposableSingletons$MessageCenterOptionsKt {
+	public static final field INSTANCE Lcom/urbanairship/messagecenter/compose/ui/theme/ComposableSingletons$MessageCenterOptionsKt;
+	public fun <init> ()V
+	public final fun getLambda$-2104461711$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$1057527840$urbanairship_message_center_compose ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors$Companion;
+	public synthetic fun <init> (JJJJJJJJLcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;JLcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;JJJJJJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-0d7_KjU ()J
+	public final fun component10-0d7_KjU ()J
+	public final fun component11 ()Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;
+	public final fun component12 ()Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;
+	public final fun component13-0d7_KjU ()J
+	public final fun component14-0d7_KjU ()J
+	public final fun component15-0d7_KjU ()J
+	public final fun component16-0d7_KjU ()J
+	public final fun component17-0d7_KjU ()J
+	public final fun component18-0d7_KjU ()J
+	public final fun component19-0d7_KjU ()J
+	public final fun component2-0d7_KjU ()J
+	public final fun component20-0d7_KjU ()J
+	public final fun component21-0d7_KjU ()J
+	public final fun component22-0d7_KjU ()J
+	public final fun component23-0d7_KjU ()J
+	public final fun component3-0d7_KjU ()J
+	public final fun component4-0d7_KjU ()J
+	public final fun component5-0d7_KjU ()J
+	public final fun component6-0d7_KjU ()J
+	public final fun component7-0d7_KjU ()J
+	public final fun component8-0d7_KjU ()J
+	public final fun component9 ()Lcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;
+	public final fun copy-Uh8c3Tg (JJJJJJJJLcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;JLcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;JJJJJJJJJJJ)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public static synthetic fun copy-Uh8c3Tg$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;JJJJJJJJLcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;JLcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;JJJJJJJJJJJILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccent-0d7_KjU ()J
+	public final fun getBackground-0d7_KjU ()J
+	public final fun getDivider-0d7_KjU ()J
+	public final fun getListTopBar ()Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;
+	public final fun getMessageCenterAlertLabel-0d7_KjU ()J
+	public final fun getMessageCenterEditBar-0d7_KjU ()J
+	public final fun getMessageCenterEditBarContent-0d7_KjU ()J
+	public final fun getMessageCenterError-0d7_KjU ()J
+	public final fun getMessageCenterPullToRefresh-0d7_KjU ()J
+	public final fun getMessageCenterPullToRefreshBackground-0d7_KjU ()J
+	public final fun getMessageEmptyBackground-0d7_KjU ()J
+	public final fun getMessageEmptyLabel-0d7_KjU ()J
+	public final fun getMessageError-0d7_KjU ()J
+	public final fun getMessageErrorBackground-0d7_KjU ()J
+	public final fun getMessageListBackground-0d7_KjU ()J
+	public final fun getMessageListHighlight-0d7_KjU ()J
+	public final fun getMessageListItemCheckbox ()Lcom/urbanairship/messagecenter/compose/ui/theme/CheckboxColors;
+	public final fun getMessageListItemDate-0d7_KjU ()J
+	public final fun getMessageListItemSubtitle-0d7_KjU ()J
+	public final fun getMessageListItemTitle-0d7_KjU ()J
+	public final fun getMessageLoadingBackground-0d7_KjU ()J
+	public final fun getMessageTopBar ()Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;
+	public final fun getSurface-0d7_KjU ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors$Companion {
+	public final fun darkDefaults-4JmcsL4 (JJJJJJJ)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public static synthetic fun darkDefaults-4JmcsL4$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors$Companion;JJJJJJJILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public final fun lightDefaults-4JmcsL4 (JJJJJJJ)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public static synthetic fun lightDefaults-4JmcsL4$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors$Companion;JJJJJJJILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Companion;
+	public synthetic fun <init> (FLandroidx/compose/foundation/layout/PaddingValues;FLcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-D9Ej5fM ()F
+	public final fun component2 ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun component3-D9Ej5fM ()F
+	public final fun component4 ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;
+	public final fun copy-ilQz_9s (FLandroidx/compose/foundation/layout/PaddingValues;FLcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;
+	public static synthetic fun copy-ilQz_9s$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;FLandroidx/compose/foundation/layout/PaddingValues;FLcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessageCenterDividerInset ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;
+	public final fun getMessageListItemMinHeight-D9Ej5fM ()F
+	public final fun getMessageListItemPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getMessageListItemsSpace-D9Ej5fM ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Companion {
+	public final fun defaults ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset {
+	public static final field $stable I
+	public synthetic fun <init> (FFLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-D9Ej5fM ()F
+	public final fun component2-D9Ej5fM ()F
+	public final fun copy-YgX7TsA (FF)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;
+	public static synthetic fun copy-YgX7TsA$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;FFILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens$Inset;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnd-D9Ej5fM ()F
+	public final fun getStart-D9Ej5fM ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions$Companion;
+	public fun <init> (ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Z)V
+	public synthetic fun <init> (ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lkotlin/jvm/functions/Function2;
+	public final fun component3 ()Lkotlin/jvm/functions/Function3;
+	public final fun component4 ()Z
+	public final fun component5 ()Lkotlin/jvm/functions/Function2;
+	public final fun component6 ()Lkotlin/jvm/functions/Function2;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Z
+	public final fun copy (ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Z)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Ljava/lang/String;ZILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCanDeleteMessages ()Z
+	public final fun getMessageCenterDividerEnabled ()Z
+	public final fun getMessageCenterEmptyListMessage ()Lkotlin/jvm/functions/Function2;
+	public final fun getMessageCenterListTitle ()Ljava/lang/String;
+	public final fun getMessageListPlaceholderIcon ()Lkotlin/jvm/functions/Function2;
+	public final fun getMessageListUnreadIndicator ()Lkotlin/jvm/functions/Function3;
+	public final fun getMessageLoadingView ()Lkotlin/jvm/functions/Function2;
+	public final fun getShowMessageListThumbnail ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions$Companion {
+	public final fun defaults ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterTheme {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;)V
+	public synthetic fun <init> (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public final fun component2 ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public final fun component3 ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;
+	public final fun component4 ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;
+	public final fun component5 ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;
+	public final fun copy (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTheme;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTheme;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTheme;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDarkColors ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public final fun getDimens ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;
+	public final fun getLightColors ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;
+	public final fun getOptions ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;
+	public final fun getTypography ()Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography {
+	public static final field $stable I
+	public static final field Companion Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography$Companion;
+	public fun <init> (Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;)V
+	public final fun component1 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component2 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component3 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component4 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component5 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component6 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun component7 ()Landroidx/compose/ui/text/TextStyle;
+	public final fun copy (Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;
+	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlertButtonLabel ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getEmptyViewMessage ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getItemDate ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getItemDescription ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getItemTitle ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getMessageCenterError ()Landroidx/compose/ui/text/TextStyle;
+	public final fun getMessageError ()Landroidx/compose/ui/text/TextStyle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography$Companion {
+	public final fun defaults (Landroidx/compose/ui/text/font/FontFamily;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;
+	public static synthetic fun defaults$default (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography$Companion;Landroidx/compose/ui/text/font/FontFamily;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/MsgCenterThemeKt {
+	public static final fun MessageCenterTheme (Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterColors;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterOptions;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterTypography;Lcom/urbanairship/messagecenter/compose/ui/theme/MessageCenterDimens;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-0d7_KjU ()J
+	public final fun component2-0d7_KjU ()J
+	public final fun component3-0d7_KjU ()J
+	public final fun component4-0d7_KjU ()J
+	public final fun component5-0d7_KjU ()J
+	public final fun copy-t635Npw (JJJJJ)Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;
+	public static synthetic fun copy-t635Npw$default (Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;JJJJJILjava/lang/Object;)Lcom/urbanairship/messagecenter/compose/ui/theme/TopAppBarColors;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActionIconContentColor-0d7_KjU ()J
+	public final fun getContainerColor-0d7_KjU ()J
+	public final fun getNavigationIconContentColor-0d7_KjU ()J
+	public final fun getScrolledContainerColor-0d7_KjU ()J
+	public final fun getTitleContentColor-0d7_KjU ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

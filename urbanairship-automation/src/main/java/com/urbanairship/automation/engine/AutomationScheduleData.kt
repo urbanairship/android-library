@@ -4,16 +4,17 @@ package com.urbanairship.automation.engine
 
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.minus
+import java.time.Instant
 import java.util.Objects
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.milliseconds
 import org.jetbrains.annotations.VisibleForTesting
 
 internal class AutomationScheduleData(
     schedule: AutomationSchedule,
     scheduleState: AutomationScheduleState,
-    scheduleStateChangeDate: Long,
+    scheduleStateChangeDate: Instant,
     executionCount: Int,
     triggerInfo: TriggeringInfo? = null,
     preparedScheduleInfo: PreparedScheduleInfo? = null,
@@ -24,7 +25,7 @@ internal class AutomationScheduleData(
         private set
     var scheduleState: AutomationScheduleState = scheduleState
         private set
-    var scheduleStateChangeDate: Long = scheduleStateChangeDate
+    var scheduleStateChangeDate: Instant = scheduleStateChangeDate
         private set
     var executionCount: Int = executionCount
         private set
@@ -41,7 +42,7 @@ internal class AutomationScheduleData(
         return this
     }
 
-    private fun setState(state: AutomationScheduleState, date: Long): AutomationScheduleData {
+    private fun setState(state: AutomationScheduleState, date: Instant): AutomationScheduleData {
         if (scheduleState == state) { return this }
 
         scheduleState = state
@@ -49,31 +50,35 @@ internal class AutomationScheduleData(
         return this
     }
 
-    internal fun finished(date: Long): AutomationScheduleData {
+    internal fun finished(date: Instant): AutomationScheduleData {
         setState(AutomationScheduleState.FINISHED, date)
         preparedScheduleInfo = null
         triggerInfo = null
         return this
     }
 
-    internal fun idle(date: Long): AutomationScheduleData {
+    internal fun idle(date: Instant): AutomationScheduleData {
         setState(AutomationScheduleState.IDLE, date)
         preparedScheduleInfo = null
         triggerInfo = null
         return this
     }
 
-    internal fun paused(date: Long): AutomationScheduleData {
+    internal fun paused(date: Instant): AutomationScheduleData {
         setState(AutomationScheduleState.PAUSED, date)
         preparedScheduleInfo = null
         triggerInfo = null
         return this
     }
 
-    internal fun triggered(triggerInfo: TriggeringInfo, date: Long): AutomationScheduleData {
+    internal fun triggered(
+        triggerInfo: TriggeringInfo,
+        date: Instant,
+        isOverLimit: Boolean
+    ): AutomationScheduleData {
         if (scheduleState != AutomationScheduleState.IDLE) { return  this }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
@@ -84,12 +89,16 @@ internal class AutomationScheduleData(
         return setState(AutomationScheduleState.TRIGGERED, date)
     }
 
-    internal fun prepared(info: PreparedScheduleInfo, date: Long): AutomationScheduleData {
+    internal fun prepared(
+        info: PreparedScheduleInfo,
+        date: Instant,
+        isOverLimit: Boolean
+    ): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.TRIGGERED))) {
             return this
         }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
@@ -97,7 +106,7 @@ internal class AutomationScheduleData(
         return setState(AutomationScheduleState.PREPARED, date)
     }
 
-    internal fun executing(date: Long): AutomationScheduleData {
+    internal fun executing(date: Instant): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.PREPARED))) {
             return this
         }
@@ -107,16 +116,20 @@ internal class AutomationScheduleData(
         return this
     }
 
-    internal fun executionInterrupted(date: Long, retry: Boolean): AutomationScheduleData {
+    internal fun executionInterrupted(
+        date: Instant,
+        retry: Boolean,
+        isOverLimit: Boolean
+    ): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.EXECUTING))) {
             return this
         }
 
         if (!retry) {
-            return finishedExecuting(date)
+            return finishedExecuting(date, isOverLimit)
         }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
@@ -124,26 +137,26 @@ internal class AutomationScheduleData(
         return setState(AutomationScheduleState.TRIGGERED, date)
     }
 
-    internal fun executionCancelled(date: Long): AutomationScheduleData {
+    internal fun executionCancelled(date: Instant, isOverLimit: Boolean): AutomationScheduleData {
         // Delay cancellation triggers are active for both `TRIGGERED` and `PREPARED`,
         // so a cancellation must unwind either state, including an in-flight prepare.
         if (!isInState(listOf(AutomationScheduleState.TRIGGERED, AutomationScheduleState.PREPARED))) {
             return this
         }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
         return idle(date)
     }
 
-    internal fun executionInvalidated(date: Long): AutomationScheduleData {
+    internal fun executionInvalidated(date: Instant, isOverLimit: Boolean): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.PREPARED))) {
             return this
         }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
@@ -151,12 +164,12 @@ internal class AutomationScheduleData(
         return setState(AutomationScheduleState.TRIGGERED, date)
     }
 
-    internal fun executionSkipped(date: Long): AutomationScheduleData {
+    internal fun executionSkipped(date: Instant, isOverLimit: Boolean): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.PREPARED))) {
             return this
         }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
@@ -167,7 +180,11 @@ internal class AutomationScheduleData(
         }
     }
 
-    internal fun prepareCancelled(date: Long, penalize: Boolean): AutomationScheduleData {
+    internal fun prepareCancelled(
+        date: Instant,
+        penalize: Boolean,
+        isOverLimit: Boolean
+    ): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.TRIGGERED))) {
             return this
         }
@@ -176,33 +193,33 @@ internal class AutomationScheduleData(
             executionCount += 1
         }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
         return idle(date)
     }
 
-    internal fun prepareInterrupted(date: Long): AutomationScheduleData {
+    internal fun prepareInterrupted(date: Instant, isOverLimit: Boolean): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.PREPARED, AutomationScheduleState.TRIGGERED))) {
             return this
         }
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             return finished(date)
         }
 
         return setState(AutomationScheduleState.TRIGGERED, date)
     }
 
-    internal fun finishedExecuting(date: Long): AutomationScheduleData {
+    internal fun finishedExecuting(date: Instant, isOverLimit: Boolean): AutomationScheduleData {
         if (!isInState(listOf(AutomationScheduleState.EXECUTING))) {
             return this
         }
 
         executionCount += 1
 
-        if (isOverLimit() || isExpired(date)) {
+        if (isOverLimit || isExpired(date)) {
             finished(date)
             return this
         }
@@ -214,8 +231,8 @@ internal class AutomationScheduleData(
         }
     }
 
-    internal fun updateState(timeStamp: Long): AutomationScheduleData {
-        return if (isOverLimit() || isExpired(timeStamp)) {
+    internal fun updateState(timeStamp: Instant, isOverLimit: Boolean): AutomationScheduleData {
+        return if (isOverLimit || isExpired(timeStamp)) {
             finished(timeStamp)
         } else if (isInState(listOf(AutomationScheduleState.FINISHED))) {
             idle(timeStamp)
@@ -224,40 +241,32 @@ internal class AutomationScheduleData(
         }
     }
 
-    internal fun shouldDelete(date: Long): Boolean {
+    internal fun shouldDelete(date: Instant): Boolean {
         if (scheduleState != AutomationScheduleState.FINISHED) {
             return false
         }
 
-        val gracePeriod = (schedule.editGracePeriodDays ?: return true).toLong().days
-        val sinceLastChange = (date - scheduleStateChangeDate).milliseconds
+        val gracePeriod = (schedule.editGracePeriodDays ?: return true).days
+        val sinceLastChange = date - scheduleStateChangeDate
         return sinceLastChange >= gracePeriod
     }
 
-    internal fun isExpired(date: Long): Boolean {
+    internal fun isExpired(date: Instant): Boolean {
         val end = schedule.endDate ?: return false
-        return end <= date.toULong()
+        return end <= date
     }
 
-    internal fun isActive(date: Long): Boolean {
+    internal fun isActive(date: Instant): Boolean {
         if (isExpired(date)) { return false }
         val start = schedule.startDate ?: return true
-        return date >= start.toLong()
-    }
-
-    internal fun isOverLimit(): Boolean {
-        // 0 means no limit
-        val limit = schedule.limit ?: 1U
-        if (limit == 0U) { return false }
-
-        return limit <= executionCount.toUInt()
+        return date >= start
     }
 
     internal fun isInState(state: List<AutomationScheduleState>): Boolean {
         return state.contains(scheduleState)
     }
 
-    internal class Comparator(val date: Long) : java.util.Comparator<AutomationScheduleData> {
+    internal class Comparator(val date: Instant) : java.util.Comparator<AutomationScheduleData> {
 
         override fun compare(left: AutomationScheduleData, right: AutomationScheduleData): Int {
             val leftPriority = left.schedule.priority ?: 0

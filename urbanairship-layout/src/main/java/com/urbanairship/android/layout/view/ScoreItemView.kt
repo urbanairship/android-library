@@ -2,7 +2,6 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.widget.Checkable
 import androidx.annotation.Dimension
 import androidx.appcompat.widget.AppCompatRadioButton
@@ -18,7 +17,15 @@ internal class ScoreItemView(
     private val label: String,
     private val bindings: ScoreStyle.Bindings,
     @Dimension(unit = Dimension.DP)
-    private val padding: Int
+    private val padding: Int,
+    /**
+     * The longest label in the range, which every item in it is sized by.
+     *
+     * Items sized by their own labels come out different widths — a "1" narrower than a "10" —
+     * where the range should read as one row of equal ones. Defaults to this item's own label,
+     * for a score of one.
+     */
+    private val sizingLabel: String = label
 ) : AppCompatRadioButton(
     context,
     null,
@@ -41,9 +48,7 @@ internal class ScoreItemView(
         )
 
         setBackground(background)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
-        }
+        foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
 
         configure()
     }
@@ -60,21 +65,35 @@ internal class ScoreItemView(
         val unselectedTextAppearance = bindings.unselected.textAppearance
         val appearance = if (isChecked) selectedTextAppearance else unselectedTextAppearance
 
-        post {
-            // Just use the raw font height without padding
-            val textHeight = paint.fontMetrics.let { it.descent - it.ascent }.toInt()
-
-            // Convert minimum touch target to pixels
-            val minimumTouchTarget = LayoutUtils.dpToPx(context, 44)
-
-            // Use the larger of the text height or minimum touch target
-            minimumHeight = maxOf(minimumTouchTarget, textHeight)
-            minimumWidth = minimumHeight
-
-            requestLayout()
-        }
-
         LayoutUtils.applyTextAppearance(this, appearance)
+
+        // Once from the paint as it stands, and again after anything the appearance loads in the
+        // background — a font family among it — has settled and changed the measurements.
+        applySmallestSize()
+        post { applySmallestSize() }
+    }
+
+    /**
+     * Sizes the item to the number it holds, never smaller than something that can be tapped.
+     *
+     * The number with as much again around it, which is the room iOS gives one: it measures the
+     * longest label in the range and adds that measurement again as spacing. Sized to the text
+     * alone, an item was the number and nothing else — a row of large digits in circles barely
+     * wider than they were.
+     *
+     * Square, so the shape drawn in it is the shape the layout asked for.
+     */
+    private fun applySmallestSize() {
+        val textWidth = paint.measureText(sizingLabel)
+        val textHeight = paint.fontMetrics.let { it.descent - it.ascent }
+        val minimumTouchTarget = LayoutUtils.dpToPx(context, MIN_TAPPABLE_DP).toFloat()
+
+        val side = maxOf(minimumTouchTarget, textWidth * 2f, textHeight * 2f).toInt()
+        if (side == minimumWidth && side == minimumHeight) return
+
+        minimumHeight = side
+        minimumWidth = side
+        requestLayout()
     }
 
     override fun setChecked(checked: Boolean) {
@@ -95,5 +114,14 @@ internal class ScoreItemView(
 
     companion object {
         val CHECKED_STATE_SET: IntArray = intArrayOf(android.R.attr.state_checked)
+
+        /**
+         * The smallest a score item is drawn, which is a tappable one.
+         *
+         * Matches iOS rather than Android's usual 48dp minimum touch target, so score items are
+         * the same size on both platforms.
+         */
+        @Dimension(unit = Dimension.DP)
+        private const val MIN_TAPPABLE_DP: Int = 44
     }
 }

@@ -4,10 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.urbanairship.db.RetryingSQLiteOpenHelper
+import com.urbanairship.util.TimeTypeConverters
 
 @Database(entities = [CacheEntity::class], version = 1)
+@TypeConverters(TimeTypeConverters::class)
 internal abstract class CacheDatabase : RoomDatabase() {
     abstract fun cacheDao(): CacheDao
 

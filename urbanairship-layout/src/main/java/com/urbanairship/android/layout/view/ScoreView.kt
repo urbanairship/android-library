@@ -85,12 +85,14 @@ internal class ScoreView(
 
     private fun configureNumberRange(style: NumberRange) {
         val constraints = ConstraintSetBuilder.newBuilder(context)
+        val sizingLabel = longestLabel(style.start, style.end)
         val viewIds = (style.start..style.end).map { i ->
             val button = ScoreItemView(
                 context = context,
                 label = i.toString(),
                 bindings = style.bindings,
-                padding = 0
+                padding = 0,
+                sizingLabel = sizingLabel
             ).apply {
                 setOnClickListener { onScoreClick(i) }
                 makeViewAccessibleAsRadioButton(this, i)
@@ -103,6 +105,13 @@ internal class ScoreView(
         constraints
             .setHorizontalChainStyle(viewIds, androidx.constraintlayout.helper.widget.Flow.CHAIN_PACKED)
             .createHorizontalChainInParent(viewIds, 0, style.spacing)
+
+        // Square, so the shape drawn in each item is the item — a chain of items free to take a
+        // width of their own shares the row out between them, and the spacing the style asks for
+        // arrives as whatever is left over between one shape and the next.
+        viewIds.forEach { constraints.squareAspectRatio(it) }
+
+        constraints
             .build()
             .applyTo(this)
     }
@@ -116,12 +125,14 @@ internal class ScoreView(
             maxItemsPerLine = style.wrapping.maxItemsPerLine
         }
 
+        val sizingLabel = longestLabel(style.start, style.end)
         (style.start..style.end).forEach { i ->
             val button = ScoreItemView(
                 context = context,
                 label = i.toString(),
                 bindings = style.bindings,
-                padding = 0
+                padding = 0,
+                sizingLabel = sizingLabel
             ).apply {
                 setOnClickListener { onScoreClick(i) }
                 // Make each item a RadioButton for accessibility.
@@ -133,6 +144,10 @@ internal class ScoreView(
         addView(wrappingViewGroup)
     }
 
+    /** The longest label in a range, which every item in it is sized by. */
+    private fun longestLabel(start: Int, end: Int): String =
+        (start..end).map { it.toString() }.maxByOrNull { it.length } ?: ""
+
     private fun makeViewAccessibleAsRadioButton(view: View, score: Int) {
         view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
         view.isFocusable = true
@@ -143,7 +158,9 @@ internal class ScoreView(
                 info.className = RadioButton::class.java.name
                 info.isCheckable = true
                 info.isClickable = true
+                @Suppress("DEPRECATION")
                 info.isChecked = score == selectedScore
+
                 info.contentDescription = host.context.getString(
                     R.string.ua_score_selected_state_description,
                     score,

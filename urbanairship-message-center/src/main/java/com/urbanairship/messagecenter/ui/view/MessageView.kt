@@ -13,6 +13,7 @@ import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
@@ -63,6 +64,7 @@ public class MessageView @JvmOverloads constructor(
 
     internal var analyticsFactory: ((onDismissed: () -> Unit) -> ThomasListenerInterface?)? = null
     internal var storageFactory: (() -> LayoutDataStorage?)? = null
+    internal var aiProvider: (() -> InternalAirshipAi?)? = null
 
     /** Tracks the collector job from the most recent `bind()` call, so a rebind can cancel it. */
     internal var activeBindingJob: Job? = null
@@ -113,7 +115,8 @@ public class MessageView @JvmOverloads constructor(
             actionRunner = { actions, _ ->
                 DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
             },
-            stateStorage = storageFactory?.invoke()
+            stateStorage = storageFactory?.invoke(),
+            ai = aiProvider?.invoke()
         )
     }
 
@@ -139,6 +142,7 @@ public class MessageView @JvmOverloads constructor(
                 }
 
                 @Deprecated("Deprecated in Java")
+                @Suppress("OVERRIDE_DEPRECATION")
                 override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String?) {
                     UALog.w { "onReceivedError! $errorCode $description $failingUrl" }
                     if (message != null && failingUrl != null && failingUrl == message?.bodyUrl) {

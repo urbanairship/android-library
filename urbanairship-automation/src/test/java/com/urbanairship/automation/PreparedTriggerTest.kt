@@ -13,6 +13,9 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration
 import junit.framework.TestCase.assertEquals
@@ -44,11 +47,11 @@ public class PreparedTriggerTest: BaseTestCase() {
         trigger.goal = 3.0
 
         instance.update(trigger = AutomationTrigger.Event(trigger),
-            startDate = clock.currentTimeMillis().toULong(),
-            endDate = clock.currentTimeMillis().toULong(),
+            startDate = clock.now(),
+            endDate = clock.now(),
             priority = 3)
-        assertEquals(clock.currentTimeMillis().toULong(), instance.startDate)
-        assertEquals(clock.currentTimeMillis().toULong(), instance.endDate)
+        assertEquals(clock.now(), instance.startDate)
+        assertEquals(clock.now(), instance.endDate)
         assertEquals(3, instance.priority)
         assertEquals(AutomationTrigger.Event(trigger), instance.trigger)
     }
@@ -86,7 +89,7 @@ public class PreparedTriggerTest: BaseTestCase() {
 
     @Test
     public fun testProcessEventHappyPath(): TestResult = runTest {
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
         val trigger = EventAutomationTrigger(type = EventAutomationTriggerType.APP_INIT, goal = 2.0)
         val instance = makeTrigger(trigger = AutomationTrigger.Event(trigger), type = TriggerExecutionType.EXECUTION)
         instance.activate()
@@ -104,12 +107,12 @@ public class PreparedTriggerTest: BaseTestCase() {
         assertEquals(TriggerExecutionType.EXECUTION, report?.triggerExecutionType)
         assertEquals(DeferredTriggerContext(type = "app_init", goal = 2.0, event = JsonValue.NULL),
             report?.triggerInfo?.context)
-        assertEquals(clock.currentTimeMillis(), report?.triggerInfo?.date)
+        assertEquals(clock.now(), report?.triggerInfo?.date)
     }
 
     @Test
     public fun testProcessEventDoesNothing(): TestResult = runTest {
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
         val trigger = EventAutomationTrigger(type = EventAutomationTriggerType.APP_INIT, goal = 1.0)
         val instance = makeTrigger(trigger = AutomationTrigger.Event(trigger))
         assertNull(instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT)))
@@ -117,7 +120,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         instance.activate()
         instance.update(
             trigger = AutomationTrigger.Event(trigger),
-            startDate = clock.currentTimeMillis().toULong().plus(1u),
+            startDate = clock.now().plusMillis(1),
             endDate = null,
             priority = 0
         )
@@ -795,8 +798,8 @@ public class PreparedTriggerTest: BaseTestCase() {
 
     private fun makeTrigger(trigger: AutomationTrigger? = null,
                             type: TriggerExecutionType = TriggerExecutionType.EXECUTION,
-                            startDate: ULong? = null,
-                            endDate: ULong? = null,
+                            startDate: Instant? = null,
+                            endDate: Instant? = null,
                             state: TriggerData? = null) : PreparedTrigger {
         val triggerData: TriggerData?
         val automationTrigger = trigger ?: AutomationTrigger.Event(

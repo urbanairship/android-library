@@ -5,8 +5,10 @@ import androidx.annotation.IntRange
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -21,14 +23,14 @@ public class RateLimiter(
 ) {
 
     private data class RateLimitData(
-        val hits: Map<String, List<Long>> = emptyMap(),
+        val hits: Map<String, List<Instant>> = emptyMap(),
         val rules: Map<String, Rule> = emptyMap()
     ) {
         fun withRule(limitId: String, rule: Rule): RateLimitData {
             return copy(rules = rules + (limitId to rule))
         }
 
-        fun withHits(limitId: String, hits: List<Long>): RateLimitData {
+        fun withHits(limitId: String, hits: List<Instant>): RateLimitData {
             return copy(hits = this.hits + (limitId to hits))
         }
 
@@ -48,7 +50,7 @@ public class RateLimiter(
      * @param limitId The limit Id.
      */
     public fun track(limitId: String) {
-        val currentTime = clock.currentTimeMillis()
+        val currentTime = clock.now()
 
         data.update { current ->
             val recordedHits = current.hits[limitId] ?: return@update current
@@ -66,7 +68,7 @@ public class RateLimiter(
      * @return The status if a limit exists, otherwise `null`.
      */
     public fun status(limitId: String): Status? {
-        val currentTime = clock.currentTimeMillis()
+        val currentTime = clock.now()
         var result: Status? = null
 
         data.update { current ->
@@ -77,7 +79,7 @@ public class RateLimiter(
 
             // Calculate result while we have the data
             result = if (updatedHits.size >= appliedRule.rate) {
-                val nextExpired = appliedRule.duration - (currentTime - updatedHits[updatedHits.size - appliedRule.rate]).milliseconds
+                val nextExpired = appliedRule.duration - (currentTime - updatedHits[updatedHits.size - appliedRule.rate])
                 Status(LimitStatus.OVER, nextExpired)
             } else {
                 Status(LimitStatus.UNDER, 0.seconds)
@@ -106,13 +108,16 @@ public class RateLimiter(
         }
     }
 
-    private fun filter(hits: List<Long>, rule: Rule, currentTimeMs: Long): List<Long> {
-        return hits.filter { it + rule.duration.inWholeMilliseconds > currentTimeMs }
+    private fun filter(hits: List<Instant>, rule: Rule, currentTime: Instant): List<Instant> {
+        return hits.filter { it + rule.duration > currentTime }
     }
 
     /**
      * Limit status.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public enum class LimitStatus {
 
         /**
@@ -128,7 +133,10 @@ public class RateLimiter(
 
     /**
      * Rate limit status.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Status @VisibleForTesting public constructor(
         /**
          * The status.

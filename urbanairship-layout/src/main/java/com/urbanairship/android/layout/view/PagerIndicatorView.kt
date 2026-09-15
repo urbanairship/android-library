@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.model.PagerIndicatorModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ShapeView
+import com.urbanairship.R as CoreR
 
 internal class PagerIndicatorView(
     context: Context,
@@ -27,7 +28,14 @@ internal class PagerIndicatorView(
 
         isFocusable = false
         isFocusableInTouchMode = false
-        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        if (model.announcePage) {
+            // The view must be important for accessibility so that the page
+            // number is announced via live region updates on this view.
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+            accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_POLITE
+        } else {
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
 
         model.listener = object : PagerIndicatorModel.Listener {
             private var itemsCount = 0
@@ -52,6 +60,27 @@ internal class PagerIndicatorView(
                 LayoutUtils.updateBackground(this@PagerIndicatorView, old, new)
             }
         }
+    }
+
+    /**
+     * Lays the dots out square, at the height the item stated or at [DEFAULT_DOT_SIZE_DP].
+     *
+     * A shape draws into the bounds it is given and reports no size of its own, so dots take
+     * theirs from the row. An item that states `auto` leaves the row taking its height from the
+     * dots in turn, and the pair of them settle at nothing: `100% x auto` drew six 1px dots.
+     */
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val size = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+            MeasureSpec.getSize(heightMeasureSpec)
+        } else {
+            ResourceUtils.dpToPx(context, DEFAULT_DOT_SIZE_DP).toInt()
+        }
+
+        for (i in 0 until childCount) {
+            getChildAt(i).layoutParams.width = size
+        }
+
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY))
     }
 
     /**
@@ -86,6 +115,12 @@ internal class PagerIndicatorView(
         }
     }
 
+    private companion object {
+
+        /** What a dot is when nothing states a height, matching iOS. */
+        private const val DEFAULT_DOT_SIZE_DP = 32
+    }
+
     /**
      * Updates the highlighted dot view in the indicator.
      *
@@ -95,11 +130,8 @@ internal class PagerIndicatorView(
         for (i in 0 until childCount) {
             (getChildAt(i) as Checkable).isChecked = i == position
         }
-        if (model.announcePage == true) {
-            val announcement =
-                context.getString(com.urbanairship.R.string.ua_pager_progress, position + 1, childCount)
-            this.contentDescription = announcement
-            this.announceForAccessibility(announcement)
+        if (model.announcePage) {
+            contentDescription = context.getString(CoreR.string.ua_pager_progress, position + 1, childCount)
         }
     }
 }

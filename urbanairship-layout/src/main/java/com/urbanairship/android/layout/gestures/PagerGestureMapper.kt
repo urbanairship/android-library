@@ -71,8 +71,6 @@ internal class PagerGestureMapper(
         // Ignore swipes that are too short.
         if (getSwipeDistance(x1, y1, x2, y2) < SWIPE_MIN_DISTANCE) return null
 
-        // TODO: check for min velocity? can we even get this callback if too slow?
-
         // Calculate the swipe angle and determine if the swipe was UP or DOWN.
         return when (getSwipeAngle(x1, y1, x2, y2)) {
             in UP_RANGE -> GestureDirection.UP

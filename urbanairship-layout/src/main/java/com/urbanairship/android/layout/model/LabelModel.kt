@@ -25,7 +25,7 @@ internal class LabelModel(
         context: Context,
         viewEnvironment: ViewEnvironment,
         itemProperties: ItemProperties?
-    ) = LabelView(context, this).apply {
+    ) = LabelView(context, this, itemProperties).apply {
         id = viewId
 
         viewInfo.labels?.let { label ->

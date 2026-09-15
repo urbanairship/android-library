@@ -21,7 +21,7 @@ internal abstract class PushDatabase : RoomDatabase() {
         fun create(context: Context) =
             Room.databaseBuilder(context.applicationContext,
                 PushDatabase::class.java, "com.urbanairship.debug.push.db")
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration(true)
                 .build()
     }
 }

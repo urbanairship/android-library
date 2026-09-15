@@ -16,7 +16,10 @@ public interface ImageLoader {
 
     /**
      * Image loaded callback.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun interface ImageLoadedCallback {
 
         /**

@@ -50,6 +50,15 @@ public class WrappingViewGroup @JvmOverloads constructor(
         setMeasuredDimension(parentWidth, resolveSize(totalHeight, heightMeasureSpec))
     }
 
+    /**
+     * Places the children in the lines [onMeasure] made room for.
+     *
+     * Both passes have to break a line on the same two counts — a line that is
+     * full and a line that is wide enough — or the height reserved is for one
+     * arrangement and the children are placed in another. Leaving out the count
+     * here put a whole range on a single line under the two lines' worth of
+     * space measured for it, with the second line's room left empty below.
+     */
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         val parentWidth = measuredWidth
         var lineHeight = 0
@@ -62,7 +71,10 @@ public class WrappingViewGroup @JvmOverloads constructor(
             val childWidth = child.measuredWidth
             val childHeight = child.measuredHeight
 
-            if (lineWidth + childWidth + (if (lineItems.isNotEmpty()) itemSpacing else 0) > parentWidth) {
+            val full = lineItems.size >= maxItemsPerLine ||
+                lineWidth + childWidth + (if (lineItems.isNotEmpty()) itemSpacing else 0) > parentWidth
+
+            if (full && lineItems.isNotEmpty()) {
                 // Center the line and layout
                 layoutLine(lineItems, parentWidth, y)
                 y += lineHeight + lineSpacing

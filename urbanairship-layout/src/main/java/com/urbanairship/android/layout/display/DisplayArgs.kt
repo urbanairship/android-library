@@ -5,6 +5,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.util.Factory
@@ -24,5 +25,10 @@ public class DisplayArgs(
     public val actionRunner: ThomasActionRunner,
     public val webViewClientFactory: Factory<AirshipWebViewClient>? = null,
     public val imageCache: ImageCache? = null,
-    public val stateStorage: LayoutDataStorage? = null
+    public val stateStorage: LayoutDataStorage? = null,
+    /**
+     * Supplied by the host rather than resolved here: a layout is built on the main
+     * thread, and reaching the Airship singleton for it blocks until takeoff completes.
+     */
+    public val ai: InternalAirshipAi? = null
 )

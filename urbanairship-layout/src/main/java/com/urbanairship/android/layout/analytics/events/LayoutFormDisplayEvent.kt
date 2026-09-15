@@ -9,5 +9,5 @@ internal class InAppFormDisplayEvent(
     override val data: ReportingEvent.FormDisplayData
 ) : LayoutEvent {
 
-    override val eventType: EventType = EventType.IN_APP_FORM_DISPLAY
+    override val eventType: EventType = EventType.LAYOUT_FORM_DISPLAY
 }

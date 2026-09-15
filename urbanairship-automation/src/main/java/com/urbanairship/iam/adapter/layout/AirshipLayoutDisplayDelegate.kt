@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.android.layout.analytics.LayoutListener
@@ -12,6 +13,7 @@ import com.urbanairship.android.layout.display.DisplayException
 import com.urbanairship.android.layout.util.CachedImage
 import com.urbanairship.android.layout.util.ExtendableImageCache
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.banner.BannerViewManager
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.iam.InAppMessageWebViewClient
 import com.urbanairship.iam.actions.InAppActionRunner
@@ -35,7 +37,8 @@ internal class AirshipLayoutDisplayDelegate(
     private val priority: Int,
     private val messageExtras: JsonMap?,
     private val activityMonitor: ActivityMonitor,
-    private val actionRunner: InAppActionRunner
+    private val actionRunner: InAppActionRunner,
+    private val ai: InternalAirshipAi? = null
 ) : DelegatingDisplayAdapter.Delegate {
 
     override val activityPredicate: Predicate<Activity>? = null
@@ -79,7 +82,9 @@ internal class AirshipLayoutDisplayDelegate(
                     null
                 }
             },
-            embeddedViewManager = EmbeddedViewManager
+            embeddedViewManager = EmbeddedViewManager,
+            bannerViewManager = BannerViewManager,
+            ai = ai
         )
 
         return withContext(Dispatchers.Main.immediate) {
@@ -87,11 +92,11 @@ internal class AirshipLayoutDisplayDelegate(
                 continuation = it
                 request.display(context)
 
-                // If the display is not embedded, we notify the listener that it is visible.
-                // If it is embedded, the above request to display will place the embedded layout
-                // into the display queue, so we'll need to wait for the content to be displayed
+                // If the display is not embedded or a banner, we notify the listener that it is
+                // visible. Embedded layouts and banners are placed into a display queue by the
+                // above request to display, so we'll need to wait for the content to be displayed
                 // before notifying the listener.
-                if (!displayContent.layout.isEmbedded()) {
+                if (!displayContent.layout.isEmbedded() && !displayContent.layout.isBanner()) {
                     displayListener.onVisibilityChanged(true, activityMonitor.isAppForegrounded)
                 }
             }

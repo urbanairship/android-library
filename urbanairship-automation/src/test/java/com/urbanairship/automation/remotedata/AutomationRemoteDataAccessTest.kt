@@ -16,6 +16,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
@@ -297,7 +298,7 @@ public class AutomationRemoteDataAccessTest {
         // as an empty map.
         val corruptPayload = RemoteDataPayload(
             type = "in_app_messages",
-            timestamp = 0L,
+            timestamp = Instant.ofEpochMilli(0),
             data = JsonMap.EMPTY_MAP,
             remoteDataInfo = null
         )
@@ -385,7 +386,7 @@ public class AutomationRemoteDataAccessTest {
         // Covers the full payload path, including the metadata pass in parse() that rebuilds Data.
         val payload = RemoteDataPayload(
             type = "in_app_messages",
-            timestamp = 999L,
+            timestamp = Instant.ofEpochMilli(999L),
             data = JsonValue
                 .parseString("""{ "in_app_messages": [$VALID_SCHEDULE, $INVALID_SCHEDULE_WITH_ID] }""")
                 .requireMap(),
@@ -404,14 +405,14 @@ public class AutomationRemoteDataAccessTest {
         // Missing the required "in_app_messages" key, so the whole payload fails to parse.
         val corruptContact = RemoteDataPayload(
             type = "in_app_messages",
-            timestamp = 999L,
+            timestamp = Instant.ofEpochMilli(999L),
             data = JsonMap.EMPTY_MAP,
             remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.CONTACT)
         )
 
         val validApp = RemoteDataPayload(
             type = "in_app_messages",
-            timestamp = 999L,
+            timestamp = Instant.ofEpochMilli(999L),
             data = JsonValue
                 .parseString("""{ "in_app_messages": [$VALID_SCHEDULE] }""")
                 .requireMap(),
@@ -434,7 +435,7 @@ public class AutomationRemoteDataAccessTest {
         // reach across sources.
         val badConstraints = RemoteDataPayload(
             type = "in_app_messages",
-            timestamp = 999L,
+            timestamp = Instant.ofEpochMilli(999L),
             data = JsonValue
                 .parseString(
                     """{ "in_app_messages": [], "frequency_constraints": [ { "id": "no-range" } ] }"""
@@ -445,7 +446,7 @@ public class AutomationRemoteDataAccessTest {
 
         val validApp = RemoteDataPayload(
             type = "in_app_messages",
-            timestamp = 999L,
+            timestamp = Instant.ofEpochMilli(999L),
             data = JsonValue
                 .parseString("""{ "in_app_messages": [$VALID_SCHEDULE] }""")
                 .requireMap(),
@@ -479,7 +480,7 @@ public class AutomationRemoteDataAccessTest {
             identifier = "schedule id",
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.NULL),
             triggers = listOf(),
-            created = clock.currentTimeMillis.toULong(),
+            created = clock.currentTime,
             metadata = jsonMapOf("com.urbanairship.iaa.REMOTE_DATA_INFO" to (remoteDataInfo ?: "")).toJsonValue()
         )
     }

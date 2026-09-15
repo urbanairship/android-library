@@ -1,0 +1,75 @@
+public final class com/urbanairship/featureflag/FeatureFlag : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/featureflag/FeatureFlag$Companion;
+	public synthetic fun <init> (Ljava/lang/String;ZZLcom/urbanairship/featureflag/FeatureFlag$ReportingInfo;Lcom/urbanairship/json/JsonMap;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/featureflag/FeatureFlag;
+	public final fun getExists ()Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getVariables ()Lcom/urbanairship/json/JsonMap;
+	public fun hashCode ()I
+	public final fun isEligible ()Z
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/featureflag/FeatureFlag$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/featureflag/FeatureFlag;
+}
+
+public abstract class com/urbanairship/featureflag/FeatureFlagException : java/lang/Exception {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/featureflag/FeatureFlagException$FailedToFetch : com/urbanairship/featureflag/FeatureFlagException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/featureflag/FeatureFlagManager : com/urbanairship/AirshipComponent {
+	public static final field Companion Lcom/urbanairship/featureflag/FeatureFlagManager$Companion;
+	public final fun flag-0E7RQCE (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun flag-0E7RQCE$default (Lcom/urbanairship/featureflag/FeatureFlagManager;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun flagAsPendingResult (Ljava/lang/String;)Lcom/urbanairship/PendingResult;
+	public final fun flagAsPendingResult (Ljava/lang/String;Z)Lcom/urbanairship/PendingResult;
+	public static synthetic fun flagAsPendingResult$default (Lcom/urbanairship/featureflag/FeatureFlagManager;Ljava/lang/String;ZILjava/lang/Object;)Lcom/urbanairship/PendingResult;
+	public final fun flagPendingResult (Ljava/lang/String;)Lcom/urbanairship/PendingResult;
+	public final fun flagPendingResult (Ljava/lang/String;Z)Lcom/urbanairship/PendingResult;
+	public static synthetic fun flagPendingResult$default (Lcom/urbanairship/featureflag/FeatureFlagManager;Ljava/lang/String;ZILjava/lang/Object;)Lcom/urbanairship/PendingResult;
+	public final fun getResultCache ()Lcom/urbanairship/featureflag/FeatureFlagResultCache;
+	public final fun getStatus ()Lcom/urbanairship/featureflag/FeatureFlagRemoteDataStatus;
+	public final fun getStatusUpdates ()Lkotlinx/coroutines/flow/Flow;
+	public static final fun shared ()Lcom/urbanairship/featureflag/FeatureFlagManager;
+	public final fun trackInteraction (Lcom/urbanairship/featureflag/FeatureFlag;)V
+	public final fun waitRefresh (Ljava/lang/Long;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun waitRefresh$default (Lcom/urbanairship/featureflag/FeatureFlagManager;Ljava/lang/Long;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun waitRefreshPendingResult ()Lcom/urbanairship/PendingResult;
+	public final fun waitRefreshPendingResult (Ljava/lang/Long;)Lcom/urbanairship/PendingResult;
+	public static synthetic fun waitRefreshPendingResult$default (Lcom/urbanairship/featureflag/FeatureFlagManager;Ljava/lang/Long;ILjava/lang/Object;)Lcom/urbanairship/PendingResult;
+}
+
+public final class com/urbanairship/featureflag/FeatureFlagManager$Companion {
+	public final fun shared ()Lcom/urbanairship/featureflag/FeatureFlagManager;
+}
+
+public final class com/urbanairship/featureflag/FeatureFlagManagerKt {
+	public static final fun getFeatureFlagManager (Lcom/urbanairship/Airship;)Lcom/urbanairship/featureflag/FeatureFlagManager;
+}
+
+public final class com/urbanairship/featureflag/FeatureFlagRemoteDataStatus : java/lang/Enum {
+	public static final field OUT_OF_DATE Lcom/urbanairship/featureflag/FeatureFlagRemoteDataStatus;
+	public static final field STALE Lcom/urbanairship/featureflag/FeatureFlagRemoteDataStatus;
+	public static final field UP_TO_DATE Lcom/urbanairship/featureflag/FeatureFlagRemoteDataStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/featureflag/FeatureFlagRemoteDataStatus;
+	public static fun values ()[Lcom/urbanairship/featureflag/FeatureFlagRemoteDataStatus;
+}
+
+public final class com/urbanairship/featureflag/FeatureFlagResultCache {
+	public final fun cache-8Mi8wO0 (Lcom/urbanairship/featureflag/FeatureFlag;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun cacheAsync-2TYgG_w (Lcom/urbanairship/featureflag/FeatureFlag;J)V
+	public final fun flag (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun flagAsync (Ljava/lang/String;)Lcom/urbanairship/PendingResult;
+	public final fun removeCachedFlag (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun removeCachedFlagAsync (Ljava/lang/String;)V
+}
+

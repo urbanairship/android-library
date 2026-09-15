@@ -9,26 +9,38 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
+import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.VerticalScrollLayoutModel
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.widget.PercentBaseProvider
 
 internal class VerticalScrollLayoutView(
     context: Context,
     model: VerticalScrollLayoutModel,
     viewEnvironment: ViewEnvironment
-) : NestedScrollView(context), BaseView {
+) : NestedScrollView(context), BaseView, PercentBaseProvider {
+
+    private val contentView: View
+
+    // A scene at the DSL floor predates the viewport: it was laid out with a scrolled percentage
+    // falling back to its own content, and handing it a viewport now would give an empty `100%` a
+    // screenful of blank its author never saw. So it's left with no base, same as before there was
+    // one to offer.
+    private val offersViewport = viewEnvironment.layoutVersion > Thomas.MIN_SUPPORTED_VERSION
+
+    override val percentBaseWidth: Int = 0
+    override var percentBaseHeight: Int = 0
+        private set
 
     init {
         isFillViewport = false
         clipToOutline = true
 
-        val contentView = model.view.createView(context, viewEnvironment, null).apply {
-            LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-        }
-        addView(contentView)
+        contentView = model.view.createView(context, viewEnvironment, null)
+        addView(contentView, LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
@@ -47,5 +59,19 @@ internal class VerticalScrollLayoutView(
         ViewCompat.setOnApplyWindowInsetsListener(this) { _: View, insets: WindowInsetsCompat ->
             ViewCompat.dispatchApplyWindowInsets(contentView, insets)
         }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        // NestedScrollView measures its content with an UNSPECIFIED height so it can scroll, which
+        // leaves percent-height descendants with nothing to resolve against. Record the viewport
+        // for them to find. Taken from the incoming spec rather than measuredHeight, which is still
+        // the previous pass's value while our content is being measured.
+        //
+        // Left at 0 for a scene at the DSL floor -- see `offersViewport`.
+        if (offersViewport) {
+            percentBaseHeight = (MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom)
+                .coerceAtLeast(0)
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 }

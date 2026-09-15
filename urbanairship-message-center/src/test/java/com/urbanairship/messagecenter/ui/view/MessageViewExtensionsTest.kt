@@ -24,6 +24,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.time.Instant
 import java.util.Date
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -540,7 +541,7 @@ public class MessageViewExtensionsTest {
             id = id,
             title = "$id title",
             bodyUrl = "https://example.com/$id/body/",
-            sentDate = Date(),
+            sentDate = Instant.now(),
             expirationDate = null,
             isUnread = true,
             extras = null,

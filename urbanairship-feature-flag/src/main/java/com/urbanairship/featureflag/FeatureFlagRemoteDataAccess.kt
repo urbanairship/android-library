@@ -55,7 +55,7 @@ internal class FeatureFlagRemoteDataAccess(
             .map { it.optMap() }
             .mapNotNull(FeatureFlagInfo::fromJson)
             .filter { it.name == name }
-            .filter { it.timeCriteria?.meets(clock.currentTimeMillis()) ?: true }
+            .filter { it.timeCriteria?.meets(clock.now()) ?: true }
             .toList()
 
         return RemoteDataFeatureFlagInfo(

@@ -9,13 +9,16 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.util.TimeTypeConverters
 import java.io.File
 
 /**
  * @hide
  */
 @Database(entities = [ConstraintEntity::class, OccurrenceEntity::class], version = 1)
+@TypeConverters(TimeTypeConverters::class)
 internal abstract class FrequencyLimitDatabase : RoomDatabase() {
     abstract val dao: FrequencyLimitDao
 
@@ -27,7 +30,7 @@ internal abstract class FrequencyLimitDatabase : RoomDatabase() {
                 context,
                 FrequencyLimitDatabase::class.java,
                 path
-            ).fallbackToDestructiveMigrationOnDowngrade().build()
+            ).fallbackToDestructiveMigrationOnDowngrade(true).build()
         }
 
         @VisibleForTesting

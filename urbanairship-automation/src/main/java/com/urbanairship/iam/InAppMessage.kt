@@ -250,6 +250,9 @@ public class InAppMessage internal constructor(
 
     internal fun isEmbedded(): Boolean = displayContent.isEmbedded()
 
+    /** @see InAppMessageDisplayContent.isBanner */
+    internal fun isBanner(): Boolean = displayContent.isBanner()
+
     override fun toJsonValue(): JsonValue = jsonMapOf(
         NAME_KEY to name,
         EXTRA_KEY to extras,

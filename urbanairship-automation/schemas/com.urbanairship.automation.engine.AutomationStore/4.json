@@ -17,8 +17,7 @@
           {
             "fieldPath": "group",
             "columnName": "group",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "executionCount",
@@ -29,8 +28,7 @@
           {
             "fieldPath": "preparedScheduleInfo",
             "columnName": "preparedScheduleInfo",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "schedule",
@@ -53,20 +51,17 @@
           {
             "fieldPath": "triggerInfo",
             "columnName": "triggerInfo",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "triggerSessionId",
             "columnName": "triggerSessionId",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "associatedData",
             "columnName": "associatedData",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -74,9 +69,7 @@
           "columnNames": [
             "scheduleId"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       },
       {
         "tableName": "automation_trigger_data",
@@ -112,12 +105,9 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       }
     ],
-    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
       "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5e6dc22f073cc3a468814afc65ce1d8d')"

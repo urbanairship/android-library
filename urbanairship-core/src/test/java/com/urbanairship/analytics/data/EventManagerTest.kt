@@ -19,6 +19,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import java.net.HttpURLConnection
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -26,6 +27,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -55,7 +58,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      */
     private val testDispatcher = StandardTestDispatcher()
 
-    private val eventManager: EventManager = EventManager(
+    private fun eventManager(scope: CoroutineScope): EventManager = EventManager(
         preferenceStore = dataStore,
         runtimeConfig = testAirshipRuntimeConfig,
         jobDispatcher = mockDispatcher,
@@ -63,16 +66,76 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         eventDao = mockEventDao,
         apiClient = mockClient,
         clock = clock,
-        scope = CoroutineScope(testDispatcher)
+        scope = scope
     )
+
+    private val eventManager: EventManager = eventManager(CoroutineScope(testDispatcher))
+
+    /** Collects the jobs [mockDispatcher] is asked to dispatch, in order. */
+    private fun dispatchedJobs(): Channel<JobInfo> {
+        val jobs = Channel<JobInfo>(Channel.UNLIMITED)
+        every { mockDispatcher.dispatch(any()) } answers {
+            jobs.trySend(firstArg())
+            Unit
+        }
+        return jobs
+    }
 
     private val testEvent = AirshipEventData(
         "testEvent",
         "session-testEvent",
         JsonMap.EMPTY_MAP.toJsonValue(),
         EventType.APP_FOREGROUND,
-        System.currentTimeMillis()
+        Instant.now()
     )
+
+    /**
+     * A request that wants to upload sooner than the pending upload replaces it. Notably, an
+     * immediate request made while a long upload is pending has to win.
+     *
+     * Runs the manager's scope on a real dispatcher: the second call reads the pending send time
+     * from an async preference, which is backed by the database rather than the test scheduler.
+     */
+    @Test
+    public fun testScheduleSoonerThanPendingReplaces(): TestResult = runTest {
+        val dispatched = dispatchedJobs()
+        val manager = eventManager(CoroutineScope(Dispatchers.Default))
+
+        manager.scheduleEventUpload(30.seconds)
+        assertEquals(30.seconds, dispatched.receive().minDelay)
+
+        manager.scheduleEventUpload(10.seconds)
+        val second = dispatched.receive()
+
+        assertEquals(10.seconds, second.minDelay)
+        assertEquals(JobInfo.ConflictStrategy.REPLACE, second.conflictStrategy)
+    }
+
+    /**
+     * A request that wants to upload later than the pending upload keeps the pending one, and
+     * asks for the time remaining on it rather than the longer delay.
+     *
+     * The clock is advanced once the first upload has been dispatched, which is partway through
+     * the scheduling block — so this only holds because that block reads the clock a single time
+     * and stores `now + delay` from it. Reading the clock again for the stored send time makes
+     * the advance land in the middle of the decision and the remaining delay come back as the
+     * full 10s.
+     */
+    @Test
+    public fun testScheduleLaterThanPendingKeepsPending(): TestResult = runTest {
+        val dispatched = dispatchedJobs()
+        val manager = eventManager(CoroutineScope(Dispatchers.Default))
+
+        manager.scheduleEventUpload(10.seconds)
+        assertEquals(10.seconds, dispatched.receive().minDelay)
+
+        clock.advanceBy(4.seconds)
+        manager.scheduleEventUpload(30.seconds)
+        val second = dispatched.receive()
+
+        assertEquals(6.seconds, second.minDelay)
+        assertEquals(JobInfo.ConflictStrategy.KEEP, second.conflictStrategy)
+    }
 
     /**
      * Tests adding an event after the next send time schedules an upload with a 10 second delay.
@@ -106,7 +169,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     @Test
     public fun testAddEventBeforeNextSendTime(): TestResult = runTest(testDispatcher.scheduler) {
         // Set the last send time to the current time so the next send time is minBatchInterval
-        dataStore.put(EventManager.LAST_SEND_KEY, clock.currentTimeMillis)
+        dataStore.put(EventManager.LAST_SEND_KEY, clock.currentTime.toEpochMilli())
 
         // Set the minBatchInterval to 20 seconds
         dataStore.put(EventManager.MIN_BATCH_INTERVAL_KEY, 20000)

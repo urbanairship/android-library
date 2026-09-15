@@ -39,6 +39,8 @@ public interface JobRunner {
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class DefaultRunner() : JobRunner {
 
         private val entryLock = ReentrantLock()

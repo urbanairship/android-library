@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -32,8 +33,8 @@ public class FeatureFlagInfoTest {
 
         val testFlag = featureFlags.first()!!
         assert(testFlag.id == "27f26d85-0550-4df5-85f0-7022fa7a5925")
-        assert(1684868854000 == testFlag.created)
-        assert(1684868855000 == testFlag.lastUpdated)
+        assert(Instant.ofEpochMilli(1684868854000) == testFlag.created)
+        assert(Instant.ofEpochMilli(1684868855000) == testFlag.lastUpdated)
         assert("cool_flag" == testFlag.name)
         assert(jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925") == testFlag.reportingContext)
         assertNotNull(testFlag.audience)
@@ -67,8 +68,8 @@ public class FeatureFlagInfoTest {
 
         val testFlag = featureFlags.first()!!
         assert(testFlag.id == "27f26d85-0550-4df5-85f0-7022fa7a5925")
-        assert(1684868854000 == testFlag.created)
-        assert(1684868855000 == testFlag.lastUpdated)
+        assert(Instant.ofEpochMilli(1684868854000) == testFlag.created)
+        assert(Instant.ofEpochMilli(1684868855000) == testFlag.lastUpdated)
         assert("cool_flag" == testFlag.name)
         assert(jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925") == testFlag.reportingContext)
         assertNotNull(testFlag.audience)

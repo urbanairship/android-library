@@ -3,6 +3,7 @@ package com.urbanairship.remotedata
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonMap
+import java.time.Instant
 
 /**
  * Model representing a remote data payload.
@@ -12,7 +13,7 @@ import com.urbanairship.json.JsonMap
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class RemoteDataPayload(
     val type: String,
-    val timestamp: Long,
+    val timestamp: Instant,
     val data: JsonMap,
     val remoteDataInfo: RemoteDataInfo? = null
 ) {
@@ -22,7 +23,7 @@ public data class RemoteDataPayload(
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun emptyPayload(type: String): RemoteDataPayload {
-            return RemoteDataPayload(type, 0, JsonMap.EMPTY_MAP, null)
+            return RemoteDataPayload(type, Instant.EPOCH, JsonMap.EMPTY_MAP, null)
         }
     }
 }

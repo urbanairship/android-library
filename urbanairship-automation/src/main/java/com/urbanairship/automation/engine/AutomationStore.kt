@@ -31,6 +31,8 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.SerialQueue
+import com.urbanairship.util.TimeTypeConverters
+import java.time.Instant
 import org.jetbrains.annotations.VisibleForTesting
 import java.io.File
 import java.util.UUID
@@ -172,7 +174,7 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
             return databaseBuilder(context, AutomationStore::class.java, path)
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
-                .fallbackToDestructiveMigrationOnDowngrade()
+                .fallbackToDestructiveMigrationOnDowngrade(true)
                 .build()
         }
 
@@ -344,7 +346,7 @@ internal interface AutomationDao {
     suspend fun deleteSchedules(group: String)
 
     @Query("SELECT scheduleId FROM automation_trigger_data")
-    suspend fun getTriggersScheduleIds(): List<String>?
+    suspend fun getTriggersScheduleIds(): List<String>
 
     @Transaction
     suspend fun upsertTriggers(triggers: List<TriggerEntity>) {
@@ -387,7 +389,7 @@ internal interface AutomationDao {
      */
     @Transaction
     suspend fun deleteTriggersExcluding(scheduleIds: List<String>) {
-        val allScheduleIds = getTriggersScheduleIds() ?: return
+        val allScheduleIds = getTriggersScheduleIds()
         val idsToDelete = allScheduleIds - scheduleIds.toSet()
         runBatched(idsToDelete) { deleteTriggersInternal(it) }
     }
@@ -406,7 +408,7 @@ internal interface AutomationDao {
 }
 
 @Entity(tableName = "schedules")
-@TypeConverters(JsonTypeConverters::class)
+@TypeConverters(JsonTypeConverters::class, TimeTypeConverters::class)
 internal class ScheduleEntity(
     @PrimaryKey
     var scheduleId: String,
@@ -415,7 +417,7 @@ internal class ScheduleEntity(
     var preparedScheduleInfo: JsonValue?,
     var schedule: JsonValue,
     var scheduleState: String,
-    var scheduleStateChangeDate: Long,
+    var scheduleStateChangeDate: Instant,
     var triggerInfo: JsonValue?,
     var triggerSessionId: String?,
     var associatedData: JsonValue?
@@ -460,7 +462,7 @@ internal class ScheduleEntity(
 /** @hide */
 @Entity(tableName = "automation_trigger_data")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@TypeConverters(JsonTypeConverters::class)
+@TypeConverters(JsonTypeConverters::class, TimeTypeConverters::class)
 internal data class TriggerEntity(
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0,

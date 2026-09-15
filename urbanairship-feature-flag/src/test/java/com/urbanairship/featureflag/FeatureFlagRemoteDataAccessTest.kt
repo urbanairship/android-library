@@ -9,9 +9,13 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -23,7 +27,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class FeatureFlagRemoteDataAccessTest {
     private val remoteData: RemoteData = mockk()
-    private val clock = TestClock().apply { currentTimeMillis = currentTimeMillis() }
+    private val clock = TestClock()
     private val remoteDataAccess = FeatureFlagRemoteDataAccess(remoteData, clock)
 
     private val payloadType = "feature_flags"
@@ -54,7 +58,7 @@ public class FeatureFlagRemoteDataAccessTest {
 
         val data = RemoteDataPayload(
             type = payloadType,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = JsonValue.parseString(json).requireMap(),
             remoteDataInfo = RemoteDataInfo(
                 url = "https://sample.url/${UUID.randomUUID()}",
@@ -109,7 +113,7 @@ public class FeatureFlagRemoteDataAccessTest {
 
         val data = RemoteDataPayload(
             type = payloadType,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = JsonValue.parseString(json).requireMap(),
             remoteDataInfo = RemoteDataInfo(
                 url = "https://sample.url/${UUID.randomUUID()}",
@@ -164,7 +168,7 @@ public class FeatureFlagRemoteDataAccessTest {
 
         val data = RemoteDataPayload(
             type = payloadType,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = JsonValue.parseString(json).requireMap(),
             remoteDataInfo = RemoteDataInfo(
                 url = "https://sample.url/${UUID.randomUUID()}",
@@ -201,8 +205,8 @@ public class FeatureFlagRemoteDataAccessTest {
                        "flag_id":"27f26d85-0550-4df5-85f0-7022fa7a5925"
                     },
                     "time_criteria": {
-                      "start_timestamp": ${clock.currentTimeMillis},
-                      "end_timestamp": ${clock.currentTimeMillis + 5000}
+                      "start_timestamp": ${clock.currentTime.toEpochMilli()},
+                      "end_timestamp": ${(clock.currentTime + 5000.milliseconds).toEpochMilli()}
                     }
                  }
               }
@@ -212,7 +216,7 @@ public class FeatureFlagRemoteDataAccessTest {
 
         val data = RemoteDataPayload(
             type = payloadType,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = JsonValue.parseString(json).requireMap(),
             remoteDataInfo = RemoteDataInfo(
                 url = "https://sample.url/${UUID.randomUUID()}",
@@ -225,16 +229,16 @@ public class FeatureFlagRemoteDataAccessTest {
 
         assertFalse(remoteDataAccess.fetchFlagRemoteInfo("cool_flag").flagInfoList.isEmpty())
 
-        clock.currentTimeMillis -= 1
+        clock.currentTime -= (1).milliseconds
         assertTrue(remoteDataAccess.fetchFlagRemoteInfo("cool_flag").flagInfoList.isEmpty())
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         assertFalse(remoteDataAccess.fetchFlagRemoteInfo("cool_flag").flagInfoList.isEmpty())
 
-        clock.currentTimeMillis += 5000
+        clock.currentTime += (5000).milliseconds
         assertFalse(remoteDataAccess.fetchFlagRemoteInfo("cool_flag").flagInfoList.isEmpty())
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         assertTrue(remoteDataAccess.fetchFlagRemoteInfo("cool_flag").flagInfoList.isEmpty())
     }
 }

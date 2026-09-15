@@ -5,7 +5,6 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -123,18 +122,14 @@ internal class WebViewView(
         }
         frameLayout.addView(progressBar, progressBarLayoutParams)
 
-        @Suppress("DEPRECATION")
         wv.settings.run {
             javaScriptEnabled = true
             if (ManifestUtils.shouldEnableLocalStorage(context)) {
                 domStorageEnabled = true
-                databaseEnabled = true
             }
 
             // Disallow all file and content access, which could pose a security risk if enabled.
             allowFileAccess = false
-            allowFileAccessFromFileURLs = false
-            allowUniversalAccessFromFileURLs = false
             allowContentAccess = false
         }
 
@@ -149,7 +144,7 @@ internal class WebViewView(
                     webView.loadUrl(model.viewInfo.url)
                 }
 
-                override fun onClose(webView: WebView): Boolean {
+                override fun onClose(view: WebView): Boolean {
                     model.onClose()
                     return true
                 }
@@ -208,11 +203,7 @@ internal class WebViewView(
             request: WebResourceRequest,
             error: WebResourceError
         ) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                UALog.e("Error loading web view! %d - %s", error.errorCode, error.description)
-            } else {
-                UALog.e("Error loading web view!")
-            }
+            UALog.e("Error loading web view! %d - %s", error.errorCode, error.description)
             this.error = true
         }
 

@@ -59,4 +59,28 @@ public class EnableFeatureActionTest {
         assertTrue(args.enableAirshipUsage)
         assertTrue(args.fallbackSystemSettings)
     }
+
+    @Test
+    public fun testPermissionValueArguments() {
+        val expected = mapOf(
+            "app_tracking_transparency" to Permission.APP_TRACKING_TRANSPARENCY,
+            "camera" to Permission.CAMERA,
+            "microphone" to Permission.MICROPHONE,
+            "bluetooth" to Permission.BLUETOOTH,
+            "photo_library" to Permission.PHOTO_LIBRARY,
+            "contacts" to Permission.CONTACTS
+        )
+
+        expected.forEach { (argument, permission) ->
+            val arguments = ActionTestUtils.createArgs(
+                Action.Situation.MANUAL_INVOCATION, argument
+            )
+            assertTrue(action.acceptsArguments(arguments))
+
+            val args = action.parseArg(arguments)
+            assertEquals(permission, args.permission)
+            assertTrue(args.enableAirshipUsage)
+            assertTrue(args.fallbackSystemSettings)
+        }
+    }
 }

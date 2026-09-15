@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireList
+import java.time.Instant
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -64,6 +65,8 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
         override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val TYPE = "type"
         private const val AUDIENCE = "audience"
@@ -130,7 +133,7 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
     }
 
     public suspend fun evaluate(
-        newEvaluationDate: Long,
+        newEvaluationDate: Instant,
         infoProvider: DeviceInfoProvider,
         hashChecker: HashChecker
     ): AirshipDeviceAudienceResult {

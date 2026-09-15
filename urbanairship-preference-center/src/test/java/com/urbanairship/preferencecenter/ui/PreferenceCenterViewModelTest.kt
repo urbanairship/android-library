@@ -49,6 +49,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import java.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -308,8 +309,8 @@ public class PreferenceCenterViewModelTest {
             coVerify {
                 contact.namedUserIdFlow
                 channel.subscriptions
-                contact.subscriptions
-                contact.channelContacts
+                contact.subscriptionListsFlow
+                contact.contactChannelsFlow
             }
             confirmVerified(channel, contact)
         }
@@ -352,8 +353,8 @@ public class PreferenceCenterViewModelTest {
             }
             coVerify {
                 contact.namedUserIdFlow
-                contact.subscriptions
-                contact.channelContacts
+                contact.subscriptionListsFlow
+                contact.contactChannelsFlow
             }
             coVerify(exactly = 0) { channel.subscriptions }
             confirmVerified(channel, contact)
@@ -378,9 +379,9 @@ public class PreferenceCenterViewModelTest {
             coVerify {
                 contact.namedUserIdFlow
                 channel.subscriptions
-                contact.channelContacts
+                contact.contactChannelsFlow
             }
-            coVerify(exactly = 0) { contact.subscriptions }
+            coVerify(exactly = 0) { contact.subscriptionListsFlow }
             confirmVerified(channel, contact)
         }
     }
@@ -403,9 +404,9 @@ public class PreferenceCenterViewModelTest {
             coVerify {
                 contact.namedUserIdFlow
                 channel.subscriptions
-                contact.subscriptions
+                contact.subscriptionListsFlow
             }
-            verify(exactly = 0) { contact.channelContacts }
+            verify(exactly = 0) { contact.contactChannelsFlow }
             confirmVerified(channel, contact)
         }
     }
@@ -547,7 +548,7 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.subscriptions
+                 contact.subscriptionListsFlow
 
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, item.scopes, true)
@@ -612,7 +613,7 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.subscriptions
+                contact.subscriptionListsFlow
 
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, item.scopes, false)
@@ -671,7 +672,7 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.subscriptions
+                contact.subscriptionListsFlow
 
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, component.scopes, true)
@@ -740,7 +741,7 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.subscriptions
+                contact.subscriptionListsFlow
 
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, unsubscribeScopes, false)
@@ -1193,8 +1194,8 @@ public class PreferenceCenterViewModelTest {
             registrationInfo = ContactChannel.Email.RegistrationInfo.Registered(
                 channelId = "channel-id",
                 maskedAddress = "t**t@example.com",
-                transactionalOptedIn = 100L,
-                commercialOptedIn = 200L
+                transactionalOptedIn = Instant.ofEpochMilli(100),
+                commercialOptedIn = Instant.ofEpochMilli(200)
             )
         )
 
@@ -1209,26 +1210,26 @@ public class PreferenceCenterViewModelTest {
         val updatedChannels1 = listOf(channel1, channel2)
         val updatedChannels2 = listOf(channel1Registered, channel2)
 
-        val contactChannelsFlow = MutableSharedFlow<Result<List<ContactChannel>>>(replay = 1)
+        val channelsMutableFlow = MutableSharedFlow<Result<List<ContactChannel>>>(replay = 1)
 
         viewModel(
             config = config,
-            mockContact = { every { channelContacts } returns contactChannelsFlow },
+            mockContact = { every { contactChannelsFlow } returns channelsMutableFlow },
             dispatcher = testDispatcher
         ).run {
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
-                contactChannelsFlow.emit(Result.success(initialChannels))
+                channelsMutableFlow.emit(Result.success(initialChannels))
 
                 handle(Action.Refresh)
                 val initialState = awaitItem() as State.Content
                 assertThat(initialState.contactChannels).containsExactlyElementsIn(initialChannels)
 
-                contactChannelsFlow.emit(Result.success(updatedChannels1))
+                channelsMutableFlow.emit(Result.success(updatedChannels1))
                 val updatedState1 = awaitItem() as State.Content
                 assertThat(updatedState1.contactChannels).containsExactlyElementsIn(updatedChannels1)
 
-                contactChannelsFlow.emit(Result.success(updatedChannels2))
+                channelsMutableFlow.emit(Result.success(updatedChannels2))
                 val updatedState2 = awaitItem() as State.Content
                 assertThat(updatedState2.contactChannels).containsExactlyElementsIn(updatedChannels2)
 
@@ -1278,9 +1279,9 @@ public class PreferenceCenterViewModelTest {
         }
         coVerifyAll {
             contact.namedUserIdFlow
-            contact.subscriptions
+            contact.subscriptionListsFlow
             channel.subscriptions
-            contact.channelContacts
+            contact.contactChannelsFlow
         }
         confirmVerified(contact, channel)
     }
@@ -1298,7 +1299,7 @@ public class PreferenceCenterViewModelTest {
 
         viewModel(
             config = config,
-            mockContact = { every { channelContacts } returns neverEmits },
+            mockContact = { every { contactChannelsFlow } returns neverEmits },
             dispatcher = testDispatcher
         ).run {
             states.test {
@@ -1349,11 +1350,11 @@ public class PreferenceCenterViewModelTest {
             mockk(relaxUnitFun = true)
         } else {
             mockk<Contact>(relaxed = true) {
-                coEvery { subscriptions } answers {
+                coEvery { subscriptionListsFlow } answers {
                     flowOf(Result.success(contactSubscriptions))
                 }
                 every { this@mockk.namedUserIdFlow } returns namedUserIdFlow
-                every { channelContacts } answers {
+                every { contactChannelsFlow } answers {
                     flowOf(Result.success(contactChannels))
                 }
             }.also(mockContact::invoke)

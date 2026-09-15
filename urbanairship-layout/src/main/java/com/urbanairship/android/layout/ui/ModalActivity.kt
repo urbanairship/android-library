@@ -18,6 +18,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ai.DefaultThomasAIInference
 import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.ThomasListenerInterface
@@ -75,7 +76,8 @@ public class ModalActivity : AppCompatActivity() {
             return@onCreate
         }
 
-        val restoredTime = savedInstanceState?.getLong(KEY_DISPLAY_TIME) ?: 0
+        // Bundle stores whole milliseconds; the timer itself works in Duration.
+        val restoredTime = (savedInstanceState?.getLong(KEY_DISPLAY_TIME) ?: 0).milliseconds
         displayTimer = DisplayTimer(this, restoredTime)
 
         try {
@@ -105,7 +107,8 @@ public class ModalActivity : AppCompatActivity() {
             modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = args.actionRunner,
-                displayTimer = displayTimer
+                displayTimer = displayTimer,
+                aiInference = DefaultThomasAIInference.create(args.ai)
             )
 
             val model = viewModel.getOrCreateModel(args.payload.view, modelEnvironment)
@@ -118,7 +121,8 @@ public class ModalActivity : AppCompatActivity() {
                 args.inAppActivityMonitor,
                 args.webViewClientFactory,
                 args.imageCache,
-                placement.shouldIgnoreSafeArea()
+                placement.shouldIgnoreSafeArea(),
+                args.payload.version
             )
 
             val view = ModalView(this, model, presentation, viewEnvironment).apply {
@@ -135,9 +139,9 @@ public class ModalActivity : AppCompatActivity() {
 
             setContentView(view)
 
-            placement.animation?.let {
-                window.enterTransition  = TransitionFactory.enterTransition(it, view.frameView, view.shadeView)
-                window.returnTransition = TransitionFactory.exitTransition(it, view.frameView, view.shadeView)
+            placement.transition?.let {
+                window.enterTransition  = TransitionFactory.modalTransition(it.enter, view.frameView, view.shadeView)
+                window.returnTransition = TransitionFactory.modalTransition(it.exit, view.frameView, view.shadeView)
             }
 
             ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
@@ -221,7 +225,7 @@ public class ModalActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putLong(KEY_DISPLAY_TIME, displayTimer.time)
+        outState.putLong(KEY_DISPLAY_TIME, displayTimer.time.inWholeMilliseconds)
     }
 
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = lifecycleScope.launch {
@@ -248,7 +252,7 @@ public class ModalActivity : AppCompatActivity() {
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = displayTimer.time.milliseconds,
+                displayTime = displayTimer.time,
                 context = state
             )
         )

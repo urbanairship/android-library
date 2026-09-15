@@ -1,0 +1,128 @@
+public abstract interface class com/urbanairship/liveupdate/CallbackLiveUpdateCustomHandler : com/urbanairship/liveupdate/CustomLiveUpdateHandler {
+	public abstract fun onUpdate (Landroid/content/Context;Lcom/urbanairship/liveupdate/LiveUpdateEvent;Lcom/urbanairship/liveupdate/LiveUpdate;Lcom/urbanairship/liveupdate/CallbackLiveUpdateCustomHandler$LiveUpdateResultCallback;)V
+}
+
+public abstract interface class com/urbanairship/liveupdate/CallbackLiveUpdateCustomHandler$LiveUpdateResultCallback {
+	public abstract fun cancel ()V
+	public abstract fun ok ()V
+}
+
+public abstract interface class com/urbanairship/liveupdate/CallbackLiveUpdateNotificationHandler : com/urbanairship/liveupdate/NotificationLiveUpdateHandler {
+	public abstract fun onUpdate (Landroid/content/Context;Lcom/urbanairship/liveupdate/LiveUpdateEvent;Lcom/urbanairship/liveupdate/LiveUpdate;Lcom/urbanairship/liveupdate/CallbackLiveUpdateNotificationHandler$LiveUpdateResultCallback;)V
+}
+
+public abstract interface class com/urbanairship/liveupdate/CallbackLiveUpdateNotificationHandler$LiveUpdateResultCallback {
+	public abstract fun cancel ()V
+	public abstract fun ok (Landroidx/core/app/NotificationCompat$Builder;)Lcom/urbanairship/liveupdate/CallbackLiveUpdateNotificationHandler$NotificationResult;
+}
+
+public final class com/urbanairship/liveupdate/CallbackLiveUpdateNotificationHandler$NotificationResult {
+	public fun <init> (Ljava/lang/String;ILandroid/app/Notification;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNotification ()Landroid/app/Notification;
+	public final fun getNotificationId ()I
+	public final fun getNotificationTag ()Ljava/lang/String;
+	public fun hashCode ()I
+}
+
+public abstract interface class com/urbanairship/liveupdate/CustomLiveUpdateHandler : com/urbanairship/liveupdate/LiveUpdateHandler {
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdate {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;Ljava/time/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lcom/urbanairship/json/JsonMap;
+	public final fun getDismissalTime ()Ljava/time/Instant;
+	public final fun getLastContentUpdateTime ()Ljava/time/Instant;
+	public final fun getLastStateChangeTime ()Ljava/time/Instant;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdateEvent : java/lang/Enum {
+	public static final field END Lcom/urbanairship/liveupdate/LiveUpdateEvent;
+	public static final field START Lcom/urbanairship/liveupdate/LiveUpdateEvent;
+	public static final field UPDATE Lcom/urbanairship/liveupdate/LiveUpdateEvent;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/liveupdate/LiveUpdateEvent;
+	public static fun values ()[Lcom/urbanairship/liveupdate/LiveUpdateEvent;
+}
+
+public abstract interface class com/urbanairship/liveupdate/LiveUpdateHandler {
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdateManager : com/urbanairship/AirshipComponent {
+	public static final field Companion Lcom/urbanairship/liveupdate/LiveUpdateManager$Companion;
+	public final fun clearAll ()V
+	public final fun end (Ljava/lang/String;)V
+	public final fun end (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;)V
+	public final fun end (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;)V
+	public final fun end (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;)V
+	public static synthetic fun end$default (Lcom/urbanairship/liveupdate/LiveUpdateManager;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;ILjava/lang/Object;)V
+	public final fun register (Ljava/lang/String;Lcom/urbanairship/liveupdate/LiveUpdateHandler;)V
+	public static final fun shared ()Lcom/urbanairship/liveupdate/LiveUpdateManager;
+	public final fun start (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;)V
+	public final fun start (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;)V
+	public final fun start (Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;)V
+	public static synthetic fun start$default (Lcom/urbanairship/liveupdate/LiveUpdateManager;Ljava/lang/String;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;ILjava/lang/Object;)V
+	public final fun update (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;)V
+	public final fun update (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;)V
+	public final fun update (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;)V
+	public static synthetic fun update$default (Lcom/urbanairship/liveupdate/LiveUpdateManager;Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Ljava/time/Instant;Ljava/time/Instant;ILjava/lang/Object;)V
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdateManager$Companion {
+	public final fun shared ()Lcom/urbanairship/liveupdate/LiveUpdateManager;
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdateManagerKt {
+	public static final fun getLiveUpdateManager (Lcom/urbanairship/Airship;)Lcom/urbanairship/liveupdate/LiveUpdateManager;
+}
+
+public abstract class com/urbanairship/liveupdate/LiveUpdateResult {
+	public static final field Companion Lcom/urbanairship/liveupdate/LiveUpdateResult$Companion;
+	public static final fun cancel ()Lcom/urbanairship/liveupdate/LiveUpdateResult$Cancel;
+	public static final fun ok ()Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;
+	public static final fun ok (Ljava/lang/Object;)Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdateResult$Cancel : com/urbanairship/liveupdate/LiveUpdateResult {
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdateResult$Companion {
+	public final fun cancel ()Lcom/urbanairship/liveupdate/LiveUpdateResult$Cancel;
+	public final fun ok ()Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;
+	public final fun ok (Ljava/lang/Object;)Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;
+	public static synthetic fun ok$default (Lcom/urbanairship/liveupdate/LiveUpdateResult$Companion;Ljava/lang/Object;ILjava/lang/Object;)Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;
+}
+
+public abstract interface class com/urbanairship/liveupdate/LiveUpdateResult$NotificationExtender {
+	public abstract fun extend (Landroid/app/Notification;ILjava/lang/String;)V
+}
+
+public final class com/urbanairship/liveupdate/LiveUpdateResult$Ok : com/urbanairship/liveupdate/LiveUpdateResult {
+	public fun <init> ()V
+	public final fun extend (Lcom/urbanairship/liveupdate/LiveUpdateResult$NotificationExtender;)Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;
+	public final fun getValue ()Ljava/lang/Object;
+}
+
+public abstract interface class com/urbanairship/liveupdate/NotificationLiveUpdateHandler : com/urbanairship/liveupdate/LiveUpdateHandler {
+}
+
+public abstract interface class com/urbanairship/liveupdate/SuspendLiveUpdateCustomHandler : com/urbanairship/liveupdate/CustomLiveUpdateHandler {
+	public abstract fun onUpdate (Landroid/content/Context;Lcom/urbanairship/liveupdate/LiveUpdateEvent;Lcom/urbanairship/liveupdate/LiveUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class com/urbanairship/liveupdate/SuspendLiveUpdateNotificationHandler : com/urbanairship/liveupdate/NotificationLiveUpdateHandler {
+	public fun <init> ()V
+	protected final fun extend (Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;Lcom/urbanairship/liveupdate/LiveUpdateResult$NotificationExtender;)Lcom/urbanairship/liveupdate/LiveUpdateResult$Ok;
+	public abstract fun onUpdate (Landroid/content/Context;Lcom/urbanairship/liveupdate/LiveUpdateEvent;Lcom/urbanairship/liveupdate/LiveUpdate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/urbanairship/liveupdate/notification/LiveUpdateNotificationReceiver : android/content/BroadcastReceiver {
+	public fun <init> ()V
+	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
+}
+

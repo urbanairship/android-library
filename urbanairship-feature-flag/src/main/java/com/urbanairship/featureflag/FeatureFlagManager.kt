@@ -16,6 +16,7 @@ import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.json.JsonMap
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -469,7 +470,7 @@ public val Airship.featureFlagManager: FeatureFlagManager
 private suspend fun FeatureFlagVariables.evaluate(
     isEligible: Boolean,
     audienceEvaluator: AudienceEvaluator,
-    newEvaluationDate: Long,
+    newEvaluationDate: Instant,
     deviceInfoProvider: DeviceInfoProvider
 ): VariableResult? {
     if (!isEligible) {

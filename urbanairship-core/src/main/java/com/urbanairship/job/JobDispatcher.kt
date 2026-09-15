@@ -189,6 +189,8 @@ public class JobDispatcher public constructor(
 
     private data class Pending(val jobInfo: JobInfo, val delay: Duration)
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         public val RESCHEDULE_RETRY_DELAY: Duration = 1.hours

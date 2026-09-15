@@ -54,6 +54,8 @@ public class SyncPrefKey<T> private constructor(
     public override fun serialize(value: T): String = toString(value)
     public override fun deserialize(stored: String): T? = fromString(stored)
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         /** Key for a non-null [String] value. Stored verbatim. */
@@ -129,6 +131,8 @@ public class AsyncPrefKey<T> private constructor(
     public override fun serialize(value: T): String = toString(value)
     public override fun deserialize(stored: String): T? = fromString(stored)
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         /** Key for a non-null [String] value. Stored verbatim. */

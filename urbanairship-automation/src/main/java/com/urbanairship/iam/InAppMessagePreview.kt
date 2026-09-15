@@ -1,6 +1,7 @@
 package com.urbanairship.iam
 
 import android.content.Context
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.automation.utils.NetworkMonitor
@@ -12,6 +13,7 @@ import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.android.layout.analytics.events.LayoutEvent
 import com.urbanairship.iam.assets.EmptyAirshipCachedAssets
 import com.urbanairship.json.JsonValue
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,9 +39,15 @@ public class InAppMessagePreview(
                 activityMonitor = GlobalActivityMonitor.shared(context)
             )
             val analytics = object : InAppMessageAnalyticsInterface {
-                override fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?) { }
-                override fun recordImpression(date: Long): Boolean { return false }
+                override fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?) {
+                    UALog.d { "Layout event type: ${event.eventType}, data: ${event.data?.toJsonValue()}" }
+                }
+                override fun recordImpression(date: Instant): Boolean {
+                    UALog.d { "Layout impression recorded at: $date" }
+                    return false
+                }
                 override fun customEventContext(state: LayoutData?): InAppCustomEventContext {
+                    UALog.d { "Layout custom event context requested, state: ${state?.toJsonValue()}" }
                     return InAppCustomEventContext(
                         id = LayoutEventMessageId.AppDefined(message.name),
                         context = null

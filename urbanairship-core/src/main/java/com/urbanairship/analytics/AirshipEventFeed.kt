@@ -19,13 +19,19 @@ public class AirshipEventFeed(
     private val privacyManager: PrivacyManager,
     private val isAnalyticsEnabled: Boolean
 ) {
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public sealed class Event {
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public data class Analytics(
             public val eventType: EventType,
             public val data: JsonValue,
             public val value: Double? = null
         ): Event()
 
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public data class Screen(
             public val screen: String
         ): Event()

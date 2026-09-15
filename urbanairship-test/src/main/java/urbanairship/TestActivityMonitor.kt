@@ -7,6 +7,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.ForwardingActivityListener
 import com.urbanairship.app.ForwardingApplicationListener
+import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,7 +39,7 @@ public class TestActivityMonitor : ActivityMonitor {
                 if (!isAppForegrounded) {
                     isAppForegrounded = true
                     _foregroundState.value = true
-                    applicationListener.onForeground(System.currentTimeMillis())
+                    applicationListener.onForeground(Instant.now())
                 }
                 super.onActivityStarted(activity)
             }
@@ -49,7 +50,7 @@ public class TestActivityMonitor : ActivityMonitor {
                 }
                 if (startedActivities == 0 && isAppForegrounded) {
                     isAppForegrounded = false
-                    applicationListener.onBackground(System.currentTimeMillis())
+                    applicationListener.onBackground(Instant.now())
                 }
                 super.onActivityStopped(activity)
             }
@@ -78,20 +79,20 @@ public class TestActivityMonitor : ActivityMonitor {
         stopActivity(activity)
     }
 
-    public fun foreground(timeStamp: Long) {
+    public fun foreground(timeStamp: Instant) {
         applicationListener.onForeground(timeStamp)
     }
 
     public fun foreground() {
         isAppForegrounded = true
         _foregroundState.value = true
-        applicationListener.onForeground(0)
+        applicationListener.onForeground(Instant.EPOCH)
     }
 
     public fun background() {
         isAppForegrounded = false
         _foregroundState.value = false
-        applicationListener.onBackground(0)
+        applicationListener.onBackground(Instant.EPOCH)
     }
 
     public fun startActivity(activity: Activity) {

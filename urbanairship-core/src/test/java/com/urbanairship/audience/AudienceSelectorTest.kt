@@ -19,6 +19,7 @@ import com.urbanairship.util.toSha256
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import java.util.Arrays
 import java.util.Locale
 import junit.framework.TestCase
@@ -198,13 +199,13 @@ public class AudienceSelectorTest {
         val requiresNewUser = AudienceSelector.newBuilder().setNewUser(true).build()
         val requiresExistingUser = AudienceSelector.newBuilder().setNewUser(false).build()
 
-        every { infoProvider.installDateMilliseconds } returns 2
+        every { infoProvider.installDate } returns Instant.ofEpochMilli(2)
 
-        TestCase.assertFalse(checkAudience(requiresNewUser, timestamp = 3))
-        TestCase.assertTrue(checkAudience(requiresExistingUser, timestamp = 3))
+        TestCase.assertFalse(checkAudience(requiresNewUser, timestamp = Instant.ofEpochMilli(3)))
+        TestCase.assertTrue(checkAudience(requiresExistingUser, timestamp = Instant.ofEpochMilli(3)))
 
-        TestCase.assertTrue(checkAudience(requiresNewUser, timestamp = 1))
-        TestCase.assertFalse(checkAudience(requiresExistingUser, timestamp = 1))
+        TestCase.assertTrue(checkAudience(requiresNewUser, timestamp = Instant.ofEpochMilli(1)))
+        TestCase.assertFalse(checkAudience(requiresExistingUser, timestamp = Instant.ofEpochMilli(1)))
     }
 
     @Test
@@ -330,7 +331,7 @@ public class AudienceSelectorTest {
         assertFalse(checkAudience(audience))
     }
 
-    private suspend fun checkAudience(audience: AudienceSelector, timestamp: Long = 0): Boolean {
+    private suspend fun checkAudience(audience: AudienceSelector, timestamp: Instant = Instant.EPOCH): Boolean {
         return audience.evaluate(timestamp, infoProvider, hashChecker).isMatch
     }
 }

@@ -9,8 +9,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
+import java.time.Instant
 import java.util.Calendar
-import java.util.Date
 import java.util.Objects
 import java.util.SimpleTimeZone
 import java.util.TimeZone
@@ -46,7 +46,7 @@ public class ExecutionWindow(
 
     @Throws(IllegalArgumentException::class)
     internal fun nextAvailability(
-        date: Date,
+        date: Instant,
         currentTimeZone: TimeZone? = null
     ): ExecutionWindowResult {
         val timeZone = currentTimeZone ?: TimeZone.getDefault()
@@ -96,8 +96,12 @@ public class ExecutionWindow(
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class ExecutionWindowResult {
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data object Now: ExecutionWindowResult()
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Retry(public val delay: Duration): ExecutionWindowResult() {
 
         override fun equals(other: Any?): Boolean {
@@ -143,7 +147,7 @@ public sealed class Rule(
             }
         }
 
-        override fun resolve(date: Date, current: java.util.TimeZone): DateRange? {
+        override fun resolve(date: Instant, current: java.util.TimeZone): DateRange? {
             return calendar(timeZone, current)?.dateInterval(date, timeRange)
         }
 
@@ -207,7 +211,7 @@ public sealed class Rule(
             }
         }
 
-        override fun resolve(date: Date, current: java.util.TimeZone): DateRange? {
+        override fun resolve(date: Instant, current: java.util.TimeZone): DateRange? {
             val calendar = calendar(timeZone, current) ?: return null
             var nextDate = calendar.nextDate(date, daysOfWeek)
 
@@ -222,7 +226,7 @@ public sealed class Rule(
                 val result = timeInterval.intersection(remainingDay)
                 if (result == null) {
                     nextDate = calendar.nextDate(
-                        date = calendar.startOfDay(date, addingDays = 1).time,
+                        date = calendar.startOfDay(date, addingDays = 1).toInstant(),
                         weekdays = daysOfWeek
                     )
                     continue
@@ -303,7 +307,7 @@ public sealed class Rule(
             }
         }
 
-        override fun resolve(date: Date, current: java.util.TimeZone): DateRange? {
+        override fun resolve(date: Instant, current: java.util.TimeZone): DateRange? {
             val platformMonth = months?.map { it - 1 }
 
             val calendar = calendar(timeZone, current) ?: return null
@@ -320,7 +324,7 @@ public sealed class Rule(
                 val result = timeInterval.intersection(remainingDay)
                 if (result == null) {
                     nextDate = calendar.nextDate(
-                        date = calendar.startOfDay(date, addingDays = 1).time,
+                        date = calendar.startOfDay(date, addingDays = 1).toInstant(),
                         months = platformMonth,
                         days = daysOfMonth
                     )
@@ -375,7 +379,7 @@ public sealed class Rule(
     }
 
     @Throws(IllegalArgumentException::class)
-    internal abstract fun resolve(date: Date, current: java.util.TimeZone): DateRange?
+    internal abstract fun resolve(date: Instant, current: java.util.TimeZone): DateRange?
 
     internal companion object {
         private const val TYPE = "type"
@@ -605,18 +609,18 @@ public sealed class Rule(
 internal class AirshipCalendar(timeZone: TimeZone) {
     private val calendar: Calendar = Calendar.getInstance(timeZone)
 
-    fun startOfDay(date: Date, addingDays: Int = 0): Calendar {
+    fun startOfDay(date: Instant, addingDays: Int = 0): Calendar {
         return calendar.startOfDay(date).also { it.add(Calendar.DAY_OF_YEAR, addingDays) }
     }
 
-    fun remainingDay(date: Date): DateRange {
+    fun remainingDay(date: Instant): DateRange {
         return DateRange(
-            startDate = calendar.copyForDate(date).time,
-            endDate = startOfDay(date, 1).time
+            startDate = calendar.copyForDate(date).toInstant(),
+            endDate = startOfDay(date, 1).toInstant()
         )
     }
 
-    internal fun dateCalendar(date: Date, hour: Int, minute: Int): Calendar {
+    internal fun dateCalendar(date: Instant, hour: Int, minute: Int): Calendar {
         return startOfDay(date).also {
             it.set(Calendar.HOUR_OF_DAY, hour)
             it.set(Calendar.MINUTE, minute)
@@ -627,18 +631,18 @@ internal class AirshipCalendar(timeZone: TimeZone) {
 
     // Returns the date interval for the given date and timeRange. If the
     // date is passed the time range, the DateInterval will be for the next day.
-    fun dateInterval(date: Date, timeRange: Rule.TimeRange): DateRange {
+    fun dateInterval(date: Instant, timeRange: Rule.TimeRange): DateRange {
         if (timeRange.start == timeRange.end) {
             val todayStart = dateCalendar(
                 date = date,
                 hour = timeRange.startHour,
                 minute = timeRange.startMinute)
 
-            if (todayStart.time == date) {
+            if (todayStart.toInstant() == date) {
                 return DateRange(todayStart, 1.seconds)
             } else {
                 val tomorrowStart = dateCalendar(
-                    date = startOfDay(date, addingDays = 1).time,
+                    date = startOfDay(date, addingDays = 1).toInstant(),
                     hour = timeRange.startHour,
                     minute = timeRange.startMinute
                 )
@@ -663,7 +667,7 @@ internal class AirshipCalendar(timeZone: TimeZone) {
 
     // Returns the current date if it matches the weekdays,
     // or the date of the start of the next requested weekday
-    fun nextDate(date: Date, weekdays: List<Int>): Date {
+    fun nextDate(date: Instant, weekdays: List<Int>): Instant {
         val copy = calendar.copyForDate(date)
 
         val currentWeekday = copy.get(Calendar.DAY_OF_WEEK)
@@ -681,13 +685,13 @@ internal class AirshipCalendar(timeZone: TimeZone) {
         }
 
         return if (daysUntilNextSlot > 0) {
-            startOfDay(date, addingDays = daysUntilNextSlot).time
+            startOfDay(date, addingDays = daysUntilNextSlot).toInstant()
         } else {
             date
         }
     }
 
-    fun nextDate(date: Date, months: List<Int>?, days: List<Int>?): Date {
+    fun nextDate(date: Instant, months: List<Int>?, days: List<Int>?): Instant {
         if (!(months?.isNotEmpty() == true || days?.isNotEmpty() == true)) {
             return date
         }
@@ -715,7 +719,7 @@ internal class AirshipCalendar(timeZone: TimeZone) {
                 return if (targetDay == currentDay) {
                     date
                 } else {
-                    startOfDay(date, (targetDay - currentDay)).time
+                    startOfDay(date, (targetDay - currentDay)).toInstant()
                 }
             }
         }
@@ -724,26 +728,26 @@ internal class AirshipCalendar(timeZone: TimeZone) {
         targetDay = sortedDays.firstOrNull() ?: 1
 
         if (sortedMonths.isEmpty()) {
-            return (copy.nextMatching(date, day = targetDay) ?: copy.distantFuture()).time
+            return (copy.nextMatching(date, day = targetDay) ?: copy.distantFuture()).toInstant()
         }
 
         return sortedMonths
             .mapNotNull { copy.nextMatching(date, month = it, day = targetDay) }
-            .minOfOrNull { it.time }
-            ?: copy.distantFuture().time
+            .minOfOrNull { it.toInstant() }
+            ?: copy.distantFuture().toInstant()
     }
 }
 
 internal class DateRange(
-    val startDate: Date,
-    val endDate: Date
+    val startDate: Instant,
+    val endDate: Instant
 ) {
     constructor(calendar: Calendar, duration: Duration): this(
-        startDate = calendar.time,
-        endDate = calendar.addingSeconds(duration.inWholeSeconds.toInt()).time
+        startDate = calendar.toInstant(),
+        endDate = calendar.addingSeconds(duration.inWholeSeconds.toInt()).toInstant()
     )
 
-    fun contains(date: Date): Boolean {
+    fun contains(date: Instant): Boolean {
         return date in startDate..<endDate
     }
 
@@ -761,28 +765,28 @@ internal class DateRange(
     companion object {
         fun today(
             calendar: AirshipCalendar,
-            date: Date,
+            date: Instant,
             timeRange: Rule.TimeRange): DateRange {
             return intervalWithOffset(calendar, date, timeRange, 0)
         }
 
         fun yesterday(
             calendar: AirshipCalendar,
-            date: Date,
+            date: Instant,
             timeRange: Rule.TimeRange): DateRange {
             return intervalWithOffset(calendar, date, timeRange, -1)
         }
 
         fun tomorrow(
             calendar: AirshipCalendar,
-            date: Date,
+            date: Instant,
             timeRange: Rule.TimeRange): DateRange {
             return intervalWithOffset(calendar, date, timeRange, 1)
         }
 
         private fun intervalWithOffset(
             calendar: AirshipCalendar,
-            date: Date,
+            date: Instant,
             timeRange: Rule.TimeRange,
             addingDays: Int = 0): DateRange {
 
@@ -794,23 +798,23 @@ internal class DateRange(
 
             return DateRange(
                 startDate = calendar.dateCalendar(
-                    date = calendar.startOfDay(date, addingDays).time,
+                    date = calendar.startOfDay(date, addingDays).toInstant(),
                     hour = timeRange.startHour,
                     minute = timeRange.startMinute
-                ).time,
+                ).toInstant(),
                 endDate = calendar.dateCalendar(
-                    date = calendar.startOfDay(date, endDay).time,
+                    date = calendar.startOfDay(date, endDay).toInstant(),
                     hour = timeRange.endHour,
                     minute = timeRange.endMinute
-                ).time
+                ).toInstant()
             )
         }
     }
 }
 
-private fun Calendar.startOfDay(date: Date): Calendar {
+private fun Calendar.startOfDay(date: Instant): Calendar {
     return (this.clone() as Calendar).apply {
-        timeInMillis = date.time
+        timeInMillis = date.toEpochMilli()
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
@@ -818,9 +822,9 @@ private fun Calendar.startOfDay(date: Date): Calendar {
     }
 }
 
-private fun Calendar.copyForDate(date: Date): Calendar {
+private fun Calendar.copyForDate(date: Instant): Calendar {
     return (this.clone() as Calendar).apply {
-        timeInMillis = date.time
+        timeInMillis = date.toEpochMilli()
     }
 }
 
@@ -832,9 +836,9 @@ private fun Calendar.distantFuture(): Calendar {
     return this.also { add(Calendar.YEAR, 1) }
 }
 
-private fun Calendar.nextMatching(date: Date, month: Int? = null, day: Int): Calendar? {
+private fun Calendar.nextMatching(date: Instant, month: Int? = null, day: Int): Calendar? {
     fun canAccept(calendar: Calendar): Boolean {
-        if (calendar.time < date) {
+        if (calendar.toInstant() < date) {
             return false
         }
 
@@ -885,6 +889,6 @@ private fun Calendar.nextMatching(date: Date, month: Int? = null, day: Int): Cal
     }
 }
 
-private fun Date.durationSince(other: Date): Duration {
-    return (time - other.time).milliseconds
+private fun Instant.durationSince(other: Instant): Duration {
+    return (toEpochMilli() - other.toEpochMilli()).milliseconds
 }

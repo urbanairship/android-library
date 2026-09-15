@@ -10,9 +10,9 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.PagerData
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
@@ -36,6 +36,10 @@ internal class PagerController(
     environment = environment,
     properties = properties
 ) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
 
     private val pagerViewCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
     private val completionReported = MutableStateFlow(false)
@@ -79,7 +83,7 @@ internal class PagerController(
         // call this before page view to generate the correct history in the context
         environment.pagerTracker.onPageView(
             pageEvent = eventData,
-            currentDisplayTime = environment.displayTimer.time.milliseconds
+            currentDisplayTime = environment.displayTimer.time
         )
 
         val event = ReportingEvent.PageView(
@@ -116,7 +120,7 @@ internal class PagerController(
         val pagerIdentifier = pagerState.changes.value.identifier
         environment.pagerTracker.stop(
             pagerId = pagerIdentifier,
-            currentDisplayTime = environment.displayTimer.time.milliseconds
+            currentDisplayTime = environment.displayTimer.time
         )
 
         val summary = environment.pagerTracker
