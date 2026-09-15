@@ -9,10 +9,10 @@ import com.urbanairship.actions.ActionValue.Companion.wrap
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -35,6 +35,7 @@ public class SuspendingActionTest {
 
     private val actionRegistry = ActionRegistry()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @After
     public fun tearDown() {
         Dispatchers.resetMain()
@@ -62,10 +63,7 @@ public class SuspendingActionTest {
         }
     }
 
-    /**
-     * The framework must await a suspending action, so the reported result is the completed
-     * result rather than an empty placeholder.
-     */
+    /** Test that the framework awaits a suspending action instead of returning an empty result. */
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testFrameworkAwaitsSuspendingAction(): TestResult = runTest {
@@ -93,7 +91,10 @@ public class SuspendingActionTest {
         assertEquals("onFinish should see the completed result", expected, action.onFinishResult)
     }
 
-    /** The registry lookup path must also take the suspending path. */
+    /**
+     * Test that the registry lookup path also awaits the action. The gate is left open until
+     * the request has started, since completing it upfront would pass either way.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testSuspendingActionFromRegistry(): TestResult = runTest {
@@ -102,20 +103,29 @@ public class SuspendingActionTest {
         val action = GatedSuspendingAction(gate, expected)
         actionRegistry.registerEntry(setOf("suspending!")) { ActionRegistry.Entry(action) }
 
+        var runResult: ActionRunRequest.ActionRunResult? = null
+        val job = launch {
+            runResult = createRequest("suspending!", actionRegistry)
+                .setDispatcher(UnconfinedTestDispatcher(testScheduler))
+                .runSuspending()
+        }
+
+        runCurrent()
+        assertTrue("Action looked up from the registry should have started", action.started)
+        assertFalse("Action should not have completed yet", action.finished)
+
         gate.complete(Unit)
-        val runResult = createRequest("suspending!", actionRegistry)
-            .setDispatcher(UnconfinedTestDispatcher(testScheduler))
-            .runSuspending()
+        job.join()
 
         assertTrue(action.finished)
-        assertEquals(expected, runResult.result)
+        assertEquals(expected, runResult?.result)
         assertEquals(
             "suspending!",
-            runResult.arguments.metadata.getString(ActionArguments.REGISTRY_ACTION_NAME_METADATA)
+            runResult?.arguments?.metadata?.getString(ActionArguments.REGISTRY_ACTION_NAME_METADATA)
         )
     }
 
-    /** A rejected suspending action never performs. */
+    /** Test that a rejected suspending action never performs. */
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testRejectedArguments(): TestResult = runTest {
@@ -136,7 +146,7 @@ public class SuspendingActionTest {
         assertEquals(ActionResult.Status.REJECTED_ARGUMENTS, runResult.result.status)
     }
 
-    /** Exceptions thrown from a suspending action become error results. */
+    /** Test that exceptions thrown from a suspending action become error results. */
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testExceptionBecomesErrorResult(): TestResult = runTest {
@@ -153,7 +163,7 @@ public class SuspendingActionTest {
         assertEquals(ActionResult.Status.EXECUTION_ERROR, runResult.result.status)
     }
 
-    /** Existing blocking actions keep working through the same path. */
+    /** Test that existing blocking actions still work through the suspending path. */
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testBlockingActionStillRuns(): TestResult = runTest {
@@ -170,7 +180,7 @@ public class SuspendingActionTest {
         assertEquals(expected, runResult.result)
     }
 
-    /** The blocking bridge on SuspendingAction still returns the completed result. */
+    /** Test that the blocking bridge on SuspendingAction returns the completed result. */
     @Test
     public fun testBlockingBridge() {
         val gate = CompletableDeferred<Unit>()
@@ -182,10 +192,7 @@ public class SuspendingActionTest {
         assertTrue(action.finished)
     }
 
-    /**
-     * [ActionRunRequest.runSync] blocks the calling thread, but it must still wait for a
-     * suspending action's real work rather than returning as soon as it suspends.
-     */
+    /** Test that [ActionRunRequest.runSync] waits for a suspending action's real work. */
     @Test
     public fun testRunSyncAgainstSuspendingAction() {
         val expected = newResult(wrap("done"))
@@ -202,9 +209,8 @@ public class SuspendingActionTest {
     }
 
     /**
-     * A main-thread action ([Action.shouldRunOnMainThread] == true) that suspends must yield
-     * control instead of blocking, so other work queued on the same dispatcher can still run
-     * while it's suspended.
+     * Test that a main-thread action yields the dispatcher instead of blocking it, so other
+     * queued work (`otherWorkRan`) can still run while it's suspended.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
@@ -223,12 +229,21 @@ public class SuspendingActionTest {
         }
 
         val job = launch {
-            createRequest(action).setDispatcher(UnconfinedTestDispatcher(testScheduler)).runSuspending()
+            createRequest(action).runSuspending()
+        }
+
+        var otherWorkRan = false
+        launch(Dispatchers.Main) {
+            otherWorkRan = true
         }
 
         runCurrent()
         assertTrue("Action should have started on the main dispatcher", action.started)
         assertFalse("run() must not complete while the action is suspended", job.isCompleted)
+        assertTrue(
+            "Other work queued on the same dispatcher must still run while the action is suspended",
+            otherWorkRan
+        )
 
         gate.complete(Unit)
         runCurrent()
@@ -236,33 +251,30 @@ public class SuspendingActionTest {
     }
 
     /**
-     * Cancelling the caller must propagate as a real cancellation, not get swallowed into an
-     * error [ActionResult] the way other exceptions are.
+     * Test that [Action.runSuspending] rethrows [CancellationException] instead of swallowing
+     * it into an error result. Thrown directly rather than via `job.cancel()`, since a cancelled
+     * Job finalizes as cancelled either way and wouldn't actually exercise the catch branch.
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testCancellationPropagates(): TestResult = runTest {
-        val started = CompletableDeferred<Unit>()
         val action = object : SuspendingAction() {
             var onFinishCalled: Boolean = false
             override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
-                started.complete(Unit)
-                awaitCancellation()
+                throw CancellationException("boom")
             }
             override fun onFinish(arguments: ActionArguments, result: ActionResult) {
                 onFinishCalled = true
             }
         }
 
-        val job = launch {
-            createRequest(action).setDispatcher(UnconfinedTestDispatcher(testScheduler)).runSuspending()
+        var caught: CancellationException? = null
+        try {
+            action.runSuspending(ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, "val"))
+        } catch (e: CancellationException) {
+            caught = e
         }
 
-        started.await()
-        job.cancel()
-        job.join()
-
-        assertTrue("The caller's job should be cancelled, not completed with a result", job.isCancelled)
-        assertFalse("onFinish should not run for a cancelled action", action.onFinishCalled)
+        assertTrue("runSuspending must rethrow CancellationException, not swallow it", caught != null)
+        assertFalse("onFinish should not run when the action is cancelled", action.onFinishCalled)
     }
 }
