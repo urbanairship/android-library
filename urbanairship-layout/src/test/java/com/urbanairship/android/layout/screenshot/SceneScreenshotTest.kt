@@ -59,15 +59,20 @@ import org.robolectric.annotation.GraphicsMode
  *
  * The presentation identity is pinned rather than inherited: the Robolectric SDK level and the
  * display qualifiers below are what every baseline is captured against, so changing either
- * invalidates the whole baseline set. At `sdk = 28` the renderer's size math reads
- * `resources.displayMetrics` directly (`ResourceUtils.getWindowWidthPixels`), which makes the
- * qualifiers the only thing that decides scene geometry, and means safe-area insets are always
- * zero here and go unexercised.
+ * invalidates the whole baseline set. Keep `robolectric.sdk` in `uitests/config.json` in step with
+ * the level here — that is what names the baseline artifact.
+ *
+ * 32 is the ceiling, not a preference: Robolectric 4.16's native graphics has no text measurement
+ * for 33 or above, which fails as `UnsatisfiedLinkError` in `MeasuredText.nGetExtent`. It is past
+ * `Build.VERSION_CODES.R`, so the renderer takes its modern window-size path
+ * (`ResourceUtils.getWindowHeightPixels`) rather than the pre-30 `displayMetrics` fallback. That
+ * path still resolves to the full display here, because Robolectric reports no system bar insets,
+ * so `ignore_safe_area` makes no difference to a capture and safe-area geometry goes unexercised.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @RunWith(ParameterizedRobolectricTestRunner::class)
-@Config(sdk = [28], qualifiers = "w411dp-h891dp-xhdpi")
+@Config(sdk = [32], qualifiers = "w411dp-h891dp-xhdpi")
 internal class SceneScreenshotTest(
     private val name: String,
     private val fixture: ThomasFixture,
@@ -102,7 +107,14 @@ internal class SceneScreenshotTest(
             every { isAllowed(any(), any()) } returns true
         }
 
-        activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
+        // Robolectric's default host theme carries an ActionBar, which takes 56dp off the content
+        // frame and leaves every scene laid out in a viewport 112px shorter than the window size
+        // the renderer itself reads back. The layout module's own theme is NoActionBar, and is what
+        // the production hosts wrap their context in anyway.
+        activity = Robolectric.buildActivity(ComponentActivity::class.java).let { controller ->
+            controller.get().setTheme(R.style.UrbanAirship_Layout)
+            controller.setup().get()
+        }
     }
 
     @After
@@ -138,12 +150,21 @@ internal class SceneScreenshotTest(
         }
 
         val target = host(layout)
-        activity.setContentView(target.root)
+        // Params passed explicitly: the single-argument setContentView hard-codes MATCH_PARENT on
+        // both axes and throws away the view's own, which would stretch a bounded embedded host to
+        // the full window.
+        activity.setContentView(target.root, ViewGroup.LayoutParams(target.width, target.height))
 
         // The image views load inside doOnAttach, and a banner reveals its frame in a post{} with a
         // delayed transition, so both only land once the looper has drained.
         shadowOf(Looper.getMainLooper()).idle()
 
+        // The host activity's decor leaves its content frame short of the display, so the pass
+        // above settles the scene at the wrong height. Re-measuring alone does not fix it:
+        // ConstraintLayout only re-solves its children from `setChildrenConstraints()` when the
+        // hierarchy is marked dirty, and nothing here touches their LayoutParams, so a resized
+        // parent would keep the previous pass's child bounds and leave the difference unpainted.
+        target.root.requestLayout()
         target.root.measure(
             View.MeasureSpec.makeMeasureSpec(target.width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(target.height, View.MeasureSpec.EXACTLY)

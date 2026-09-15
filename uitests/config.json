@@ -1,6 +1,6 @@
 {
   "robolectric": {
-    "sdk": 28,
+    "sdk": 32,
     "qualifiers": "w411dp-h891dp-xhdpi"
   },
   "roborazzi": {
