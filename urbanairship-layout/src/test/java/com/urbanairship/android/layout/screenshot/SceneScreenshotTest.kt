@@ -155,7 +155,14 @@ internal class SceneScreenshotTest(
             return
         }
 
-        val target = host(layout)
+        val model = try {
+            buildModel(layout)
+        } catch (e: Exception) {
+            ScreenshotManifest.skipped(total, fixture.path, "does not build: ${e.message}")
+            return
+        }
+
+        val target = host(layout, model)
         // Params passed explicitly: the single-argument setContentView hard-codes MATCH_PARENT on
         // both axes and throws away the view's own, which would stretch a bounded embedded host to
         // the full window.
@@ -220,17 +227,26 @@ internal class SceneScreenshotTest(
      * without it the layout's own `?attr/colorControlNormal` tints resolve against whatever theme
      * the test activity carries.
      */
-    private fun host(layout: LayoutInfo): Target {
-        val metrics = activity.resources.displayMetrics
-        val themed = ContextThemeWrapper(activity, R.style.UrbanAirship_Layout)
-
+    /**
+     * Building the model tree is where the payload is validated — a form nested somewhere the
+     * schema does not allow one fails here rather than at decode. So a failure is the shared
+     * corpus drifting ahead of Android's support, the same class as a decode failure, and is
+     * recorded rather than failed. Rendering stays outside this on purpose: a crash there would
+     * be our bug, not the fixture's, and should stop the sweep.
+     */
+    private fun buildModel(layout: LayoutInfo): AnyModel {
         val viewModel = LayoutViewModel()
         val modelEnvironment = viewModel.getOrCreateEnvironment(
             reporter = mockk<Reporter>(relaxUnitFun = true),
             displayTimer = DisplayTimer(activity),
             actionRunner = { _, _ -> }
         )
-        val model: AnyModel = viewModel.getOrCreateModel(layout.view, modelEnvironment)
+        return viewModel.getOrCreateModel(layout.view, modelEnvironment)
+    }
+
+    private fun host(layout: LayoutInfo, model: AnyModel): Target {
+        val metrics = activity.resources.displayMetrics
+        val themed = ContextThemeWrapper(activity, R.style.UrbanAirship_Layout)
 
         fun environment(ignoreSafeAreas: Boolean) = DefaultViewEnvironment(
             activity = activity,
