@@ -64,9 +64,13 @@ import org.robolectric.annotation.GraphicsMode
  * invalidates the whole baseline set. Keep `robolectric.sdk` in `uitests/config.json` in step with
  * the level here — that is what names the baseline artifact.
  *
- * 32 is the ceiling, not a preference: Robolectric 4.16's native graphics has no text measurement
- * for 33 or above, which fails as `UnsatisfiedLinkError` in `MeasuredText.nGetExtent`. It is past
- * `Build.VERSION_CODES.R`, so the renderer takes its modern window-size path
+ * 32 is a ceiling rather than a preference, and it is Robolectric's: 4.16's native graphics has no
+ * text measurement at 33 or above, which fails as `UnsatisfiedLinkError` in
+ * `MeasuredText.nGetExtent`. Independent of the Roborazzi version. Robolectric 4.17 does render at
+ * 35, but it fails ~1469 of this repo's existing tests, so raising the ceiling means migrating the
+ * whole repo first.
+ *
+ * 32 is at least past `Build.VERSION_CODES.R`, so the renderer takes its modern window-size path
  * (`ResourceUtils.getWindowHeightPixels`) rather than the pre-30 `displayMetrics` fallback. That
  * path still resolves to the full display here, because Robolectric reports no system bar insets,
  * so `ignore_safe_area` makes no difference to a capture and safe-area geometry goes unexercised.
@@ -161,19 +165,6 @@ internal class SceneScreenshotTest(
         // delayed transition, so both only land once the looper has drained.
         shadowOf(Looper.getMainLooper()).idle()
 
-        // The host activity's decor leaves its content frame short of the display, so the pass
-        // above settles the scene at the wrong height. Re-measuring alone does not fix it:
-        // ConstraintLayout only re-solves its children from `setChildrenConstraints()` when the
-        // hierarchy is marked dirty, and nothing here touches their LayoutParams, so a resized
-        // parent would keep the previous pass's child bounds and leave the difference unpainted.
-        target.root.requestLayout()
-        target.root.measure(
-            View.MeasureSpec.makeMeasureSpec(target.width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(target.height, View.MeasureSpec.EXACTLY)
-        )
-        target.root.layout(0, 0, target.width, target.height)
-        shadowOf(Looper.getMainLooper()).idle()
-
         val file = File(ScreenshotPaths.shots, "${name}__p0.png")
         file.parentFile?.mkdirs()
         target.root.captureRoboImage(filePath = file.absolutePath)
@@ -186,18 +177,29 @@ internal class SceneScreenshotTest(
         config().opt("sweep").optMap().opt("skip").optMap().opt(fixture.path).string
 
     /**
-     * `@Config` needs a compile-time constant, so the SDK level is stated twice: here and as
-     * `robolectric.sdk` in `config.json`, which is what names the baseline artifact. Drift between
-     * them would label a set of captures with an API level they were not taken at, so it fails the
-     * run rather than going unnoticed.
+     * `config.json` restates two things the build already knows, because neither can be read from
+     * it: `@Config` needs a compile-time constant, and the harness needs the values without a
+     * Gradle model. Both feed what a capture is labelled with — the SDK names the baseline
+     * artifact, the Roborazzi version goes into `provenance.json` — so drift would attribute a set
+     * of screenshots to a toolchain that did not produce them. Fail instead of mislabelling.
      */
     private fun config(): JsonMap {
         val config = JsonValue.parseString(ScreenshotPaths.config.readText()).optMap()
-        val declared = config.opt("robolectric").optMap().opt("sdk").getInt(0)
-        check(declared == Build.VERSION.SDK_INT) {
-            "robolectric.sdk is $declared in ${ScreenshotPaths.config.name} but the capture runs " +
-                "at API ${Build.VERSION.SDK_INT}; update @Config(sdk = ...) or the config to match"
+        val name = ScreenshotPaths.config.name
+
+        val sdk = config.opt("robolectric").optMap().opt("sdk").getInt(0)
+        check(sdk == Build.VERSION.SDK_INT) {
+            "robolectric.sdk is $sdk in $name but the capture runs at API " +
+                "${Build.VERSION.SDK_INT}; update @Config(sdk = ...) or the config to match"
         }
+
+        val roborazzi = config.opt("roborazzi").optMap().opt("version").string
+        val resolved = System.getProperty("thomas.roborazzi.version")
+        check(roborazzi == resolved) {
+            "roborazzi.version is $roborazzi in $name but the build resolves $resolved; " +
+                "update the config or the version catalog to match"
+        }
+
         return config
     }
 

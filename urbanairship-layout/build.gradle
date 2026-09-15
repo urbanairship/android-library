@@ -41,6 +41,9 @@ android {
                 test.systemProperty 'thomas.fixtures.dir', thomasFixturesDir.path
                 test.systemProperty 'thomas.shots.dir', thomasShotsDir.path
                 test.systemProperty 'thomas.config', thomasConfigFile.path
+                // Gradle resolves the real version from the catalog; config.json only records it
+                // for provenance, so hand the truth over and let the test reject any drift.
+                test.systemProperty 'thomas.roborazzi.version', libs.versions.roborazzi.get()
                 // Native-graphics rendering holds a full-size bitmap per scene, which the
                 // default test heap is not sized for.
                 test.maxHeapSize = '4g'
