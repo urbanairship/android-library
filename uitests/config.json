@@ -1,0 +1,25 @@
+{
+  "robolectric": {
+    "sdk": 28,
+    "qualifiers": "w411dp-h891dp-xhdpi"
+  },
+  "roborazzi": {
+    "version": "1.43.1"
+  },
+  "diff": {
+    "threshold": 0.1,
+    "antialiasing": true
+  },
+  "baselines": {
+    "branch": "main",
+    "workflow": "thomas-screenshot-tests.yml"
+  },
+  "reports": {
+    "branch": "gh-pages",
+    "directory": "ui-tests"
+  },
+  "sweep": {
+    "fixtures": "devapp/src/main/assets/sample_layouts/Scenes",
+    "skip": {}
+  }
+}

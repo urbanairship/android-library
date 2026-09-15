@@ -4,6 +4,13 @@ plugins {
 
 description = "Airship Layout Rendering Library"
 
+// The Thomas scene screenshot sweep renders every scene fixture and is far too slow to belong in
+// the unit test run that ci.yml and merge.yml trigger on every PR and merge, so it is excluded
+// unless explicitly asked for. Keyed off the requested task names rather than a -P flag so that
+// `./gradlew uitestRun` just works; startParameter is a configuration-cache-safe input.
+def wantsScreenshots = gradle.startParameter.taskNames.any { it.contains('uitestRun') } ||
+        project.hasProperty('thomasScreenshots')
+
 android {
     compileSdk rootProject.compileSdkVersion
 
@@ -16,6 +23,21 @@ android {
         unitTests {
             includeAndroidResources = true
             returnDefaultValues = true
+
+            all { test ->
+                if (wantsScreenshots) {
+                    test.filter.includeTestsMatching '*SceneScreenshotTest*'
+                    test.systemProperty 'roborazzi.test.record', 'true'
+                    test.systemProperty 'thomas.fixtures.dir', "$rootDir/devapp/src/main/assets/sample_layouts/Scenes"
+                    test.systemProperty 'thomas.shots.dir', "$rootDir/uitests/build/shots"
+                    test.systemProperty 'thomas.config', "$rootDir/uitests/config.json"
+                    // Native-graphics rendering holds a full-size bitmap per scene, which the
+                    // default test heap is not sized for.
+                    test.maxHeapSize = '4g'
+                } else {
+                    test.filter.excludeTestsMatching '*SceneScreenshotTest*'
+                }
+            }
         }
     }
 
@@ -42,4 +64,6 @@ dependencies {
 
     // Unit Tests
     testImplementation project(':urbanairship-test')
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.snakeyaml)
 }

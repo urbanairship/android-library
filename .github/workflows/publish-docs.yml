@@ -22,12 +22,16 @@ on:
         type: string
 
 jobs:
+  # Public repo only: a dispatch on the dev repo would deploy with keep_files: false
+  # and wipe the Thomas screenshot reports off that repo's gh-pages branch.
   prepare-docs:
+    if: github.repository == 'urbanairship/android-library'
     uses: ./.github/workflows/prepare-docs.yml
     with:
       version: ${{ inputs.version }}
 
   deploy-to-pages:
+    if: github.repository == 'urbanairship/android-library'
     needs: prepare-docs
     runs-on: ubuntu-latest
     permissions:

@@ -1,0 +1,8 @@
+{
+  "name": "airship-android-uitests",
+  "private": true,
+  "description": "Thomas screenshot test harness for the Airship Android SDK",
+  "devDependencies": {
+    "odiff-bin": "^3.2.1"
+  }
+}
