@@ -8,6 +8,7 @@ import com.urbanairship.automation.AutomationAiSuppression
 import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.LedgerSharedIds
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.json.JsonException
@@ -49,11 +50,11 @@ public data class PreparedScheduleInfo(
     internal val priority: Int = 0,
     internal val sendMetadata: String? = null,
     /**
-     * Shared ledger group ID the schedule had when prepared. Stamped here so
-     * execution-outcome ledger events record under it without re-reading the
-     * (possibly changed) schedule config.
+     * Shared ledger group IDs the schedule had when prepared. Stamped here so
+     * execution-outcome ledger events record under them without re-reading
+     * the (possibly changed) schedule config.
      */
-    internal val ledgerSharedId: String? = null,
+    internal val ledgerSharedIds: List<String> = emptyList(),
     /**
      * ID of the execution-causing trigger, carried through for ledger event
      * attribution.
@@ -78,7 +79,9 @@ public data class PreparedScheduleInfo(
         private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
         private const val PRIORITY = "PRIORITY"
         private const val SEND_METADATA = "send_metadata"
-        private const val LEDGER_SHARED_ID = "ledger_shared_id"
+        private const val LEDGER_SHARED_IDS = "ledger_shared_ids"
+        /** Read-only: the single-ID key [LEDGER_SHARED_IDS] replaced. */
+        private const val LEGACY_LEDGER_SHARED_ID = "ledger_shared_id"
         private const val TRIGGER_ID = "trigger_id"
         private const val AI_SUPPRESSION = "ai_suppression"
 
@@ -98,13 +101,35 @@ public data class PreparedScheduleInfo(
                 additionalAudienceCheckResult = content.optionalField(ADDITIONAL_AUDIENCE_CHECK_RESULT) ?: true,
                 priority = content.optionalField(PRIORITY) ?: 0,
                 sendMetadata = content.optionalField(SEND_METADATA),
-                ledgerSharedId = content.optionalField(LEDGER_SHARED_ID),
+                // Falls back to the single-ID key this field replaced. A
+                // prepared schedule is persisted as encoded JSON and outlives
+                // an app upgrade, so one prepared by the previous build and
+                // executed by this one would otherwise record its outcome
+                // under no shared group at all — silently missing from the
+                // pooled tally it was meant to count against.
+                //
+                // Canonicalized like LedgerConfig.fromJson, for the same
+                // reason: two otherwise-identical prepared-schedule payloads
+                // naming the same groups in a different order should compare
+                // equal.
+                ledgerSharedIds = LedgerSharedIds.canonical(
+                    content.get(LEDGER_SHARED_IDS)?.requireList()?.map { it.requireString() }
+                        ?: content.optionalField<String>(LEGACY_LEDGER_SHARED_ID)?.let { listOf(it) }
+                ),
                 triggerId = content.optionalField(TRIGGER_ID),
                 aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)
             )
         }
     }
 
+    /**
+     * Only ever writes the current shape; the legacy key is read-only.
+     *
+     * The shared IDs are omitted rather than written as `[]` when there are
+     * none, matching `LedgerConfig` and `LedgerEvent` — most prepared
+     * schedules have no ledger config at all, and an empty array would put a
+     * dead key in every one of their persisted rows.
+     */
     override fun toJsonValue(): JsonValue = jsonMapOf(
         SCHEDULE_ID to scheduleId,
         PRODUCT_ID to productId,
@@ -117,7 +142,7 @@ public data class PreparedScheduleInfo(
         ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult,
         PRIORITY to priority,
         SEND_METADATA to sendMetadata,
-        LEDGER_SHARED_ID to ledgerSharedId,
+        LEDGER_SHARED_IDS to ledgerSharedIds.ifEmpty { null },
         TRIGGER_ID to triggerId,
         AI_SUPPRESSION to aiSuppression
     ).toJsonValue()
@@ -170,7 +195,7 @@ internal suspend fun AutomationLedgerInterface.recordExecution(
 ) {
     recordExecution(
         scheduleId = info.scheduleId,
-        sharedId = info.ledgerSharedId,
+        sharedIds = info.ledgerSharedIds,
         triggerId = info.triggerId,
         result = result,
         cancel = cancel

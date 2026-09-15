@@ -33,7 +33,7 @@ public class ActionAutomationExecutorTest {
     private val preparedInfo = PreparedScheduleInfo(
         scheduleId = "some id",
         triggerSessionId = UUID.randomUUID().toString(),
-        ledgerSharedId = "group-1",
+        ledgerSharedIds = listOf("group-1"),
         triggerId = "trigger-1"
     )
     private val actions = jsonMapOf("some-action" to "some-value").toJsonValue()
@@ -49,7 +49,7 @@ public class ActionAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = "some id",
-                    sharedId = "group-1",
+                    sharedIds = listOf("group-1"),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.SUCCEEDED,
                     cancel = false
@@ -74,7 +74,7 @@ public class ActionAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = "some id",
-                    sharedId = "group-1",
+                    sharedIds = listOf("group-1"),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = false

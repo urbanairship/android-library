@@ -8,6 +8,7 @@ import com.urbanairship.UALog
 import com.urbanairship.automation.limits.storage.LedgerDao
 import com.urbanairship.automation.limits.storage.LedgerDatabase
 import com.urbanairship.automation.limits.storage.LedgerEventEntity
+import com.urbanairship.automation.limits.storage.LedgerEventInsert
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonException
 import com.urbanairship.util.SerialQueue
@@ -19,9 +20,9 @@ import java.time.Instant
  * Scope of this store is persistence only: writing real events and reading
  * during limit checks are handled by higher layers. It supports appending
  * events, querying the events eligible for a schedule's limit evaluation
- * (events recorded under the schedule's own ID or its current shared group
- * ID), deleting events by scope, and the two maintenance passes that bound
- * storage — retention and compaction.
+ * (events recorded under the schedule's own ID or any of its current shared
+ * group IDs), deleting events by scope, and the two maintenance passes that
+ * bound storage — retention and compaction.
  */
 internal interface LedgerStoreInterface {
 
@@ -46,24 +47,34 @@ internal interface LedgerStoreInterface {
      */
     suspend fun recordEventsUnless(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         events: List<LedgerEvent>,
         alreadyRecorded: (LedgerEvent) -> Boolean
     ): Boolean
 
     /**
-     * Fetches every event recorded under [scheduleId], plus — when [sharedId]
-     * is non-null — every event recorded under it, matched against either
-     * `schedule_id` or `shared_id`. Callers evaluating a schedule's limit pass
-     * `null` here unless that schedule opted into
-     * `limit_config.include_shared_events`, so a schedule's own payload alone
-     * determines what it can see.
+     * Fetches the events eligible for a schedule's limit evaluation: every
+     * event recorded under the schedule's own ID, plus every event matching
+     * any of [sharedIds] — matched against either an event's own groups or its
+     * `schedule_id`, so a named schedule's pre-existing un-tagged history
+     * counts too.
+     *
+     * The IDs are matched with a logical **OR**, not an AND: an event
+     * qualifies if its `schedule_id` matches [scheduleId] OR it matches any of
+     * [sharedIds]. Despite the AND-like parameter list, an event does not need
+     * to match both — passing [sharedIds] widens the result set, it does not
+     * narrow it. An event matching several ways is still returned once.
+     *
+     * Callers evaluating a schedule's limit pass an empty [sharedIds] unless
+     * that schedule opted in with `limit_config: {type: 'shared'}`, so a
+     * schedule's own payload alone determines what it can see.
      *
      * @param scheduleId The evaluating schedule's ID.
-     * @param sharedId The shared group ID to also fetch, if any.
+     * @param sharedIds The shared group IDs to also fetch. Empty to restrict
+     * the result to the schedule's own events.
      * @return The eligible events, oldest first.
      */
-    suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent>
+    suspend fun events(scheduleId: String, sharedIds: List<String>): List<LedgerEvent>
 
     /**
      * True if any event is recorded under [scheduleId], including events whose
@@ -81,7 +92,7 @@ internal interface LedgerStoreInterface {
      * An event survives while any of the IDs it was recorded under is still
      * live, so a shared group's pooled history outlives individual variants. An
      * event is deleted only when its `scheduleId` is not in [liveScheduleIds]
-     * **and** its `sharedId` (if any) is not in [liveSharedIds].
+     * **and** none of its `sharedIds` is in [liveSharedIds].
      *
      * @param liveScheduleIds Schedule IDs that still reference the ledger.
      * @param liveSharedIds Shared group IDs that still reference the ledger.
@@ -116,42 +127,58 @@ internal class LedgerStore(
         UALog.v { "Recording ledger events: $events" }
 
         queue.run {
-            dao.insertAll(events.map { it.toEntity() })
+            dao.insertEvents(events.map { it.toInsert() })
         }
     }
 
     override suspend fun recordEventsUnless(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         events: List<LedgerEvent>,
         alreadyRecorded: (LedgerEvent) -> Boolean
     ): Boolean = queue.run {
-        val existing = dao.getEvents(scheduleId, sharedId).mapNotNull(::decode)
+        val existing = dao.getEvents(scheduleId, sharedIds).mapNotNull(::decode)
         if (existing.any(alreadyRecorded)) {
             return@run false
         }
 
         if (events.isNotEmpty()) {
             UALog.v { "Recording ledger events: $events" }
-            dao.insertAll(events.map { it.toEntity() })
+            dao.insertEvents(events.map { it.toInsert() })
         }
         true
     }
 
-    override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> {
-        UALog.v { "Fetching ledger events for schedule $scheduleId sharedId $sharedId" }
+    override suspend fun events(scheduleId: String, sharedIds: List<String>): List<LedgerEvent> {
+        UALog.v { "Fetching ledger events for schedule $scheduleId sharedIds $sharedIds" }
 
         return queue.run {
             // The query already orders by record time. Skip any undecodable rows
             // (e.g. a forward-incompatible event written by a newer SDK) rather
             // than failing the whole query.
-            dao.getEvents(scheduleId, sharedId).mapNotNull(::decode)
+            dao.getEvents(scheduleId, sharedIds).mapNotNull(::decode)
         }
     }
 
     override suspend fun hasEvents(scheduleId: String): Boolean =
         queue.run { dao.hasEvents(scheduleId) }
 
+    /**
+     * Deletes every event recorded under any of [scopes].
+     *
+     * No production caller: retention goes through [retainEvents], and this
+     * exists to mirror the iOS store's surface. Kept rather than deleted for
+     * that parity, but worth knowing two things before wiring it up.
+     *
+     * First, it deletes whole events, not the named scope's share of them —
+     * an event recorded under `[a, b]` is removed entirely when only `b` is
+     * passed, taking `a`'s tally and the recording schedule's own history with
+     * it. Under the single-ID model that could not happen, so this is a
+     * semantic the multi-group change introduced.
+     *
+     * Second, [LedgerScope.Shared] still names one group at a time, which is
+     * the shape of a delete request rather than a leftover from that model.
+     */
     override suspend fun deleteEvents(scopes: List<LedgerScope>) {
         if (scopes.isEmpty()) {
             return
@@ -238,10 +265,21 @@ internal class LedgerStore(
             // keeps its identity, so one merged pair does not churn the ledger.
             dao.replaceEvents(
                 deleteIds = plan.replacedIds,
-                events = plan.merged.map { it.toEntity() }
+                events = plan.merged.map { it.toInsert() }
             )
         }
     }
+
+    /**
+     * How many shared-ID rows the store holds. Test-only.
+     *
+     * Exposed because shared-ID rows are otherwise invisible from outside: a
+     * leak here (a delete that drops events but strands their rows) would grow
+     * the store without ever changing a query result, so nothing else could
+     * catch it.
+     */
+    @VisibleForTesting
+    internal suspend fun sharedIdRowCount(): Int = queue.run { dao.sharedIdRowCount() }
 
     /**
      * Decodes a stored row, or null when its body cannot be parsed (e.g. a
@@ -254,10 +292,21 @@ internal class LedgerStore(
         null
     }
 
-    private fun LedgerEvent.toEntity(): LedgerEventEntity = LedgerEventEntity(
-        scheduleId = scheduleId,
-        sharedId = sharedId,
-        timestamp = timestamp.toEpochMilli(),
-        body = toJsonValue()
-    )
+    /**
+     * Maps to the storage shape, canonicalizing [LedgerEvent.sharedIds] rather
+     * than trusting the caller — so every writer, direct recording and a
+     * compaction rewrite alike, ends up with the same de-duplicated, sorted
+     * rows and a matching encoded body.
+     */
+    private fun LedgerEvent.toInsert(): LedgerEventInsert {
+        val canonical = canonicalizingSharedIds()
+        return LedgerEventInsert(
+            entity = LedgerEventEntity(
+                scheduleId = canonical.scheduleId,
+                timestamp = canonical.timestamp.toEpochMilli(),
+                body = canonical.toJsonValue()
+            ),
+            sharedIds = canonical.effectiveSharedIds
+        )
+    }
 }

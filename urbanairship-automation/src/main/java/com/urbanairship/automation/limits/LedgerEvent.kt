@@ -120,30 +120,74 @@ internal sealed class LedgerExecutionResult(internal val json: String) : JsonSer
 
 /**
  * The scope an event was recorded under. An event is always recorded under
- * its schedule's ID, and additionally under a shared group ID when the
- * recording schedule had a `ledger_config.shared_id` at record time.
+ * its schedule's ID, and additionally under every shared group ID the
+ * recording schedule had in `ledger_config.shared_ids` at record time.
  */
 internal sealed class LedgerScope {
     /** Events recorded by a specific schedule (matched on `scheduleId`). */
     data class Schedule(val scheduleId: String) : LedgerScope()
 
-    /** Events recorded under a specific shared group (matched on `sharedId`). */
+    /**
+     * Events recorded under a specific shared group (matched against an
+     * event's `sharedIds`).
+     */
     data class Shared(val sharedId: String) : LedgerScope()
+}
+
+/**
+ * Canonicalization for the shared group IDs carried by a config or an event.
+ *
+ * A schedule's `ledger_config.shared_ids` is an unordered set in intent but
+ * arrives as a JSON array, so it is reduced to one canonical form — empties
+ * dropped, duplicates removed, sorted — before it is stamped onto an event or
+ * used for matching. Canonical form matters beyond tidiness: it makes two
+ * events that belong to the same groups compare and hash equal, which is what
+ * lets [LedgerCompactor] merge them, and it gives every caller of
+ * [LedgerGroupReservations] the same lock ordering.
+ */
+internal object LedgerSharedIds {
+
+    /**
+     * The canonical form of [ids]: non-empty, de-duplicated, sorted. Empty
+     * when there are no usable IDs.
+     *
+     * Sorts and compares by UTF-16 code unit, which is what `TreeSet` gives.
+     * iOS sorts the same set with Swift's `<`, which compares by Unicode
+     * canonical equivalence, so the two platforms can disagree on a group ID
+     * outside the BMP (order) or on two canonically-equivalent spellings of
+     * one ID (Android keeps both, iOS folds them into one). Left as-is rather
+     * than normalizing: group IDs are backend-issued identifiers, matched
+     * everywhere else in this SDK — and in the database — by exact string
+     * equality, and making this one function fold equivalents would put it out
+     * of step with every place the result is then compared.
+     */
+    fun canonical(ids: List<String>?): List<String> {
+        if (ids.isNullOrEmpty()) {
+            return emptyList()
+        }
+        return ids.filter { it.isNotEmpty() }.toSortedSet().toList()
+    }
+
+    /**
+     * The canonical form of [ids], or null when empty — for optional payload
+     * fields that should be omitted from JSON rather than encoded as `[]`.
+     */
+    fun canonicalOrNull(ids: List<String>?): List<String>? = canonical(ids).ifEmpty { null }
 }
 
 /**
  * A single event recorded by the ledger.
  *
- * Every event carries the scope it was recorded under: `scheduleId` always,
- * and `sharedId` (the `ledger_config.shared_id` active at record time) when
- * the recording schedule had one. Neither ID is ever rewritten, so an event
- * stays with the scopes it was recorded under even after the schedule changes
- * its config.
+ * Every event carries the scopes it was recorded under: `scheduleId` always,
+ * and `sharedIds` (the `ledger_config.shared_ids` active at record time) when
+ * the recording schedule had any. No ID is ever rewritten, so an event stays
+ * with the scopes it was recorded under even after the schedule changes its
+ * config.
  *
- * An event is eligible for a schedule's limit evaluation when either scope ID
+ * An event is eligible for a schedule's limit evaluation when any scope ID
  * matches one of the schedule's ledger IDs: its `scheduleId` equals the
- * schedule's own ID, or its `sharedId` equals the schedule's current shared
- * ledger ID.
+ * schedule's own ID, or its `sharedIds` intersect the schedule's current
+ * shared ledger IDs.
  */
 internal sealed class LedgerEvent : JsonSerializable {
 
@@ -153,8 +197,11 @@ internal sealed class LedgerEvent : JsonSerializable {
     /** ID of the schedule that recorded the event. */
     abstract val scheduleId: String
 
-    /** Shared group ID the recording schedule had at record time, if any. */
-    abstract val sharedId: String?
+    /**
+     * Shared group IDs the recording schedule had at record time, if any.
+     * Canonical form: non-empty, de-duplicated, sorted.
+     */
+    abstract val sharedIds: List<String>?
 
     /**
      * ID of the execution-causing trigger, if known. A plain attribute for
@@ -177,10 +224,27 @@ internal sealed class LedgerEvent : JsonSerializable {
     val effectiveCount: Int
         get() = count ?: 1
 
+    /** Shared group IDs the recording schedule had at record time. Empty when it had none. */
+    val effectiveSharedIds: List<String>
+        get() = sharedIds ?: emptyList()
+
+    /**
+     * A copy of this event with [sharedIds] replaced by their canonical form.
+     *
+     * Used at the storage boundary so every writer — direct recording and a
+     * compaction rewrite alike — persists the same de-duplicated, sorted rows
+     * and a matching encoded body, rather than depending on every caller (and
+     * every future one) canonicalizing before it gets there.
+     */
+    fun canonicalizingSharedIds(): LedgerEvent = when (this) {
+        is Triggered -> copy(sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds))
+        is Execution -> copy(sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds))
+    }
+
     /** Recorded when an execution-causing trigger reaches its goal. */
     data class Triggered(
         override val scheduleId: String,
-        override val sharedId: String? = null,
+        override val sharedIds: List<String>? = null,
         override val triggerId: String? = null,
         override val timestamp: Instant,
         override val count: Int? = null
@@ -190,7 +254,7 @@ internal sealed class LedgerEvent : JsonSerializable {
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             SCHEDULE_ID to scheduleId,
-            SHARED_ID to sharedId,
+            SHARED_IDS to sharedIds,
             TRIGGER_ID to triggerId,
             TIMESTAMP to timestamp.toEpochMilli(),
             COUNT to count
@@ -204,14 +268,14 @@ internal sealed class LedgerEvent : JsonSerializable {
      * exclusion rule can subtract.
      *
      * A [LedgerExecutionResult.BACKFILL] result carries the pre-ledger
-     * execution count in `count`: it has no `triggerId` and its `sharedId` is
-     * always null (recorded only under the schedule ID, so legacy history
+     * execution count in `count`: it has no `triggerId` and its `sharedIds`
+     * are always null (recorded only under the schedule ID, so legacy history
      * never pollutes a group's pooled tally), and its timestamp reflects when
      * migration occurred, not when the original executions happened.
      */
     data class Execution(
         override val scheduleId: String,
-        override val sharedId: String? = null,
+        override val sharedIds: List<String>? = null,
         override val triggerId: String? = null,
         override val timestamp: Instant,
         override val count: Int? = null,
@@ -227,7 +291,7 @@ internal sealed class LedgerEvent : JsonSerializable {
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             SCHEDULE_ID to scheduleId,
-            SHARED_ID to sharedId,
+            SHARED_IDS to sharedIds,
             TRIGGER_ID to triggerId,
             TIMESTAMP to timestamp.toEpochMilli(),
             COUNT to count,
@@ -239,7 +303,15 @@ internal sealed class LedgerEvent : JsonSerializable {
     internal companion object {
         private const val TYPE = "type"
         private const val SCHEDULE_ID = "schedule_id"
-        private const val SHARED_ID = "shared_id"
+        private const val SHARED_IDS = "shared_ids"
+        /**
+         * Read-only: the single-ID key [SHARED_IDS] replaced. A device upgrading
+         * from a pre-multi-group SDK has existing rows whose persisted `body`
+         * still uses this key — the storage migration only promotes the old
+         * `sharedId` SQL column into the new join table, it does not rewrite
+         * this JSON, so decoding still has to understand it.
+         */
+        private const val LEGACY_SHARED_ID = "shared_id"
         private const val TRIGGER_ID = "trigger_id"
         private const val TIMESTAMP = "timestamp"
         private const val COUNT = "count"
@@ -249,10 +321,12 @@ internal sealed class LedgerEvent : JsonSerializable {
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): LedgerEvent {
             val content = value.requireMap()
+            val sharedIds = content.get(SHARED_IDS)?.requireList()?.map { it.requireString() }
+                ?: content.optionalField<String>(LEGACY_SHARED_ID)?.let { listOf(it) }
             return when (LedgerEventType.fromJson(content.require(TYPE))) {
                 LedgerEventType.TRIGGERED -> Triggered(
                     scheduleId = content.requireField(SCHEDULE_ID),
-                    sharedId = content.optionalField(SHARED_ID),
+                    sharedIds = sharedIds,
                     triggerId = content.optionalField(TRIGGER_ID),
                     timestamp = content.requireEpochMillis(TIMESTAMP),
                     count = content.optionalField(COUNT)
@@ -260,7 +334,7 @@ internal sealed class LedgerEvent : JsonSerializable {
 
                 LedgerEventType.EXECUTION -> Execution(
                     scheduleId = content.requireField(SCHEDULE_ID),
-                    sharedId = content.optionalField(SHARED_ID),
+                    sharedIds = sharedIds,
                     triggerId = content.optionalField(TRIGGER_ID),
                     timestamp = content.requireEpochMillis(TIMESTAMP),
                     count = content.optionalField(COUNT),

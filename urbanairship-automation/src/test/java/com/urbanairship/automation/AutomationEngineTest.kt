@@ -55,6 +55,7 @@ import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -358,7 +359,7 @@ public class AutomationEngineTest {
     }
 
     private fun ledgerSchedule(
-        sharedId: String?,
+        sharedIds: List<String> = emptyList(),
         identifier: String = "test",
         priority: Int? = null
     ): AutomationSchedule = AutomationSchedule(
@@ -374,7 +375,7 @@ public class AutomationEngineTest {
             )
         ),
         created = clock.currentTime,
-        ledgerConfig = sharedId?.let { LedgerConfig(sharedId = it) }
+        ledgerConfig = sharedIds.ifEmpty { null }?.let { LedgerConfig(sharedIds = it) }
     )
 
     private fun ledgerScheduleData(
@@ -402,7 +403,7 @@ public class AutomationEngineTest {
             date = clock.currentTime,
             triggerId = "trigger-1"
         )
-        val sched = ledgerSchedule(sharedId = "group-1")
+        val sched = ledgerSchedule(sharedIds = listOf("group-1"))
         val idleData = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
 
         every { triggerProcessor.getTriggerResults() } answers {
@@ -434,7 +435,7 @@ public class AutomationEngineTest {
             listOf(
                 TestAutomationLedger.Recorded.Triggered(
                     scheduleId = "test",
-                    sharedId = "group-1",
+                    sharedIds = listOf("group-1"),
                     triggerId = "trigger-1"
                 )
             ),
@@ -454,7 +455,7 @@ public class AutomationEngineTest {
             date = clock.currentTime,
             triggerId = "trigger-1"
         )
-        val sched = ledgerSchedule(sharedId = "group-1")
+        val sched = ledgerSchedule(sharedIds = listOf("group-1"))
         val idleData = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
 
         every { triggerProcessor.getTriggerResults() } answers {
@@ -487,14 +488,20 @@ public class AutomationEngineTest {
      */
     @Test
     public fun testRecordsExecutionForTerminalInterruption(): TestResult = runTest {
-        val sched = ledgerSchedule(sharedId = "group-1")
+        // The stored schedule and the prepared info name DIFFERENT groups on
+        // purpose. The recovery event has to use the prepared one: that is the
+        // group the interrupted execution actually ran against, and remote data
+        // may well have moved the schedule since. Recording under the live
+        // group instead would charge a pool that never saw the display and let
+        // the pool that did show one more.
+        val sched = ledgerSchedule(sharedIds = listOf("group-moved-to"))
         val executing = ledgerScheduleData(sched, AutomationScheduleState.EXECUTING, triggerInfo = null)
         executing.setPreparedScheduleInfo(
             PreparedScheduleInfo(
                 scheduleId = "test",
                 triggerSessionId = UUID.randomUUID().toString(),
                 priority = 0,
-                ledgerSharedId = "group-1",
+                ledgerSharedIds = listOf("group-1"),
                 triggerId = "trigger-1"
             )
         )
@@ -512,7 +519,7 @@ public class AutomationEngineTest {
             listOf(
                 TestAutomationLedger.Recorded.ExecutionIfNoneSince(
                     scheduleId = "test",
-                    sharedId = "group-1",
+                    sharedIds = listOf("group-1"),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.SUCCEEDED,
                     cancel = false,
@@ -529,14 +536,14 @@ public class AutomationEngineTest {
      */
     @Test
     public fun testRecordsNothingForRetriedInterruption(): TestResult = runTest {
-        val sched = ledgerSchedule(sharedId = "group-1")
+        val sched = ledgerSchedule(sharedIds = listOf("group-1"))
         val executing = ledgerScheduleData(sched, AutomationScheduleState.EXECUTING, triggerInfo = null)
         executing.setPreparedScheduleInfo(
             PreparedScheduleInfo(
                 scheduleId = "test",
                 triggerSessionId = UUID.randomUUID().toString(),
                 priority = 0,
-                ledgerSharedId = "group-1",
+                ledgerSharedIds = listOf("group-1"),
                 triggerId = "trigger-1"
             )
         )
@@ -559,7 +566,7 @@ public class AutomationEngineTest {
      */
     @Test
     public fun testUpsertFinishesScheduleOverLedgerLimit(): TestResult = runTest {
-        val sched = ledgerSchedule(sharedId = "group-1")
+        val sched = ledgerSchedule(sharedIds = listOf("group-1"))
         val stored = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
 
         coEvery { store.getSchedules() } answers { emptyList() }
@@ -582,7 +589,7 @@ public class AutomationEngineTest {
     /** The same upsert leaves a schedule with budget left alone. */
     @Test
     public fun testUpsertKeepsScheduleUnderLedgerLimit(): TestResult = runTest {
-        val sched = ledgerSchedule(sharedId = "group-1")
+        val sched = ledgerSchedule(sharedIds = listOf("group-1"))
         val stored = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
 
         coEvery { store.getSchedules() } answers { emptyList() }
@@ -606,12 +613,15 @@ public class AutomationEngineTest {
      */
     @Test
     public fun testReconcileLedgerDerivesLiveIds(): TestResult = runTest {
-        val withGroup = ledgerSchedule(sharedId = "group-1", identifier = "a")
-        val withoutGroup = ledgerSchedule(sharedId = null, identifier = "b")
-        val otherGroup = ledgerSchedule(sharedId = "group-2", identifier = "c")
+        // "a" pools under two groups at once: every one of them has to be
+        // reported live, or the next retention pass hard-deletes the history of
+        // whichever ones were dropped and silently resets their limits.
+        val withGroups = ledgerSchedule(sharedIds = listOf("group-1", "group-3"), identifier = "a")
+        val withoutGroup = ledgerSchedule(sharedIds = emptyList(), identifier = "b")
+        val otherGroup = ledgerSchedule(sharedIds = listOf("group-2"), identifier = "c")
 
         coEvery { store.getSchedules() } answers {
-            listOf(withGroup, withoutGroup, otherGroup).map {
+            listOf(withGroups, withoutGroup, otherGroup).map {
                 ledgerScheduleData(it, AutomationScheduleState.IDLE, triggerInfo = null)
             }
         }
@@ -625,7 +635,7 @@ public class AutomationEngineTest {
             listOf(
                 TestAutomationLedger.Recorded.Reconciled(
                     liveScheduleIds = setOf("a", "b", "c"),
-                    liveSharedIds = setOf("group-1", "group-2")
+                    liveSharedIds = setOf("group-1", "group-2", "group-3")
                 )
             ),
             ledger.recorded
@@ -667,16 +677,16 @@ public class AutomationEngineTest {
      * a preparer that hands back a prepared schedule, and an executor that
      * reports ready.
      *
-     * @param sharedId The schedule's ledger group, or null for an unpooled one.
+     * @param sharedIds The schedule's ledger groups, or empty for an unpooled one.
      * @param onConditionsMet Runs when the schedule clears its delay conditions,
      * which is the seam between the prepare-time limit check and the
      * execute-time one — the window a sibling would record in.
      */
     private suspend fun TestScope.driveToExecution(
-        sharedId: String?,
+        sharedIds: List<String> = emptyList(),
         onConditionsMet: () -> Unit = {}
     ): AutomationScheduleData {
-        val sched = ledgerSchedule(sharedId = sharedId)
+        val sched = ledgerSchedule(sharedIds = sharedIds)
         val stored = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
         val triggerInfo = TriggeringInfo(
             context = null,
@@ -696,7 +706,7 @@ public class AutomationEngineTest {
             info = PreparedScheduleInfo(
                 scheduleId = "test",
                 triggerSessionId = stored.triggerSessionId,
-                ledgerSharedId = sharedId,
+                ledgerSharedIds = sharedIds,
                 triggerId = "trigger-1"
             ),
             data = PreparedScheduleData.Action(
@@ -739,7 +749,7 @@ public class AutomationEngineTest {
     public fun testExecutesPooledScheduleWithBudget(): TestResult = runTest {
         isGroupSpent = false
 
-        driveToExecution(sharedId = "group-1")
+        driveToExecution(sharedIds = listOf("group-1"))
 
         coVerify { executor.execute(any()) }
     }
@@ -753,7 +763,7 @@ public class AutomationEngineTest {
     public fun testSkipsPooledScheduleWhenGroupSpentBeforeExecuting(): TestResult = runTest {
         isGroupSpent = false
 
-        val stored = driveToExecution(sharedId = "group-1") {
+        val stored = driveToExecution(sharedIds = listOf("group-1")) {
             // A sibling in the group recorded while this schedule waited.
             isGroupSpent = true
         }
@@ -783,8 +793,8 @@ public class AutomationEngineTest {
 
         // Priority orders the pending-execution drain, so "first" is dispatched
         // ahead of "second" instead of the set's arbitrary order deciding.
-        val first = ledgerSchedule(sharedId = "group-1", identifier = "first", priority = -1)
-        val second = ledgerSchedule(sharedId = "group-1", identifier = "second")
+        val first = ledgerSchedule(sharedIds = listOf("group-1"), identifier = "first", priority = -1)
+        val second = ledgerSchedule(sharedIds = listOf("group-1"), identifier = "second")
 
         // Mutable, so a test can model remote data replacing a stored schedule
         // while it waits. The store hands back whatever is in here, which is a
@@ -814,7 +824,7 @@ public class AutomationEngineTest {
                         scheduleId = sched.identifier,
                         triggerSessionId = requireNotNull(storedById[sched.identifier])
                             .triggerSessionId,
-                        ledgerSharedId = "group-1",
+                        ledgerSharedIds = listOf("group-1"),
                         triggerId = "trigger-1"
                     ),
                     data = when (sched.identifier) {
@@ -828,7 +838,7 @@ public class AutomationEngineTest {
         }
 
         every { executor.isValid(any()) } returns true
-        every { executor.isReady(any()) } returns ScheduleReadyResult.READY
+        every { executor.isReady(any()) } answers { readyResult }
         coEvery { executor.execute(any()) } coAnswers {
             val id = firstArg<PreparedSchedule>().info.scheduleId
             log.add("execute:$id")
@@ -931,6 +941,12 @@ public class AutomationEngineTest {
     /** The schedules the two-sibling harness stored, for asserting final state. */
     private var storedForTest: MutableMap<String, AutomationScheduleData> = mutableMapOf()
 
+    /**
+     * What the stubbed executor reports from `isReady`. Overridable so a test
+     * can park an attempt on the conditions notifier.
+     */
+    private var readyResult: ScheduleReadyResult = ScheduleReadyResult.READY
+
     /** A prepared embedded message, so `reservesLedgerGroup` is false for it. */
     private fun embeddedMessageData(): PreparedInAppMessageData {
         val layout = """
@@ -1011,7 +1027,7 @@ public class AutomationEngineTest {
 
         assertTrue(log.contains("execute:first"))
         assertFalse(groupReservations.isReserved("group-1"))
-        assertEquals(1, groupReservations.inFlight("group-1"))
+        assertEquals(1, groupReservations.inFlight(listOf("group-1")))
 
         releaseFirst.complete(Unit)
         advanceUntilIdle()
@@ -1038,12 +1054,79 @@ public class AutomationEngineTest {
         driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
 
         // "first" is parked mid-display holding only its in-flight mark.
-        assertEquals(1, groupReservations.inFlight("group-1"))
+        assertEquals(1, groupReservations.inFlight(listOf("group-1")))
 
         engine.stop()
         advanceUntilIdle()
 
-        assertEquals(0, groupReservations.inFlight("group-1"))
+        assertEquals(0, groupReservations.inFlight(listOf("group-1")))
+    }
+
+    /**
+     * A sibling dropped before it ever marks itself must not clear a mark it
+     * never took. The clear is guarded on having marked precisely because the
+     * counter is shared: an unguarded `exitInFlight` in that path decrements
+     * whatever is there, which is somebody else's mark.
+     *
+     * Two marks never coexist in the other harnesses here, so the clamp that
+     * floors the counter at zero would hide an unguarded clear — this is the
+     * arrangement where it cannot, because the mark it would zero is real.
+     */
+    @Test
+    public fun testSiblingDroppedAtRevalidateLeavesAnothersMarkAlone(): TestResult = runTest {
+        isGroupSpent = false
+        // Both embedded, so both take marks rather than reservations.
+        embeddedSchedules.add("first")
+        embeddedSchedules.add("second")
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        // "first" parks mid-display holding the group's only mark, and its
+        // recorded outcome spends the budget, so "second" is dropped at
+        // revalidate without ever marking.
+        driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
+
+        // Still exactly the one mark "first" is holding.
+        assertEquals(1, groupReservations.inFlight(listOf("group-1")))
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(0, groupReservations.inFlight(listOf("group-1")))
+    }
+
+    /**
+     * A schedule that marks itself in flight and then turns out not to be
+     * ready parks on the conditions notifier — a wait with no timeout, which
+     * only a host becoming available ends, and for an embedded message may
+     * never end at all. The mark must not still be held while it waits.
+     *
+     * Nothing was displayed and no budget was spent, so there is nothing for a
+     * sibling to wait out; if the mark survived, every schedule in the group
+     * would block in `awaitInFlightClear` behind a message that is not on
+     * screen and may never be. This is the same hazard the reserving branch
+     * avoids by settling outside `withGroup`.
+     */
+    @Test
+    public fun testInFlightMarkIsClearedWhenTheAttemptParksOnConditions(): TestResult = runTest {
+        isGroupSpent = false
+        embeddedSchedules.add("first")
+        embeddedSchedules.add("second")
+        // No host view is registered, so the executor reports not-ready and the
+        // attempt goes to the conditions notifier instead of executing.
+        readyResult = ScheduleReadyResult.NOT_READY
+        // The notifier is a relaxed mock by default, so `wait()` would return
+        // at once and the park this test is about would never happen. Make it
+        // suspend the way the real one does when no host ever appears.
+        coEvery { scheduleConditionsChangedNotifier.wait() } coAnswers { awaitCancellation() }
+
+        val log = driveTwoPooledSchedules(CompletableDeferred()) { }
+
+        // Neither ever displayed...
+        assertFalse(log.any { it.startsWith("execute:") })
+        // ...and both are now parked on the notifier, so neither may still be
+        // holding the group marked behind it.
+        assertEquals(0, groupReservations.inFlight(listOf("group-1")))
+        assertFalse(groupReservations.isReserved("group-1"))
     }
 
     /**
@@ -1058,7 +1141,7 @@ public class AutomationEngineTest {
         driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
 
         assertTrue(groupReservations.isReserved("group-1"))
-        assertEquals(0, groupReservations.inFlight("group-1"))
+        assertEquals(0, groupReservations.inFlight(listOf("group-1")))
 
         releaseFirst.complete(Unit)
         advanceUntilIdle()
@@ -1190,7 +1273,7 @@ public class AutomationEngineTest {
                     // queued. The store now hands back the new definition, while
                     // the waiting attempt still holds the old snapshot.
                     stored["second"] = ledgerScheduleData(
-                        ledgerSchedule(sharedId = "group-2", identifier = "second"),
+                        ledgerSchedule(sharedIds = listOf("group-2"), identifier = "second"),
                         AutomationScheduleState.PREPARED,
                         triggerInfo = null
                     )
@@ -1214,7 +1297,7 @@ public class AutomationEngineTest {
     public fun testExecutesUnpooledScheduleWithoutRecheck(): TestResult = runTest {
         isGroupSpent = false
 
-        driveToExecution(sharedId = null) {
+        driveToExecution(sharedIds = emptyList()) {
             // Even if the ledger changed its answer, an unpooled schedule has
             // no sibling that could have spent anything.
             isGroupSpent = true

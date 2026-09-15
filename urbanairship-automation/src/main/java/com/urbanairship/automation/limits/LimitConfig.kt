@@ -22,12 +22,16 @@ import com.urbanairship.json.toJsonList
  * [Self] (or no config at all), the tally is the schedule's own events, full
  * stop — nothing another schedule declares can affect it, and there's no
  * `source` field around to write a no-op reference to another schedule with.
- * Only [Shared] additionally counts events whose `schedule_id` or `shared_id`
- * matches this schedule's `ledger_config.shared_id` — not just events from
- * schedules that also declare that `shared_id` themselves, but any event
- * carrying it in either field, including a named schedule's own un-tagged
- * history (e.g. backfill). Only then does an [ExclusionRule.source] have
- * another schedule's events to actually subtract.
+ * Only [Shared] additionally counts events whose `schedule_id` or `shared_ids`
+ * match any of this schedule's `ledger_config.shared_ids` — not just events
+ * from schedules that also declare one of those groups themselves, but any
+ * event carrying one in either field, including a named schedule's own
+ * un-tagged history (e.g. backfill). Only then does an [ExclusionRule.source]
+ * have another schedule's events to actually subtract.
+ *
+ * Note the two configs answer different questions and neither implies the
+ * other: `ledger_config.shared_ids` says which groups this schedule *records*
+ * into, always; this one says whether its own limit *reads* them back.
  */
 internal sealed class LimitConfig : JsonSerializable {
 
@@ -193,7 +197,7 @@ internal data class ExclusionRule(
 /**
  * Selects which schedule recorded the events a rule applies to, relative to the
  * evaluating schedule. Candidates are already scoped to the schedule's ledger
- * IDs (its schedule ID and shared ledger ID); this picks among the schedule IDs
+ * IDs (its schedule ID and shared ledger IDs); this picks among the schedule IDs
  * within that scope by matching each event's `schedule_id`.
  */
 internal sealed class LedgerSource : JsonSerializable {
@@ -328,12 +332,12 @@ internal sealed class LedgerEventMatch : JsonSerializable {
     fun matches(event: LedgerEvent, context: LedgerLimitContext): Boolean = when {
         this is Triggered && event is LedgerEvent.Triggered ->
             (timeBounds?.isActive(event.timestamp) ?: true) &&
-                    (sharedGroup?.matches(event.sharedId, context) ?: true) &&
+                    (sharedGroup?.matches(event.sharedIds, context) ?: true) &&
                     (triggerId == null || triggerId == event.triggerId)
 
         this is Execution && event is LedgerEvent.Execution ->
             (timeBounds?.isActive(event.timestamp) ?: true) &&
-                    (sharedGroup?.matches(event.sharedId, context) ?: true) &&
+                    (sharedGroup?.matches(event.sharedIds, context) ?: true) &&
                     (results?.contains(event.result) ?: true) &&
                     (cancel == null || cancel == (event.cancel ?: false)) &&
                     (triggerId == null || triggerId == event.triggerId)
@@ -416,28 +420,38 @@ internal sealed class LedgerEventMatch : JsonSerializable {
 }
 
 /**
- * Matches events by the shared group they were recorded under (their
- * `shared_id`), relative to the evaluating schedule's current shared group or by
- * an absolute ID.
+ * Matches events by the shared groups they were recorded under (their
+ * `shared_ids`), relative to the evaluating schedule's current shared groups
+ * or by an absolute ID.
+ *
+ * Both sides can hold several IDs, so the relative cases are overlap tests: an
+ * event matches [Current] when it shares at least one group with the
+ * evaluating schedule. Partial overlap counts as current — an event recorded
+ * under `[experiment, promo]` is current for a schedule now in `[experiment]`
+ * alone.
  */
 internal sealed class SharedGroupMatch : JsonSerializable {
 
     /**
-     * Events recorded under the evaluating schedule's current shared group. If
-     * the schedule has no shared group, matches events recorded with none.
+     * Events sharing at least one group with the evaluating schedule's current
+     * shared groups. If the schedule has none, matches events recorded with
+     * none.
      */
     data object Current : SharedGroupMatch()
 
     /**
      * The complement of [Current] — matches whatever that doesn't. When the
-     * schedule has a current shared group, that's every event whose
-     * `sharedId` differs, including events recorded with no shared group at
-     * all. When the schedule has no current shared group, [Current] already
-     * matches events recorded with none, so this matches none of them.
+     * schedule has current shared groups, that's every event sharing none of
+     * them, including events recorded with no shared group at all. When the
+     * schedule has none, [Current] already matches events recorded with none,
+     * so this matches none of them.
      */
     data object NotCurrent : SharedGroupMatch()
 
-    /** Events recorded under a specific shared group, named absolutely. */
+    /**
+     * Events recorded under a specific shared group, named absolutely. Matches
+     * when that ID is among the event's groups.
+     */
     data class Id(val sharedId: String) : SharedGroupMatch()
 
     /**
@@ -446,12 +460,28 @@ internal sealed class SharedGroupMatch : JsonSerializable {
      */
     data object Unknown : SharedGroupMatch()
 
-    /** Whether an event recorded under [sharedId] satisfies this match. */
-    fun matches(sharedId: String?, context: LedgerLimitContext): Boolean = when (this) {
-        is Current -> sharedId == context.currentSharedId
-        is NotCurrent -> sharedId != context.currentSharedId
-        is Id -> sharedId == this.sharedId
-        is Unknown -> false
+    /** Whether an event recorded under [sharedIds] satisfies this match. */
+    fun matches(sharedIds: List<String>?, context: LedgerLimitContext): Boolean {
+        val recorded = sharedIds?.toSet() ?: emptySet()
+        return when (this) {
+            // A schedule with no groups is "current" with events that also
+            // have none, mirroring the single-ID behavior where nil equalled
+            // nil.
+            is Current -> if (recorded.isEmpty()) {
+                context.currentSharedIds.isEmpty()
+            } else {
+                recorded.any { it in context.currentSharedIds }
+            }
+
+            is NotCurrent -> if (recorded.isEmpty()) {
+                context.currentSharedIds.isNotEmpty()
+            } else {
+                recorded.none { it in context.currentSharedIds }
+            }
+
+            is Id -> recorded.contains(sharedId)
+            is Unknown -> false
+        }
     }
 
     override fun toJsonValue(): JsonValue = when (this) {
@@ -491,6 +521,6 @@ internal sealed class SharedGroupMatch : JsonSerializable {
 internal data class LedgerLimitContext(
     /** The evaluating schedule's own ID. */
     val scheduleId: String,
-    /** The evaluating schedule's current shared ledger ID, if any. */
-    val currentSharedId: String?
+    /** The evaluating schedule's current shared ledger IDs. Empty when it has no shared group. */
+    val currentSharedIds: Set<String>
 )

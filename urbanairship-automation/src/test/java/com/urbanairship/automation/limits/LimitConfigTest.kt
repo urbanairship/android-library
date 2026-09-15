@@ -25,11 +25,11 @@ public class LimitConfigTest {
     private val sharedId = "group-1"
     private val now: Instant = Instant.ofEpochMilli(10_000)
 
-    private val context = LedgerLimitContext(scheduleId = scheduleId, currentSharedId = sharedId)
+    private val context = LedgerLimitContext(scheduleId = scheduleId, currentSharedIds = setOf(sharedId))
 
     private fun execution(
         scheduleId: String = this.scheduleId,
-        sharedId: String? = null,
+        sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
         timestamp: Instant = now,
         count: Int? = null,
@@ -37,7 +37,7 @@ public class LimitConfigTest {
         cancel: Boolean? = null
     ): LedgerEvent = LedgerEvent.Execution(
         scheduleId = scheduleId,
-        sharedId = sharedId,
+        sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
         timestamp = timestamp,
         count = count,
@@ -143,7 +143,7 @@ public class LimitConfigTest {
     public fun testExcludeOtherSchedules() {
         val events = listOf(
             execution(scheduleId = scheduleId),
-            execution(scheduleId = otherScheduleId, sharedId = sharedId)
+            execution(scheduleId = otherScheduleId, sharedIds = listOf(sharedId))
         )
         val exclude = ExclusionSet(listOf(ExclusionRule(source = LedgerSource.OtherSchedules)))
         // Only the own-schedule execution remains counted.
@@ -155,7 +155,7 @@ public class LimitConfigTest {
     public fun testExcludeOwnSchedule() {
         val events = listOf(
             execution(scheduleId = scheduleId),
-            execution(scheduleId = otherScheduleId, sharedId = sharedId)
+            execution(scheduleId = otherScheduleId, sharedIds = listOf(sharedId))
         )
         val exclude = ExclusionSet(listOf(ExclusionRule(source = LedgerSource.OwnSchedule)))
         assertTrue(isOverLimit(limit = 1U, events = events, exclude = exclude))
@@ -166,7 +166,7 @@ public class LimitConfigTest {
     public fun testExcludeSpecificSchedule() {
         val events = listOf(
             execution(scheduleId = scheduleId),
-            execution(scheduleId = otherScheduleId, sharedId = sharedId)
+            execution(scheduleId = otherScheduleId, sharedIds = listOf(sharedId))
         )
         val exclude = ExclusionSet(
             listOf(ExclusionRule(source = LedgerSource.Schedule(otherScheduleId)))
@@ -285,8 +285,8 @@ public class LimitConfigTest {
     @Test
     public fun testExcludeCurrentSharedGroup() {
         val events = listOf(
-            execution(sharedId = sharedId),
-            execution(sharedId = "other-group")
+            execution(sharedIds = listOf(sharedId)),
+            execution(sharedIds = listOf("other-group"))
         )
         val exclude = ExclusionSet(
             listOf(
@@ -304,9 +304,9 @@ public class LimitConfigTest {
     @Test
     public fun testExcludeNotCurrentSharedGroup() {
         val events = listOf(
-            execution(sharedId = sharedId),
-            execution(sharedId = "stale-group"),
-            execution(sharedId = null)
+            execution(sharedIds = listOf(sharedId)),
+            execution(sharedIds = listOf("stale-group")),
+            execution(sharedIds = emptyList())
         )
         val exclude = ExclusionSet(
             listOf(
@@ -325,8 +325,8 @@ public class LimitConfigTest {
     @Test
     public fun testExcludeSharedGroupById() {
         val events = listOf(
-            execution(sharedId = sharedId),
-            execution(sharedId = "target-group")
+            execution(sharedIds = listOf(sharedId)),
+            execution(sharedIds = listOf("target-group"))
         )
         val exclude = ExclusionSet(
             listOf(
@@ -340,6 +340,161 @@ public class LimitConfigTest {
         )
         assertTrue(isOverLimit(limit = 1U, events = events, exclude = exclude))
         assertFalse(isOverLimit(limit = 2U, events = events, exclude = exclude))
+    }
+
+    @Test
+    public fun testCurrentMatchesOnPartialOverlap() {
+        // The schedule is in `group-1`; the event was recorded while its
+        // schedule was in `group-1` and another. Sharing one group makes it
+        // current.
+        val event = execution(sharedIds = listOf(sharedId, "other-group"))
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.Current)
+        )
+
+        assertTrue(rule.matches(event, context))
+    }
+
+    @Test
+    public fun testNotCurrentNeedsEveryGroupToDiffer() {
+        val overlapping = execution(sharedIds = listOf(sharedId, "other-group"))
+        val disjoint = execution(sharedIds = listOf("other-group", "third-group"))
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.NotCurrent)
+        )
+
+        assertFalse(rule.matches(overlapping, context))
+        assertTrue(rule.matches(disjoint, context))
+    }
+
+    /**
+     * The other side of the overlap. Every test above varies the event's
+     * groups against a schedule in one; a schedule can equally be in several,
+     * and `Current` has to consider all of them. Matching on only the first
+     * would leave an execution recorded under `promo` unsubtracted for a
+     * schedule pooling `[experiment, promo]` — an over-counted tally that
+     * suppresses a message still inside its budget.
+     */
+    @Test
+    public fun testCurrentConsidersEveryGroupTheScheduleIsIn() {
+        val multiGroup = LedgerLimitContext(
+            scheduleId = scheduleId,
+            currentSharedIds = setOf("experiment", "promo")
+        )
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.Current)
+        )
+
+        // Matches on the schedule's second group, not just its first.
+        assertTrue(rule.matches(execution(sharedIds = listOf("promo")), multiGroup))
+        assertTrue(rule.matches(execution(sharedIds = listOf("experiment")), multiGroup))
+        assertFalse(rule.matches(execution(sharedIds = listOf("unrelated")), multiGroup))
+    }
+
+    @Test
+    public fun testNotCurrentConsidersEveryGroupTheScheduleIsIn() {
+        val multiGroup = LedgerLimitContext(
+            scheduleId = scheduleId,
+            currentSharedIds = setOf("experiment", "promo")
+        )
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.NotCurrent)
+        )
+
+        // Overlapping either of the schedule's groups makes the event current.
+        assertFalse(rule.matches(execution(sharedIds = listOf("promo")), multiGroup))
+        assertFalse(rule.matches(execution(sharedIds = listOf("unrelated", "promo")), multiGroup))
+        assertTrue(rule.matches(execution(sharedIds = listOf("unrelated")), multiGroup))
+    }
+
+    /**
+     * End to end through the evaluator rather than the rule alone, so the
+     * context the evaluator builds is pinned too: it has to carry the
+     * schedule's whole group set, not the first of it.
+     */
+    @Test
+    public fun testMultiGroupScheduleExcludesEventsFromEitherGroup() {
+        val multiGroup = LedgerLimitContext(
+            scheduleId = scheduleId,
+            currentSharedIds = setOf("experiment", "promo")
+        )
+        val events = listOf(
+            execution(scheduleId = otherScheduleId, sharedIds = listOf("experiment")),
+            execution(scheduleId = otherScheduleId, sharedIds = listOf("promo"))
+        )
+        val exclude = ExclusionSet(
+            listOf(
+                ExclusionRule(
+                    source = LedgerSource.AnySchedule,
+                    match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.Current)
+                )
+            )
+        )
+
+        // Both events are in one of the schedule's groups, so both are
+        // subtracted and nothing is left to count against a limit of one.
+        assertFalse(
+            LedgerLimitEvaluator.isOverLimit(
+                limit = 1U,
+                events = events,
+                context = multiGroup,
+                exclude = exclude
+            )
+        )
+    }
+
+    /**
+     * A schedule with no groups at all. `Current` means "recorded under the
+     * groups this schedule is in now", and for such a schedule that is the
+     * events recorded under none — the documented rule, and the one case every
+     * other test here skips, since they all supply a non-empty group set.
+     */
+    @Test
+    public fun testCurrentForAnUnpooledScheduleMatchesGrouplessEvents() {
+        val unpooled = LedgerLimitContext(scheduleId = scheduleId, currentSharedIds = emptySet())
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.Current)
+        )
+
+        assertTrue(rule.matches(execution(sharedIds = emptyList()), unpooled))
+        assertFalse(rule.matches(execution(sharedIds = listOf("group-1")), unpooled))
+    }
+
+    @Test
+    public fun testNotCurrentForAnUnpooledScheduleMatchesGroupedEvents() {
+        val unpooled = LedgerLimitContext(scheduleId = scheduleId, currentSharedIds = emptySet())
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.NotCurrent)
+        )
+
+        // The exact complement of Current: a groupless event is this
+        // schedule's own history, anything grouped is somebody else's.
+        assertFalse(rule.matches(execution(sharedIds = emptyList()), unpooled))
+        assertTrue(rule.matches(execution(sharedIds = listOf("group-1")), unpooled))
+    }
+
+    @Test
+    public fun testAbsoluteIdMatchesOneOfSeveralGroups() {
+        val event = execution(sharedIds = listOf("group-a", "group-b"))
+
+        assertTrue(
+            ExclusionRule(
+                source = LedgerSource.AnySchedule,
+                match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.Id("group-b"))
+            ).matches(event, context)
+        )
+        assertFalse(
+            ExclusionRule(
+                source = LedgerSource.AnySchedule,
+                match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.Id("group-c"))
+            ).matches(event, context)
+        )
     }
 
     // endregion
@@ -563,10 +718,10 @@ public class LimitConfigTest {
      * group; the winner also has a holdout event.
      */
     private fun experimentEvents(): List<LedgerEvent> = listOf(
-        execution(scheduleId = scheduleId, sharedId = sharedId, result = LedgerExecutionResult.SUCCEEDED),
-        execution(scheduleId = scheduleId, sharedId = sharedId, result = LedgerExecutionResult.HOLDOUT),
-        execution(scheduleId = otherScheduleId, sharedId = sharedId, result = LedgerExecutionResult.SUCCEEDED),
-        execution(scheduleId = otherScheduleId, sharedId = sharedId, result = LedgerExecutionResult.SUCCEEDED)
+        execution(scheduleId = scheduleId, sharedIds = listOf(sharedId), result = LedgerExecutionResult.SUCCEEDED),
+        execution(scheduleId = scheduleId, sharedIds = listOf(sharedId), result = LedgerExecutionResult.HOLDOUT),
+        execution(scheduleId = otherScheduleId, sharedIds = listOf(sharedId), result = LedgerExecutionResult.SUCCEEDED),
+        execution(scheduleId = otherScheduleId, sharedIds = listOf(sharedId), result = LedgerExecutionResult.SUCCEEDED)
     )
 
     @Test

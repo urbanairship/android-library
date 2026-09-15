@@ -333,10 +333,10 @@ internal class AutomationStoreMigrator(
          * Each schedule with a non-zero execution count contributes a single
          * `execution` event with `result: backfill` and `count` equal to that
          * legacy count. Backfill events carry no `trigger_id` and are never
-         * recorded under a `shared_id`, so pre-ledger history stays scoped to
-         * the schedule and never pollutes a pooled group tally. The timestamp
-         * is the migration time — an upper bound on when those executions
-         * actually happened.
+         * recorded under any `shared_ids`, so pre-ledger history stays scoped
+         * to the schedule and never pollutes a pooled group tally. The
+         * timestamp is the migration time — an upper bound on when those
+         * executions actually happened.
          */
         internal fun backfillLedgerEvents(
             schedules: List<AutomationScheduleData>,
@@ -348,7 +348,7 @@ internal class AutomationStoreMigrator(
 
                 LedgerEvent.Execution(
                     scheduleId = data.schedule.identifier,
-                    sharedId = null,
+                    sharedIds = null,
                     triggerId = null,
                     timestamp = timestamp,
                     count = count,

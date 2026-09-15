@@ -13,6 +13,13 @@ android {
     room {
         schemaDirectory("$projectDir/schemas")
     }
+
+    sourceSets {
+        // Room's MigrationTestHelper loads exported schema JSON as an asset;
+        // the Robolectric-backed `test` variant needs it added explicitly,
+        // unlike `androidTest`, which the Room Gradle plugin wires up itself.
+        test.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
 }
 
 dependencies {

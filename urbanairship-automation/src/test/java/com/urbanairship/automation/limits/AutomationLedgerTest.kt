@@ -42,7 +42,7 @@ public class AutomationLedgerTest {
 
     private suspend fun recordIfNoneSince() = ledger.recordExecutionIfNoneSince(
         scheduleId = "schedule-A",
-        sharedId = "group-1",
+        sharedIds = listOf("group-1"),
         triggerId = "trigger-1",
         result = LedgerExecutionResult.SUCCEEDED,
         cancel = false,
@@ -50,7 +50,58 @@ public class AutomationLedgerTest {
     )
 
     private suspend fun executions(): List<LedgerEvent.Execution> =
-        store.events("schedule-A", "group-1").filterIsInstance<LedgerEvent.Execution>()
+        store.events("schedule-A", listOf("group-1")).filterIsInstance<LedgerEvent.Execution>()
+
+    // MARK: - Canonicalization
+    //
+    // AutomationLedger itself no longer canonicalizes sharedIds before
+    // constructing an event — LedgerStore's storage boundary is the sole
+    // place that does, per AutomationLedger's own doc comment. These pin that
+    // guarantee from this class's own call sites, so a future accidental
+    // removal of the storage-layer canonicalization would fail here even
+    // though every other test in this file only ever passes already-sorted,
+    // duplicate-free input.
+
+    @Test
+    public fun testRecordTriggeredCanonicalizesSharedIds(): TestResult = runTest {
+        ledger.recordTriggered(
+            scheduleId = "schedule-A",
+            sharedIds = listOf("group-2", "group-1", "group-1"),
+            triggerId = "trigger-1"
+        )
+
+        val stored = store.events("schedule-A", emptyList()).single() as LedgerEvent.Triggered
+        assertEquals(listOf("group-1", "group-2"), stored.sharedIds)
+    }
+
+    @Test
+    public fun testRecordExecutionCanonicalizesSharedIds(): TestResult = runTest {
+        ledger.recordExecution(
+            scheduleId = "schedule-A",
+            sharedIds = listOf("group-2", "group-1", "group-1"),
+            triggerId = null,
+            result = LedgerExecutionResult.SUCCEEDED,
+            cancel = false
+        )
+
+        val stored = store.events("schedule-A", emptyList()).single() as LedgerEvent.Execution
+        assertEquals(listOf("group-1", "group-2"), stored.sharedIds)
+    }
+
+    @Test
+    public fun testRecordExecutionIfNoneSinceCanonicalizesSharedIds(): TestResult = runTest {
+        ledger.recordExecutionIfNoneSince(
+            scheduleId = "schedule-A",
+            sharedIds = listOf("group-2", "group-1", "group-1"),
+            triggerId = null,
+            result = LedgerExecutionResult.SUCCEEDED,
+            cancel = false,
+            since = Instant.EPOCH
+        )
+
+        val stored = store.events("schedule-A", emptyList()).single() as LedgerEvent.Execution
+        assertEquals(listOf("group-1", "group-2"), stored.sharedIds)
+    }
 
     @Test
     public fun testRecordsWhenNothingRecorded(): TestResult = runTest {
@@ -64,7 +115,7 @@ public class AutomationLedgerTest {
         // change persisted. Recovery must not record a second execution.
         ledger.recordExecution(
             scheduleId = "schedule-A",
-            sharedId = "group-1",
+            sharedIds = listOf("group-1"),
             triggerId = "trigger-1",
             result = LedgerExecutionResult.SUCCEEDED,
             cancel = false
@@ -83,7 +134,7 @@ public class AutomationLedgerTest {
             listOf(
                 LedgerEvent.Execution(
                     scheduleId = "schedule-A",
-                    sharedId = "group-1",
+                    sharedIds = listOf("group-1"),
                     timestamp = startedExecuting.minusMillis(1),
                     result = LedgerExecutionResult.SUCCEEDED
                 )
@@ -103,7 +154,7 @@ public class AutomationLedgerTest {
             listOf(
                 LedgerEvent.Execution(
                     scheduleId = "schedule-B",
-                    sharedId = "group-1",
+                    sharedIds = listOf("group-1"),
                     timestamp = clock.now(),
                     result = LedgerExecutionResult.SUCCEEDED
                 )
@@ -141,7 +192,7 @@ public class AutomationLedgerTest {
         // Only an execution outcome counts as already recorded.
         ledger.recordTriggered(
             scheduleId = "schedule-A",
-            sharedId = "group-1",
+            sharedIds = listOf("group-1"),
             triggerId = "trigger-1"
         )
 
@@ -178,8 +229,8 @@ public class AutomationLedgerTest {
 
         ledger.reconcile(liveScheduleIds = setOf("schedule-A"), liveSharedIds = emptySet())
 
-        assertEquals(1, store.events("schedule-A", null).size)
-        assertTrue(store.events("gone", null).isEmpty())
+        assertEquals(1, store.events("schedule-A", emptyList()).size)
+        assertTrue(store.events("gone", emptyList()).isEmpty())
     }
 
     @Test
@@ -200,7 +251,7 @@ public class AutomationLedgerTest {
 
         ledger.reconcile(liveScheduleIds = setOf("schedule-A"), liveSharedIds = emptySet())
 
-        val result = store.events("schedule-A", null)
+        val result = store.events("schedule-A", emptyList())
         assertEquals(1, result.size)
         assertEquals(2, result.first().effectiveCount)
     }
@@ -217,7 +268,7 @@ public class AutomationLedgerTest {
 
             override suspend fun recordEventsUnless(
                 scheduleId: String,
-                sharedId: String?,
+                sharedIds: List<String>,
                 events: List<LedgerEvent>,
                 alreadyRecorded: (LedgerEvent) -> Boolean
             ): Boolean = throw CancellationException("shutting down")
@@ -228,7 +279,7 @@ public class AutomationLedgerTest {
         try {
             ledger.recordExecution(
                 scheduleId = "schedule-A",
-                sharedId = null,
+                sharedIds = emptyList(),
                 triggerId = null,
                 result = LedgerExecutionResult.SUCCEEDED,
                 cancel = false
@@ -242,7 +293,7 @@ public class AutomationLedgerTest {
         try {
             ledger.recordExecutionIfNoneSince(
                 scheduleId = "schedule-A",
-                sharedId = null,
+                sharedIds = emptyList(),
                 triggerId = null,
                 result = LedgerExecutionResult.SUCCEEDED,
                 cancel = false,
@@ -265,12 +316,12 @@ public class AutomationLedgerTest {
 
         override suspend fun recordEventsUnless(
             scheduleId: String,
-            sharedId: String?,
+            sharedIds: List<String>,
             events: List<LedgerEvent>,
             alreadyRecorded: (LedgerEvent) -> Boolean
         ): Boolean = true
 
-        override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
+        override suspend fun events(scheduleId: String, sharedIds: List<String>): List<LedgerEvent> =
             emptyList()
 
         override suspend fun hasEvents(scheduleId: String): Boolean = false

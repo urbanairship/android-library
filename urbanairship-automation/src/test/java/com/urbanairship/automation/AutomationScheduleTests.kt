@@ -15,6 +15,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.time.Instant
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.time.Duration.Companion.seconds
@@ -418,7 +420,7 @@ public class AutomationScheduleTests {
                    "foo": "bar"
                },
                "ledger_config": {
-                   "shared_id": "group-42"
+                   "shared_ids": ["group-42"]
                },
                "created": "2023-12-20T12:00:00Z"
            }
@@ -438,10 +440,139 @@ public class AutomationScheduleTests {
                 )
             ),
             created = Instant.ofEpochMilli(1703073600000),
-            ledgerConfig = LedgerConfig(sharedId = "group-42")
+            ledgerConfig = LedgerConfig(sharedIds = listOf("group-42"))
         )
 
         verify(json, expected)
+
+        assertEquals(listOf("group-42"), expected.ledgerSharedIds)
+    }
+
+    /**
+     * The single-ID shape this field replaced still pools, so a payload
+     * written against the older shape does not silently lose its shared
+     * group.
+     */
+    @Test
+    public fun testParseLegacySingleSharedId() {
+        val schedule = AutomationSchedule.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                   "id": "test_schedule",
+                   "type": "actions",
+                   "actions": { "foo": "bar" },
+                   "triggers": [],
+                   "created": "2023-12-20T12:00:00Z",
+                   "ledger_config": { "shared_id": "group-1" }
+                }
+                """
+            )
+        )
+
+        assertEquals(listOf("group-1"), schedule.ledgerSharedIds)
+    }
+
+    /**
+     * Both keys present: the current shape wins rather than merging, so a
+     * payload that carries `shared_id` for older SDKs does not widen the pool
+     * on newer ones.
+     */
+    @Test
+    public fun testCurrentSharedIdsWinOverLegacyKey() {
+        val schedule = AutomationSchedule.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                   "id": "test_schedule",
+                   "type": "actions",
+                   "actions": { "foo": "bar" },
+                   "triggers": [],
+                   "created": "2023-12-20T12:00:00Z",
+                   "ledger_config": { "shared_ids": ["group-1"], "shared_id": "legacy-group" }
+                }
+                """
+            )
+        )
+
+        assertEquals(listOf("group-1"), schedule.ledgerSharedIds)
+    }
+
+    /**
+     * An explicitly empty `shared_ids` means "no pooling" and must not fall
+     * through to the legacy key, or a payload carrying both for mixed SDK
+     * versions would pool on new SDKs when it meant not to.
+     */
+    @Test
+    public fun testEmptySharedIdsDoesNotFallBackToLegacyKey() {
+        fun decode(ledgerConfig: String): AutomationSchedule = AutomationSchedule.fromJson(
+            JsonValue.parseString(
+                """
+                { "id": "test_schedule", "type": "actions", "actions": { "foo": "bar" },
+                  "triggers": [], "created": "2023-12-20T12:00:00Z",
+                  "ledger_config": $ledgerConfig }
+                """
+            )
+        )
+
+        assertEquals(
+            emptyList<String>(),
+            decode("""{ "shared_ids": [], "shared_id": "legacy" }""").ledgerSharedIds
+        )
+        assertEquals(
+            listOf("legacy"),
+            decode("""{ "shared_ids": null, "shared_id": "legacy" }""").ledgerSharedIds
+        )
+    }
+
+    /**
+     * Re-encoding a schedule decoded from the legacy key emits the current
+     * shape, so the old spelling never round-trips back out.
+     */
+    @Test
+    public fun testLegacySharedIdReencodesAsArray() {
+        val schedule = AutomationSchedule.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                   "id": "test_schedule",
+                   "type": "actions",
+                   "actions": { "foo": "bar" },
+                   "triggers": [],
+                   "created": "2023-12-20T12:00:00Z",
+                   "ledger_config": { "shared_id": "group-1" }
+                }
+                """
+            )
+        )
+
+        val reencoded = schedule.toJsonValue().toString()
+        assertTrue(reencoded.contains("shared_ids"))
+        assertFalse(reencoded.contains("\"shared_id\""))
+
+        val roundTripped = AutomationSchedule.fromJson(JsonValue.parseString(reencoded))
+        assertEquals(listOf("group-1"), roundTripped.ledgerSharedIds)
+    }
+
+    /** Canonical form: de-duplicated and sorted, whatever order they arrive in. */
+    @Test
+    public fun testParsesMultipleSharedIdsCanonicalizes() {
+        val schedule = AutomationSchedule.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                   "id": "test_schedule",
+                   "type": "actions",
+                   "actions": { "foo": "bar" },
+                   "triggers": [],
+                   "created": "2023-12-20T12:00:00Z",
+                   "ledger_config": { "shared_ids": ["group-2", "group-1", "group-1"] }
+                }
+                """
+            )
+        )
+
+        assertEquals(listOf("group-1", "group-2"), schedule.ledgerSharedIds)
     }
 
     @Test

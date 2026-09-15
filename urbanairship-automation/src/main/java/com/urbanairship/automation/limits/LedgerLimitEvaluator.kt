@@ -4,6 +4,7 @@ package com.urbanairship.automation.limits
 
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.ledgerSharedIds
 
 /**
  * Evaluates whether a schedule has reached its execution limit by counting
@@ -18,12 +19,12 @@ internal class LedgerLimitEvaluator(
      *
      * Always counts the schedule's own `execution` events (every
      * [LedgerExecutionResult], never `triggered`). With a [LimitConfig.Shared]
-     * config, additionally counts events recorded under the schedule's
-     * `shared_id` — matched against either the `schedule_id` or `shared_id` of
+     * config, additionally counts events matching any of the schedule's
+     * `shared_ids` — matched against either the `schedule_id` or the groups of
      * another event, so a named schedule's pre-existing history is picked up
-     * even if it predates any `shared_id`. With [LimitConfig.Self] (or no
+     * even if it predates any `shared_ids`. With [LimitConfig.Self] (or no
      * config at all), no other schedule's events can affect this one,
-     * regardless of `shared_id`. Subtracts any events removed by
+     * regardless of `shared_ids`. Subtracts any events removed by
      * `limit_config.exclude`, and compares the total against the schedule's
      * `limit` (null → 1, 0 → unlimited).
      */
@@ -34,17 +35,19 @@ internal class LedgerLimitEvaluator(
             return false
         }
 
-        val currentSharedId = schedule.ledgerConfig?.sharedId
+        val currentSharedIds = schedule.ledgerSharedIds
         val limitConfig = schedule.limitConfig
         // Only reach beyond the schedule's own events when it opted in; a
         // schedule's own payload alone must determine what can affect it.
-        val fetchSharedId = when (limitConfig) {
-            is LimitConfig.Shared -> currentSharedId
-            is LimitConfig.Self, null -> null
+        // Belonging to several groups widens what `Shared` reaches, but it is
+        // still this flag alone that decides whether it reaches at all.
+        val fetchSharedIds = when (limitConfig) {
+            is LimitConfig.Shared -> currentSharedIds
+            is LimitConfig.Self, null -> emptyList()
         }
 
         val events = try {
-            store.events(scheduleId = schedule.identifier, sharedId = fetchSharedId)
+            store.events(scheduleId = schedule.identifier, sharedIds = fetchSharedIds)
         } catch (ex: Exception) {
             // A ledger read failure must never wedge execution. Err toward
             // showing the message rather than silently suppressing it.
@@ -53,7 +56,7 @@ internal class LedgerLimitEvaluator(
         }
 
         // A Self config's rules have no `source` to check — every fetched
-        // event already is this schedule's own, since `fetchSharedId` is null
+        // event already is this schedule's own, since `fetchSharedIds` is empty
         // above — so OwnSchedule is the equivalent, and only, source.
         val exclude = when (limitConfig) {
             is LimitConfig.Self -> limitConfig.exclude?.let { rules ->
@@ -69,10 +72,10 @@ internal class LedgerLimitEvaluator(
             events = events,
             context = LedgerLimitContext(
                 scheduleId = schedule.identifier,
-                // The real current shared_id, not gated by the config variant:
+                // The real current groups, not gated by the config variant:
                 // exclusion rules filtering the schedule's own already-fetched
-                // events (e.g. a `current` shared_group match) still need it.
-                currentSharedId = currentSharedId
+                // events (e.g. a `current` shared_group match) still need them.
+                currentSharedIds = currentSharedIds.toSet()
             ),
             exclude = exclude
         )

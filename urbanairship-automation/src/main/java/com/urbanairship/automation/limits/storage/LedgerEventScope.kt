@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation.limits.storage
 
+import androidx.room.Relation
+
 /**
  * The recording scope of a stored ledger event, projected without its body.
  *
@@ -9,7 +11,9 @@ package com.urbanairship.automation.limits.storage
  * it reads these instead of the full [LedgerEventEntity].
  */
 internal data class LedgerEventScope(
-    val id: Int,
+    val id: Long,
     val scheduleId: String,
-    val sharedId: String?
+
+    @Relation(parentColumn = "id", entityColumn = "eventId", entity = LedgerSharedIdEntity::class)
+    val sharedIds: List<LedgerSharedIdEntity>
 )

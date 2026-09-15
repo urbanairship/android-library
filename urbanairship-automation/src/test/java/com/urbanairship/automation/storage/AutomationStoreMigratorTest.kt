@@ -17,6 +17,7 @@ import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
+import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.automation.limits.LedgerEvent
 import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.LedgerScope
@@ -599,7 +600,7 @@ public class AutomationStoreMigratorTest {
         val expected = listOf(
             LedgerEvent.Execution(
                 scheduleId = "a",
-                sharedId = null,
+                sharedIds = null,
                 triggerId = null,
                 timestamp = timestamp,
                 count = 3,
@@ -608,7 +609,7 @@ public class AutomationStoreMigratorTest {
             ),
             LedgerEvent.Execution(
                 scheduleId = "c",
-                sharedId = null,
+                sharedIds = null,
                 triggerId = null,
                 timestamp = timestamp,
                 count = 1,
@@ -618,6 +619,45 @@ public class AutomationStoreMigratorTest {
         )
 
         assertEquals(expected, events)
+    }
+
+    /**
+     * A pooled schedule's pre-ledger history still backfills under the
+     * schedule alone. The whole point of `sharedIds = null` here is that this
+     * history predates pooling: dumping a legacy count into a shared group
+     * would charge every sibling for executions the group never saw, and on
+     * the first launch after upgrade that can exhaust the pooled budget
+     * outright and take the campaign dark for good.
+     *
+     * Reachable because backfill runs against the current store, whose
+     * schedules do carry `ledger_config` from remote data — every other
+     * fixture here leaves it null, which makes the distinction invisible.
+     */
+    @Test
+    public fun testBackfillIgnoresTheSchedulesSharedGroups() {
+        val timestamp = Instant.ofEpochMilli(1000)
+        val pooled = scheduleData(
+            "a",
+            count = 3,
+            ledgerConfig = LedgerConfig(sharedIds = listOf("promo", "experiment"))
+        )
+
+        val events = AutomationStoreMigrator.backfillLedgerEvents(listOf(pooled), timestamp)
+
+        assertEquals(
+            listOf(
+                LedgerEvent.Execution(
+                    scheduleId = "a",
+                    sharedIds = null,
+                    triggerId = null,
+                    timestamp = timestamp,
+                    count = 3,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            ),
+            events
+        )
     }
 
     @Test
@@ -649,7 +689,7 @@ public class AutomationStoreMigratorTest {
             listOf(
                 LedgerEvent.Execution(
                     scheduleId = "legacy-1",
-                    sharedId = null,
+                    sharedIds = null,
                     triggerId = null,
                     timestamp = Instant.ofEpochMilli(5000),
                     count = 5,
@@ -709,7 +749,7 @@ public class AutomationStoreMigratorTest {
             listOf(
                 LedgerEvent.Execution(
                     scheduleId = "current-1",
-                    sharedId = null,
+                    sharedIds = null,
                     triggerId = null,
                     timestamp = Instant.ofEpochMilli(7000),
                     count = 2,
@@ -718,7 +758,7 @@ public class AutomationStoreMigratorTest {
                 ),
                 LedgerEvent.Execution(
                     scheduleId = "current-3",
-                    sharedId = null,
+                    sharedIds = null,
                     triggerId = null,
                     timestamp = Instant.ofEpochMilli(7000),
                     count = 4,
@@ -749,7 +789,7 @@ public class AutomationStoreMigratorTest {
             listOf(
                 LedgerEvent.Execution(
                     scheduleId = "legacy-1",
-                    sharedId = null,
+                    sharedIds = null,
                     triggerId = null,
                     timestamp = clock.currentTime,
                     count = 5,
@@ -799,14 +839,19 @@ public class AutomationStoreMigratorTest {
         assertTrue(ledger.recorded.isEmpty())
     }
 
-    private fun scheduleData(id: String, count: Int): AutomationScheduleData {
+    private fun scheduleData(
+        id: String,
+        count: Int,
+        ledgerConfig: LedgerConfig? = null
+    ): AutomationScheduleData {
         return AutomationScheduleData(
             schedule = AutomationSchedule(
                 identifier = id,
                 triggers = emptyList(),
                 data = AutomationSchedule.ScheduleData.Actions(
                     jsonMapOf("action" to "value").toJsonValue()
-                )
+                ),
+                ledgerConfig = ledgerConfig
             ),
             scheduleState = AutomationScheduleState.IDLE,
             scheduleStateChangeDate = Instant.ofEpochMilli(0),
@@ -854,7 +899,7 @@ public class AutomationStoreMigratorTest {
 
         override suspend fun recordEventsUnless(
             scheduleId: String,
-            sharedId: String?,
+            sharedIds: List<String>,
             events: List<LedgerEvent>,
             alreadyRecorded: (LedgerEvent) -> Boolean
         ): Boolean {
@@ -865,7 +910,7 @@ public class AutomationStoreMigratorTest {
             return true
         }
 
-        override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
+        override suspend fun events(scheduleId: String, sharedIds: List<String>): List<LedgerEvent> =
             emptyList()
 
         override suspend fun hasEvents(scheduleId: String): Boolean =
