@@ -147,14 +147,18 @@ jobs:
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
 
-      - name: Install node packages
-        run: npm --prefix uitests ci
+      # The pin lives in config.json, so read it rather than repeating it here: a version
+      # bump there changes the key and the stale binary is never reused. `doctor` downloads
+      # and checksum-verifies odiff on a miss, so a cold cache costs one release asset.
+      - name: odiff version
+        id: odiff
+        run: echo "version=$(jq -r .odiff.version uitests/config.json)" >> "$GITHUB_OUTPUT"
 
-      # cwebp's libpng rejects the PNGs odiff writes, so the report re-encodes every diff heatmap
-      # through Pillow. Without it the report builds until the first real visual difference and
-      # then dies - which is exactly the run you needed it for.
-      - name: Install report packages
-        run: python3 -m pip install --break-system-packages Pillow
+      - name: Cache odiff
+        uses: actions/cache@v4
+        with:
+          path: uitests/build/bin
+          key: odiff-${{ runner.os }}-${{ runner.arch }}-${{ steps.odiff.outputs.version }}
 
       # After the fetch, so the fixture check has something to look at.
       - name: Doctor

@@ -7,8 +7,7 @@ The split is deliberate. **Gradle owns capture; the shell harness in `bin/uitest
 ## Quick start
 
 ```sh
-uitests/bin/uitest doctor          # node, npm, jq, python3, cwebp, gh, odiff + fixtures present
-npm --prefix uitests install       # odiff
+uitests/bin/uitest doctor          # jq, python3, curl, sha256, git, gh, odiff + fixtures present
 ./gradlew uitestRun --console=plain
 open uitests/build/report/index.html
 ```
@@ -29,7 +28,34 @@ uitest publish-report <pr>         publish build/report to the private Pages sit
 uitest prune-reports               remove published reports for PRs that are no longer open
 ```
 
-Everything the run produces lives under `uitests/build/` and is gitignored: `shots/` (this run's PNGs), `baselines/<label>/`, `diffs/` (heatmaps plus `results.jsonl`), `report/`, `pages/` (scratch checkout of the Pages branch).
+Everything the run produces lives under `uitests/build/` and is gitignored: `shots/` (this run's PNGs), `baselines/<label>/`, `diffs/` (heatmaps plus `results.jsonl`), `report/`, `bin/` (the pinned odiff binary), `pages/` (scratch checkout of the Pages branch).
+
+## Toolchain
+
+`uitest doctor` is the entire prerequisite list, and it is deliberately short — everything the harness needs after capture is either already present on a CI runner and a developer machine, or is one pinned binary it fetches itself:
+
+- **`jq`** — every pinned value the harness uses is read out of `config.json`.
+- **`python3`** — builds the report. Standard library only; there is nothing to `pip install`.
+- **`curl`** and a **sha256 tool** (`sha256sum`, or `shasum -a 256` on macOS) — fetch and verify odiff.
+- **`git`** and **`gh`** — baseline artifacts and the Pages publish.
+- **the fixture corpus**, where `sweep.fixtures` says it is. Checked after the layouts fetch, so it has something to look at.
+- **odiff**, downloaded and checksum-verified on first use (below).
+
+`doctor` also prints an informational `gh auth` line rather than a pass/fail one. Being unauthenticated is fine for capturing and diffing against a baseline you already have locally; only `baseline-pull`, `promote-baselines`, `publish-report` and `prune-reports` need a token.
+
+No Node, no npm, no `cwebp`, no Pillow.
+
+### The odiff pin
+
+odiff's version *and* a sha256 per platform asset live in `config.json` under `odiff`. On first use the harness downloads the matching asset from that release on GitHub into `uitests/build/bin/odiff-<version>`, checks it against the recorded digest, and refuses to run if it does not match. The binary stays cached there for later runs, `build/` is gitignored, and no binary is ever committed.
+
+The digest is re-checked on every use, not only after a download, and a binary that fails is deleted and refetched. In CI that binary arrives from a restored `actions/cache` entry, and hashing a few megabytes costs nothing next to trusting whatever the cache handed over.
+
+The checksum is not belt-and-braces on top of the version. A GitHub release asset is mutable — a tag can be moved and an asset re-uploaded under the same name — so a version pin names a URL, not a particular binary. The digest names the binary. odiff is the thing that decides whether a PR's screenshots are a regression, so it has to be the same bytes on every run and on every machine; with only a version pin, a silently replaced asset could change every verdict in the suite and nothing in the run would say so.
+
+It used to arrive from npm as `odiff-bin`. That package vendors all five platform binaries to deliver the one you need — 33MB of `node_modules` — and its contents are byte-identical to the release assets it wraps, so npm was buying us a package manager and a whole Node toolchain in the prerequisites in exchange for nothing. Node and npm were never used for anything else here: iOS needs them for flow generation, and this harness has no flow generation.
+
+The pin is currently 4.5.0, up from the 3.2.1 npm pin, and it is a drop-in: same `--threshold`, `--antialiasing`, `--fail-on-layout` and `-i/--ignore`, and the same exit codes the diff switches on (0 equal, 21 size mismatch, 22 diff).
 
 ## How capture works
 
@@ -72,8 +98,10 @@ It also only sees what was rendered. A fixture whose content renders blank (see 
 
 - **Pulling.** `uitest baseline-pull` downloads the newest `baselines-robolectric-<sdk>` artifact from the base branch's runs (`gh auth login` required; `UITEST_BASELINE_BRANCH` overrides the branch, `UITEST_BASELINE_RUN` pins a specific run). Exit 0 means pulled, exit 3 means the branch has no completed run yet — a bootstrap, where everything is reported as `new` and the check does not fail. Every other failure, including an expired or broken artifact, is a hard failure: a run that could not fetch its baselines must never report "no diffs".
 - **Promotion on merge.** A merge into `main` that touches rendering publishes new baselines. `uitest promote-baselines <merge-sha>` reuses the merged PR's own passing screenshots when they were taken against the base as it was at merge time — it requires `provenance.baseSha == <merge-sha>^` and refuses otherwise, so a PR that fell behind its base cannot promote a stale render. Refusal is the signal to capture a fresh set instead.
-- **PR flow.** Opt in with the `run-ui-tests` label; the check runs on that push and on every later push while the label stays on. The job diffs against the base branch's baselines, builds `build/report/` — every screenshot as a card, status chips, search, a viewer that flips between baseline / this run / diff with the arrow keys — publishes it to the repo's private Pages site under `<reports.directory>/pr-<n>/`, and posts one comment from `summary.md`. Report images are downscaled WebP so a full sweep stays a few MB; the full-size PNGs are in the `ui-test-report` artifact next to it. Reports live on the `gh-pages` branch, which is not mirrored publicly, and `uitest prune-reports` drops the ones for closed PRs.
+- **PR flow.** Opt in with the `run-ui-tests` label; the check runs on that push and on every later push while the label stays on. The job diffs against the base branch's baselines, builds `build/report/` — every screenshot as a card, status chips, search, a viewer that flips between baseline / this run / diff with the arrow keys — publishes it to the repo's private Pages site under `<reports.directory>/pr-<n>/`, and posts one comment from `summary.md`. The report serves the captured PNGs directly, lazily loaded, and the same files are in the `ui-test-report` artifact next to it. Reports live on the `gh-pages` branch, which is not mirrored publicly, and `uitest prune-reports` drops the ones for closed PRs.
 - **Accepting a change.** An intentional visual change is accepted with the `visual-change-accepted` label, which re-runs the check in report-only mode (`UITEST_DIFF_REPORT_ONLY`) so the diff is visible but not fatal. Merging then promotes the new baselines on the base branch. There is no step where you accept a diff by committing a PNG.
+
+**Why the report ships PNGs.** A Robolectric render of a Thomas scene is mostly flat colour and compresses extremely well: a shot is about 38KB, and the whole 122-shot sweep is 4.6MB. Downscaling and converting every image to WebP saved roughly 3MB of that, and cost two native dependencies to do it — `cwebp`, plus Pillow, because `cwebp`'s libpng rejects the PNGs odiff writes and every diff heatmap had to be re-encoded first. 3MB is not worth two prerequisites and a re-encode step that fails only on the runs with a real visual difference, so the report points at the PNGs and lets the browser lazy-load them. This is where we deliberately diverge from iOS: its captures are 3x device screenshots at around 400KB each, where the conversion pays for itself several times over.
 
 ## Why `set-baseline` is a local dead end
 
@@ -87,4 +115,3 @@ It deliberately cannot feed CI. Robolectric is deterministic *for a given SDK le
 - **Custom views render empty.** A `custom_view` with no registered handler falls back to an empty `View`. The `modal-custom-*` and `model-custom-camera-view` fixtures are therefore container-geometry coverage too, unless the capture registers handlers for them.
 - **Safe-area math is not exercised at `sdk=28`.** Thomas resolves safe areas from `WindowInsetsCompat.Type.systemBars()` through an `OnApplyWindowInsetsListener`. Under Robolectric at SDK 28 there is no real window decor and the dispatched insets are zero, so `ignore_safe_area` and its inverse resolve to identical geometry. The `banner-safe-area-*` and `safe-areas-*` fixtures render, and their screenshots are stable, but they cannot regress on inset handling — that still needs a device or a higher-SDK, cutout-configured capture.
 - **Scroll position is the top of the content.** A scrollable fixture is captured at its initial viewport; content below the fold is not in any screenshot.
-- **`odiff-bin` needs its postinstall script.** The binary is copied out of the package by `post_install.js`, so an install that blocks lifecycle scripts leaves `node_modules/.bin/odiff` dangling. `uitest doctor` checks that odiff actually runs, not just that it is installed.

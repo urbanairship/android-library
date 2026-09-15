@@ -1,7 +1,7 @@
 #!/bin/bash
 # Single entry point for the Thomas scene screenshot tests. Runs identically locally and in CI.
 #
-#   uitest doctor          verify toolchain (node, npm, jq, python3, cwebp, Pillow, gh, odiff) + fixtures
+#   uitest doctor          verify toolchain (jq, python3, curl, sha256, git, gh) + fixtures + odiff
 #   uitest finish          provenance + .complete, then baseline-pull, diff, report
 #   uitest baseline-pull   download the latest baselines minted on the base branch
 #   uitest diff            compare build/shots against build/baselines (odiff)
@@ -39,6 +39,7 @@ QUALIFIERS=$(cfg '.robolectric.qualifiers')
 ROBORAZZI_VERSION=$(cfg '.roborazzi.version')
 DIFF_THRESHOLD=$(cfg '.diff.threshold')
 DIFF_ANTIALIASING=$(cfg '.diff.antialiasing')
+ODIFF_VERSION=$(cfg '.odiff.version')
 # UITEST_BASELINE_BRANCH selects which branch's mint to diff against (CI passes the PR's
 # base branch); the config value is the default and the fallback for branches never minted.
 BASELINE_BRANCH=${UITEST_BASELINE_BRANCH:-$(cfg '.baselines.branch')}
@@ -59,6 +60,9 @@ SHOTS_DIR="$BUILD_DIR/shots"
 DIFF_DIR="$BUILD_DIR/diffs"
 REPORT_DIR="$BUILD_DIR/report"
 PAGES_CHECKOUT="$BUILD_DIR/pages"
+# Versioned filename so a version bump in config.json fetches a new binary instead of
+# silently reusing a cached one that would diff differently.
+ODIFF="$BUILD_DIR/bin/odiff-$ODIFF_VERSION"
 # Written by the Kotlin test run alongside the PNGs; the report reads it for coverage and
 # tolerates its absence (an explicit subset run does not produce one).
 SHOTS_MANIFEST="$SHOTS_DIR/manifest.json"
@@ -71,9 +75,85 @@ repo_slug() {
   git -C "$REPO_ROOT" remote get-url origin | sed -E 's#.*github\.com[:/]##; s#\.git$##'
 }
 
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | cut -d' ' -f1
+  else
+    shasum -a 256 "$1" | cut -d' ' -f1
+  fi
+}
+
+# Maps this machine to the release asset odiff publishes for it.
+odiff_asset() {
+  local os arch
+  os=$(uname -s)
+  arch=$(uname -m)
+  case "$os/$arch" in
+    Darwin/arm64)         echo "odiff-macos-arm64" ;;
+    Darwin/x86_64)        echo "odiff-macos-x64" ;;
+    Linux/x86_64)         echo "odiff-linux-x64" ;;
+    Linux/aarch64|Linux/arm64) echo "odiff-linux-arm64" ;;
+    *) return 1 ;;
+  esac
+}
+
+# Fetches the pinned odiff release binary. Pinned by checksum as well as version because the
+# diff engine decides whether a PR passes: a substituted or truncated download would quietly
+# change that verdict, and a release asset can be replaced after the fact.
+#
+# Downloaded rather than installed through a package manager: odiff's npm package vendors all
+# five platform binaries (33MB) to hand over one, and its assets are byte-identical to these,
+# so npm bought nothing and made node a dependency of an Android repo.
+ensure_odiff() {
+  local asset expected actual url tmp
+  if ! asset=$(odiff_asset); then
+    echo "no pinned odiff build for $(uname -s)/$(uname -m) - add one to odiff.checksums in uitests/config.json" >&2
+    return 1
+  fi
+
+  expected=$(cfg ".odiff.checksums.\"$asset\"")
+  if [ -z "$expected" ] || [ "$expected" = "null" ]; then
+    echo "no checksum pinned for $asset in uitests/config.json" >&2
+    return 1
+  fi
+
+  # Re-verified on every use, not just on download: in CI this binary arrives from a restored
+  # cache, and hashing a few MB costs nothing next to trusting whatever that cache handed over.
+  if [ -x "$ODIFF" ]; then
+    if [ "$(sha256_of "$ODIFF")" = "$expected" ]; then
+      return 0
+    fi
+    echo "odiff: cached binary failed its checksum, refetching" >&2
+    rm -f "$ODIFF"
+  fi
+
+  url="https://github.com/dmtrKovalenko/odiff/releases/download/v$ODIFF_VERSION/$asset"
+  mkdir -p "$(dirname "$ODIFF")"
+  tmp="$ODIFF.part"
+  rm -f "$tmp"
+  echo "odiff: fetching $asset v$ODIFF_VERSION"
+  if ! curl -sSfL --retry 3 --max-time 180 -o "$tmp" "$url"; then
+    rm -f "$tmp"
+    echo "could not download odiff from $url" >&2
+    return 1
+  fi
+
+  actual=$(sha256_of "$tmp")
+  if [ "$actual" != "$expected" ]; then
+    rm -f "$tmp"
+    echo "odiff checksum mismatch for $asset" >&2
+    echo "  expected $expected" >&2
+    echo "  actual   $actual" >&2
+    return 1
+  fi
+
+  chmod +x "$tmp"
+  mv "$tmp" "$ODIFF"
+}
+
 write_provenance() {
   local odiff_version jdk
-  odiff_version=$(node -p "require('$UITESTS_DIR/node_modules/odiff-bin/package.json').version" 2>/dev/null || echo unknown)
+  odiff_version="$ODIFF_VERSION"
   # Gradle, not this script, runs the JVM that captured the shots, so this is only a record
   # of the JDK on PATH - enough to spot a baseline minted under a different major version.
   jdk=$(java -version 2>&1 | head -1 || echo unknown)
@@ -104,21 +184,19 @@ cmd_doctor() {
   # Counted the same way the capture task discovers them, so this number and the manifest's
   # `fixtures` agree; a bare file count picks up .DS_Store and .gitkeep and reads high.
   fixtures=$(find "$FIXTURES_DIR" -type f \( -name '*.yml' -o -name '*.yaml' -o -name '*.json' \) 2>/dev/null | wc -l | tr -d ' ')
-  check "node" "node --version" "needed for odiff image diffs; install: brew install node"
-  check "npm" "npm --version" "needed to install odiff; ships with node"
   check "jq" "jq --version" "needed to read uitests/config.json; install: brew install jq"
   check "python3" "python3 --version" "needed to build the report; install: brew install python"
-  check "cwebp" "cwebp -version" "needed to build the report; install: brew install webp"
-  # Not a nice-to-have: cwebp's libpng rejects the PNGs odiff writes, so Pillow re-encodes every
-  # diff heatmap. Without it the report builds fine until the first real visual difference.
-  check "pillow" "python3 -m PIL --version" "needed to build the report; install: python3 -m pip install --break-system-packages Pillow (a Homebrew python is externally managed, so plain pip refuses)"
+  check "curl" "curl --version" "needed to fetch the pinned odiff binary"
+  check "sha256" "sha256_of '$CONFIG'" "need sha256sum or shasum to verify the odiff download"
+  check "git" "git -C '$REPO_ROOT' rev-parse HEAD" "needed for provenance and the Pages publish"
   check "gh" "gh --version" "needed to pull CI baselines; install: brew install gh"
   check "fixtures ($fixtures under $(cfg '.sweep.fixtures'))" "test '$fixtures' -gt 0" \
     "no scene fixtures found - check sweep.fixtures in uitests/config.json"
-  if [ -x "$UITESTS_DIR/node_modules/.bin/odiff" ]; then
-    echo "ok    odiff (npm)"
+  # Downloads on a miss, so this both reports and provisions: a cold CI cache costs one asset.
+  if ensure_odiff; then
+    echo "ok    odiff $ODIFF_VERSION (pinned, checksum verified)"
   else
-    echo "FAIL  odiff (npm) - run: npm --prefix uitests install"
+    echo "FAIL  odiff $ODIFF_VERSION - see above"
     failed=1
   fi
   if gh auth status >/dev/null 2>&1; then
@@ -277,11 +355,10 @@ cmd_promote_baselines() {
 }
 
 cmd_diff() {
-  local odiff="$UITESTS_DIR/node_modules/.bin/odiff"
-  if [ ! -x "$odiff" ]; then
-    echo "odiff missing - run: npm --prefix uitests install"
+  if ! ensure_odiff; then
     exit 2
   fi
+  local odiff="$ODIFF"
   if ! ls "$SHOTS_DIR"/*.png >/dev/null 2>&1; then
     echo "no screenshots at $SHOTS_DIR - capture them first: ./gradlew uitestRun --console=plain"
     exit 2

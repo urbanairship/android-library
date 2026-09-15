@@ -6,32 +6,26 @@
 Writes to <report-dir>:
     index.html      a self-contained gallery: every screenshot as a card, filter by status,
                     search, and a viewer that flips between baseline / this run / diff
-    img/            downscaled WebP copies of the screenshots the page shows (the full-size
-                    PNGs stay in the workflow artifact next to this report)
+    img/            copies of the screenshots the page shows
     summary.md      the PR comment body
 
-The report directory is published as-is to the private Pages site, so it has to stay small:
-an xhdpi phone capture is ~250KB as PNG and ~25KB as a downscaled WebP. Baseline and diff
-images are only emitted for rows that changed; unchanged rows carry the current shot only.
+The report directory is published as-is to the private Pages site, so it has to stay small.
+A Thomas scene is mostly flat colour, so a capture is only ~38KB as PNG and a whole sweep
+fits in a few MB - not enough to be worth a WebP conversion step and its native
+dependencies. Baseline and diff images are only emitted for rows that changed; unchanged
+rows carry the current shot only.
 """
 
-import concurrent.futures
 import html
 import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 
 results_path, baseline_dir, shots_dir, diff_dir, report_dir, label, manifest_path = sys.argv[1:8]
 
 ORDER = {"diff": 0, "error": 1, "new": 2, "gone": 3, "ok": 4}
-# The capture is a `w411dp-h891dp-xhdpi` Robolectric phone, so ~822x1782 px. The viewer shows
-# it around 415 px wide at a typical laptop window height, so 660 still oversamples enough to
-# stay crisp on a HiDPI screen while cutting the payload to a fraction of the PNG.
-FULL_WIDTH = 660
-THUMB_WIDTH = 240
 # Pixel dimensions of the capture, so a card reserves the right box before its image loads.
 CAPTURE_ASPECT = "822/1782"
 
@@ -42,42 +36,24 @@ provenance = {}
 if os.path.isfile(os.path.join(baseline_dir, "provenance.json")):
     provenance = json.load(open(os.path.join(baseline_dir, "provenance.json")))
 
-cwebp = shutil.which("cwebp")
-if not cwebp:
-    sys.exit("cwebp missing - install: apt-get install webp (brew install webp on macOS)")
-
 # --- images ------------------------------------------------------------------------------
 
 img_root = os.path.join(report_dir, "img")
 shutil.rmtree(img_root, ignore_errors=True)
-jobs = []
+copied = 0
 
 
-def plan(kind, source, name, width):
-    """Queue one WebP conversion; returns the page-relative path, or None if the source is missing."""
+def copy(kind, source, name):
+    """Copy one screenshot into the report; returns the page-relative path, or None if the source is missing."""
+    global copied
     if not os.path.isfile(source):
         return None
-    stem = name[:-4] if name.endswith(".png") else name
-    rel = os.path.join("img", kind, f"{stem}.webp")
-    jobs.append((source, os.path.join(report_dir, rel), width))
-    return rel
-
-
-def convert(job):
-    source, target, width = job
+    rel = os.path.join("img", kind, name)
+    target = os.path.join(report_dir, rel)
     os.makedirs(os.path.dirname(target), exist_ok=True)
-    args = [cwebp, "-quiet", "-q", "80", "-resize", str(width), "0"]
-    if subprocess.run(args + [source, "-o", target], capture_output=True).returncode == 0:
-        return
-    # cwebp's libpng rejects the PNGs odiff writes ("invalid read length"); re-encoding them
-    # through Pillow normalises them. The CI report job installs Pillow for exactly this.
-    reencoded = target + ".png"
-    from PIL import Image
-    Image.open(source).save(reencoded)
-    try:
-        subprocess.run(args + [reencoded, "-o", target], check=True)
-    finally:
-        os.remove(reencoded)
+    shutil.copyfile(source, target)
+    copied += 1
+    return rel
 
 
 # --- rows ---------------------------------------------------------------------------------
@@ -134,19 +110,13 @@ for row in rows:
         "source": fixture_by_shot.get(base_name),
         "notes": notes_by_shot.get(base_name, []),
     }
-    # The gallery card shows the current shot; a removed screenshot only has its baseline.
-    primary_dir = baseline_dir if status == "gone" else shots_dir
-    card["thumb"] = plan("thumb", os.path.join(primary_dir, name), name, THUMB_WIDTH)
-    card["run"] = plan("run", os.path.join(shots_dir, name), name, FULL_WIDTH) if status != "gone" else None
+    card["run"] = copy("run", os.path.join(shots_dir, name), name) if status != "gone" else None
     if status in ("diff", "error", "gone"):
-        card["base"] = plan("base", os.path.join(baseline_dir, name), name, FULL_WIDTH)
+        card["base"] = copy("base", os.path.join(baseline_dir, name), name)
     else:
         card["base"] = None
-    card["diff"] = plan("diff", os.path.join(diff_dir, name), name, FULL_WIDTH) if status == "diff" else None
+    card["diff"] = copy("diff", os.path.join(diff_dir, name), name) if status == "diff" else None
     cards.append(card)
-
-with concurrent.futures.ThreadPoolExecutor() as pool:
-    list(pool.map(convert, jobs))
 
 counts = {}
 for card in cards:
@@ -346,9 +316,11 @@ main{padding:16px 20px}
         const el = document.createElement("div");
         el.className = "card status-" + c.status;
         el.tabIndex = 0;
+        // Cards show the full-size run PNG scaled down by CSS; a removed screenshot only has its baseline.
+        const shot = c.run || c.base;
         el.innerHTML =
           '<div class="shot">' +
-            (c.thumb ? '<img loading="lazy" src="' + esc(c.thumb) + '" alt="">' : '<div class="missing">missing</div>') +
+            (shot ? '<img loading="lazy" decoding="async" src="' + esc(shot) + '" alt="">' : '<div class="missing">missing</div>') +
             '<span class="badge">' + esc(LABEL[c.status] || c.status) + "</span></div>" +
           '<div class="cap"><b>' + esc(c.fixture) + (c.page ? " · page " + (c.page + 1) : "") + "</b>" +
             "<span>" + esc(c.category) + (c.detail ? " · " + esc(c.detail) : "") + "</span>" +
@@ -459,4 +431,4 @@ else:
 open(os.path.join(report_dir, "summary.md"), "w").write("\n".join(lines) + "\n")
 
 size = sum(os.path.getsize(os.path.join(root, f)) for root, _, files in os.walk(report_dir) for f in files)
-print(f"report: {os.path.join(report_dir, 'index.html')} ({len(cards)} screenshots, {len(jobs)} images, {size / 1_000_000:.1f} MB)")
+print(f"report: {os.path.join(report_dir, 'index.html')} ({len(cards)} screenshots, {copied} images, {size / 1_000_000:.1f} MB)")
