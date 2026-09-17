@@ -172,6 +172,14 @@ internal class SceneScreenshotTest(
         // delayed transition, so both only land once the looper has drained.
         shadowOf(Looper.getMainLooper()).idle()
 
+        // Model state (e.g. icon_view's drawable) is only applied from a `viewScope.launch` collector
+        // on `Dispatchers.Main.immediate`, which resolves to this StandardTestDispatcher. Draining the
+        // looper above does not run coroutines queued on it, so without this, state-driven views never
+        // receive their first update and render blank. `runCurrent()` rather than `advanceUntilIdle()`:
+        // the latter also fires any `delay(...)`-based timers (story auto-advance, video progress),
+        // fast-forwarding them past what a real render pass would ever reach.
+        testDispatcher.scheduler.runCurrent()
+
         val file = File(ScreenshotPaths.shots, "${name}__p0.png")
         file.parentFile?.mkdirs()
         target.root.captureRoboImage(filePath = file.absolutePath)
