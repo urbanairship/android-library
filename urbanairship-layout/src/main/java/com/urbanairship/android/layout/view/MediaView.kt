@@ -256,6 +256,16 @@ internal class MediaView(
      * has it deprecated, so there is nothing here to align it to.
      */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        // An item that declares a ratio has both its axes worked out by the parent, so the specs
+        // are the box to crop into; taking the image's own shape leaves the ratio with no effect.
+        if (itemProperties?.size?.aspectRatio != null &&
+            MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY &&
+            MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY
+        ) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            return
+        }
+
         val drawable = imageView?.drawable
         val mediaWidth = drawable?.intrinsicWidth ?: 0
         val mediaHeight = drawable?.intrinsicHeight ?: 0

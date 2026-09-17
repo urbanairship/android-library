@@ -44,6 +44,9 @@ import org.robolectric.RobolectricTestRunner
  * The overflow comes off the children that can give it, in proportion to what each asked for.
  * Handing out what is left over in order instead pays the first child in full and the last one
  * with the remainder, which is how two images of the same photo ended up different sizes.
+ *
+ * A percent child asks too: it is sized from what its siblings left, so a child that can give has
+ * to divide the stack with it rather than be measured first and hand back the remainder.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -148,6 +151,89 @@ public class StackRationingTest {
         assertTrue("trailing label has a width", trailing.measuredWidth > 0)
     }
 
+    /** A child at the whole and an image both want all of it, so they take half each. */
+    @Test
+    public fun testAPercentChildAndAnImageDivideTheStack() {
+        val stack = shareBesideImage(vertical = true)
+        stack.measure(exactly(PAGE), exactly(PAGE))
+
+        assertEquals("share height", PAGE / 2, stack.getChildAt(0).measuredHeight)
+        assertEquals("image height", PAGE / 2, allMedia(stack).single().measuredHeight)
+    }
+
+    /** A row divides it the same way. */
+    @Test
+    public fun testAPercentChildAndAnImageDivideTheRow() {
+        val row = shareBesideImage(vertical = false)
+        row.measure(exactly(PAGE), exactly(PAGE))
+
+        assertEquals("share width", PAGE / 2, row.getChildAt(0).measuredWidth)
+        assertEquals("image width", PAGE / 2, allMedia(row).single().measuredWidth)
+    }
+
+    /**
+     * A ratio child is measured last of all, off what the percent children leave, so its claim has
+     * to be counted while they are being paid. Inside its share it keeps the length the ratio asks
+     * for, and the percent child takes the rest.
+     */
+    @Test
+    public fun testARatioChildInsideItsShareKeepsItsLength() {
+        val stack = shareBesideRatio(ratio = 4)
+        stack.measure(exactly(PAGE), exactly(PAGE))
+
+        assertEquals("ratio height", PAGE / 4, stack.getChildAt(1).measuredHeight)
+        assertEquals("share height", PAGE - PAGE / 4, stack.getChildAt(0).measuredHeight)
+    }
+
+    /** Past its share it is cut like anything else, and takes the other axis down with it. */
+    @Test
+    public fun testARatioChildPastItsShareIsCutDownWithTheRest() {
+        val stack = shareBesideRatio(ratio = 0.5)
+        stack.measure(exactly(PAGE), exactly(PAGE))
+
+        assertEquals("share height", PAGE / 2, stack.getChildAt(0).measuredHeight)
+        assertEquals("ratio height", PAGE / 2, stack.getChildAt(1).measuredHeight)
+        assertEquals("ratio keeps its shape", PAGE / 4, stack.getChildAt(1).measuredWidth)
+    }
+
+    /**
+     * A length the ratio takes from the cross axis is still a share of the stack axis, not a claim
+     * on it: it divides the row with a percent sibling rather than being paid before one.
+     */
+    @Test
+    public fun testARatioChildDividesARowEvenWhenItsLengthWouldFit() {
+        val row = build(
+            """
+            {
+              "type": "linear_layout",
+              "direction": "horizontal",
+              "items": [
+                {"size": {"width": "auto", "height": "100%", "aspect_ratio": 1}, "view": $SHARE},
+                {"size": {"width": "100%", "height": "100%"}, "view": $SHARE}
+              ]
+            }
+            """.trimIndent()
+        )
+        // A square off the row's height would fit the row with room to spare, at 800 of 1000.
+        row.measure(exactly(PAGE), exactly(800))
+
+        assertEquals("ratio width", PAGE / 2, row.getChildAt(0).measuredWidth)
+        assertEquals("ratio keeps its shape", PAGE / 2, row.getChildAt(0).measuredHeight)
+        assertEquals("share width", PAGE / 2, row.getChildAt(1).measuredWidth)
+    }
+
+    /** A child that fits inside its share keeps its content, and the percent child takes the rest. */
+    @Test
+    public fun testAPercentChildTakesWhatACaptionLeaves() {
+        val stack = shareBesideCaption()
+        stack.measure(exactly(PAGE), exactly(PAGE))
+
+        val caption = requireNotNull(findLabel(stack, TRAILING)) { "no caption" }
+        val height = caption.measuredHeight
+        assertTrue("caption keeps its line: $height", height > 0 && height < PAGE / 2)
+        assertEquals("the share takes the rest", PAGE - height, stack.getChildAt(0).measuredHeight)
+    }
+
     private fun findLabel(view: View, text: String): View? {
         if (view is android.widget.TextView && view.text?.toString() == text) return view
         if (view is ViewGroup) {
@@ -235,6 +321,59 @@ public class StackRationingTest {
         """.trimIndent()
     )
 
+    /** A child at the whole of the stack axis, beside an image that wants more than it can have. */
+    private fun shareBesideImage(vertical: Boolean): ViewGroup = build(
+        """
+        {
+          "type": "linear_layout",
+          "direction": "${if (vertical) "vertical" else "horizontal"}",
+          "items": [
+            {"size": {"width": "100%", "height": "100%"}, "view": $SHARE},
+            {
+              "size": ${if (vertical) """{"width": "100%", "height": "auto"}"""
+                        else """{"width": "auto", "height": "100%"}"""},
+              "view": $MEDIA
+            }
+          ]
+        }
+        """.trimIndent()
+    )
+
+    /** A child at the whole of the stack axis, beside one whose length is its width over [ratio]. */
+    private fun shareBesideRatio(ratio: Number): ViewGroup = build(
+        """
+        {
+          "type": "linear_layout",
+          "direction": "vertical",
+          "items": [
+            {"size": {"width": "100%", "height": "100%"}, "view": $SHARE},
+            {"size": {"width": "100%", "height": "auto", "aspect_ratio": $ratio}, "view": $SHARE}
+          ]
+        }
+        """.trimIndent()
+    )
+
+    /** The same, with a line of text in place of the image. */
+    private fun shareBesideCaption(): ViewGroup = build(
+        """
+        {
+          "type": "linear_layout",
+          "direction": "vertical",
+          "items": [
+            {"size": {"width": "100%", "height": "100%"}, "view": $SHARE},
+            {
+              "size": {"width": "100%", "height": "auto"},
+              "view": {
+                "type": "label", "text": "$TRAILING",
+                "text_appearance": {"font_size": 14,
+                  "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}
+              }
+            }
+          ]
+        }
+        """.trimIndent()
+    )
+
     private fun image(): Drawable = object : ColorDrawable(Color.RED) {
         override fun getIntrinsicWidth(): Int = 400
         override fun getIntrinsicHeight(): Int = 400
@@ -244,6 +383,10 @@ public class StackRationingTest {
         private const val PAGE = 1000
         private const val BAND = 100
         private const val TRAILING = "What the images left room for."
+
+        private val SHARE = """
+            {"type": "empty_view"}
+        """.trimIndent()
 
         private val MEDIA = """
             {"type": "media", "media_type": "image", "media_fit": "fit_crop",

@@ -4,6 +4,20 @@ plugins {
 
 description = "Airship Layout Rendering Library"
 
+// The Thomas scene screenshot sweep renders every scene fixture and is far too slow to belong in
+// the unit test run that ci.yml and merge.yml trigger on every PR and merge, so it is excluded
+// unless explicitly asked for. Keyed off the requested task names rather than a -P flag so that
+// `./gradlew uitestRun` just works; startParameter is a configuration-cache-safe input.
+// uitestFinish counts too: it depends on this task and then blesses whatever is in the shots
+// directory, so running it without capturing would stamp fresh provenance onto a previous run.
+def wantsScreenshots = gradle.startParameter.taskNames.any {
+    it.contains('uitestRun') || it.contains('uitestFinish')
+} || project.hasProperty('thomasScreenshots')
+
+def thomasFixturesDir = file("$rootDir/devapp/src/main/assets/sample_layouts/Scenes")
+def thomasShotsDir = file("$rootDir/uitests/build/shots")
+def thomasConfigFile = file("$rootDir/uitests/config.json")
+
 android {
     compileSdk rootProject.compileSdkVersion
 
@@ -16,6 +30,55 @@ android {
         unitTests {
             includeAndroidResources = true
             returnDefaultValues = true
+
+            // Only the debug task ever captures. Declaring the same output directory on both the
+            // debug and release tasks would put two tasks in conflict over it.
+            all { test ->
+                if (!wantsScreenshots || test.name != 'testDebugUnitTest') {
+                    test.filter.excludeTestsMatching '*SceneScreenshotTest*'
+                    return
+                }
+
+                test.filter.includeTestsMatching '*SceneScreenshotTest*'
+                test.systemProperty 'roborazzi.test.record', 'true'
+                test.systemProperty 'thomas.fixtures.dir', thomasFixturesDir.path
+                test.systemProperty 'thomas.shots.dir', thomasShotsDir.path
+                test.systemProperty 'thomas.config', thomasConfigFile.path
+                // Gradle resolves the real version from the catalog; config.json only records it
+                // for provenance, so hand the truth over and let the test reject any drift.
+                test.systemProperty 'thomas.roborazzi.version', libs.versions.roborazzi.get()
+                // Native-graphics rendering holds a full-size bitmap per scene, which the
+                // default test heap is not sized for.
+                test.maxHeapSize = '4g'
+
+                // The scenes and the skip list reach the test as system properties, which Gradle
+                // cannot see, so without these it reports UP-TO-DATE after a fixture edit and
+                // silently captures nothing — and the screenshots, its real product, were an
+                // undeclared output, so a build-cache hit would skip the capture and leave the
+                // directory empty.
+                test.inputs.dir(thomasFixturesDir)
+                        .withPropertyName('thomasFixtures')
+                        // A fixture's path decides its category and its screenshot filename.
+                        .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+                        .optional(true)
+                test.inputs.file(thomasConfigFile)
+                        .withPropertyName('thomasConfig')
+                        .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.NONE)
+                        .optional(true)
+                test.outputs.dir(thomasShotsDir).withPropertyName('thomasShots')
+
+                // Gradle does not clear a task's output directory, and this one sits outside the
+                // project build dir. Stale contents are not merely untidy: a deleted fixture would
+                // leave its PNG behind and keep reporting `ok` instead of `gone`, and a `.complete`
+                // left by an earlier green run would let set-baseline bless a partial capture.
+                test.doFirst { thomasShotsDir.deleteDir() }
+
+                // Never served from the build cache. The whole premise is that these bytes came
+                // out of this renderer on this machine; a restored set would assert that without
+                // having rendered anything, and cross-environment pixel equality is precisely
+                // what this suite has not yet established.
+                test.outputs.cacheIf { false }
+            }
         }
     }
 
@@ -42,4 +105,6 @@ dependencies {
 
     // Unit Tests
     testImplementation project(':urbanairship-test')
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.snakeyaml)
 }

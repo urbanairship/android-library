@@ -166,6 +166,20 @@ public class MediaSizingTest {
         assertEquals("height", MEDIA_HEIGHT / 2, media.measuredHeight)
     }
 
+    /** A ratio the item declared is the shape the image is cropped to, whatever shape it is. */
+    @Test
+    public fun testADeclaredRatioIsTheShape() {
+        val stack = stack(
+            itemSize = FULL_WIDTH,
+            mediaItemSize = """{"width": "auto", "height": "auto", "aspect_ratio": 4}"""
+        )
+        measure(stack, PAGE, exactly = true)
+
+        val media = requireNotNull(findMedia(stack))
+        assertEquals("width", PAGE, media.measuredWidth)
+        assertEquals("height", PAGE / 4, media.measuredHeight)
+    }
+
     /** An image in a row leaves the label beside it its own width. */
     @Test
     public fun testImageBesideALabelLeavesRoomForIt() {

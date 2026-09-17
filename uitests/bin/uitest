@@ -1,0 +1,653 @@
+#!/bin/bash
+# Single entry point for the Thomas scene screenshot tests. Runs identically locally and in CI.
+#
+#   uitest doctor          verify toolchain (jq, python3, curl, sha256, git, gh) + fixtures + odiff
+#   uitest finish          provenance + .complete, then baseline-pull, diff, report
+#   uitest baseline-pull   download the latest baselines minted on the base branch
+#   uitest diff            compare build/shots against build/baselines (odiff)
+#   uitest report          write build/report (gallery + summary.md) from the last diff
+#   uitest set-baseline    promote build/shots into the LOCAL baseline cache (never committed)
+#   uitest promote-baselines <merge-sha>
+#                          reuse the merged PR's passing screenshots as the new baselines
+#   uitest publish-report N  publish build/report to the private Pages site as ui-tests/pr-N/
+#   uitest prune-reports   remove published reports for PRs that are no longer open
+#
+# Gradle owns capture: Roborazzi renders the scenes on the JVM under Robolectric, so there is
+# no emulator, no device farm and no sharding. This script owns everything after capture and
+# never shells back into ./gradlew, which would contend on the daemon and the build locks.
+# Baselines are never committed: android-library is public and would carry every PNG forever.
+# CI stores them as a workflow artifact of the base branch. A merge promotes the merged
+# PR's own passing screenshots when they were taken against the current base, and only
+# runs a full mint when they were not.
+# PR reports go to the repo's private GitHub Pages site (the `gh-pages` branch, which
+# is not mirrored to the public repo). Every publish rewrites that branch as a single
+# commit and drops reports for closed PRs, so neither the tree nor the history grows.
+
+set -o pipefail
+set -e
+
+UITESTS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$UITESTS_DIR/.." && pwd)"
+CONFIG="$UITESTS_DIR/config.json"
+
+cfg() {
+  jq -r "$1" "$CONFIG"
+}
+
+ROBOLECTRIC_SDK=$(cfg '.robolectric.sdk')
+QUALIFIERS=$(cfg '.robolectric.qualifiers')
+ROBORAZZI_VERSION=$(cfg '.roborazzi.version')
+DIFF_THRESHOLD=$(cfg '.diff.threshold')
+DIFF_ANTIALIASING=$(cfg '.diff.antialiasing')
+ODIFF_VERSION=$(cfg '.odiff.version')
+# UITEST_BASELINE_BRANCH selects which branch's mint to diff against (CI passes the PR's
+# base branch); the config value is the default and the fallback for branches never minted.
+BASELINE_BRANCH=${UITEST_BASELINE_BRANCH:-$(cfg '.baselines.branch')}
+BASELINE_DEFAULT_BRANCH=$(cfg '.baselines.branch')
+BASELINE_WORKFLOW=$(cfg '.baselines.workflow')
+PAGES_BRANCH=$(cfg '.reports.branch')
+PAGES_DIR=$(cfg '.reports.directory')
+FIXTURES_DIR="$REPO_ROOT/$(cfg '.sweep.fixtures')"
+
+# Baselines are stored per Robolectric SDK: the platform's own rendering changes between
+# API levels, so shots taken under one are not comparable with another's.
+RUNTIME_LABEL="robolectric-$ROBOLECTRIC_SDK"
+
+BUILD_DIR="$UITESTS_DIR/build"
+BASELINE_DIR="$BUILD_DIR/baselines/$RUNTIME_LABEL"
+BASELINE_ARTIFACT="baselines-$RUNTIME_LABEL"
+SHOTS_DIR="$BUILD_DIR/shots"
+DIFF_DIR="$BUILD_DIR/diffs"
+REPORT_DIR="$BUILD_DIR/report"
+PAGES_CHECKOUT="$BUILD_DIR/pages"
+# Versioned filename so a version bump in config.json fetches a new binary instead of
+# silently reusing a cached one that would diff differently.
+ODIFF="$BUILD_DIR/bin/odiff-$ODIFF_VERSION"
+# Written by the Kotlin test run alongside the PNGs; the report reads it for coverage and
+# tolerates its absence (an explicit subset run does not produce one).
+SHOTS_MANIFEST="$SHOTS_DIR/manifest.json"
+
+# CI passes the PR's merge base explicitly. Locally HEAD^ is the useful stand-in, and
+# promote-baselines checks this against the merge commit's first parent.
+BASE_SHA=${UITEST_BASE_SHA:-$(git -C "$REPO_ROOT" rev-parse HEAD^ 2>/dev/null || true)}
+
+repo_slug() {
+  git -C "$REPO_ROOT" remote get-url origin | sed -E 's#.*github\.com[:/]##; s#\.git$##'
+}
+
+# This repo is mirrored to the public urbanairship/android-library, and the workflow guards every
+# job on the dev repo so the sweep never runs there. That guard cannot cover a local invocation:
+# publish-report and prune-reports force-push to the Pages branch of whatever `origin` resolves to,
+# so from a clone of the mirror they would put screenshot reports on the public docs site.
+require_reports_repo() {
+  local slug expected
+  slug=$(repo_slug)
+  expected=$(cfg '.reports.repo')
+  if [ "$slug" != "$expected" ]; then
+    echo "refusing: reports may only be published to $expected, but origin is $slug" >&2
+    exit 2
+  fi
+}
+
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | cut -d' ' -f1
+  else
+    shasum -a 256 "$1" | cut -d' ' -f1
+  fi
+}
+
+# Maps this machine to the release asset odiff publishes for it.
+odiff_asset() {
+  local os arch
+  os=$(uname -s)
+  arch=$(uname -m)
+  case "$os/$arch" in
+    Darwin/arm64)         echo "odiff-macos-arm64" ;;
+    Darwin/x86_64)        echo "odiff-macos-x64" ;;
+    Linux/x86_64)         echo "odiff-linux-x64" ;;
+    Linux/aarch64|Linux/arm64) echo "odiff-linux-arm64" ;;
+    *) return 1 ;;
+  esac
+}
+
+# Fetches the pinned odiff release binary. Pinned by checksum as well as version because the
+# diff engine decides whether a PR passes: a substituted or truncated download would quietly
+# change that verdict, and a release asset can be replaced after the fact.
+#
+# Downloaded rather than installed through a package manager: odiff's npm package vendors all
+# five platform binaries (33MB) to hand over one, and its assets are byte-identical to these,
+# so npm bought nothing and made node a dependency of an Android repo.
+ensure_odiff() {
+  local asset expected actual url tmp
+  if ! asset=$(odiff_asset); then
+    echo "no pinned odiff build for $(uname -s)/$(uname -m) - add one to odiff.checksums in uitests/config.json" >&2
+    return 1
+  fi
+
+  expected=$(cfg ".odiff.checksums.\"$asset\"")
+  if [ -z "$expected" ] || [ "$expected" = "null" ]; then
+    echo "no checksum pinned for $asset in uitests/config.json" >&2
+    return 1
+  fi
+
+  # Re-verified on every use, not just on download: in CI this binary arrives from a restored
+  # cache, and hashing a few MB costs nothing next to trusting whatever that cache handed over.
+  if [ -x "$ODIFF" ]; then
+    if [ "$(sha256_of "$ODIFF")" = "$expected" ]; then
+      return 0
+    fi
+    echo "odiff: cached binary failed its checksum, refetching" >&2
+    rm -f "$ODIFF"
+  fi
+
+  url="https://github.com/dmtrKovalenko/odiff/releases/download/v$ODIFF_VERSION/$asset"
+  mkdir -p "$(dirname "$ODIFF")"
+  tmp="$ODIFF.part"
+  rm -f "$tmp"
+  echo "odiff: fetching $asset v$ODIFF_VERSION"
+  if ! curl -sSfL --retry 3 --max-time 180 -o "$tmp" "$url"; then
+    rm -f "$tmp"
+    echo "could not download odiff from $url" >&2
+    return 1
+  fi
+
+  actual=$(sha256_of "$tmp")
+  if [ "$actual" != "$expected" ]; then
+    rm -f "$tmp"
+    echo "odiff checksum mismatch for $asset" >&2
+    echo "  expected $expected" >&2
+    echo "  actual   $actual" >&2
+    return 1
+  fi
+
+  chmod +x "$tmp"
+  mv "$tmp" "$ODIFF"
+}
+
+write_provenance() {
+  local odiff_version jdk
+  odiff_version="$ODIFF_VERSION"
+  # Gradle, not this script, runs the JVM that captured the shots, so this is only a record
+  # of the JDK on PATH - enough to spot a baseline minted under a different major version.
+  jdk=$(java -version 2>&1 | head -1 || echo unknown)
+  jq -n \
+    --arg capturedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    --arg commit "$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)" \
+    --arg baseSha "$BASE_SHA" \
+    --argjson robolectricSdk "$ROBOLECTRIC_SDK" \
+    --arg qualifiers "$QUALIFIERS" \
+    --arg roborazzi "$ROBORAZZI_VERSION" \
+    --arg jdk "$jdk" \
+    --arg odiff "$odiff_version" \
+    '{capturedAt: $capturedAt, commit: $commit, baseSha: $baseSha, robolectricSdk: $robolectricSdk,
+      qualifiers: $qualifiers, roborazzi: $roborazzi, jdk: $jdk, odiff: $odiff}' > "$1"
+}
+
+cmd_doctor() {
+  local failed=0
+  check() {
+    if eval "$2" >/dev/null 2>&1; then
+      echo "ok    $1"
+    else
+      echo "FAIL  $1 - $3"
+      failed=1
+    fi
+  }
+  local fixtures
+  # Counted the same way the capture task discovers them, so this number and the manifest's
+  # `fixtures` agree; a bare file count picks up .DS_Store and .gitkeep and reads high.
+  fixtures=$(find "$FIXTURES_DIR" -type f \( -name '*.yml' -o -name '*.yaml' -o -name '*.json' \) 2>/dev/null | wc -l | tr -d ' ')
+  check "jq" "jq --version" "needed to read uitests/config.json; install: brew install jq"
+  check "python3" "python3 --version" "needed to build the report; install: brew install python"
+  check "curl" "curl --version" "needed to fetch the pinned odiff binary"
+  check "sha256" "sha256_of '$CONFIG'" "need sha256sum or shasum to verify the odiff download"
+  check "git" "git -C '$REPO_ROOT' rev-parse HEAD" "needed for provenance and the Pages publish"
+  check "gh" "gh --version" "needed to pull CI baselines; install: brew install gh"
+  check "fixtures ($fixtures under $(cfg '.sweep.fixtures'))" "test '$fixtures' -gt 0" \
+    "no scene fixtures found - check sweep.fixtures in uitests/config.json"
+  # Downloads on a miss, so this both reports and provisions: a cold CI cache costs one asset.
+  if ensure_odiff; then
+    echo "ok    odiff $ODIFF_VERSION (pinned, checksum verified)"
+  else
+    echo "FAIL  odiff $ODIFF_VERSION - see above"
+    failed=1
+  fi
+  if gh auth status >/dev/null 2>&1; then
+    echo "ok    gh auth (baseline-pull can fetch CI baselines)"
+  else
+    echo "info  gh not authenticated - baseline-pull unavailable, set-baseline still works locally"
+  fi
+  exit $failed
+}
+
+cmd_baseline_pull() {
+  # Baselines live as the `$BASELINE_ARTIFACT` artifact of the newest successful
+  # `$BASELINE_WORKFLOW` run on `$BASELINE_BRANCH`. UITEST_BASELINE_RUN pins a run id.
+  #
+  # Exit codes: 0 pulled; 3 bootstrap (the workflow has never run on the baseline
+  # branch or its fallback, so there is nothing to compare against yet); 1 anything
+  # else, including an expired artifact or a broken mint, which callers must treat
+  # as a failure and never as "no diffs".
+  local slug err status staged
+  slug=$(repo_slug)
+  # Downloaded to the side and swapped in only once it is complete: clearing the cache up front
+  # would mean a bootstrap or a broken artifact left you with no baselines at all, silently
+  # turning the next diff into "everything is new".
+  staged="${BASELINE_DIR}.incoming"
+  rm -rf "$staged"
+  mkdir -p "$(dirname "$BASELINE_DIR")"
+  if [ -n "${UITEST_BASELINE_RUN:-}" ]; then
+    if err=$(gh run download "$UITEST_BASELINE_RUN" --repo "$slug" --name "$BASELINE_ARTIFACT" --dir "$staged" 2>&1); then
+      swap_staged_baselines "$staged"
+      echo "baselines: run $UITEST_BASELINE_RUN -> $BASELINE_DIR"
+      return 0
+    fi
+    rm -rf "$staged"
+    echo "no $BASELINE_ARTIFACT artifact on run $UITEST_BASELINE_RUN: $err"
+    return 1
+  fi
+  status=0
+  pull_branch_baselines "$slug" "$BASELINE_BRANCH" "$staged" || status=$?
+  if [ "$status" -eq 3 ] && [ "$BASELINE_BRANCH" != "$BASELINE_DEFAULT_BRANCH" ]; then
+    # A branch that is never minted (e.g. the parent of a stacked PR): use the default.
+    echo "falling back to the $BASELINE_DEFAULT_BRANCH baselines"
+    status=0
+    pull_branch_baselines "$slug" "$BASELINE_DEFAULT_BRANCH" "$staged" || status=$?
+  fi
+  rm -rf "$staged"
+  return "$status"
+}
+
+# Replace the baseline cache with a completed download, atomically enough that an interrupted
+# pull cannot leave a half-populated cache behind.
+swap_staged_baselines() {
+  local staged="$1"
+  rm -rf "$BASELINE_DIR"
+  mv "$staged" "$BASELINE_DIR"
+}
+
+# Download the newest successful mint on one branch. Exit 3 when the branch has no
+# completed run yet (nothing to compare against, a one-time state right after a branch
+# starts minting); exit 1 when it has completed runs but none carries the artifact.
+pull_branch_baselines() {
+  local slug="$1" branch="$2" staged="$3" run_id runs err
+  if ! runs=$(gh run list --repo "$slug" --workflow "$BASELINE_WORKFLOW" --branch "$branch" \
+      --limit 20 --json databaseId,conclusion,status 2>&1); then
+    # gh resolves --workflow against the *default* branch, so until this workflow is merged there
+    # it 404s. That is the same bootstrap state as "never run", not a broken baseline set: without
+    # this the very PR that adds the workflow could never go green.
+    case "$runs" in
+      *"not found on the default branch"*|*"HTTP 404"*)
+        echo "$BASELINE_WORKFLOW does not exist on the default branch yet - no baselines exist yet"
+        return 3
+        ;;
+    esac
+    echo "could not list $BASELINE_WORKFLOW runs on $branch: $runs"
+    return 1
+  fi
+  if [ "$(printf '%s' "$runs" | jq '[.[] | select(.status == "completed")] | length')" = "0" ]; then
+    echo "$BASELINE_WORKFLOW has no completed run on $branch - no baselines exist yet"
+    return 3
+  fi
+  for run_id in $(printf '%s' "$runs" | jq -r '.[] | select(.conclusion == "success") | .databaseId'); do
+    if err=$(gh run download "$run_id" --repo "$slug" --name "$BASELINE_ARTIFACT" --dir "$staged" 2>&1); then
+      swap_staged_baselines "$staged"
+      echo "baselines: $branch run $run_id -> $BASELINE_DIR"
+      [ -f "$BASELINE_DIR/provenance.json" ] && jq -r '"  minted: \(.capturedAt) \((.commit // "")[0:11]) robolectric-\(.robolectricSdk) roborazzi \(.roborazzi)"' "$BASELINE_DIR/provenance.json"
+      return 0
+    fi
+    rm -rf "$staged"
+  done
+  echo "$BASELINE_WORKFLOW has run on $branch but no recent successful run carries a $BASELINE_ARTIFACT artifact"
+  echo "(expired after its retention window, or the mint is failing) - re-mint with: gh workflow run $BASELINE_WORKFLOW --ref $branch"
+  [ -n "${err:-}" ] && echo "last download error: $err"
+  return 1
+}
+
+# Reuse the merged PR's screenshots as the baselines for the branch its merge commit
+# landed on. They qualify when the PR's last UI test run on that head passed and was
+# taken against the base exactly as it was at merge time (provenance baseSha equals the
+# merge commit's first parent). Anything else returns 1 and the caller mints in full.
+# UITEST_PROMOTE_PR names the PR directly (local testing, or if the lookup by commit
+# finds none).
+cmd_promote_baselines() {
+  local merge_sha="$1" slug pr head_sha run_id parent base tmp updated
+  if [ -z "$merge_sha" ]; then
+    echo "usage: uitest promote-baselines <merge-sha>"
+    exit 2
+  fi
+  slug=$(repo_slug)
+  if [ -n "${UITEST_PROMOTE_PR:-}" ]; then
+    pr="$UITEST_PROMOTE_PR"
+  else
+    pr=$(gh api "repos/$slug/commits/$merge_sha/pulls" --jq '[.[] | select(.merged_at != null)][0].number' 2>/dev/null || true)
+  fi
+  if [ -z "$pr" ] || [ "$pr" = "null" ]; then
+    echo "no merged pull request found for $merge_sha"
+    return 1
+  fi
+  head_sha=$(gh pr view "$pr" --repo "$slug" --json headRefOid --jq .headRefOid)
+  run_id=$(gh run list --repo "$slug" --workflow "$BASELINE_WORKFLOW" --commit "$head_sha" --event pull_request \
+    --status success --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)
+  if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+    echo "PR #$pr has no passing UI test run on its merged head $head_sha"
+    return 1
+  fi
+  tmp=$(mktemp -d)
+  if ! gh run download "$run_id" --repo "$slug" --name ui-test-report --dir "$tmp" >/dev/null 2>&1; then
+    echo "PR #$pr run $run_id has no ui-test-report artifact"
+    rm -rf "$tmp"
+    return 1
+  fi
+  if [ ! -f "$tmp/shots/.complete" ] || [ ! -f "$tmp/shots/provenance.json" ]; then
+    echo "PR #$pr run $run_id did not complete its screenshots"
+    rm -rf "$tmp"
+    return 1
+  fi
+  base=$(jq -r '.baseSha // ""' "$tmp/shots/provenance.json")
+  parent=$(git -C "$REPO_ROOT" rev-parse "$merge_sha^")
+  if [ -z "$base" ]; then
+    echo "PR #$pr run $run_id recorded no base commit"
+    rm -rf "$tmp"
+    return 1
+  fi
+  if [ "$base" != "$parent" ]; then
+    echo "PR #$pr run $run_id was taken against $base but $merge_sha merged onto $parent - the base moved"
+    rm -rf "$tmp"
+    return 1
+  fi
+  rm -rf "$SHOTS_DIR"
+  mkdir -p "$(dirname "$SHOTS_DIR")"
+  mv "$tmp/shots" "$SHOTS_DIR"
+  rm -rf "$tmp"
+  updated=$(mktemp)
+  jq --arg commit "$merge_sha" --argjson pr "$pr" --argjson run "$run_id" \
+    '. + {commit: $commit, promotedFromPR: $pr, promotedFromRun: $run}' \
+    "$SHOTS_DIR/provenance.json" > "$updated"
+  mv "$updated" "$SHOTS_DIR/provenance.json"
+  echo "promoted $(ls "$SHOTS_DIR"/*.png | wc -l | tr -d ' ') screenshots from PR #$pr run $run_id as the baselines for $merge_sha"
+}
+
+cmd_diff() {
+  if ! ensure_odiff; then
+    exit 2
+  fi
+  local odiff="$ODIFF"
+  if ! ls "$SHOTS_DIR"/*.png >/dev/null 2>&1; then
+    echo "no screenshots at $SHOTS_DIR - capture them first: ./gradlew uitestRun --console=plain"
+    exit 2
+  fi
+  if ! ls "$BASELINE_DIR"/*.png >/dev/null 2>&1; then
+    echo "no baselines at $BASELINE_DIR - pulling from CI"
+    local pull_status=0
+    cmd_baseline_pull || pull_status=$?
+    if [ "$pull_status" -eq 3 ]; then
+      # Bootstrap: nothing minted on the baseline branch yet, so there is nothing to
+      # compare against. Report every screenshot as new and do not fail on it.
+      echo "bootstrap: no mint on $BASELINE_BRANCH (or $BASELINE_DEFAULT_BRANCH) yet - reporting every screenshot as new"
+      mkdir -p "$BASELINE_DIR"
+      UITEST_DIFF_REPORT_ONLY=1
+    elif [ "$pull_status" -ne 0 ] && [ -n "${UITEST_DIFF_REPORT_ONLY:-}" ]; then
+      # A mint run is the one that replaces the baselines, so it must not be stopped by their
+      # absence. An expired artifact would otherwise deadlock the branch permanently: the run
+      # whose job is to publish fresh baselines fails for want of the stale ones, skipping the
+      # upload, and every push after it repeats that.
+      echo "no baselines to compare against, and this run mints them - reporting every screenshot as new"
+      mkdir -p "$BASELINE_DIR"
+    elif [ "$pull_status" -ne 0 ]; then
+      echo "hint: uitest set-baseline promotes the current shots locally"
+      exit 2
+    fi
+  fi
+  rm -rf "$DIFF_DIR"
+  mkdir -p "$DIFF_DIR"
+
+  # --fail-on-layout: without it odiff compares only the overlapping region of two
+  # differently sized images and reports them equal.
+  local odiff_args=(--threshold "$DIFF_THRESHOLD" --fail-on-layout)
+  if [ "$DIFF_ANTIALIASING" = "true" ]; then
+    odiff_args+=(--antialiasing)
+  fi
+
+  local results="$DIFF_DIR/results.jsonl"
+  : > "$results"
+  local failures=0 checked=0
+  for shot in "$SHOTS_DIR"/*.png; do
+    local name output odiff_status
+    name=$(basename "$shot")
+    local baseline="$BASELINE_DIR/$name"
+    checked=$((checked + 1))
+    if [ ! -f "$baseline" ]; then
+      echo "NEW   $name (no baseline yet)"
+      echo "{\"name\":\"$name\",\"status\":\"new\"}" >> "$results"
+      failures=$((failures + 1))
+      continue
+    fi
+    odiff_status=0
+    output=$("$odiff" "${odiff_args[@]}" "$baseline" "$shot" "$DIFF_DIR/$name" 2>&1) || odiff_status=$?
+    case "$odiff_status" in
+      0)  echo "ok    $name"
+          echo "{\"name\":\"$name\",\"status\":\"ok\"}" >> "$results" ;;
+      22) echo "DIFF  $name -> $DIFF_DIR/$name"
+          echo "{\"name\":\"$name\",\"status\":\"diff\"}" >> "$results"
+          failures=$((failures + 1)) ;;
+      21) echo "DIFF  $name (size mismatch)"
+          echo "{\"name\":\"$name\",\"status\":\"diff\",\"detail\":\"size mismatch\"}" >> "$results"
+          failures=$((failures + 1)) ;;
+      *)  echo "ERROR $name (odiff exit $odiff_status): $output"
+          echo "{\"name\":\"$name\",\"status\":\"error\",\"detail\":$(printf '%s' "$output" | jq -Rs .)}" >> "$results"
+          failures=$((failures + 1)) ;;
+    esac
+  done
+  for baseline in "$BASELINE_DIR"/*.png; do
+    [ -e "$baseline" ] || break
+    if [ ! -f "$SHOTS_DIR/$(basename "$baseline")" ]; then
+      echo "GONE  $(basename "$baseline") (baseline has no screenshot)"
+      echo "{\"name\":\"$(basename "$baseline")\",\"status\":\"gone\"}" >> "$results"
+      failures=$((failures + 1))
+    fi
+  done
+  echo "$checked screenshots checked, $failures failures"
+  if [ "$failures" -gt 0 ] && [ -n "${UITEST_DIFF_REPORT_ONLY:-}" ]; then
+    echo "report-only mode: not failing on visual differences"
+    return 0
+  fi
+  return $((failures > 0 ? 1 : 0))
+}
+
+cmd_report() {
+  if [ ! -f "$DIFF_DIR/results.jsonl" ]; then
+    echo "no diff results - run: uitest diff"
+    exit 2
+  fi
+  mkdir -p "$REPORT_DIR"
+  python3 "$UITESTS_DIR/tools/build-report.py" \
+    "$DIFF_DIR/results.jsonl" "$BASELINE_DIR" "$SHOTS_DIR" "$DIFF_DIR" "$REPORT_DIR" "$RUNTIME_LABEL" "$SHOTS_MANIFEST"
+}
+
+cmd_set_baseline() {
+  if ! ls "$SHOTS_DIR"/*.png >/dev/null 2>&1; then
+    echo "no screenshots to promote - capture them first: ./gradlew uitestRun --console=plain"
+    exit 2
+  fi
+  if [ ! -f "$SHOTS_DIR/.complete" ]; then
+    echo "refusing: the last capture did not complete successfully, promoting it would bless a partial run"
+    exit 2
+  fi
+  rm -rf "$BASELINE_DIR"
+  mkdir -p "$BASELINE_DIR"
+  cp "$SHOTS_DIR"/*.png "$BASELINE_DIR/"
+  [ -f "$SHOTS_DIR/provenance.json" ] && cp "$SHOTS_DIR/provenance.json" "$BASELINE_DIR/"
+  echo "set $(ls "$SHOTS_DIR"/*.png | wc -l | tr -d ' ') local baselines in $BASELINE_DIR (not committed; CI mints canonical ones on $BASELINE_BRANCH)"
+}
+
+# Clone only the trees of the Pages branch (no blobs) and check out just our reports
+# directory. Sets PAGES_BASE_SHA for the push lease.
+pages_checkout() {
+  local slug
+  slug=$(repo_slug)
+  rm -rf "$PAGES_CHECKOUT"
+  git clone --quiet --filter=blob:none --depth 1 --no-checkout --branch "$PAGES_BRANCH" \
+    "https://github.com/$slug.git" "$PAGES_CHECKOUT"
+  git -C "$PAGES_CHECKOUT" sparse-checkout set "$PAGES_DIR"
+  git -C "$PAGES_CHECKOUT" checkout --quiet "$PAGES_BRANCH"
+  PAGES_BASE_SHA=$(git -C "$PAGES_CHECKOUT" rev-parse HEAD)
+  mkdir -p "$PAGES_CHECKOUT/$PAGES_DIR"
+}
+
+# Drop reports whose PR is no longer open. Prints the number removed.
+pages_prune() {
+  local slug open dir pr removed=0
+  slug=$(repo_slug)
+  open=" $(gh pr list --repo "$slug" --state open --limit 1000 --json number --jq '.[].number' | tr '\n' ' ') "
+  for dir in "$PAGES_CHECKOUT/$PAGES_DIR"/pr-*; do
+    [ -d "$dir" ] || continue
+    pr=${dir##*/pr-}
+    case "$open" in
+      *" $pr "*) ;;
+      *) rm -rf "$dir"; removed=$((removed + 1)); echo "pruned report for closed PR #$pr" ;;
+    esac
+  done
+  echo "$removed report(s) pruned"
+}
+
+# Index page listing the published reports.
+pages_index() {
+  python3 - "$PAGES_CHECKOUT/$PAGES_DIR" "$(repo_slug)" <<'PY'
+import html, os, sys, time
+root, slug = sys.argv[1], sys.argv[2]
+prs = sorted((int(d[3:]) for d in os.listdir(root) if d.startswith("pr-") and d[3:].isdigit()), reverse=True)
+items = "".join(f'<li><a href="pr-{n}/">PR #{n}</a> <a class="gh" href="https://github.com/{slug}/pull/{n}">on GitHub</a></li>' for n in prs) or "<li>none</li>"
+open(os.path.join(root, "index.html"), "w").write(f"""<!doctype html><meta charset="utf-8"><title>Thomas screenshot test reports (Android)</title>
+<style>body{{font:14px -apple-system,system-ui,sans-serif;margin:24px;color:#222}} li{{margin:4px 0}} .gh{{color:#888;font-size:12px;margin-left:8px}}</style>
+<h1>Thomas screenshot test reports (Android)</h1><p>Visual diff reports for open pull requests in {html.escape(slug)}. Reports are removed when the PR closes.</p>
+<ul>{items}</ul><p style="color:#888;font-size:12px">updated {time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())}</p>""")
+PY
+}
+
+# Commit the reports directory as a brand-new root commit carrying the full current tree
+# and force-push it, so the branch history is always exactly one commit. The sparse
+# checkout narrows the working tree but not the index, so write-tree preserves everything
+# else already on the branch. The lease makes a concurrent docs deploy fail this push
+# instead of being overwritten; CI serialises both under the `pages` concurrency group so
+# that should not happen.
+pages_push() {
+  local message="$1" tree commit
+  git -C "$PAGES_CHECKOUT" -c user.name="ui-tests" -c user.email="ui-tests@users.noreply.github.com" \
+    add -A "$PAGES_DIR"
+  if git -C "$PAGES_CHECKOUT" diff --cached --quiet; then
+    echo "reports unchanged - nothing to publish"
+    return 0
+  fi
+  tree=$(git -C "$PAGES_CHECKOUT" write-tree)
+  commit=$(git -C "$PAGES_CHECKOUT" -c user.name="ui-tests" -c user.email="ui-tests@users.noreply.github.com" \
+    commit-tree "$tree" -m "$message")
+  if [ -n "${UITEST_PAGES_DRY_RUN:-}" ]; then
+    echo "dry run: would force-push $commit (tree $tree) to $PAGES_BRANCH, replacing $PAGES_BASE_SHA"
+    git -C "$PAGES_CHECKOUT" diff --cached --stat | tail -3
+    return 0
+  fi
+  local pushed_at
+  pushed_at=$(date +%s)
+  git -C "$PAGES_CHECKOUT" push --quiet --force-with-lease="refs/heads/$PAGES_BRANCH:$PAGES_BASE_SHA" \
+    origin "$commit:refs/heads/$PAGES_BRANCH"
+  echo "published $PAGES_BRANCH as single commit $commit"
+  pages_wait_built "$pushed_at"
+}
+
+# GitHub Pages rebuilds the whole site after every push and serves the previous build
+# meanwhile: a link posted before the build finishes 404s. Wait for a build that started
+# after our push to finish, up to two minutes - this site is only the reports, a few MB.
+# (The build's reported commit lags the push, so time is the signal.)
+pages_wait_built() {
+  local pushed_at="$1" slug deadline latest status created
+  slug=$(repo_slug)
+  deadline=$(( $(date +%s) + 120 ))
+  while [ "$(date +%s)" -lt "$deadline" ]; do
+    latest=$(gh api "repos/$slug/pages/builds/latest" \
+      --jq '"\(.status) \((.created_at // "") | if . == "" then 0 else fromdateiso8601 end)"' 2>/dev/null || echo "unknown 0")
+    status=${latest%% *}
+    created=${latest##* }
+    if [[ "$created" =~ ^[0-9]+$ ]] && [ "$created" -ge "$((pushed_at - 30))" ]; then
+      case "$status" in
+        built)   echo "pages build finished"; return 0 ;;
+        errored) echo "pages build failed (GitHub reported: Page build failed)"; return 0 ;;
+      esac
+    fi
+    sleep 15
+  done
+  echo "pages build still not finished after two minutes; the report link may 404 for a while"
+}
+
+cmd_publish_report() {
+  require_reports_repo
+  local pr="$1"
+  if [ -z "$pr" ] || ! [[ "$pr" =~ ^[0-9]+$ ]]; then
+    echo "usage: uitest publish-report <pr-number>"
+    exit 2
+  fi
+  if [ ! -f "$REPORT_DIR/index.html" ]; then
+    echo "no report at $REPORT_DIR/index.html - run: uitest report"
+    exit 2
+  fi
+  pages_checkout
+  pages_prune
+  rm -rf "$PAGES_CHECKOUT/$PAGES_DIR/pr-$pr"
+  mkdir -p "$PAGES_CHECKOUT/$PAGES_DIR"
+  cp -R "$REPORT_DIR" "$PAGES_CHECKOUT/$PAGES_DIR/pr-$pr"
+  rm -f "$PAGES_CHECKOUT/$PAGES_DIR/pr-$pr/summary.md"
+  pages_index
+  pages_push "ui-tests: report for PR #$pr"
+}
+
+cmd_prune_reports() {
+  require_reports_repo
+  pages_checkout
+  pages_prune
+  pages_index
+  pages_push "ui-tests: prune reports for closed PRs"
+}
+
+# Everything after Gradle's capture, in one call: bless the shots, then diff and report.
+cmd_finish() {
+  if ! ls "$SHOTS_DIR"/*.png >/dev/null 2>&1; then
+    echo "no screenshots at $SHOTS_DIR - the Roborazzi capture task produced none"
+    echo "run the capture first: ./gradlew uitestRun --console=plain"
+    exit 2
+  fi
+  # Provenance is written here, not by Gradle, so shots minted on CI carry the toolchain
+  # that actually ran them. set-baseline and promote-baselines require the marker, so a
+  # partial or failed capture can never become a baseline.
+  write_provenance "$SHOTS_DIR/provenance.json"
+  touch "$SHOTS_DIR/.complete"
+
+  # No pull here on purpose. cmd_diff already pulls when the cache is empty, and handles both
+  # the bootstrap and the hard-failure cases; pulling unconditionally would instead overwrite a
+  # local `set-baseline` every time, which is exactly the iterate-against-your-own-capture loop
+  # that set-baseline exists for. CI always starts from a clean workspace, so the cache is empty
+  # there and the pull still happens.
+  local diff_status=0
+  cmd_diff || diff_status=$?
+  # A run with differences must still produce a report - that report is how they get reviewed.
+  if [ -f "$DIFF_DIR/results.jsonl" ]; then
+    cmd_report
+  fi
+  return "$diff_status"
+}
+
+case "${1:-}" in
+  doctor)        cmd_doctor ;;
+  finish)        cmd_finish ;;
+  baseline-pull) cmd_baseline_pull ;;
+  diff)          cmd_diff ;;
+  report)        cmd_report ;;
+  set-baseline)  cmd_set_baseline ;;
+  promote-baselines) shift; cmd_promote_baselines "${1:-}" ;;
+  publish-report) shift; cmd_publish_report "${1:-}" ;;
+  prune-reports) cmd_prune_reports ;;
+  *)
+    sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+    exit 1
+    ;;
+esac

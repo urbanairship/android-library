@@ -342,6 +342,11 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // What the children that can't give have taken, which is what the rest have to share.
         var fixedLength = 0
 
+        // What the children that can bend are allowed when a percent sibling wants the same room.
+        // Settled once the children that can't give are measured, and null when nothing needs
+        // rationing.
+        var shares: Shares? = null
+
         // See how tall everyone is. Also remember max width.
         //
         // Children that can give are measured after the ones that can't, and all against the same
@@ -349,7 +354,17 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // in order, the first to ask takes as much as it likes and anything after it — another
         // image, or the paragraph under them both — is measured against nothing and disappears.
         for (pass in 0..1) {
-            if (pass == 1) fixedLength = totalLength
+            if (pass == 1) {
+                fixedLength = totalLength
+                if (percentTotal > 0f) {
+                    shares = sharesWithPercentChildren(
+                        vertical = true,
+                        fixedLength = fixedLength,
+                        mainMeasureSpec = heightMeasureSpec,
+                        crossMeasureSpec = widthMeasureSpec
+                    )
+                }
+            }
 
         for (i in 0..<count) {
             val child = getChildAt(i) ?: continue
@@ -425,7 +440,13 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 // what its siblings left: what it asks for is what the shrink below divides
                 // between them. Against the leftovers the first to ask takes the room and the
                 // last is handed what remains, however little that is.
+                val share = shares?.perChild?.get(i) ?: -1
                 val heightUsed = when {
+                    // Withhold all but the share, pinning the child to exactly that height. A
+                    // percent sibling's claim has already been taken out of it.
+                    share >= 0 -> (MeasureSpec.getSize(heightMeasureSpec) - paddingTop
+                            - paddingBottom - lp.topMargin - lp.bottomMargin - share)
+                        .coerceAtLeast(0)
                     percentTotal != 0f -> 0
                     pass == 1 -> fixedLength
                     else -> totalLength
@@ -694,7 +715,10 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 val marginLp = it.layoutParams as LayoutParams
                 marginLp.topMargin + marginLp.bottomMargin
             }
-            var slotRemaining = delta + percentMargins
+            // Less what the ratio children are owed: they are measured after this, against what is
+            // left, so anything handed out here is taken from them.
+            var slotRemaining =
+                (delta + percentMargins - (shares?.ratioReserve ?: 0)).coerceAtLeast(0)
 
             val lastChildIndex = maxPercentCount - 1
             for (i in 0..<maxPercentCount) {
@@ -1053,13 +1077,28 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // What the children that can't give have taken, which is what the rest have to share.
         var fixedLength = 0
 
+        // As in `measureVertical`: what the children that can bend are allowed when a percent
+        // sibling wants the same room. A row that divides equally never has one, so the two never
+        // meet.
+        var percentShares: Shares? = null
+
         // See how wide everyone is. Also remember max height.
         //
         // As in `measureVertical`: the children that can give are measured after the ones that
         // can't, and all against the same room, so a photo beside a caption divides what is left
         // with its siblings rather than taking the row and leaving them measured against nothing.
         for (pass in 0..1) {
-            if (pass == 1) fixedLength = totalLength
+            if (pass == 1) {
+                fixedLength = totalLength
+                if (percentTotal > 0f) {
+                    percentShares = sharesWithPercentChildren(
+                        vertical = false,
+                        fixedLength = fixedLength,
+                        mainMeasureSpec = widthMeasureSpec,
+                        crossMeasureSpec = heightMeasureSpec
+                    )
+                }
+            }
 
         for (i in 0..<count) {
             val child = getChildAt(i) ?: continue
@@ -1127,24 +1166,20 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
                 // Width to withhold from the child, so it measures against:
                 // (row width - padding - margins - width used)
-                //
-                // Three cases:
-                //   shares:
-                //   normal:
-                //   percent present:
-                val widthUsed = if (shares != null) {
-                    //  withhold all but shares[i], pinning the child to exactly that width
-                    (MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd
-                            - lp.marginStart - lp.marginEnd - shares[i]).coerceAtLeast(0)
-                } else if (percentTotal == 0f) {
+                val share = shares?.get(i) ?: percentShares?.perChild?.get(i) ?: -1
+                val widthUsed = when {
+                    // withhold all but the share, pinning the child to exactly that width
+                    // (an equal one, or one a percent sibling's claim is already out of)
+                    share >= 0 ->
+                        (MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd
+                                - lp.marginStart - lp.marginEnd - share).coerceAtLeast(0)
                     // withhold what the children that can't give took, so the ones that can are
                     // all measured against the same room
-                    if (pass == 1) fixedLength else totalLength
-                } else {
+                    percentTotal == 0f -> if (pass == 1) fixedLength else totalLength
                     // withhold nothing. totalLength keeps moving until percent children are
                     // sized in the distribution pass below, so using it here would measure
                     // against a stale value.
-                    0
+                    else -> 0
                 }
 
                 measureChildWithMargins(
@@ -1405,7 +1440,10 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 val marginLp = it.layoutParams as LayoutParams
                 marginLp.marginStart + marginLp.marginEnd
             }
-            var slotRemaining = delta + percentMargins
+            // As in `measureVertical`: less what the ratio children are owed, since they are
+            // measured after this against what is left.
+            var slotRemaining =
+                (delta + percentMargins - (percentShares?.ratioReserve ?: 0)).coerceAtLeast(0)
 
             val lastChildIndex = maxPercentCount - 1
             for (i in 0..<maxPercentCount) {
@@ -1756,6 +1794,150 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         }
 
         return shares
+    }
+
+    /**
+     * What the children that can bend are allowed on the stack axis when a percent sibling wants
+     * the same room: a cap for each child that can give, and the total the deferred ratio children
+     * are to be left.
+     */
+    private class Shares(val perChild: IntArray, val ratioReserve: Int)
+
+    /**
+     * How a stack divides itself between the children that can bend to it. Null when nothing has
+     * to give; `-1` in [Shares.perChild] for a child that isn't sharing.
+     *
+     * A percent child is sized from what its siblings left, so it is paid last: a child that can
+     * give is asked for its content first, and a ratio child isn't measured until later still.
+     * Whoever goes first takes what it likes, and at 100% the percent child leaves nothing for
+     * anyone. Every claim is a demand like any other, so they all join the same greedy fair share
+     * the ratio passes use — smallest demand first, each capped at its share of what is left. A
+     * full-length box beside an auto image, or beside a square, ends up with half the stack, as on
+     * iOS. A ratio child bends with the rest: cut on the stack axis, it takes the other axis with
+     * it rather than holding a length the percentage was supposed to divide with it.
+     *
+     * @param fixedLength what the children that can't give have taken, margins included.
+     * @param mainMeasureSpec the spec for the stack axis.
+     * @param crossMeasureSpec the spec for the other axis.
+     * @return the shares, or null if the stack has room for every demand.
+     */
+    private fun sharesWithPercentChildren(
+        vertical: Boolean,
+        fixedLength: Int,
+        mainMeasureSpec: Int,
+        crossMeasureSpec: Int
+    ): Shares? {
+        val mode = MeasureSpec.getMode(mainMeasureSpec)
+        // An unbounded stack is as long as its children turn out to be, and with no basis a percent
+        // child stands on its content: either way there's nothing being divided.
+        if (mode == MeasureSpec.UNSPECIFIED) return null
+        if (mode != MeasureSpec.EXACTLY && !establishesLength(horizontal = !vertical)) return null
+
+        val count = childCount
+        val base = MeasureSpec.getSize(mainMeasureSpec)
+        val crossSize = MeasureSpec.getSize(crossMeasureSpec)
+
+        // Demand to child index, with -1 for a percent child: its claim competes, but the
+        // distribution pass is what hands it out.
+        val queue = mutableListOf<Pair<Int, Int>>()
+        val margins = IntArray(count)
+        val isRatio = BooleanArray(count)
+        var percentMargins = 0
+        var bending = 0
+
+        for (i in 0..<count) {
+            val child = getChildAt(i) ?: continue
+            if (child.visibility == GONE) continue
+
+            val lp = child.layoutParams as LayoutParams
+            margins[i] =
+                if (vertical) lp.topMargin + lp.bottomMargin else lp.marginStart + lp.marginEnd
+            val declared = if (vertical) lp.height else lp.width
+            val percent = if (vertical) lp.maxHeightPercent else lp.maxWidthPercent
+
+            when {
+                declared == 0 && percent > 0f -> {
+                    queue.add((base * percent).toInt().coerceAtLeast(0) to -1)
+                    percentMargins += margins[i]
+                }
+
+                // The same child the deferred ratio pass will take: its length comes from the
+                // other axis, which is settled, so what it wants is known without measuring it.
+                lp.aspectRatio > 0f && declared == ViewGroup.LayoutParams.WRAP_CONTENT
+                        && percent == 0f -> {
+                    isRatio[i] = true
+                    queue.add(ratioMainExtent(lp, vertical, crossSize) + margins[i] to i)
+                    bending++
+                }
+
+                child.givesOnShrink(horizontal = !vertical) -> {
+                    queue.add(contentLength(child, vertical, crossMeasureSpec) + margins[i] to i)
+                    bending++
+                }
+            }
+        }
+
+        // Nobody to take it from, or nobody asking them to.
+        if (bending == 0 || bending == queue.size) return null
+
+        val padding = if (vertical) paddingTop + paddingBottom else paddingStart + paddingEnd
+        // A percent child's margins come out of its own slot, here as in the distribution pass, so
+        // they're part of what's being divided rather than fixed content.
+        var room = base - padding - (fixedLength - percentMargins)
+
+        // Room for every demand, so nothing has to give and everyone is measured as they asked.
+        if (room <= 0 || queue.sumOf { it.first } <= room) return null
+
+        val shares = IntArray(count) { -1 }
+        var ratioReserve = 0
+        var slotsLeft = queue.size
+        // Smallest demand first, so a child that fits inside its share settles at its content and
+        // hands the surplus to the rest.
+        for ((demand, index) in queue.sortedBy { it.first }) {
+            val take = min(demand, room / slotsLeft)
+            if (index >= 0) {
+                // A ratio child is measured by its own pass, off what the percent children leave,
+                // so its share is held back rather than handed over.
+                if (isRatio[index]) ratioReserve += take
+                else shares[index] = (take - margins[index]).coerceAtLeast(0)
+            }
+            room -= take
+            slotsLeft -= 1
+        }
+
+        return Shares(shares, ratioReserve)
+    }
+
+    /** What [child] takes on the stack axis with nothing holding it back. */
+    private fun contentLength(child: View, vertical: Boolean, crossMeasureSpec: Int): Int {
+        val lp = child.layoutParams as LayoutParams
+        val crossMargins =
+            if (vertical) lp.marginStart + lp.marginEnd else lp.topMargin + lp.bottomMargin
+        val crossPadding =
+            if (vertical) paddingStart + paddingEnd else paddingTop + paddingBottom
+        val declared = if (vertical) lp.width else lp.height
+        val percent = if (vertical) lp.maxWidthPercent else lp.maxHeightPercent
+        val isCrossPercent = declared == 0 && percent > 0f
+
+        val crossMode = MeasureSpec.getMode(crossMeasureSpec)
+        val crossSpec = if (isCrossPercent && crossMode == MeasureSpec.EXACTLY) {
+            // Our cross length is settled; resolve against it directly.
+            val size = ((MeasureSpec.getSize(crossMeasureSpec) * percent).toInt() - crossMargins)
+                .coerceAtLeast(0)
+            MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY)
+        } else {
+            // Unsettled, a percent child stands on its content until the cross-axis pass gives it
+            // its share — the same bargain the measure loop makes.
+            getChildMeasureSpec(
+                crossMeasureSpec,
+                crossPadding + crossMargins,
+                if (isCrossPercent) ViewGroup.LayoutParams.WRAP_CONTENT else declared
+            )
+        }
+
+        val unbounded = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        if (vertical) child.measure(crossSpec, unbounded) else child.measure(unbounded, crossSpec)
+        return if (vertical) child.measuredHeight else child.measuredWidth
     }
 
     private fun forceUniformHeight(count: Int, widthMeasureSpec: Int) {

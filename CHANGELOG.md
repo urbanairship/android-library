@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 21.0.1 - September 16, 2026
+
+Patch release with a few Scene layout and sizing fixes. Apps that use Scenes should update to this version or later.
+
+### Changes
+- Fixed some layouts with percent- or ratio-sized content rendering with the wrong sizes
+- Fixed pager indicator dots not appearing when a footer row was too narrow to fit them at their default size
+
 ## Version 21.0.0 - September 14, 2026
 
 SDK 21.0 raises the minimum SDK to 26, moves public timestamps and durations to `java.time.Instant` and `kotlin.time.Duration`, brings on-device AI to Scenes and in-app experiences, adds Compose banner and embedded carousel hosts, and tightens the public API surface across every module. See the [Migration Guide](https://github.com/urbanairship/android-library/blob/main/documentation/migration/migration-guide-20-21.md) for details.
