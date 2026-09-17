@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,8 +30,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,9 +45,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.devapp.R
 import com.urbanairship.devapp.ui.theme.PreviewTheme
+import com.urbanairship.iam.content.AirshipLayout
+import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageScreen
+import com.urbanairship.messagecenter.compose.ui.rememberMessageCenterPreviewState
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,6 +78,19 @@ internal fun LayoutListScreen(
                 snackbarHostState.showSnackbar(error)
             }
         }
+    }
+
+    var preview by remember { mutableStateOf<Pair<AirshipLayout, String>?>(null) }
+
+    preview?.let { (layout, title) ->
+        MessageCenterTheme {
+            MessageCenterMessageScreen(
+                state = rememberMessageCenterPreviewState(layout = layout, title = title),
+                onNavigateUp = { preview = null },
+                onClose = { preview = null }
+            )
+        }
+        return
     }
 
     Scaffold(
@@ -102,7 +121,19 @@ internal fun LayoutListScreen(
                 is LayoutListScreenViewModel.State.Loaded ->
                     ContentView(
                         items = state.layouts,
-                        onSelected = { viewModel.display(context, it) }
+                        onSelected = { viewModel.display(context, it) },
+                        onPreview = { file ->
+                            try {
+                                preview = file.readAirshipLayout(context) to file.filename
+                            } catch (ex: Exception) {
+                                UALog.e(ex) { "Failed to preview layout ${file.filename}" }
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Failed to preview: ${file.filename}"
+                                    )
+                                }
+                            }
+                        }
                     )
                 LayoutListScreenViewModel.State.Loading -> {
                     viewModel.loadLayouts(context)
@@ -116,7 +147,8 @@ internal fun LayoutListScreen(
 @Composable
 private fun ContentView(
     items: List<ThomasLayout.LayoutFile>,
-    onSelected: (ThomasLayout.LayoutFile) -> Unit
+    onSelected: (ThomasLayout.LayoutFile) -> Unit,
+    onPreview: (ThomasLayout.LayoutFile) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -130,7 +162,14 @@ private fun ContentView(
                 HorizontalDivider(Modifier.padding(horizontal = 12.dp))
             }
 
-            Row(Modifier.fillMaxWidth().clickable { onSelected(file) }) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = { onSelected(file) },
+                        onLongClick = { onPreview(file) }
+                    )
+            ) {
                 Text(
                     modifier = Modifier.padding(12.dp),
                     text = file.filename
