@@ -203,8 +203,9 @@ public class InAppActionRunnerTest {
 
     @Test
     public fun testRunActionsInParallel(): TestResult = runTest {
-        // run(actions, state) fans each action out with async {} + awaitAll(), so two actions
-        // must run concurrently rather than waiting on each other in sequence.
+        // Pre-existing InAppActionRunner behavior, unchanged by this PR: run(actions, state)
+        // fans each action out with async {} + awaitAll(). Mocks ActionRunRequest directly, so
+        // it doesn't exercise Action/SuspendingAction itself.
         val gateFoo = CompletableDeferred<Unit>()
         val gateBar = CompletableDeferred<Unit>()
         var fooStarted = false

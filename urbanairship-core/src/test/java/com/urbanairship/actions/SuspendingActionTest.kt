@@ -251,12 +251,16 @@ public class SuspendingActionTest {
     }
 
     /**
-     * Test that [Action.runSuspending] rethrows [CancellationException] instead of swallowing
-     * it into an error result. Thrown directly rather than via `job.cancel()`, since a cancelled
-     * Job finalizes as cancelled either way and wouldn't actually exercise the catch branch.
+     * Test that [Action.runSuspending] rethrows a [CancellationException] raised inside
+     * [Action.performSuspending], instead of swallowing it into an error result. Thrown
+     * directly rather than via `job.cancel()`: a cancelled Job finalizes as cancelled either
+     * way, so that wouldn't exercise the catch branch.
+     *
+     * This only covers cancellation from inside the action: [ActionRunRequest] runs actions on
+     * their own scope, so cancelling a caller going through it doesn't reach the action itself.
      */
     @Test
-    public fun testCancellationPropagates(): TestResult = runTest {
+    public fun testCancellationFromPerformSuspendingPropagates(): TestResult = runTest {
         val action = object : SuspendingAction() {
             var onFinishCalled: Boolean = false
             override suspend fun performSuspending(arguments: ActionArguments): ActionResult {

@@ -42,14 +42,9 @@ import kotlinx.coroutines.CancellationException
  * app state changes.
  *
  *
- * By default, an action performs its work synchronously by implementing [perform]. An action
- * whose work is naturally asynchronous (e.g. it calls a `suspend` API) should instead implement
- * [performSuspending], or extend [SuspendingAction], so the actions framework can await it
- * properly instead of the action having to block a thread with `runBlocking` or fire its work
- * off without waiting for it to finish. Every entry point into the framework
- * ([com.urbanairship.actions.ActionRunRequest], [com.urbanairship.actions.ActionRunner], the
- * JavaScript bridge, push and Scene/IAA actions) awaits [performSuspending] internally, so
- * existing callers see no behavior change either way.
+ * An action whose work is naturally asynchronous should implement [performSuspending], or
+ * extend [SuspendingAction], instead of blocking a thread with `runBlocking`. The framework
+ * awaits it internally, so existing callers see no behavior change.
  */
 public abstract class Action public constructor() {
 
@@ -94,10 +89,9 @@ public abstract class Action public constructor() {
      * Performs the action, with pre/post execution calls,
      * if it accepts the provided arguments.
      *
-     * This blocks the calling thread until [perform] returns. If the action is a
-     * [SuspendingAction] (or otherwise overrides [performSuspending]), the underlying suspending
-     * work is bridged onto this thread via `runBlocking`. Do not call this from the main
-     * thread in that case. Prefer [runSuspending] from a coroutine.
+     * Blocks the calling thread until [perform] returns. If the action is a [SuspendingAction],
+     * the suspending work is bridged via `runBlocking`; don't call this from the main thread in
+     * that case, prefer [runSuspending] from a coroutine.
      *
      * @param arguments The action arguments.
      * @return The result of the action.
@@ -120,14 +114,12 @@ public abstract class Action public constructor() {
      * Performs the action, with pre/post execution calls, if it accepts the provided
      * arguments, suspending until the action completes.
      *
-     * This is the suspending counterpart to [run]: it does the same pre/post-execution work
-     * (rejecting unaccepted arguments, calling [onStart] and [onFinish]) but awaits
-     * [performSuspending] instead of blocking a thread. Actions that only implement the
-     * blocking [perform] behave exactly as they do through [run].
-     *
-     * A [kotlinx.coroutines.CancellationException] from a canceled caller is rethrown as-is,
-     * rather than being reported as an [ActionResult.Status.EXECUTION_ERROR] result. [onFinish]
-     * is not called in that case.
+     * Suspending counterpart to [run]: awaits [performSuspending] instead of blocking. A
+     * [kotlinx.coroutines.CancellationException] thrown by [performSuspending] is rethrown
+     * as-is rather than reported as an [ActionResult.Status.EXECUTION_ERROR] result; [onFinish]
+     * is not called in that case. This only covers cancellation raised inside
+     * [performSuspending] itself: [ActionRunRequest] runs actions on its own scope, so
+     * canceling the caller doesn't cancel an action already in flight.
      *
      * @param arguments The action arguments.
      * @return The result of the action.
@@ -152,8 +144,7 @@ public abstract class Action public constructor() {
      * Shared pre-execution step for [run] and [runSuspending]: rejects unaccepted arguments,
      * otherwise logs and calls [onStart].
      *
-     * @return A rejected [ActionResult] if [arguments] weren't accepted, otherwise `null` to
-     * signal the caller should proceed to [perform]/[performSuspending].
+     * @return A rejected [ActionResult], or `null` to proceed to [perform]/[performSuspending].
      */
     private fun rejectedResultOrNull(arguments: ActionArguments): ActionResult? {
         if (!acceptsArguments(arguments)) {
@@ -188,10 +179,8 @@ public abstract class Action public constructor() {
     /**
      * Performs the action.
      *
-     * Implement this for an action whose work is synchronous. An action whose work is
-     * naturally asynchronous should implement [performSuspending] instead (see [SuspendingAction]);
-     * this method is still required for source/binary compatibility, but a [SuspendingAction]
-     * provides it for you.
+     * Implement this for synchronous work. For naturally asynchronous work, implement
+     * [performSuspending] instead (see [SuspendingAction]), which provides this method for you.
      *
      * @param arguments The action arguments.
      * @return The result of the action.
@@ -201,10 +190,8 @@ public abstract class Action public constructor() {
     /**
      * Performs the action, suspending until it completes.
      *
-     * The default implementation delegates to the blocking [perform], so existing actions need
-     * no changes. Override this method (or extend [SuspendingAction]) to define an action that
-     * suspends instead of blocking, like one that calls a `suspend` API directly instead of
-     * bridging it with `runBlocking`.
+     * Defaults to the blocking [perform], so existing actions need no changes. Override (or
+     * extend [SuspendingAction]) for an action that suspends instead of blocking.
      *
      * @param arguments The action arguments.
      * @return The result of the action.
