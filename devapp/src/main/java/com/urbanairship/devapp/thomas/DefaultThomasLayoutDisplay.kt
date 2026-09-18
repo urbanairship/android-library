@@ -31,6 +31,7 @@ internal class DefaultThomasLayoutDisplay private constructor() {
             activityMonitor = GlobalActivityMonitor.shared(context),
             listener = thomasListener,
             actionRunner = actionRunner,
+            imageCache = TestLayoutPlaceholder.imageCache(context),
             embeddedViewManager = EmbeddedViewManager,
             bannerViewManager = BannerViewManager,
             // The viewer is a layout host like any other, so it has to supply the AI manager
