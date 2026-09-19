@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 21.0.2 - September 18, 2026
+
+Patch release with additional Scene layout fixes and an asset cache hardening fix. Apps that use Scenes should update to this version or later.
+
+### Changes
+- Fixed Scene layout and image sizing issues affecting rows and containers that mix fixed-, percent-, and auto-sized content
+- Hardened Scene asset caching against cache identifiers that could resolve outside the cache directory
+
 ## Version 21.0.1 - September 16, 2026
 
 Patch release with a few Scene layout and sizing fixes. Apps that use Scenes should update to this version or later.
