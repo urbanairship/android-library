@@ -69,6 +69,12 @@ internal class DefaultAssetFileManager(
     override fun ensureCacheDirectory(identifier: String): File {
         ensureRootCacheDirectory()
         val subDir = File(rootFolder, identifier)
+        val normalizedRoot = rootFolder.toPath().normalize()
+        val normalizedSubDir = subDir.toPath().normalize()
+        if (!normalizedSubDir.startsWith(normalizedRoot)) {
+            throw IOException("Invalid cache identifier, resolves outside the cache root: $identifier")
+        }
+
         if (!subDir.exists()) {
             if (!subDir.mkdirs()) {
                 throw IOException("Failed to create cache sub-folder! $identifier")
