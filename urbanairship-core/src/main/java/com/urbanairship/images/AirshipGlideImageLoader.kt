@@ -27,6 +27,15 @@ public interface ImageSizeResolver {
 }
 
 /**
+ * The size to decode one axis at: the larger of the view's measurement and the resolver's bound,
+ * or [fallback] when neither is known.
+ *
+ * @hide
+ */
+internal fun targetDimension(measured: Int?, resolved: Int?, fallback: Int): Int =
+    maxOf(measured ?: 0, resolved ?: 0).takeIf { it > 0 } ?: fallback
+
+/**
  * Airship Glide image loader.
  *
  * @hide
@@ -129,34 +138,34 @@ internal object AirshipGlideImageLoader : ImageLoader {
         fun resolveSize(context: Context): Size {
             val measuredHeight = getMeasuredHeight()
             val measuredWidth = getMeasuredWith()
+            val resolver = imageRequestOptions.imageSizeResolver
 
             val displayWidth = context.resources.displayMetrics.widthPixels
             val displayHeight = context.resources.displayMetrics.heightPixels
 
             return Size(
-                measuredWidth ?: imageRequestOptions.imageSizeResolver?.resolveWidth(context, measuredHeight) ?: displayWidth,
-                measuredHeight ?: imageRequestOptions.imageSizeResolver?.resolveHeight(context, measuredWidth) ?: displayHeight
+                targetDimension(measuredWidth, resolver?.resolveWidth(context, measuredHeight), displayWidth),
+                targetDimension(measuredHeight, resolver?.resolveHeight(context, measuredWidth), displayHeight)
             )
         }
 
         fun getMeasuredSize(context: Context): Size? {
-            var measuredHeight = getMeasuredHeight()
-            var measuredWidth = getMeasuredWith()
+            val measuredHeight = getMeasuredHeight()
+            val measuredWidth = getMeasuredWith()
+            val resolver = imageRequestOptions.imageSizeResolver
 
-            if (measuredHeight == null && measuredWidth != null) {
-                measuredHeight = imageRequestOptions.imageSizeResolver?.resolveHeight(context, measuredWidth)
-            }
+            val width = maxOfOrNull(measuredWidth, resolver?.resolveWidth(context, measuredHeight))
+            val height = maxOfOrNull(measuredHeight, resolver?.resolveHeight(context, measuredWidth))
 
-            if (measuredWidth == null && measuredHeight != null) {
-                measuredWidth = imageRequestOptions.imageSizeResolver?.resolveWidth(context, measuredHeight)
-            }
-
-            return if (measuredHeight != null && measuredWidth != null) {
-                Size(measuredWidth, measuredHeight)
+            return if (width != null && height != null) {
+                Size(width, height)
             } else {
                 null
             }
         }
+
+        private fun maxOfOrNull(measured: Int?, resolved: Int?): Int? =
+            if (measured == null && resolved == null) null else maxOf(measured ?: 0, resolved ?: 0)
 
         fun getMeasuredWith(): Int? {
             return getMeasuredDimension(

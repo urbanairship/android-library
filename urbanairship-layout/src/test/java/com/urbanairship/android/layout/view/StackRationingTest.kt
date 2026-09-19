@@ -234,6 +234,22 @@ public class StackRationingTest {
         assertEquals("the share takes the rest", PAGE - height, stack.getChildAt(0).measuredHeight)
     }
 
+    /**
+     * A stack whose stated lengths already overrun it between them runs off its own end: nothing
+     * can be rationed, so a child that hugs its content keeps it and the last of them is clipped.
+     * Zeroing the hugging children instead dropped a caption out of the scene whole.
+     */
+    @Test
+    public fun testAnUnrationableOverflowRunsOffTheEnd() {
+        val stack = overfull()
+        stack.measure(exactly(PAGE), exactly(BAND + BAND / 2))
+
+        val caption = requireNotNull(findLabel(stack, TRAILING)) { "no caption" }
+        assertTrue("caption keeps its height", caption.measuredHeight > 0)
+        assertEquals("band keeps its stated length", BAND, stack.getChildAt(1).measuredHeight)
+        assertEquals("band keeps its stated length", BAND, stack.getChildAt(2).measuredHeight)
+    }
+
     private fun findLabel(view: View, text: String): View? {
         if (view is android.widget.TextView && view.text?.toString() == text) return view
         if (view is ViewGroup) {
@@ -369,6 +385,28 @@ public class StackRationingTest {
                   "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}
               }
             }
+          ]
+        }
+        """.trimIndent()
+    )
+
+    /** A caption above two stated lengths that already overrun the stack between them. */
+    private fun overfull(): ViewGroup = build(
+        """
+        {
+          "type": "linear_layout",
+          "direction": "vertical",
+          "items": [
+            {
+              "size": {"width": "100%", "height": "auto"},
+              "view": {
+                "type": "label", "text": "$TRAILING",
+                "text_appearance": {"font_size": 14,
+                  "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}
+              }
+            },
+            {"size": {"width": "100%", "height": $BAND}, "view": $SHARE},
+            {"size": {"width": "100%", "height": $BAND}, "view": $SHARE}
           ]
         }
         """.trimIndent()

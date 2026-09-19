@@ -190,6 +190,34 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         if (horizontal) isAutoWidth else isAutoHeight
 
     /**
+     * Whether any child states a length on [horizontal]. See [LengthBasisProvider.statesLength].
+     *
+     * The same walk as [establishesLength] with the leaf answer inverted: a child we cannot ask
+     * has content rather than a length, so it settles nothing here.
+     */
+    override fun statesLength(horizontal: Boolean): Boolean {
+        for (i in 0..<childCount) {
+            val child = getChildAt(i) ?: continue
+            if (child.visibility == GONE) continue
+
+            val lp = child.layoutParams as? LayoutParams ?: continue
+            val declared = if (horizontal) lp.width else lp.height
+            val percent = if (horizontal) lp.maxWidthPercent else lp.maxHeightPercent
+
+            val states = when {
+                declared == 0 && percent > 0f -> false
+                declared == ViewGroup.LayoutParams.MATCH_PARENT -> false
+                declared == ViewGroup.LayoutParams.WRAP_CONTENT -> child.statesLength(horizontal)
+                else -> true
+            }
+
+            if (states) return true
+        }
+
+        return false
+    }
+
+    /**
      * Whether any child gives [horizontal] a length of its own, rather than a share of ours.
      *
      * Auto defers to the content, so the question passes down: a stack of percentages is no more
@@ -323,7 +351,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // Lazy because answering walks the subtree, and only a stack that actually has a cross-axis
         // percent child ever asks. Unsynchronized: measurement is the main thread's.
         val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
-            widthMode == MeasureSpec.EXACTLY || establishesLength(horizontal = true)
+            widthMode == MeasureSpec.EXACTLY || statesLength(horizontal = true)
         }
 
         // A child at exactly 100% is a third case, between the two above. It supplies no width, so
@@ -578,6 +606,10 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 }
             }
 
+            // With no else: children that cannot cover the overflow between them keep the
+            // lengths they measured, and the stack runs off its own end for the last of them to be
+            // clipped. That is how iOS and web lay a stack out. Zeroing the children that hug
+            // their content instead dropped a label out of the scene whole.
             if (!shrinkableChildren.isEmpty() && totalShrinkableHeight >= abs(delta)) {
                 fun widthSpecFor(child: View): Int {
                     val lp = child.layoutParams as LayoutParams
@@ -670,29 +702,6 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 totalLength += paddingTop + paddingBottom
 
                 // Delta should now be close to zero
-                delta = height - totalLength
-            } else {
-                // Fixed children overflow the parent, and WRAP_CONTENT children can't absorb it;
-                // zero out all WRAP_CONTENT children to match iOS failure behavior.
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    if (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxHeightPercent == 0f) {
-                        val widthSpec = getChildMeasureSpec(
-                            widthMeasureSpec, lp.marginStart + lp.marginEnd, lp.width
-                        )
-                        child.measure(widthSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY))
-                    }
-                }
-                totalLength = 0
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    totalLength += child.measuredHeight + lp.topMargin + lp.bottomMargin
-                }
-                totalLength += paddingTop + paddingBottom
                 delta = height - totalLength
             }
         }
@@ -1048,7 +1057,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // lone `height: 50%` child in an auto-height row collapses the same way a `width: 50%` one
         // did in an auto-width column. Same laziness, for the same reason.
         val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
-            heightMode == MeasureSpec.EXACTLY || establishesLength(horizontal = false)
+            heightMode == MeasureSpec.EXACTLY || statesLength(horizontal = false)
         }
 
         // As in `measureVertical`: a child at exactly the whole settles rather than walks, so it
@@ -1309,6 +1318,8 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 }
             }
 
+            // No else here for the same reason as the height pass above: a stack that cannot
+            // ration the overflow runs off its own end rather than collapsing what hugs it.
             if (!shrinkableChildren.isEmpty() && totalShrinkableWidth >= abs(delta)) {
                 fun heightSpecFor(child: View): Int {
                     val lp = child.layoutParams as LayoutParams
@@ -1395,29 +1406,6 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 totalLength += paddingStart + paddingEnd
 
                 // Delta should now be close to zero
-                delta = width - totalLength
-            } else {
-                // Fixed children overflow the parent, and WRAP_CONTENT children can't absorb it;
-                // zero out all WRAP_CONTENT children to match iOS failure behavior.
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    if (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxWidthPercent == 0f) {
-                        val heightSpec = getChildMeasureSpec(
-                            heightMeasureSpec, lp.topMargin + lp.bottomMargin, lp.height
-                        )
-                        child.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), heightSpec)
-                    }
-                }
-                totalLength = 0
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    totalLength += child.measuredWidth + lp.marginStart + lp.marginEnd
-                }
-                totalLength += paddingStart + paddingEnd
                 delta = width - totalLength
             }
         }

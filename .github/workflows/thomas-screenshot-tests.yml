@@ -4,7 +4,9 @@ name: Thomas Screenshot Tests
 # Robolectric, so the whole sweep is one JVM job on one Linux runner: no emulator,
 # no sharding. The same job pixel-diffs the screenshots against the base branch's
 # baselines and publishes the report to this repo's private GitHub Pages site (the
-# `gh-pages` branch, which is not mirrored to the public repo) with one PR comment.
+# `gh-pages` branch, which is not mirrored to the public repo), then comments on the PR.
+# Every run publishes its own report and posts its own comment, collapsing the previous
+# one as outdated, so the PR reads as a sequence rather than a single mutating comment.
 # Intentional visual changes: add the `visual-change-accepted` label to make the
 # diff report-only, then merge.
 #
@@ -171,6 +173,17 @@ jobs:
         id: label
         run: echo "label=robolectric-$(jq -r .robolectric.sdk uitests/config.json)" >> "$GITHUB_OUTPUT"
 
+      # The PR's head, not `git rev-parse HEAD`: on a `pull_request` event the checkout sits
+      # on the merge commit GitHub synthesised, a sha that appears nowhere in the PR. It names
+      # the run in the report and in its comment, and names the report's directory.
+      - name: Head commit
+        id: head
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          echo "sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "short=${HEAD_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
       - name: Promote the merged PR's screenshots
         if: github.event_name == 'push'
         id: promote
@@ -187,6 +200,7 @@ jobs:
           # Recorded in provenance.json so a merge can tell whether these screenshots
           # were taken against the base as it was at merge time.
           UITEST_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          UITEST_COMMIT: ${{ steps.head.outputs.sha }}
           UITEST_BASELINE_BRANCH: ${{ github.base_ref }}
           # A merge or dispatch diffs only for the record: the run exists to mint
           # baselines, and a failing diff there would keep the branch on stale ones.
@@ -208,40 +222,55 @@ jobs:
       - name: Publish report to Pages
         if: github.event_name == 'pull_request' && !cancelled() && github.event.pull_request.head.repo.full_name == github.repository
         id: publish
+        env:
+          SHORT_SHA: ${{ steps.head.outputs.short }}
         run: |
           if [ -f uitests/build/report/index.html ]; then
             gh auth setup-git
-            bash ./uitests/bin/uitest publish-report "${{ github.event.pull_request.number }}"
+            bash ./uitests/bin/uitest publish-report "${{ github.event.pull_request.number }}" "$SHORT_SHA"
             PAGES_URL=$(gh api "repos/${{ github.repository }}/pages" --jq .html_url)
-            echo "url=${PAGES_URL%/}/ui-tests/pr-${{ github.event.pull_request.number }}/" >> "$GITHUB_OUTPUT"
+            echo "url=${PAGES_URL%/}/ui-tests/pr-${{ github.event.pull_request.number }}/$SHORT_SHA/" >> "$GITHUB_OUTPUT"
           fi
 
+      # A comment per run, rather than one comment rewritten in place: which push changed
+      # which screenshot is the thing a reviewer is trying to read off the PR. The marker
+      # carries the run and commit so the previous ones can be found and collapsed.
       - name: Comment on PR
         if: github.event_name == 'pull_request' && !cancelled() && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          SHORT_SHA: ${{ steps.head.outputs.short }}
         run: |
-          MARKER="<!-- thomas-screenshot-tests -->"
+          MARKER="<!-- thomas-screenshot-tests run=${{ github.run_id }} sha=$SHORT_SHA -->"
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           REPORT_URL="${{ steps.publish.outputs.url }}"
-          if [ ! -f uitests/build/report/summary.md ]; then
-            BODY="**Thomas screenshot tests:** the run produced no report, see the [run log]($RUN_URL)."
-          elif [ -n "$REPORT_URL" ]; then
-            BODY=$(sed "s#__REPORT_URL__#$REPORT_URL#g" uitests/build/report/summary.md)
+          SUMMARY=uitests/build/report/summary.md
+          # summary.md's last line is the commit/time footer; it stays last in the comment.
+          render() { sed -e "s#__REPORT_URL__#$REPORT_URL#g" -e "s#__RUN_URL__#$RUN_URL#g" "$SUMMARY"; }
+          if [ ! -f "$SUMMARY" ]; then
+            BODY="**Thomas screenshot tests:** the run produced no report ($SHORT_SHA), see the [run log]($RUN_URL)."
           else
-            # No published report to link into: keep the summary line, point at the artifact.
-            BODY=$(head -1 uitests/build/report/summary.md | sed "s|\[Report\](__REPORT_URL__[^)]*)|[Report]($RUN_URL#artifacts) (artifact)|")
-          fi
-          if grep -q "need a look" <<<"$BODY"; then
-            BODY="$BODY"$'\n\n'"Intentional? Add the \`visual-change-accepted\` label."
+            if [ -n "$REPORT_URL" ]; then
+              BODY=$(render | sed '$d')
+            else
+              # No published report to link into: keep the summary line, point at the artifact.
+              BODY=$(head -1 "$SUMMARY" | sed "s|\[Report\](__REPORT_URL__[^)]*)|[Report]($RUN_URL#artifacts) (artifact)|")
+            fi
+            if grep -q "need a look" <<<"$BODY"; then
+              BODY="$BODY"$'\n\n'"Intentional? Add the \`visual-change-accepted\` label."
+            fi
+            BODY="$BODY"$'\n\n'"$(render | tail -1)"
           fi
           BODY="$MARKER"$'\n'"$BODY"
           PR=${{ github.event.pull_request.number }}
-          EXISTING=$(gh api "repos/${{ github.repository }}/issues/$PR/comments" --paginate \
-            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$MARKER\"))) | .id" | tail -1)
-          if [ -n "$EXISTING" ]; then
-            gh api "repos/${{ github.repository }}/issues/comments/$EXISTING" -X PATCH -f body="$BODY" >/dev/null
-          else
-            gh pr comment "$PR" --repo "${{ github.repository }}" --body "$BODY"
-          fi
+          # Listed before posting, so this run's own comment is not in it.
+          PREVIOUS=$(gh api "repos/${{ github.repository }}/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- thomas-screenshot-tests"))) | .node_id')
+          gh pr comment "$PR" --repo "${{ github.repository }}" --body "$BODY"
+          # Collapse the earlier runs: the sequence stays in the timeline, only the newest is expanded.
+          for node in $PREVIOUS; do
+            gh api graphql -f query='mutation($id: ID!) { minimizeComment(input: {subjectId: $id, classifier: OUTDATED}) { minimizedComment { isMinimized } } }' \
+              -f id="$node" >/dev/null || echo "could not collapse comment $node"
+          done
 
       # --- merges, dispatch: these screenshots are the branch's new baselines ---
       # No status function in the `if`, so a failed capture skips this step: only a

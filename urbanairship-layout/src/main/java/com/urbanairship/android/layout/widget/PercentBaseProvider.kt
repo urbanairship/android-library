@@ -75,7 +75,29 @@ internal interface AutoSizeProvider {
 
     /** True when this view sizes itself to its content on the axis, rather than to an allowance. */
     fun isAutoSized(horizontal: Boolean): Boolean
+
+    /**
+     * Whether our length on [horizontal] is a share of something above us, so how it was arrived at
+     * is a question for our ancestors and not for us.
+     *
+     * A percentage is only as definite as whatever it is a share of. All of a stated length is a
+     * stated length; all of a parent sized to its content is content-sized too, and answering
+     * [isAutoSized] from the declaration alone would call that second one definite.
+     */
+    fun inheritsLength(horizontal: Boolean): Boolean = false
 }
+
+/**
+ * A view that exists only to carry one item's declared size, holding that item at `MATCH_PARENT` on
+ * both axes.
+ *
+ * Its declared length is the item's own, so for the item view itself there is nothing here that an
+ * ancestor measured: `auto` on the frame is the item restating the `auto` it already knows about
+ * from its [ItemProperties][com.urbanairship.android.layout.model.ItemProperties]. The ancestor
+ * walks skip it for that one view, and read it like any other ancestor from anywhere deeper — where
+ * an `auto` item genuinely does take its length from the content below it.
+ */
+internal interface ItemWrapper
 
 /**
  * Interface for Views that can say whether anything in their subtree gives an axis a length that
@@ -95,6 +117,17 @@ internal interface LengthBasisProvider {
 
     /** Whether anything in this subtree gives the axis a length of its own. */
     fun establishesLength(horizontal: Boolean): Boolean
+
+    /**
+     * Whether anything in this subtree *states* a length on the axis, rather than arriving at one
+     * by measuring what it holds.
+     *
+     * The narrower question, for a percentage across the axis a stack lays out on. Along that axis
+     * the lengths add up and a percentage is a share of what is left, so content counts. Across it
+     * they only ever max, and a percentage is a share of the largest — which content cannot settle,
+     * because the percent child is one of the things the largest is taken from.
+     */
+    fun statesLength(horizontal: Boolean): Boolean
 }
 
 /**
@@ -107,3 +140,14 @@ internal interface LengthBasisProvider {
  */
 internal fun View.establishesLength(horizontal: Boolean): Boolean =
     (this as? LengthBasisProvider)?.establishesLength(horizontal) ?: true
+
+/**
+ * Whether this view states a length on an axis, for a parent resolving a percentage across the axis
+ * it lays out on. See [LengthBasisProvider.statesLength].
+ *
+ * Answers false for anything that can't say otherwise, the opposite default to [establishesLength]:
+ * a leaf has content and not a length, and reading its content as one makes a caption beside a
+ * full-width image the whole of the length that image was allowed.
+ */
+internal fun View.statesLength(horizontal: Boolean): Boolean =
+    (this as? LengthBasisProvider)?.statesLength(horizontal) ?: false

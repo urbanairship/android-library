@@ -4,10 +4,12 @@ package com.urbanairship.android.layout.view
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
+import android.graphics.RectF
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView.ScaleType
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutState
@@ -166,6 +168,82 @@ public class MediaSizingTest {
         assertEquals("height", MEDIA_HEIGHT / 2, media.measuredHeight)
     }
 
+    /**
+     * A ceiling is just as real for an item in a container as for one in a stack.
+     *
+     * `ContainerLayoutView` wraps every item in a frame and gives it `WRAP_CONTENT` for an `auto`
+     * length, so the walk looking for a content-sized ancestor finds one on its first hop and stops
+     * there. That frame holds this media and nothing else: its `WRAP_CONTENT` is the item restating
+     * its own `auto` height, not a parent that measured this image as part of its content.
+     */
+    @Test
+    public fun testAutoInAContainerIsCappedByARealCeiling() {
+        val container = container(mediaItemSize = FULL_WIDTH)
+        container.measure(
+            spec(PAGE, View.MeasureSpec.EXACTLY),
+            spec(BOX_HEIGHT, View.MeasureSpec.EXACTLY)
+        )
+
+        val media = requireNotNull(findMedia(container))
+        assertEquals("width", PAGE, media.measuredWidth)
+        assertEquals("height", BOX_HEIGHT, media.measuredHeight)
+    }
+
+    /** With no ceiling to crop into, an item in a container still takes the image's proportions. */
+    @Test
+    public fun testAutoInAContainerWithNoCeilingTakesTheImagesProportions() {
+        val container = container(mediaItemSize = FULL_WIDTH)
+        container.measure(
+            spec(PAGE, View.MeasureSpec.EXACTLY),
+            spec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+
+        val media = requireNotNull(findMedia(container))
+        assertEquals("width", PAGE, media.measuredWidth)
+        assertEquals("height", PAGE * MEDIA_HEIGHT / MEDIA_WIDTH, media.measuredHeight)
+    }
+
+    /**
+     * `center_inside` never crops, so a box cut down to a ceiling is wider than the image painted
+     * inside it. That slack is the only room left for the item to be positioned in, so it is the
+     * item's own position that decides where in the box the image lands.
+     */
+    @Test
+    public fun testWholeImageIsAnchoredWhereTheItemAsked() {
+        val container = container(mediaItemSize = FULL_WIDTH, itemPosition = START, media = WHOLE)
+        container.measure(
+            spec(PAGE, View.MeasureSpec.EXACTLY),
+            spec(BOX_HEIGHT, View.MeasureSpec.EXACTLY)
+        )
+        container.layout(0, 0, PAGE, BOX_HEIGHT)
+
+        val painted = paintedBounds(requireNotNull(findImage(container)))
+        assertEquals("width", BOX_HEIGHT * MEDIA_WIDTH / MEDIA_HEIGHT.toFloat(), painted.width(), 1f)
+        assertEquals("left", 0f, painted.left, 1f)
+    }
+
+    /**
+     * A box the item stated on both axes is laid out at the position the item asked for, so the
+     * slack left inside it stays even — `FIT_CENTER` splitting it is the answer, not a fallback.
+     */
+    @Test
+    public fun testAStatedBoxCentresTheWholeImage() {
+        val container = container(
+            mediaItemSize = """{"width": "100%", "height": "100%"}""",
+            itemPosition = START,
+            media = WHOLE
+        )
+        container.measure(
+            spec(PAGE, View.MeasureSpec.EXACTLY),
+            spec(BOX_HEIGHT, View.MeasureSpec.EXACTLY)
+        )
+        container.layout(0, 0, PAGE, BOX_HEIGHT)
+
+        val image = requireNotNull(findImage(container))
+        assertEquals("box", PAGE, image.width)
+        assertEquals("scale type", ScaleType.FIT_CENTER, image.scaleType)
+    }
+
     /** A ratio the item declared is the shape the image is cropped to, whatever shape it is. */
     @Test
     public fun testADeclaredRatioIsTheShape() {
@@ -198,6 +276,13 @@ public class MediaSizingTest {
 
     private fun spec(size: Int, mode: Int) = View.MeasureSpec.makeMeasureSpec(size, mode)
 
+    /** Where in its view the image is painted, for a view painting through its image matrix. */
+    private fun paintedBounds(image: CropImageView): RectF {
+        assertEquals("scale type", ScaleType.MATRIX, image.scaleType)
+        return RectF(0f, 0f, MEDIA_WIDTH.toFloat(), MEDIA_HEIGHT.toFloat())
+            .apply { image.imageMatrix.mapRect(this) }
+    }
+
     private fun findMedia(view: View): MediaView? {
         if (view is MediaView) return view
         if (view is ViewGroup) {
@@ -227,6 +312,40 @@ public class MediaSizingTest {
                 "type": "linear_layout",
                 "direction": "vertical",
                 "items": [{"size": $mediaItemSize, "view": $MEDIA}]
+              }
+            }
+          ]
+        }
+        """.trimIndent()
+    )
+
+    /**
+     * A `100% x 100%` container holding the media as its only item, in a stack.
+     *
+     * The container is an item rather than the root so that it has a declared length, as the one
+     * wrapping the media in a real scene does.
+     */
+    private fun container(
+        mediaItemSize: String = AUTO,
+        itemPosition: String = CENTER_BOTTOM,
+        media: String = MEDIA
+    ): ViewGroup = build(
+        """
+        {
+          "type": "linear_layout",
+          "direction": "vertical",
+          "items": [
+            {
+              "size": {"width": "100%", "height": "100%"},
+              "view": {
+                "type": "container",
+                "items": [
+                  {
+                    "position": $itemPosition,
+                    "size": $mediaItemSize,
+                    "view": $media
+                  }
+                ]
               }
             }
           ]
@@ -283,11 +402,19 @@ public class MediaSizingTest {
         private const val AUTO = """{"width": "auto", "height": "auto"}"""
         private const val FULL_WIDTH = """{"width": "100%", "height": "auto"}"""
 
-        private val MEDIA = """
+        private const val CENTER_BOTTOM = """{"horizontal": "center", "vertical": "bottom"}"""
+        private const val START = """{"horizontal": "start", "vertical": "bottom"}"""
+
+        private val MEDIA = media("fit_crop")
+
+        /** Media under a fit that never crops, so a box bigger than its shape leaves slack. */
+        private val WHOLE = media("center_inside")
+
+        private fun media(fit: String) = """
             {
               "type": "media",
               "media_type": "image",
-              "media_fit": "fit_crop",
+              "media_fit": "$fit",
               "url": "https://example.com/photo.jpg"
             }
         """.trimIndent()

@@ -11,7 +11,11 @@ internal class ThomasImageSizeResolver(
     private val imageSize: android.util.Size?
 ): ImageSizeResolver {
     override fun resolveHeight(context: Context, measuredWidth: Int?): Int? {
-        return calculateFallbackSize(context, thomasSize?.height) {
+        return calculateFallbackSize(
+            context,
+            thomasSize?.height,
+            context.resources.displayMetrics.heightPixels
+        ) {
             if (measuredWidth == null || imageSize == null) {
                 return@calculateFallbackSize null
             }
@@ -21,7 +25,11 @@ internal class ThomasImageSizeResolver(
     }
 
     override fun resolveWidth(context: Context, measuredHeight: Int?): Int? {
-        return calculateFallbackSize(context, thomasSize?.width) {
+        return calculateFallbackSize(
+            context,
+            thomasSize?.width,
+            context.resources.displayMetrics.widthPixels
+        ) {
             if (measuredHeight == null || imageSize == null) {
                 return@calculateFallbackSize null
             }
@@ -33,11 +41,15 @@ internal class ThomasImageSizeResolver(
     private fun calculateFallbackSize(
         context: Context,
         dimension: Dimension?,
+        displayDimension: Int,
         autoSize: () -> Int?
     ): Int? {
         return when (dimension?.type) {
             Size.DimensionType.AUTO ->  autoSize()
-            Size.DimensionType.PERCENT -> null
+            // The container can never be larger than the display, so this bounds the size the
+            // view will take.
+            Size.DimensionType.PERCENT ->
+                (dimension.getFloat() * displayDimension).toInt().takeIf { it > 0 }
             Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.getInt()).toInt()
             null -> null
         }

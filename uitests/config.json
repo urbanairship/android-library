@@ -26,7 +26,8 @@
   "reports": {
     "branch": "gh-pages",
     "directory": "ui-tests",
-    "repo": "urbanairship/android-library-dev"
+    "repo": "urbanairship/android-library-dev",
+    "keepRunsPerPR": 3
   },
   "sweep": {
     "fixtures": "devapp/src/main/assets/sample_layouts/Scenes",

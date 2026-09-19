@@ -29,6 +29,7 @@ import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
@@ -111,6 +112,7 @@ internal class MediaView(
     private var imageContentLoader: ((String) -> Unit)? = null
 
     private val mediaFit: MediaFit = model.viewInfo.mediaFit
+    private var wholeImageAnchor: Position? = null
 
     val isNonInteractiveVideo: Boolean =
         model.viewInfo.mediaType.isPlayable &&
@@ -282,6 +284,7 @@ internal class MediaView(
 
         var width: Float
         var height: Float
+        var cutToCeiling = false
         if (statedWidth == null && statedHeight == null) {
             val ceilingWidth = ceiling(widthMeasureSpec, horizontal = true)
             val ceilingHeight = ceiling(heightMeasureSpec, horizontal = false)
@@ -315,16 +318,48 @@ internal class MediaView(
             val ceilingOnAuto =
                 if (statedWidth != null) ceiling(heightMeasureSpec, horizontal = false)
                 else ceiling(widthMeasureSpec, horizontal = true)
-            val autoLength = ceilingOnAuto?.toFloat()?.takeIf { it < fromRatio } ?: fromRatio
+            var autoLength = ceilingOnAuto?.toFloat()?.takeIf { it < fromRatio } ?: fromRatio
+
+            // The allowance on the `auto` axis is not a box to crop into, but it is still all the
+            // room there is: a parent that rationed what it had lays out what it gave, so drawing
+            // past it cuts the image off rather than keeping it whole. Smaller is what an over-full
+            // parent costs; cropped is not. The same bargain the branch above makes.
+            val offeredOnAuto = if (statedWidth != null) offeredHeight else offeredWidth
+            if (offeredOnAuto != null && autoLength > offeredOnAuto) {
+                autoLength = offeredOnAuto.toFloat()
+            }
 
             width = statedWidth?.toFloat() ?: autoLength
             height = statedHeight?.toFloat() ?: autoLength
+
+            // Stated on both axes, there is no `auto` axis left for a ceiling to have cut.
+            cutToCeiling = (statedWidth == null || statedHeight == null) && autoLength < fromRatio
         }
+
+        anchorWholeImage(cutToCeiling)
 
         super.onMeasure(
             MeasureSpec.makeMeasureSpec(width.roundToInt().coerceAtLeast(0), MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(height.roundToInt().coerceAtLeast(0), MeasureSpec.EXACTLY)
         )
+    }
+
+    /**
+     * Anchors the image at the position the item asked for, where the box it is painted into came
+     * from a ceiling rather than from the image's own shape.
+     *
+     * Cut to the ceiling, the box is the whole of the room there was, so the item's own alignment
+     * has nothing left to place — the slack is all inside the box, and a fit that never crops
+     * would otherwise split it evenly whatever the item asked for. A fit that crops leaves none.
+     */
+    private fun anchorWholeImage(cutToCeiling: Boolean) {
+        if (mediaFit != MediaFit.CENTER_INSIDE) return
+
+        val anchor = if (cutToCeiling) itemProperties?.position else null
+        if (anchor === wholeImageAnchor) return
+
+        wholeImageAnchor = anchor
+        imageView?.setWholeImagePosition(anchor)
     }
 
     /**
@@ -387,6 +422,7 @@ internal class MediaView(
                 } else {
                     // Use ImageView scaleType to fit the image.
                     scaleType = model.viewInfo.mediaFit.scaleType
+                    wholeImageAnchor?.let { setWholeImagePosition(it) }
                 }
 
                 importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO

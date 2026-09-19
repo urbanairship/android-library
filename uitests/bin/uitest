@@ -9,7 +9,7 @@
 #   uitest set-baseline    promote build/shots into the LOCAL baseline cache (never committed)
 #   uitest promote-baselines <merge-sha>
 #                          reuse the merged PR's passing screenshots as the new baselines
-#   uitest publish-report N  publish build/report to the private Pages site as ui-tests/pr-N/
+#   uitest publish-report N [sha]  publish build/report as ui-tests/pr-N/<short-sha>/
 #   uitest prune-reports   remove published reports for PRs that are no longer open
 #
 # Gradle owns capture: Roborazzi renders the scenes on the JVM under Robolectric, so there is
@@ -20,8 +20,10 @@
 # PR's own passing screenshots when they were taken against the current base, and only
 # runs a full mint when they were not.
 # PR reports go to the repo's private GitHub Pages site (the `gh-pages` branch, which
-# is not mirrored to the public repo). Every publish rewrites that branch as a single
-# commit and drops reports for closed PRs, so neither the tree nor the history grows.
+# is not mirrored to the public repo), one per run under the PR's directory, so the comment
+# a run posts keeps pointing at the report that run produced. Every publish rewrites that
+# branch as a single commit, trims each PR to its newest `reports.keepRunsPerPR` runs and
+# drops reports for closed PRs, so neither the tree nor the history grows.
 
 set -o pipefail
 set -e
@@ -47,6 +49,9 @@ BASELINE_DEFAULT_BRANCH=$(cfg '.baselines.branch')
 BASELINE_WORKFLOW=$(cfg '.baselines.workflow')
 PAGES_BRANCH=$(cfg '.reports.branch')
 PAGES_DIR=$(cfg '.reports.directory')
+# How many runs' reports a PR keeps. Every run publishes its own, so a long-running PR would
+# otherwise carry one report per push until it closes.
+PAGES_KEEP_RUNS=$(cfg '.reports.keepRunsPerPR // 3')
 FIXTURES_DIR="$REPO_ROOT/$(cfg '.sweep.fixtures')"
 
 # Baselines are stored per Robolectric SDK: the platform's own rendering changes between
@@ -166,22 +171,31 @@ ensure_odiff() {
 }
 
 write_provenance() {
-  local odiff_version jdk
+  local odiff_version jdk commit subject
   odiff_version="$ODIFF_VERSION"
   # Gradle, not this script, runs the JVM that captured the shots, so this is only a record
   # of the JDK on PATH - enough to spot a baseline minted under a different major version.
   jdk=$(java -version 2>&1 | head -1 || echo unknown)
+  # UITEST_COMMIT because on a `pull_request` event the checkout sits on the merge commit
+  # GitHub synthesised, which appears nowhere in the PR: CI passes the head commit instead.
+  commit="${UITEST_COMMIT:-$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)}"
+  # Recorded now so the report can label the commit without a network call or a git object:
+  # a baseline's provenance travels with its artifact, and the commit it names is long gone
+  # from the shallow clone a later run diffs in.
+  subject=$(git -C "$REPO_ROOT" log -1 --format=%s "$commit" 2>/dev/null || true)
   jq -n \
     --arg capturedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    --arg commit "$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)" \
+    --arg commit "$commit" \
+    --arg commitSubject "$subject" \
     --arg baseSha "$BASE_SHA" \
     --argjson robolectricSdk "$ROBOLECTRIC_SDK" \
     --arg qualifiers "$QUALIFIERS" \
     --arg roborazzi "$ROBORAZZI_VERSION" \
     --arg jdk "$jdk" \
     --arg odiff "$odiff_version" \
-    '{capturedAt: $capturedAt, commit: $commit, baseSha: $baseSha, robolectricSdk: $robolectricSdk,
-      qualifiers: $qualifiers, roborazzi: $roborazzi, jdk: $jdk, odiff: $odiff}' > "$1"
+    '{capturedAt: $capturedAt, commit: $commit, commitSubject: $commitSubject, baseSha: $baseSha,
+      robolectricSdk: $robolectricSdk, qualifiers: $qualifiers, roborazzi: $roborazzi,
+      jdk: $jdk, odiff: $odiff}' > "$1"
 }
 
 cmd_doctor() {
@@ -294,7 +308,11 @@ pull_branch_baselines() {
     if err=$(gh run download "$run_id" --repo "$slug" --name "$BASELINE_ARTIFACT" --dir "$staged" 2>&1); then
       swap_staged_baselines "$staged"
       echo "baselines: $branch run $run_id -> $BASELINE_DIR"
-      [ -f "$BASELINE_DIR/provenance.json" ] && jq -r '"  minted: \(.capturedAt) \((.commit // "")[0:11]) robolectric-\(.robolectricSdk) roborazzi \(.roborazzi)"' "$BASELINE_DIR/provenance.json"
+      # Same shape as the report's header line, so the two read as the same fact.
+      [ -f "$BASELINE_DIR/provenance.json" ] && jq -r '"  minted: " +
+        (if .capturedAt then (.capturedAt | sub("T"; " ") | .[0:16]) + " UTC" else "unknown time" end) +
+        " at " + ((.commit // "?")[0:7]) +
+        " robolectric-\(.robolectricSdk) roborazzi \(.roborazzi)"' "$BASELINE_DIR/provenance.json"
       return 0
     fi
     rm -rf "$staged"
@@ -362,8 +380,11 @@ cmd_promote_baselines() {
   mv "$tmp/shots" "$SHOTS_DIR"
   rm -rf "$tmp"
   updated=$(mktemp)
-  jq --arg commit "$merge_sha" --argjson pr "$pr" --argjson run "$run_id" \
-    '. + {commit: $commit, promotedFromPR: $pr, promotedFromRun: $run}' \
+  # The subject moves with the commit: these shots now stand for the merge, not the PR head.
+  jq --arg commit "$merge_sha" \
+    --arg subject "$(git -C "$REPO_ROOT" log -1 --format=%s "$merge_sha" 2>/dev/null || true)" \
+    --argjson pr "$pr" --argjson run "$run_id" \
+    '. + {commit: $commit, commitSubject: $subject, promotedFromPR: $pr, promotedFromRun: $run}' \
     "$SHOTS_DIR/provenance.json" > "$updated"
   mv "$updated" "$SHOTS_DIR/provenance.json"
   echo "promoted $(ls "$SHOTS_DIR"/*.png | wc -l | tr -d ' ') screenshots from PR #$pr run $run_id as the baselines for $merge_sha"
@@ -462,6 +483,9 @@ cmd_report() {
     exit 2
   fi
   mkdir -p "$REPORT_DIR"
+  # The slug is what turns a recorded commit into a link; a clone with no usable origin
+  # (or none at all) just leaves the report's commits as plain text.
+  UITEST_REPO_SLUG="$(repo_slug 2>/dev/null || true)" \
   python3 "$UITESTS_DIR/tools/build-report.py" \
     "$DIFF_DIR/results.jsonl" "$BASELINE_DIR" "$SHOTS_DIR" "$DIFF_DIR" "$REPORT_DIR" "$RUNTIME_LABEL" "$SHOTS_MANIFEST"
 }
@@ -512,18 +536,11 @@ pages_prune() {
   echo "$removed report(s) pruned"
 }
 
-# Index page listing the published reports.
+# Index pages listing the published reports: one per PR listing its runs, plus the root.
+# Also trims each PR to its newest $PAGES_KEEP_RUNS runs.
 pages_index() {
-  python3 - "$PAGES_CHECKOUT/$PAGES_DIR" "$(repo_slug)" <<'PY'
-import html, os, sys, time
-root, slug = sys.argv[1], sys.argv[2]
-prs = sorted((int(d[3:]) for d in os.listdir(root) if d.startswith("pr-") and d[3:].isdigit()), reverse=True)
-items = "".join(f'<li><a href="pr-{n}/">PR #{n}</a> <a class="gh" href="https://github.com/{slug}/pull/{n}">on GitHub</a></li>' for n in prs) or "<li>none</li>"
-open(os.path.join(root, "index.html"), "w").write(f"""<!doctype html><meta charset="utf-8"><title>Thomas screenshot test reports (Android)</title>
-<style>body{{font:14px -apple-system,system-ui,sans-serif;margin:24px;color:#222}} li{{margin:4px 0}} .gh{{color:#888;font-size:12px;margin-left:8px}}</style>
-<h1>Thomas screenshot test reports (Android)</h1><p>Visual diff reports for open pull requests in {html.escape(slug)}. Reports are removed when the PR closes.</p>
-<ul>{items}</ul><p style="color:#888;font-size:12px">updated {time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())}</p>""")
-PY
+  python3 "$UITESTS_DIR/tools/build-pages-index.py" \
+    "$PAGES_CHECKOUT/$PAGES_DIR" "$(repo_slug)" "$PAGES_KEEP_RUNS"
 }
 
 # Commit the reports directory as a brand-new root commit carrying the full current tree
@@ -580,25 +597,40 @@ pages_wait_built() {
   echo "pages build still not finished after two minutes; the report link may 404 for a while"
 }
 
+# Publishes this run's report as its own directory under the PR's, named for the commit it
+# was captured at, so the comment this run posts keeps pointing at what this run produced.
+# A re-run of the same commit replaces its own directory.
 cmd_publish_report() {
   require_reports_repo
-  local pr="$1"
+  local pr="$1" sha="${2:-}" target
   if [ -z "$pr" ] || ! [[ "$pr" =~ ^[0-9]+$ ]]; then
-    echo "usage: uitest publish-report <pr-number>"
+    echo "usage: uitest publish-report <pr-number> [short-sha]"
     exit 2
   fi
   if [ ! -f "$REPORT_DIR/index.html" ]; then
     echo "no report at $REPORT_DIR/index.html - run: uitest report"
     exit 2
   fi
+  # CI passes the PR head's short sha; locally the report's own meta.json has it.
+  if [ -z "$sha" ]; then
+    sha=$(jq -r '.shortCommit // empty' "$REPORT_DIR/meta.json" 2>/dev/null || true)
+  fi
+  if [ -z "$sha" ]; then
+    sha="run-$(date -u +%Y%m%d%H%M%S)"
+  fi
+  if ! [[ "$sha" =~ ^[A-Za-z0-9_-]+$ ]]; then
+    echo "refusing: '$sha' is not a usable directory name for a published report"
+    exit 2
+  fi
   pages_checkout
   pages_prune
-  rm -rf "$PAGES_CHECKOUT/$PAGES_DIR/pr-$pr"
-  mkdir -p "$PAGES_CHECKOUT/$PAGES_DIR"
-  cp -R "$REPORT_DIR" "$PAGES_CHECKOUT/$PAGES_DIR/pr-$pr"
-  rm -f "$PAGES_CHECKOUT/$PAGES_DIR/pr-$pr/summary.md"
+  target="$PAGES_CHECKOUT/$PAGES_DIR/pr-$pr/$sha"
+  rm -rf "$target"
+  mkdir -p "$(dirname "$target")"
+  cp -R "$REPORT_DIR" "$target"
+  rm -f "$target/summary.md"
   pages_index
-  pages_push "ui-tests: report for PR #$pr"
+  pages_push "ui-tests: report for PR #$pr ($sha)"
 }
 
 cmd_prune_reports() {

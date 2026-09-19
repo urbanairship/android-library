@@ -8,6 +8,7 @@ Writes to <report-dir>:
                     search, and a viewer that flips between baseline / this run / diff
     img/            copies of the screenshots the page shows
     summary.md      the PR comment body
+    meta.json       commit, generation time and counts, for the published reports' index pages
 
 The report directory is published as-is to the private Pages site, so it has to stay small.
 A Thomas scene is mostly flat colour, so a capture is only ~38KB as PNG and a whole sweep
@@ -22,6 +23,7 @@ import os
 import re
 import shutil
 import sys
+from datetime import datetime, timezone
 
 results_path, baseline_dir, shots_dir, diff_dir, report_dir, label, manifest_path = sys.argv[1:8]
 
@@ -35,6 +37,46 @@ manifest = json.load(open(manifest_path)) if os.path.isfile(manifest_path) else 
 provenance = {}
 if os.path.isfile(os.path.join(baseline_dir, "provenance.json")):
     provenance = json.load(open(os.path.join(baseline_dir, "provenance.json")))
+
+# This run's own provenance, written next to the shots by `uitest finish`. The time is taken
+# here rather than read from it: `uitest report` can be re-run long after the capture.
+run_provenance = {}
+if os.path.isfile(os.path.join(shots_dir, "provenance.json")):
+    run_provenance = json.load(open(os.path.join(shots_dir, "provenance.json")))
+
+
+def short_sha(value):
+    """The run's commit and the baselines' shorten the same way: the header sets them side by side."""
+    return value[:7] if value and value != "unknown" else None
+
+
+def stamp(value):
+    """2026-09-16T04:11:20Z -> 2026-09-16 04:11 UTC, the form the generation time is written in."""
+    return value.replace("T", " ")[:16] + " UTC" if value else None
+
+
+# Set by `uitest report` from the clone's origin. Without it the header's commits stay plain text.
+REPO_SLUG = os.environ.get("UITEST_REPO_SLUG") or ""
+
+
+def commit_url(value):
+    return f"https://github.com/{REPO_SLUG}/commit/{value}" if REPO_SLUG and short_sha(value) else None
+
+
+def commit_ref(provenance_dict):
+    """The header's rendering of one commit: short sha, where it lives, what it said."""
+    return {
+        "sha": short_sha(provenance_dict.get("commit")),
+        "url": commit_url(provenance_dict.get("commit")),
+        "subject": provenance_dict.get("commitSubject") or None,
+    }
+
+
+commit = run_provenance.get("commit") or ""
+short_commit = short_sha(commit)
+now = datetime.now(timezone.utc)
+generated_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+generated_at = now.strftime("%Y-%m-%d %H:%M UTC")
 
 # --- images ------------------------------------------------------------------------------
 
@@ -148,7 +190,12 @@ STATUS_LABEL = {"diff": "changed", "new": "new", "gone": "removed", "error": "er
 
 page_data = {
     "label": label,
-    "provenance": provenance,
+    "run": {"commit": commit_ref(run_provenance), "generatedAt": generated_at},
+    "provenance": {
+        **provenance,
+        "commitRef": commit_ref(provenance),
+        "mintedAt": stamp(provenance.get("capturedAt")),
+    },
     "counts": counts,
     "coverage": coverage,
     "cards": cards,
@@ -178,6 +225,13 @@ h1 small{color:var(--muted);font-weight:normal;font-size:13px;margin-left:8px}
 .chip.all{--c:var(--accent)}
 input[type=search]{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:6px;padding:5px 9px;font:inherit;min-width:220px}
 .meta{color:var(--muted);font-size:12px;margin-top:8px}
+.meta .keys{margin-top:4px}
+.sha{position:relative;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* The commit subject on hover, rather than a native title: that waits a second and then
+   renders in the OS's colours, next to a header that has already picked its own. */
+.sha[data-tip]:hover::after,.sha[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:20;
+  width:max-content;max-width:min(520px,70vw);white-space:normal;background:var(--card);color:var(--text);border:1px solid var(--line);
+  border-radius:6px;padding:6px 8px;box-shadow:0 6px 16px rgba(0,0,0,.2);font:12px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
 .meta details{display:inline}
 .meta summary{cursor:pointer}
 .meta ul{margin:6px 0 0 18px}
@@ -277,8 +331,18 @@ main{padding:16px 20px}
 
   const meta = document.getElementById("meta");
   const parts = [];
+  // A commit as a link to itself, carrying its subject line as the hover tooltip.
+  const sha = (ref) => {
+    if (!ref || !ref.sha) return "?";
+    const tip = ref.subject ? ' data-tip="' + esc(ref.subject) + '" tabindex="0"' : "";
+    return ref.url
+      ? '<a class="sha" href="' + esc(ref.url) + '" target="_blank" rel="noopener"' + tip + ">" + esc(ref.sha) + "</a>"
+      : '<span class="sha"' + tip + ">" + esc(ref.sha) + "</span>";
+  };
+  const run = data.run || {};
+  parts.push((run.commit && run.commit.sha ? "run " + sha(run.commit) + " · " : "") + "generated " + esc(run.generatedAt));
   const prov = data.provenance || {};
-  if (prov.capturedAt) parts.push("baselines minted " + esc(prov.capturedAt) + " at " + esc((prov.commit || "?").slice(0, 11)) + " with Roborazzi " + esc(prov.roborazzi || "?"));
+  if (prov.mintedAt) parts.push("baselines minted " + esc(prov.mintedAt) + " at " + sha(prov.commitRef) + " with Roborazzi " + esc(prov.roborazzi || "?"));
   else if (!data.counts.ok && !data.counts.diff) parts.push("no baselines: every screenshot is new");
   if (data.coverage) {
     const skipped = Object.entries(data.coverage.skipped || {});
@@ -287,8 +351,8 @@ main{padding:16px 20px}
         skipped.map(([reason, fixtures]) => "<li><b>" + esc(reason) + "</b>: " + fixtures.map(esc).join(", ") + "</li>").join("") + "</ul></details>"
       : esc(data.coverage.line));
   }
-  parts.push("click a screenshot to open it; ← → move between screenshots, 1 2 3 switch views, Esc closes");
-  meta.innerHTML = parts.join(" · ");
+  meta.innerHTML = parts.join(" · ") +
+    '<div class="keys">click a screenshot to open it; ← → move between screenshots, 1 2 3 switch views, Esc closes</div>';
 
   // --- grid
   const main = document.getElementById("main");
@@ -413,9 +477,10 @@ os.makedirs(report_dir, exist_ok=True)
 open(os.path.join(report_dir, "index.html"), "w").write(page)
 
 # --- PR comment ----------------------------------------------------------------------------
-# One line, plus the changed screenshots as links into the report. `__REPORT_URL__` is the
-# published report's URL, which only the publish job knows; it substitutes the real one, or
-# drops the links when there is nothing published.
+# One line, plus the changed screenshots as links into the report, and a footer naming the
+# commit and the time so a PR carrying a comment per run reads as a sequence. `__REPORT_URL__`
+# is the published report's URL and `__RUN_URL__` the workflow run's, which only the publish
+# job knows; it substitutes the real ones, or drops the links when there is nothing published.
 
 failing = [c for c in cards if c["status"] != "ok"]
 lines = []
@@ -433,7 +498,22 @@ if failing:
         lines.append(f"- and {len(failing) - len(shown)} more in the report")
 else:
     lines.append(f"**Thomas screenshot tests:** all {len(cards)} screenshots match. [Report](__REPORT_URL__)")
+# The comment step keeps the first line and this one when it has to fall back to the artifact,
+# so the footer stays last.
+lines.append("")
+lines.append(f"<sub>{' · '.join(filter(None, [short_commit, generated_at]))} · [run log](__RUN_URL__)</sub>")
 open(os.path.join(report_dir, "summary.md"), "w").write("\n".join(lines) + "\n")
+
+# Read back by the published reports' index pages: they order a PR's runs and label each one.
+meta = {
+    "commit": commit or None,
+    "shortCommit": short_commit,
+    "generatedAt": generated_iso,
+    "label": label,
+    "counts": counts,
+    "total": len(cards),
+}
+json.dump(meta, open(os.path.join(report_dir, "meta.json"), "w"))
 
 size = sum(os.path.getsize(os.path.join(root, f)) for root, _, files in os.walk(report_dir) for f in files)
 print(f"report: {os.path.join(report_dir, 'index.html')} ({len(cards)} screenshots, {copied} images, {size / 1_000_000:.1f} MB)")

@@ -46,7 +46,7 @@ internal class ContainerLayoutModel(
     }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
-        ContainerLayoutView(context, this, viewEnvironment).apply {
+        ContainerLayoutView(context, this, viewEnvironment, itemProperties).apply {
             id = viewId
         }
 }

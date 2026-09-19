@@ -30,6 +30,8 @@ import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
 import com.urbanairship.android.layout.widget.establishesLength
+import com.urbanairship.android.layout.widget.statesLength
+import com.urbanairship.android.layout.widget.ItemWrapper
 import com.urbanairship.android.layout.widget.LengthBasisProvider
 import com.urbanairship.android.layout.widget.ShrinkableView
 import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsListenerCompat
@@ -37,7 +39,8 @@ import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsList
 internal class ContainerLayoutView(
     context: Context,
     private val model: ContainerLayoutModel,
-    private val viewEnvironment: ViewEnvironment
+    private val viewEnvironment: ViewEnvironment,
+    private val itemProperties: ItemProperties? = null
 ) : ClippableConstraintLayout(context), BaseView, ShrinkableView, AutoSizeProvider,
     LengthBasisProvider {
 
@@ -96,10 +99,10 @@ internal class ContainerLayoutView(
     }
 
     private fun addItem(constraintBuilder: ConstraintSetBuilder, item: Item) {
-        val itemView = item.model.createView(context, viewEnvironment, ItemProperties(item.info.size))
+        val itemView = item.model.createView(context, viewEnvironment, ItemProperties(item.info.size, item.info.position))
 
         val frameId = generateViewId()
-        val frame: ViewGroup = FrameLayout(context).apply {
+        val frame: ViewGroup = ItemFrame(context).apply {
             id = frameId
             addView(itemView, MATCH_PARENT, MATCH_PARENT)
         }
@@ -130,8 +133,30 @@ internal class ContainerLayoutView(
     private var isAutoWidth = false
     private var isAutoHeight = false
 
-    override fun isAutoSized(horizontal: Boolean): Boolean =
-        if (horizontal) isAutoWidth else isAutoHeight
+    /**
+     * A length the item declared is a length, however our parent went about measuring us. `AT_MOST`
+     * is a bound we were given, not a sign we size ourselves to our content: a `100%` container
+     * measured that way takes the bound, and media below it has a real ceiling to crop into.
+     *
+     * The spec is the fallback for the root, where no item above us declared anything.
+     */
+    override fun isAutoSized(horizontal: Boolean): Boolean {
+        declaredDimension(horizontal)?.let { return it.isAuto }
+
+        return if (horizontal) isAutoWidth else isAutoHeight
+    }
+
+    override fun inheritsLength(horizontal: Boolean): Boolean {
+        if (declaredDimension(horizontal)?.type != Size.DimensionType.PERCENT) return false
+
+        // Only while the share is still unresolved. Measured against a parent that has settled, a
+        // percentage of it is a length like any other, and what is below us has a real box. Still
+        // being measured, it is the question we were asked, passed along.
+        return if (horizontal) isAutoWidth else isAutoHeight
+    }
+
+    private fun declaredDimension(horizontal: Boolean): Size.Dimension? =
+        if (horizontal) itemProperties?.size?.width else itemProperties?.size?.height
 
     /**
      * Whether any item gives [horizontal] a length of its own, rather than a share of ours.
@@ -147,6 +172,23 @@ internal class ContainerLayoutView(
             when {
                 dimension.isPercent -> false
                 dimension.isAuto -> view.establishesLength(horizontal)
+                else -> true
+            }
+        }
+
+    /**
+     * Whether any item states a length on [horizontal]. See [LengthBasisProvider.statesLength].
+     *
+     * The same declarations as [establishesLength], with the leaf answer inverted.
+     */
+    override fun statesLength(horizontal: Boolean): Boolean =
+        itemDeclarations.any { (size, view) ->
+            if (view.visibility == GONE) return@any false
+
+            val dimension = if (horizontal) size.width else size.height
+            when {
+                dimension.isPercent -> false
+                dimension.isAuto -> view.statesLength(horizontal)
                 else -> true
             }
         }
@@ -476,6 +518,9 @@ internal class ContainerLayoutView(
             return applied.inset(insets)
         }
     }
+
+    /** The frame carrying one item's declared size. See [ItemWrapper]. */
+    private class ItemFrame(context: Context) : FrameLayout(context), ItemWrapper
 
     private companion object {
         /** `SparseArray` default for "the percent solve didn't run for this frame". */

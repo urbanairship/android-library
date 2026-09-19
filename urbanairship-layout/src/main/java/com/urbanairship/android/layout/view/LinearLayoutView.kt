@@ -116,7 +116,7 @@ internal class LinearLayoutView(
         for (i in items.indices) {
             val (itemInfo, itemModel) = items[i]
             val lp = generateItemLayoutParams(itemInfo)
-            val itemView = itemModel.createView(context, viewEnvironment, ItemProperties(itemInfo.size))
+            val itemView = itemModel.createView(context, viewEnvironment, ItemProperties(itemInfo.size, itemInfo.position))
 
             if (isListView && itemInfo.isListItem) {
                 val listIndex = listItems.indexOf(itemInfo)
