@@ -164,8 +164,8 @@ public open class ActionRunRequest {
     public open fun runSync(): ActionResult {
         return try {
             runBlocking { runSuspending().result }
-        } catch (ex: InterruptedException) {
-            UALog.e("Failed to run action with arguments ${createActionArguments()}")
+        } catch (ex: Exception) {
+            UALog.e(ex, "Failed to run action with arguments ${createActionArguments()}")
             ActionResult.newErrorResult(ex)
         }
     }
@@ -213,7 +213,14 @@ public open class ActionRunRequest {
         val handler = Handler(runLooper)
 
         scope.launch {
-            val result = runSuspending()
+            // Guarantees the callback contract holds no matter what an action throws, so
+            // anything awaiting it (e.g. ActionRunner.runSuspending) can't hang forever.
+            val result = try {
+                runSuspending()
+            } catch (e: Exception) {
+                UALog.e(e, "Failed to run action with arguments ${createActionArguments()}")
+                ActionRunResult(createActionArguments(), ActionResult.newErrorResult(e))
+            }
 
             handler.post { callback?.onFinish(result.arguments, result.result) }
         }

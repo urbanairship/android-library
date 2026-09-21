@@ -3,7 +3,6 @@
 package com.urbanairship.iam.actions
 
 import com.urbanairship.Airship
-import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
 import com.urbanairship.actions.SuspendingAction

@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newResult
@@ -13,6 +14,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -25,6 +29,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.LooperMode
 
@@ -251,16 +256,16 @@ public class SuspendingActionTest {
     }
 
     /**
-     * Test that [Action.runSuspending] rethrows a [CancellationException] raised inside
-     * [Action.performSuspending], instead of swallowing it into an error result. Thrown
-     * directly rather than via `job.cancel()`: a cancelled Job finalizes as cancelled either
-     * way, so that wouldn't exercise the catch branch.
-     *
-     * This only covers cancellation from inside the action: [ActionRunRequest] runs actions on
-     * their own scope, so cancelling a caller going through it doesn't reach the action itself.
+     * Test that a [CancellationException] that doesn't mean the caller is actually cancelled
+     * (a bare throw here stands in for e.g. an inner `withTimeout` expiring, or a plain
+     * `java.util.concurrent.CancellationException` from unrelated code, the same class as
+     * kotlinx's on the JVM) is reported as an error result, not rethrown. [Action.runSuspending]
+     * distinguishes the two via `currentCoroutineContext().ensureActive()`; without that guard,
+     * this would be rethrown right along with a real cancellation, which is exactly the bug this
+     * test guards against.
      */
     @Test
-    public fun testCancellationFromPerformSuspendingPropagates(): TestResult = runTest {
+    public fun testUnrelatedCancellationExceptionBecomesErrorResult(): TestResult = runTest {
         val action = object : SuspendingAction() {
             var onFinishCalled: Boolean = false
             override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
@@ -271,14 +276,93 @@ public class SuspendingActionTest {
             }
         }
 
+        val result = action.runSuspending(ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, "val"))
+
+        assertEquals(ActionResult.Status.EXECUTION_ERROR, result.status)
+        assertFalse("onFinish should not run for a failed action", action.onFinishCalled)
+    }
+
+    /**
+     * Test that a [CancellationException] does still propagate out of [Action.runSuspending]
+     * when the caller's own coroutine is genuinely cancelled, rather than being caught by the
+     * [testUnrelatedCancellationExceptionBecomesErrorResult] guard indiscriminately.
+     */
+    @Test
+    public fun testRealCancellationStillPropagates(): TestResult = runTest {
+        val action = object : SuspendingAction() {
+            var onFinishCalled: Boolean = false
+            override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
+                currentCoroutineContext().cancel()
+                throw CancellationException("boom")
+            }
+            override fun onFinish(arguments: ActionArguments, result: ActionResult) {
+                onFinishCalled = true
+            }
+        }
+
         var caught: CancellationException? = null
         try {
-            action.runSuspending(ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, "val"))
+            coroutineScope {
+                action.runSuspending(ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, "val"))
+            }
         } catch (e: CancellationException) {
             caught = e
         }
 
-        assertTrue("runSuspending must rethrow CancellationException, not swallow it", caught != null)
+        assertTrue("A genuinely cancelled caller must still see the exception propagate", caught != null)
         assertFalse("onFinish should not run when the action is cancelled", action.onFinishCalled)
+    }
+
+    /**
+     * Test that going through [ActionRunRequest] also reports [ActionResult.Status.EXECUTION_ERROR]
+     * for an action that throws an unrelated [CancellationException], rather than leaving the
+     * exception to escape [ActionRunRequest.runSuspending] uncaught.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    public fun testActionRunRequestReportsErrorForUnrelatedCancellationException(): TestResult = runTest {
+        val action = object : SuspendingAction() {
+            override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
+                throw CancellationException("boom")
+            }
+        }
+
+        val runResult = createRequest(action)
+            .setDispatcher(UnconfinedTestDispatcher(testScheduler))
+            .runSuspending()
+
+        assertEquals(ActionResult.Status.EXECUTION_ERROR, runResult.result.status)
+    }
+
+    /**
+     * Test that [ActionRunRequest.run] with a callback still invokes
+     * [ActionCompletionCallback.onFinish] when the action throws a [CancellationException],
+     * instead of leaving the callback contract (and anything awaiting it, e.g.
+     * [ActionRunner.runSuspending]) hanging forever.
+     */
+    @Test
+    public fun testRunCallbackFiresForCancellationException() {
+        val looper = Shadows.shadowOf(Looper.getMainLooper())
+        looper.runToEndOfTasks()
+
+        val dispatcher = StandardTestDispatcher()
+        val action = object : SuspendingAction() {
+            override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
+                throw CancellationException("boom")
+            }
+        }
+
+        var onFinishResult: ActionResult? = null
+        createRequest(action)
+            .setDispatcher(dispatcher)
+            .run { _, result -> onFinishResult = result }
+            .also {
+                looper.pause()
+                dispatcher.scheduler.advanceUntilIdle()
+            }
+
+        looper.runToEndOfTasks()
+
+        assertEquals(ActionResult.Status.EXECUTION_ERROR, onFinishResult?.status)
     }
 }

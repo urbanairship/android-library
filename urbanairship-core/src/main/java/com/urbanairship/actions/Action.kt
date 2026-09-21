@@ -3,6 +3,8 @@ package com.urbanairship.actions
 
 import com.urbanairship.UALog
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 /**
  * The base action class that describes an operation to perform.
@@ -91,7 +93,7 @@ public abstract class Action public constructor() {
      *
      * Blocks the calling thread until [perform] returns. If the action is a [SuspendingAction],
      * the suspending work is bridged via `runBlocking`; don't call this from the main thread in
-     * that case, prefer [runSuspending] from a coroutine.
+     * that case, prefer [runSuspending] from a coroutine on an appropriate dispatcher.
      *
      * @param arguments The action arguments.
      * @return The result of the action.
@@ -114,12 +116,19 @@ public abstract class Action public constructor() {
      * Performs the action, with pre/post execution calls, if it accepts the provided
      * arguments, suspending until the action completes.
      *
-     * Suspending counterpart to [run]: awaits [performSuspending] instead of blocking. A
-     * [kotlinx.coroutines.CancellationException] thrown by [performSuspending] is rethrown
-     * as-is rather than reported as an [ActionResult.Status.EXECUTION_ERROR] result; [onFinish]
-     * is not called in that case. This only covers cancellation raised inside
-     * [performSuspending] itself: [ActionRunRequest] runs actions on its own scope, so
-     * canceling the caller doesn't cancel an action already in flight.
+     * Suspending counterpart to [run]: awaits [performSuspending] instead of blocking. If this
+     * coroutine is actually canceled, that's rethrown as-is rather than reported as an
+     * [ActionResult.Status.EXECUTION_ERROR] result, and [onFinish] is not called. A
+     * [kotlinx.coroutines.CancellationException] that doesn't mean that (an inner `withTimeout`
+     * expiring, or a plain `java.util.concurrent.CancellationException` from unrelated code,
+     * which is the same class on the JVM) is reported as an error result like any other
+     * exception. This only covers cancellation raised inside [performSuspending] itself:
+     * [ActionRunRequest] runs actions on its own scope, so canceling the caller doesn't cancel
+     * an action already in flight.
+     *
+     * Calling this directly does no dispatching of its own: [shouldRunOnMainThread] is only
+     * consulted by [ActionRunRequest]. Call it from whatever dispatcher is already appropriate
+     * for the action, or go through [ActionRunRequest] instead.
      *
      * @param arguments The action arguments.
      * @return The result of the action.
@@ -132,9 +141,14 @@ public abstract class Action public constructor() {
 
             onFinish(arguments, result)
             return result
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Exception) {
+            if (e is CancellationException) {
+                // Rethrow only if this coroutine is truly canceled. A CancellationException can
+                // also mean something unrelated (an inner withTimeout, or a plain
+                // java.util.concurrent.CancellationException, which is the same class on the
+                // JVM), and that should be reported like any other exception instead.
+                currentCoroutineContext().ensureActive()
+            }
             UALog.e(e, "Failed to run action $this")
             return ActionResult.newErrorResult(e)
         }

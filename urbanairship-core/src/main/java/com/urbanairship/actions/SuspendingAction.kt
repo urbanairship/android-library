@@ -9,7 +9,9 @@ import kotlinx.coroutines.runBlocking
  *
  * Subclasses implement [performSuspending] instead of [Action.perform]. The actions framework
  * ([ActionRunRequest], [ActionRunner], the JavaScript bridge, push and Scene/IAA actions) awaits
- * it internally, so the [ActionResult] reflects the completed work.
+ * it internally, so the [ActionResult] reflects the completed work, capped in the Scene/IAA case
+ * by that layout's own timeout: a Thomas layout only waits up to 5 seconds (`ACTION_RUN_TIMEOUT`
+ * in `BaseModel`) before continuing teardown, after which the action keeps running untracked.
  *
  * Blocking entry points ([Action.run], [ActionRunRequest.runSync]) still work for compatibility,
  * but block the calling thread until the action completes; don't call them from the main thread.
