@@ -94,7 +94,18 @@ internal class VerticalScrollLayoutView(
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        backgroundsPainter.draw(canvas, width, height)
+        // View.draw() pre-translates this canvas by (-scrollX, -scrollY) before dispatchDraw runs,
+        // the same way it does for onDraw -- undo it here so the painter draws against the fixed
+        // viewport box it was sized against, the same way View's own drawBackground() stays put
+        // regardless of scroll. Without this, every layer -- parallaxing or not -- would scroll
+        // with the content at 1:1 on top of whatever parallax offset it already applies.
+        canvas.save()
+        canvas.translate(scrollX.toFloat(), scrollY.toFloat())
+        try {
+            backgroundsPainter.draw(canvas, width, height)
+        } finally {
+            canvas.restore()
+        }
         super.dispatchDraw(canvas)
     }
 }
