@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.graphics.Canvas
 import android.os.SystemClock
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -186,7 +187,7 @@ internal class PagerView(
             override fun onContentOffsetChanged(offsetPx: Float) {
                 backgroundsPainter.offsetPx = offsetPx
                 videoBackgroundChildren.forEach { child ->
-                    val (dx, dy) = backgroundsPainter.parallaxTranslation(child.parallax)
+                    val (dx, dy) = backgroundsPainter.parallaxTranslation(child.parallax, width, height)
                     child.mediaView.translationX = dx
                     child.mediaView.translationY = dy
                 }
@@ -197,6 +198,25 @@ internal class PagerView(
         // Pass along any calls to apply insets to the view.
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
             ViewCompat.dispatchApplyWindowInsets(view, insets)
+        }
+    }
+
+    /**
+     * A video child needs the same oversize a canvas-painted parallax layer gets from
+     * [BackgroundsPainter.drawLayer] -- without it, translating it by [Parallax] (see
+     * `onContentOffsetChanged`) would slide its edge into view rather than reveal more of an
+     * already-larger view, the same gap [BackgroundsPainter.parallaxMargins] exists to prevent.
+     * `CENTER` gravity keeps it aligned with the box at rest (`offsetPx == 0`), matching that
+     * oversized layer's own centering.
+     */
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        videoBackgroundChildren.forEach { child ->
+            val (marginX, marginY) = backgroundsPainter.parallaxMargins(child.parallax, w, h)
+            child.mediaView.layoutParams = FrameLayout.LayoutParams(
+                w + 2 * marginX,
+                h + 2 * marginY
+            ).apply { gravity = Gravity.CENTER }
         }
     }
 

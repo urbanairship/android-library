@@ -136,15 +136,37 @@ internal class BackgroundsPainter(
      * The translate a parallaxing layer needs for the current [offsetPx] -- shared by
      * [drawLayer] and by a host positioning one of [attachedViewBackgrounds] as a real child, so
      * both move by the same amount.
+     *
+     * Clamped to [width]/[height] on the axis(es) [parallax] moves along: [offsetPx] is
+     * unbounded for a driving host with a continuous scroll region (`ScrollLayout`), and a
+     * `factor` is only ever documented up to a magnitude of `1` (see [Parallax]), so without a
+     * clamp a layer could be asked to travel arbitrarily far from the box it's drawn into.
+     * Paired with [parallaxMargins], which oversizes that same layer by exactly this much, so the
+     * clamped range never outruns the content and exposes a gap at the box's edge.
      */
-    fun parallaxTranslation(parallax: Parallax?): Pair<Float, Float> {
+    fun parallaxTranslation(parallax: Parallax?, width: Int, height: Int): Pair<Float, Float> {
         val dx = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
-            -parallax.factor * offsetPx
+            (-parallax.factor * offsetPx).coerceIn(-width.toFloat(), width.toFloat())
         } else 0f
         val dy = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
-            -parallax.factor * offsetPx
+            (-parallax.factor * offsetPx).coerceIn(-height.toFloat(), height.toFloat())
         } else 0f
         return dx to dy
+    }
+
+    /**
+     * The extra room a parallaxing layer needs on each side of [width]/[height], so it still
+     * fully covers the box at the far end of [parallaxTranslation]'s clamped range.
+     *
+     * `0` on an axis [parallax] doesn't move along, or where [parallax] is `null`. Shared with a
+     * host positioning one of [attachedViewBackgrounds] as a real child (see `PagerView`), so
+     * that child is oversized and centered the same way [drawLayer] oversizes a canvas-painted
+     * one.
+     */
+    fun parallaxMargins(parallax: Parallax?, width: Int, height: Int): Pair<Int, Int> {
+        val marginX = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) width else 0
+        val marginY = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) height else 0
+        return marginX to marginY
     }
 
     private fun drawLayers(canvas: Canvas, width: Int, height: Int, toDraw: List<Layer>) {
@@ -158,22 +180,30 @@ internal class BackgroundsPainter(
         }
     }
 
+    /**
+     * Translates by [parallaxTranslation]'s clamped amount, offset by [parallaxMargins]' oversize
+     * so the box sees the *oversized* layer's own center at rest (`offsetPx == 0`) -- the same
+     * reasoning as centering any larger box over a smaller one. A layer with no [Layer.parallax]
+     * gets zero margin on both axes, so this is a no-op translate and an unchanged (`width`,
+     * `height`) draw size, exactly as before this existed.
+     */
     private fun drawLayer(canvas: Canvas, layer: Layer, width: Int, height: Int) {
-        val (dx, dy) = parallaxTranslation(layer.parallax)
+        val (dx, dy) = parallaxTranslation(layer.parallax, width, height)
+        val (marginX, marginY) = parallaxMargins(layer.parallax, width, height)
+        val drawWidth = width + 2 * marginX
+        val drawHeight = height + 2 * marginY
 
-        val translated = dx != 0f || dy != 0f
-        if (translated) {
-            canvas.save()
-            canvas.translate(dx, dy)
-        }
+        canvas.save()
+        canvas.translate(dx - marginX, dy - marginY)
         try {
             when (val background = layer.background) {
-                is Background.ColorBackground -> drawColor(canvas, background, width, height)
-                is Background.GradientBackground -> drawGradient(canvas, background, width, height)
-                is Background.MediaBackground -> drawMedia(canvas, background, width, height)
+                is Background.ColorBackground -> drawColor(canvas, background, drawWidth, drawHeight)
+                is Background.GradientBackground ->
+                    drawGradient(canvas, background, width, height, drawWidth, drawHeight)
+                is Background.MediaBackground -> drawMedia(canvas, background, drawWidth, drawHeight)
             }
         } finally {
-            if (translated) canvas.restore()
+            canvas.restore()
         }
     }
 
@@ -186,7 +216,19 @@ internal class BackgroundsPainter(
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
     }
 
-    private fun drawGradient(canvas: Canvas, layer: Background.GradientBackground, width: Int, height: Int) {
+    /**
+     * [shaderWidth]/[shaderHeight] shape the gradient itself (so it doesn't stretch when a
+     * parallaxing layer draws oversized), while [drawWidth]/[drawHeight] size the rect it's
+     * painted onto -- `CLAMP` tiling carries the end-stop color out into that extra margin.
+     */
+    private fun drawGradient(
+        canvas: Canvas,
+        layer: Background.GradientBackground,
+        shaderWidth: Int,
+        shaderHeight: Int,
+        drawWidth: Int,
+        drawHeight: Int
+    ) {
         val gradient = layer.gradient
         if (gradient.stops.isEmpty()) return
 
@@ -195,12 +237,12 @@ internal class BackgroundsPainter(
 
         val shader: Shader = when (gradient.style) {
             Gradient.Style.LINEAR -> {
-                val line = linearGradientLine(gradient.angle ?: 0f, width.toFloat(), height.toFloat())
+                val line = linearGradientLine(gradient.angle ?: 0f, shaderWidth.toFloat(), shaderHeight.toFloat())
                 LinearGradient(line.x0, line.y0, line.x1, line.y1, colors, positions, Shader.TileMode.CLAMP)
             }
             Gradient.Style.RADIAL -> {
-                val radius = hypot(width / 2f, height / 2f).coerceAtLeast(1f)
-                RadialGradient(width / 2f, height / 2f, radius, colors, positions, Shader.TileMode.CLAMP)
+                val radius = hypot(shaderWidth / 2f, shaderHeight / 2f).coerceAtLeast(1f)
+                RadialGradient(shaderWidth / 2f, shaderHeight / 2f, radius, colors, positions, Shader.TileMode.CLAMP)
             }
         }
 
@@ -209,7 +251,7 @@ internal class BackgroundsPainter(
         applyBlendMode(paint, layer.blendMode)
         // `Paint.alpha` modulates a shader's output the same way it does a flat color.
         paint.alpha = (255 * layer.opacity.orFullyOpaque()).roundToInt()
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        canvas.drawRect(0f, 0f, drawWidth.toFloat(), drawHeight.toFloat(), paint)
     }
 
     private fun drawMedia(canvas: Canvas, layer: Background.MediaBackground, width: Int, height: Int) {
