@@ -2,8 +2,11 @@
 package com.urbanairship.android.layout.widget
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
@@ -80,12 +83,14 @@ internal class BackgroundsPainter(
             field = value
             layers = value.orEmpty().map { Layer(it, null) }
             mediaViews.clear()
+            mediaClampBitmaps.clear()
         }
 
     /** Only `Pager`/`ScrollLayout` ever call this -- see the class doc. */
     fun setParallaxBackgrounds(value: List<ParallaxBackground>?) {
         layers = value.orEmpty().map { Layer(it.background, it.parallax) }
         mediaViews.clear()
+        mediaClampBitmaps.clear()
     }
 
     /**
@@ -200,7 +205,8 @@ internal class BackgroundsPainter(
                 is Background.ColorBackground -> drawColor(canvas, background, drawWidth, drawHeight)
                 is Background.GradientBackground ->
                     drawGradient(canvas, background, width, height, drawWidth, drawHeight)
-                is Background.MediaBackground -> drawMedia(canvas, background, drawWidth, drawHeight)
+                is Background.MediaBackground ->
+                    drawMedia(canvas, background, width, height, drawWidth, drawHeight)
             }
         } finally {
             canvas.restore()
@@ -220,6 +226,12 @@ internal class BackgroundsPainter(
      * [shaderWidth]/[shaderHeight] shape the gradient itself (so it doesn't stretch when a
      * parallaxing layer draws oversized), while [drawWidth]/[drawHeight] size the rect it's
      * painted onto -- `CLAMP` tiling carries the end-stop color out into that extra margin.
+     *
+     * A [Shader]'s own coordinates and the rect it paints share one coordinate space, both anchored
+     * at that space's `(0, 0)` -- so a gradient built from [shaderWidth]/[shaderHeight] alone would
+     * land in the drawn rect's own top-left corner, not its center, the moment the two sizes
+     * differ. [Shader.setLocalMatrix] re-centers it by the same margin [drawWidth]/[drawHeight]
+     * added.
      */
     private fun drawGradient(
         canvas: Canvas,
@@ -245,6 +257,7 @@ internal class BackgroundsPainter(
                 RadialGradient(shaderWidth / 2f, shaderHeight / 2f, radius, colors, positions, Shader.TileMode.CLAMP)
             }
         }
+        shader.setLocalMatrix(centeringMatrix(shaderWidth, shaderHeight, drawWidth, drawHeight))
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.shader = shader
@@ -254,37 +267,110 @@ internal class BackgroundsPainter(
         canvas.drawRect(0f, 0f, drawWidth.toFloat(), drawHeight.toFloat(), paint)
     }
 
-    private fun drawMedia(canvas: Canvas, layer: Background.MediaBackground, width: Int, height: Int) {
+    /**
+     * [shaderWidth]/[shaderHeight] size the box the image is cropped/measured into -- the same
+     * box a non-parallaxing media background would use, so `media_fit` keeps the same zoom level
+     * -- while [drawWidth]/[drawHeight] size the rect it's painted onto. Cropping straight into
+     * the larger, oversized box instead would ask `fit_crop`'s own "cover" math to fill a much
+     * wider or taller aspect ratio than the layer's own box, zooming in far more than `media_fit`
+     * ever asked for.
+     */
+    private fun drawMedia(
+        canvas: Canvas,
+        layer: Background.MediaBackground,
+        shaderWidth: Int,
+        shaderHeight: Int,
+        drawWidth: Int,
+        drawHeight: Int
+    ) {
         // Video/YouTube/Vimeo need a real attached view to play at all -- a host that supports
         // them positions one itself (see attachedViewBackgrounds) and never reaches this branch
         // for that layer. A host that doesn't opt in just doesn't render it, same as before.
         if (layer.mediaType != MediaType.IMAGE) return
+        if (shaderWidth <= 0 || shaderHeight <= 0) return
 
-        val imageView = mediaViews.getOrPut(layer) { createCropImageView(layer, width, height) }
+        val imageView = mediaViews.getOrPut(layer) { createCropImageView(layer, shaderWidth, shaderHeight) }
         // Re-affirmed on every draw in case the box has changed size since creation. Harmless to
         // repeat -- the load itself, below, only ever happens once per layer.
         imageView.measure(
-            MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(shaderWidth, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(shaderHeight, MeasureSpec.EXACTLY)
         )
-        imageView.layout(0, 0, width, height)
+        imageView.layout(0, 0, shaderWidth, shaderHeight)
 
         val opacity = layer.opacity.orFullyOpaque()
         val hasBlend = layer.blendMode != null && layer.blendMode != BlendMode.NORMAL
-        if (opacity >= 1f && !hasBlend) {
-            imageView.draw(canvas)
+
+        if (shaderWidth == drawWidth && shaderHeight == drawHeight) {
+            // Not parallaxing (or at rest on an axis it doesn't move along) -- draws directly,
+            // exactly as it always has.
+            if (opacity >= 1f && !hasBlend) {
+                imageView.draw(canvas)
+                return
+            }
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+            applyBlendMode(paint, layer.blendMode)
+            paint.alpha = (255 * opacity).roundToInt()
+            val saveCount = canvas.saveLayer(0f, 0f, shaderWidth.toFloat(), shaderHeight.toFloat(), paint)
+            try {
+                imageView.draw(canvas)
+            } finally {
+                canvas.restoreToCount(saveCount)
+            }
             return
         }
 
+        // Oversized for parallax travel: paint the correctly-cropped image (rendered once, at its
+        // own box size, and cached until that changes) through a CLAMP-tiled shader instead of
+        // re-measuring it into the larger box -- carries its edge pixels out into the margin the
+        // same way drawGradient's own CLAMP does, rather than re-cropping at the wrong aspect ratio.
+        val bitmap = clampBitmapFor(layer, imageView, shaderWidth, shaderHeight) ?: return
+        val shader = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        shader.setLocalMatrix(centeringMatrix(shaderWidth, shaderHeight, drawWidth, drawHeight))
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.shader = shader
         applyBlendMode(paint, layer.blendMode)
         paint.alpha = (255 * opacity).roundToInt()
-        val saveCount = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), paint)
-        try {
-            imageView.draw(canvas)
-        } finally {
-            canvas.restoreToCount(saveCount)
+        canvas.drawRect(0f, 0f, drawWidth.toFloat(), drawHeight.toFloat(), paint)
+    }
+
+    /**
+     * Centers a [shaderWidth]x[shaderHeight] shader pattern within a [drawWidth]x[drawHeight]
+     * rect that shares its coordinate space -- both a `Shader`'s own coordinates and the rect a
+     * `Paint` carrying it fills are read in that one shared space, anchored at its `(0, 0)`, so
+     * without this a smaller pattern lands in the larger rect's top-left corner instead of its
+     * center.
+     */
+    private fun centeringMatrix(shaderWidth: Int, shaderHeight: Int, drawWidth: Int, drawHeight: Int): Matrix =
+        Matrix().apply {
+            setTranslate((drawWidth - shaderWidth) / 2f, (drawHeight - shaderHeight) / 2f)
         }
+
+    private data class ClampBitmap(val bitmap: Bitmap, val width: Int, val height: Int)
+
+    private val mediaClampBitmaps = mutableMapOf<Background.MediaBackground, ClampBitmap>()
+
+    /**
+     * A snapshot of [imageView]'s current pixels at [width]/[height], reused across draws until
+     * either changes -- rendering a fresh [Bitmap] on every single frame of a drag would be a lot
+     * of allocation for a box that, once loaded, only actually changes content when [width]/
+     * [height] themselves do. Null while nothing has loaded yet (nothing to snapshot).
+     */
+    private fun clampBitmapFor(
+        layer: Background.MediaBackground,
+        imageView: CropImageView,
+        width: Int,
+        height: Int
+    ): Bitmap? {
+        if (imageView.drawable == null) return null
+
+        val cached = mediaClampBitmaps[layer]
+        if (cached != null && cached.width == width && cached.height == height) return cached.bitmap
+
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        imageView.draw(Canvas(bitmap))
+        mediaClampBitmaps[layer] = ClampBitmap(bitmap, width, height)
+        return bitmap
     }
 
     /**
