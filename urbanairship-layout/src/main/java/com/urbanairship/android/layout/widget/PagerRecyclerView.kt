@@ -1,11 +1,13 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.widget
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Rect
 import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +20,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.view.PagerView
 import kotlin.math.abs
+import kotlin.math.ceil
 
 internal class PagerRecyclerView(
     context: Context,
@@ -33,6 +36,12 @@ internal class PagerRecyclerView(
     private var isSettling = false
 
     private var listener: PagerView.OnScrollListener? = null
+
+    // The background's own settle animation, matched to ThomasSmoothScroller's real duration --
+    // see recyclerScrollListener.onScrollStateChanged.
+    internal var backgroundSettleAnimator: ValueAnimator? = null
+        private set
+    private val backgroundSettleInterpolator = DecelerateInterpolator()
 
     fun refresh() {
         adapter.setItems(model.pages)
@@ -108,6 +117,29 @@ internal class PagerRecyclerView(
         this.listener = listener
     }
 
+    /**
+     * The duration `ThomasSmoothScroller` would take to travel [distancePx] -- the same formula,
+     * not a restated copy of it, so a background's settle animation can never drift out of sync
+     * with what governs the real page-turn transition's own speed.
+     */
+    internal fun settleDurationMs(distancePx: Float): Long {
+        val speedPerPixel = ThomasSmoothScroller.MILLISECONDS_PER_INCH / resources.displayMetrics.densityDpi
+        // ceil, matching LinearSmoothScroller.calculateTimeForScrolling's own real formula --
+        // truncating would round *down*, occasionally finishing the animation a hair before the
+        // real page-turn's own timing does.
+        return ceil(abs(distancePx) * speedPerPixel).toLong().coerceAtLeast(1L)
+    }
+
+    /** This item's offset relative to the *nearest* page -- see `onScrolled`'s doc comment below
+     * for why relative rather than absolute. */
+    private fun relativeToNearestPage(): Float {
+        val pageWidth = width.toFloat()
+        if (pageWidth <= 0f) return 0f
+        val absolute = computeHorizontalScrollOffset().toFloat()
+        val nearestPage = Math.round(absolute / pageWidth)
+        return absolute - nearestPage * pageWidth
+    }
+
     private val recyclerScrollListener: OnScrollListener = object : OnScrollListener() {
         private var previousPosition = 0
 
@@ -118,13 +150,15 @@ internal class PagerRecyclerView(
             // page N>0. That would apply a permanent factor*pageWidth translate the instant you're
             // on any page but the first, with no dragging needed. Rounding to the nearest page and
             // subtracting gives exactly 0 at rest on *any* page, ranging smoothly to +/- half a page
-            // width mid-drag. Fires on every scroll step, drag or fling/settle alike, so a background
-            // driven from this tracks whatever curve the real paging uses with no separate animation.
-            val pageWidth = width.toFloat()
-            if (pageWidth <= 0f) return
-            val absolute = computeHorizontalScrollOffset().toFloat()
-            val nearestPage = Math.round(absolute / pageWidth)
-            listener?.onContentOffsetChanged(absolute - nearestPage * pageWidth)
+            // width mid-drag.
+            //
+            // Only reported live here while actually dragging -- once the finger lifts and the
+            // RecyclerView starts its own snap/settle animation, backgroundSettleAnimator owns
+            // offsetPx instead, matched to that animation's real duration/curve rather than
+            // whatever raw per-frame deltas this callback happens to see during it.
+            if (backgroundSettleAnimator?.isRunning != true) {
+                listener?.onContentOffsetChanged(relativeToNearestPage())
+            }
         }
 
         override fun onScrollStateChanged(v: RecyclerView, state: Int) {
@@ -137,6 +171,32 @@ internal class PagerRecyclerView(
             UALog.v { "ThomasPager RecyclerView onScrollStateChanged=$stateName isInternalScroll=$isInternalScroll" }
 
             listener?.onScrollStateChanged(state != SCROLL_STATE_IDLE)
+
+            when (state) {
+                SCROLL_STATE_DRAGGING -> {
+                    // A new drag interrupting a still-running settle -- let onScrolled's direct,
+                    // un-eased tracking take back over immediately.
+                    backgroundSettleAnimator?.cancel()
+                }
+                SCROLL_STATE_SETTLING -> {
+                    val start = relativeToNearestPage()
+                    backgroundSettleAnimator?.cancel()
+                    backgroundSettleAnimator = ValueAnimator.ofFloat(start, 0f).apply {
+                        duration = settleDurationMs(start)
+                        interpolator = backgroundSettleInterpolator
+                        addUpdateListener { listener?.onContentOffsetChanged(it.animatedValue as Float) }
+                        start()
+                    }
+                }
+                SCROLL_STATE_IDLE -> {
+                    backgroundSettleAnimator?.cancel()
+                    backgroundSettleAnimator = null
+                    // Whatever page this settled on, its own background offset is 0 by definition
+                    // (relativeToNearestPage() already resolves to this) -- stated explicitly in
+                    // case the animator above was skipped entirely (an instant/zero-distance snap).
+                    listener?.onContentOffsetChanged(0f)
+                }
+            }
 
             // Block new user swipes while the snap animation is playing so that
             // rapid swipes can't accumulate multiple page jumps before IDLE.
@@ -264,7 +324,8 @@ internal class PagerRecyclerView(
         }
 
         companion object {
-            private const val MILLISECONDS_PER_INCH = 65f
+            /** Also what a background's settle animation is timed from -- see `settleDurationMs`. */
+            const val MILLISECONDS_PER_INCH = 65f
         }
     }
 
