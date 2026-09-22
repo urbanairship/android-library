@@ -15,7 +15,6 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import com.urbanairship.Airship
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.BlendMode
@@ -48,7 +47,9 @@ import kotlin.math.sin
  *
  * An image `MediaBackground` reuses [CropImageView] and the existing image loader, so its crop
  * math and caching stay identical to a real `media` view. Video needs a real attached view to
- * play at all, so it's never drawn here -- see [attachedViewBackgrounds].
+ * play at all, so it's never drawn here -- see [attachedViewBackgrounds]. A layer stacked after
+ * such a view draws straight onto the host's canvas rather than into another isolated layer of
+ * its own, so its `blend_mode` sees that view's real pixels -- see [drawLayersAfter].
  *
  * `parallax` is read here, but only ever has anything to read from: `Pager`/`ScrollLayout` are
  * the only hosts that ever call [setParallaxBackgrounds] and update [offsetPx] -- the other four
@@ -115,11 +116,20 @@ internal class BackgroundsPainter(
         drawLayers(canvas, width, height, if (firstAttached < 0) layers else layers.subList(0, firstAttached))
     }
 
-    /** Layers after the last of [attachedViewBackgrounds] in stack order. */
+    /**
+     * Layers after the last of [attachedViewBackgrounds] in stack order.
+     *
+     * Drawn directly onto [canvas], unlike [drawLayersBefore] -- by the time this runs, the
+     * attached child has already composited its live pixels into this same [canvas] (see
+     * `PagerView.drawChild`), and a `blend_mode` here needs to read those back. Wrapping this in
+     * its own [Canvas.saveLayer] the way [drawLayersBefore] does would isolate it into a fresh,
+     * blank buffer instead -- blending against nothing rather than against the attached view.
+     */
     fun drawLayersAfter(canvas: Canvas, width: Int, height: Int) {
         val lastAttached = layers.indexOfLast { it.background in attachedViewBackgrounds }
         val toDraw = if (lastAttached < 0) emptyList() else layers.subList(lastAttached + 1, layers.size)
-        drawLayers(canvas, width, height, toDraw)
+        if (toDraw.isEmpty() || width <= 0 || height <= 0) return
+        toDraw.forEach { layer -> drawLayer(canvas, layer, width, height) }
     }
 
     /**
@@ -273,19 +283,9 @@ internal class BackgroundsPainter(
         val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
         val url = cached?.path ?: resolvedUrl
 
-        // TEMPORARY DEBUG LOGGING -- remove once the on-device blend-mode investigation is done.
-        UALog.d {
-            "BackgroundsPainter: loading media background url=$url " +
-                "imageView.width=${imageView.width} imageView.height=${imageView.height}"
-        }
-
         val options = ImageRequestOptions.newBuilder(url)
             .setImageSizeResolver(ThomasImageSizeResolver(null, cached?.size))
-            .setImageLoadedCallback { success ->
-                // TEMPORARY DEBUG LOGGING -- remove once the on-device blend-mode investigation is done.
-                UALog.d { "BackgroundsPainter: onImageLoaded success=$success url=$url" }
-                invalidate()
-            }
+            .setImageLoadedCallback { invalidate() }
             .build()
         Airship.imageLoader.load(context, imageView, options)
 
