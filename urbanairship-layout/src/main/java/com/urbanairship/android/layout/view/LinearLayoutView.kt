@@ -48,7 +48,12 @@ internal class LinearLayoutView(
     private val isListView: Boolean = model.viewInfo.accessibilityRole?.type == LinearLayoutInfo.AccessibilityRole.Type.LIST_VIEW
 
     // Never touched by measure/layout above -- see `BackgroundsPainter`.
-    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) { invalidate() }
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
+        // postInvalidate(), not invalidate() -- the image loader's onImageLoaded callback
+        // is not guaranteed to run on the UI thread, and invalidate() silently no-ops when
+        // called off it.
+        postInvalidate()
+    }
 
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
