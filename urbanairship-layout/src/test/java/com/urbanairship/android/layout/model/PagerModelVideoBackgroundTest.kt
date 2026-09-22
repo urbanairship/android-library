@@ -1,0 +1,163 @@
+/* Copyright Airship and Contributors */
+package com.urbanairship.android.layout.model
+
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.info.PagerInfo
+import com.urbanairship.android.layout.property.Background
+import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.ParallaxBackground
+import com.urbanairship.json.JsonValue
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+/**
+ * A video `backgrounds` layer plays through a real, attached [MediaModel]/`MediaView` -- the same
+ * classes an in-flow `media` view uses -- rather than [com.urbanairship.android.layout.widget.BackgroundsPainter]'s
+ * own canvas painting (see [PagerModel.videoBackgroundModels]). This covers that wiring: the right
+ * layers get a model, and that model reads the pager's own [SharedState] instances rather than
+ * building its own -- the same instances a real in-flow video's `video_controller`/pager-selection
+ * lifecycle already reads and writes.
+ */
+@RunWith(RobolectricTestRunner::class)
+public class PagerModelVideoBackgroundTest {
+
+    private val pagerState: SharedState<State.Pager> =
+        SharedState(State.Pager(identifier = PAGER_ID, pageIds = PAGE_IDS))
+    private val videoState: SharedState<State.Video> = SharedState(State.Video(identifier = null))
+
+    private val testScope = TestScope(StandardTestDispatcher())
+
+    private val mockEnv: ModelEnvironment = mockk(relaxed = true, relaxUnitFun = true) {
+        every { modelScope } returns testScope
+        every { layoutEvents } returns emptyFlow()
+        every { actionsRunner } returns mockk(relaxUnitFun = true) {
+            coEvery { run(any(), any()) } answers { nothing }
+        }
+        every { layoutState } returns mockk(relaxed = true) {
+            every { pager } returns pagerState
+            every { video } returns videoState
+            every { reportingContext(any(), any(), any()) } returns mockk()
+        }
+    }
+
+    private fun buildModel(layers: List<ParallaxBackground>?): PagerModel {
+        val viewInfo = mockk<PagerInfo>(relaxUnitFun = true) {
+            every { backgrounds } returns layers
+            every { gestures } returns emptyList()
+            every { disableSwipeWhen } returns null
+        }
+        return PagerModel(
+            availablePages = ITEMS,
+            viewInfo = viewInfo,
+            pagerState = pagerState,
+            environment = mockEnv,
+            properties = ModelProperties(pagerPageId = null)
+        )
+    }
+
+    @Test
+    public fun onlyVideoMediaLayersGetAModel() {
+        val videoLayer = videoBackground(url = "https://test-layout.internal/video.mp4")
+        val imageLayer = videoBackground(mediaType = "image", url = "https://test-layout.internal/image.jpg")
+        val colorLayer = Background.ColorBackground(
+            color = Color.fromJson(JsonValue.parseString("""{"default":{"type":"hex","hex":"#000000","alpha":1}}""")),
+            blendMode = null,
+            opacity = null
+        )
+
+        val model = buildModel(
+            listOf(
+                ParallaxBackground(background = videoLayer, parallax = null),
+                ParallaxBackground(background = imageLayer, parallax = null),
+                ParallaxBackground(background = colorLayer, parallax = null)
+            )
+        )
+
+        assertEquals(1, model.videoBackgroundModels.size)
+        assertTrue(model.videoBackgroundModels.containsKey(videoLayer))
+    }
+
+    @Test
+    public fun theVideoModelReadsThePagersOwnSharedState() {
+        val videoLayer = videoBackground(url = "https://test-layout.internal/video.mp4")
+        val model = buildModel(listOf(ParallaxBackground(background = videoLayer, parallax = null)))
+
+        val mediaModel = model.videoBackgroundModels.getValue(videoLayer)
+
+        // Not equal copies -- the exact same instances a real in-flow MediaModel would be given
+        // via ModelFactory, so a video_toggle_play/video_toggle_mute button and the pager's own
+        // page-change signal reach this model too, rather than a second, disconnected one.
+        assertSame(pagerState, mediaModel.pagerState)
+        assertSame(videoState, mediaModel.videoState)
+        assertEquals("https://test-layout.internal/video.mp4", mediaModel.viewInfo.url)
+    }
+
+    @Test
+    public fun aPagerLevelVideoBackgroundIsScopedToTheFirstPageForPauseAndRewind() {
+        val videoLayer = videoBackground(url = "https://test-layout.internal/video.mp4")
+        val model = buildModel(listOf(ParallaxBackground(background = videoLayer, parallax = null)))
+        val mediaModel = model.videoBackgroundModels.getValue(videoLayer)
+
+        // Registered by MediaModel's own init{} against the real, shared videoState -- proves the
+        // model this test inspects is the one actually driving playback state, not a mock.
+        assertTrue(videoState.changes.value.videos.containsKey(mediaModel.videoId))
+
+        // Page one (index 0, matching availablePages.first()) is current: plays.
+        pagerState.update { it.copyWithPageIndex(0) }
+        assertTrue(mediaModel.shouldBePlaying())
+
+        // Swiped to page two: the same rule an in-flow video's page-deselect already follows.
+        pagerState.update { it.copyWithPageIndex(1) }
+        assertFalse(mediaModel.shouldBePlaying())
+
+        // Back to page one: resumes.
+        pagerState.update { it.copyWithPageIndex(0) }
+        assertTrue(mediaModel.shouldBePlaying())
+    }
+
+    @Test
+    public fun noBackgroundsMeansNoVideoModels() {
+        val model = buildModel(layers = null)
+        assertTrue(model.videoBackgroundModels.isEmpty())
+        assertNull(videoState.changes.value.currentVideoId)
+    }
+
+    private fun videoBackground(mediaType: String = "video", url: String): Background.MediaBackground {
+        val json = """
+            {
+              "type": "media",
+              "media_type": "$mediaType",
+              "url": "$url",
+              "media_fit": "fit_crop",
+              "video": { "autoplay": true, "muted": true, "loop": true, "show_controls": false }
+            }
+        """.trimIndent()
+        return Background.fromJson(JsonValue.parseString(json).requireMap()) as Background.MediaBackground
+    }
+
+    private companion object {
+        private const val PAGER_ID = "video-pager"
+        private const val PAGE_1_ID = "page-1"
+        private const val PAGE_2_ID = "page-2"
+        private val PAGE_IDS = listOf(PAGE_1_ID, PAGE_2_ID)
+
+        private val ITEMS = listOf(
+            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, emptyList(), emptyList(), emptyList(), null),
+            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, emptyList(), emptyList(), emptyList(), null)
+        )
+    }
+}

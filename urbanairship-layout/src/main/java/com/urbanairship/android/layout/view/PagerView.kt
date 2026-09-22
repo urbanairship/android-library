@@ -23,6 +23,8 @@ import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerModel
+import com.urbanairship.android.layout.property.Background as BackgroundLayer
+import com.urbanairship.android.layout.property.Parallax
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.BackgroundsPainter
@@ -113,6 +115,31 @@ internal class PagerView(
         postInvalidate()
     }
 
+    /**
+     * A video `backgrounds` layer, unlike color/gradient/image, is rendered as a real attached
+     * child (see [PagerModel.videoBackgroundModels]) rather than by [backgroundsPainter]'s own
+     * canvas painting -- video needs a real, attached WebView to play at all. Added as children
+     * before `view` (below it in z-order, see [dispatchDraw]) in their `backgrounds`-array order.
+     */
+    private class VideoBackgroundChild(
+        val mediaBackground: BackgroundLayer.MediaBackground,
+        val parallax: Parallax?,
+        val mediaView: MediaView
+    )
+
+    private val videoBackgroundChildren: List<VideoBackgroundChild> = model.viewInfo.backgrounds
+        .orEmpty()
+        .mapNotNull { layer ->
+            val mediaBackground = layer.background as? BackgroundLayer.MediaBackground
+                ?: return@mapNotNull null
+            val mediaModel = model.videoBackgroundModels[mediaBackground] ?: return@mapNotNull null
+            VideoBackgroundChild(
+                mediaBackground = mediaBackground,
+                parallax = layer.parallax,
+                mediaView = mediaModel.createView(context, viewEnvironment, itemProperties = null)
+            )
+        }
+
     private val modelListener = object : PagerModel.Listener {
         override fun scrollTo(position: Int, animate: Boolean) {
             if (position != NO_POSITION) {
@@ -139,8 +166,11 @@ internal class PagerView(
 
     init {
         backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds)
+        backgroundsPainter.attachedViewBackgrounds =
+            videoBackgroundChildren.map { it.mediaBackground }.toSet()
         isFocusable = true
         isFocusedByDefault = true
+        videoBackgroundChildren.forEach { addView(it.mediaView, MATCH_PARENT, MATCH_PARENT) }
         addView(view, MATCH_PARENT, MATCH_PARENT)
         model.listener = modelListener
 
@@ -155,6 +185,11 @@ internal class PagerView(
 
             override fun onContentOffsetChanged(offsetPx: Float) {
                 backgroundsPainter.offsetPx = offsetPx
+                videoBackgroundChildren.forEach { child ->
+                    val (dx, dy) = backgroundsPainter.parallaxTranslation(child.parallax)
+                    child.mediaView.translationX = dx
+                    child.mediaView.translationY = dy
+                }
                 invalidate()
             }
         })
@@ -166,8 +201,20 @@ internal class PagerView(
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        backgroundsPainter.draw(canvas, width, height)
+        // Layers before the first video child paint here; layers after the last one paint from
+        // drawChild, once that child has actually drawn -- otherwise a blend_mode layer meant to
+        // sit on top of the video (see PagerModel.videoBackgroundModels) would paint first and
+        // land underneath it instead, since children always draw after this.
+        backgroundsPainter.drawLayersBefore(canvas, width, height)
         super.dispatchDraw(canvas)
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        if (child === videoBackgroundChildren.lastOrNull()?.mediaView) {
+            backgroundsPainter.drawLayersAfter(canvas, width, height)
+        }
+        return result
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {

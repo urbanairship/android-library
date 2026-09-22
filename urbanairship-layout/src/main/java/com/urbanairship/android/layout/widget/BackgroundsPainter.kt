@@ -46,8 +46,9 @@ import kotlin.math.sin
  * `background_color`/`border`, and never whatever the host sits on top of in the wider scene.
  * Same idea as `.compositingGroup()` on iOS or `isolation: isolate` in CSS.
  *
- * `MediaBackground` reuses [CropImageView] and the existing image loader, so its crop math and
- * caching stay identical to a real `media` view. Video media is parsed but not yet drawn.
+ * An image `MediaBackground` reuses [CropImageView] and the existing image loader, so its crop
+ * math and caching stay identical to a real `media` view. Video needs a real attached view to
+ * play at all, so it's never drawn here -- see [attachedViewBackgrounds].
  *
  * `parallax` is read here, but only ever has anything to read from: `Pager`/`ScrollLayout` are
  * the only hosts that ever call [setParallaxBackgrounds] and update [offsetPx] -- the other four
@@ -92,27 +93,63 @@ internal class BackgroundsPainter(
      */
     var offsetPx: Float = 0f
 
+    /**
+     * Layers rendered by the host as a real attached child view instead of by this class's own
+     * canvas painting -- currently only ever a video [Background.MediaBackground], since video
+     * needs a real, attached WebView to play at all (see `PagerView`). Splits [drawLayersBefore]/
+     * [drawLayersAfter] around them so a host that owns such a child can still paint the rest of
+     * the stack in the right order relative to it; a host with none set (the common case) draws
+     * everything through [draw] as before.
+     */
+    var attachedViewBackgrounds: Set<Background> = emptySet()
+
     private val mediaViews = mutableMapOf<Background.MediaBackground, CropImageView>()
 
     fun draw(canvas: Canvas, width: Int, height: Int) {
-        if (layers.isEmpty() || width <= 0 || height <= 0) return
-
-        val saveCount = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
-        try {
-            layers.forEach { layer -> drawLayer(canvas, layer, width, height) }
-        } finally {
-            canvas.restoreToCount(saveCount)
-        }
+        drawLayers(canvas, width, height, layers)
     }
 
-    private fun drawLayer(canvas: Canvas, layer: Layer, width: Int, height: Int) {
-        val parallax = layer.parallax
+    /** Layers up to (not including) the first of [attachedViewBackgrounds] in stack order. */
+    fun drawLayersBefore(canvas: Canvas, width: Int, height: Int) {
+        val firstAttached = layers.indexOfFirst { it.background in attachedViewBackgrounds }
+        drawLayers(canvas, width, height, if (firstAttached < 0) layers else layers.subList(0, firstAttached))
+    }
+
+    /** Layers after the last of [attachedViewBackgrounds] in stack order. */
+    fun drawLayersAfter(canvas: Canvas, width: Int, height: Int) {
+        val lastAttached = layers.indexOfLast { it.background in attachedViewBackgrounds }
+        val toDraw = if (lastAttached < 0) emptyList() else layers.subList(lastAttached + 1, layers.size)
+        drawLayers(canvas, width, height, toDraw)
+    }
+
+    /**
+     * The translate a parallaxing layer needs for the current [offsetPx] -- shared by
+     * [drawLayer] and by a host positioning one of [attachedViewBackgrounds] as a real child, so
+     * both move by the same amount.
+     */
+    fun parallaxTranslation(parallax: Parallax?): Pair<Float, Float> {
         val dx = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
             -parallax.factor * offsetPx
         } else 0f
         val dy = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
             -parallax.factor * offsetPx
         } else 0f
+        return dx to dy
+    }
+
+    private fun drawLayers(canvas: Canvas, width: Int, height: Int, toDraw: List<Layer>) {
+        if (toDraw.isEmpty() || width <= 0 || height <= 0) return
+
+        val saveCount = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
+        try {
+            toDraw.forEach { layer -> drawLayer(canvas, layer, width, height) }
+        } finally {
+            canvas.restoreToCount(saveCount)
+        }
+    }
+
+    private fun drawLayer(canvas: Canvas, layer: Layer, width: Int, height: Int) {
+        val (dx, dy) = parallaxTranslation(layer.parallax)
 
         val translated = dx != 0f || dy != 0f
         if (translated) {
@@ -166,9 +203,9 @@ internal class BackgroundsPainter(
     }
 
     private fun drawMedia(canvas: Canvas, layer: Background.MediaBackground, width: Int, height: Int) {
-        // Video/YouTube/Vimeo backgrounds are parsed but not rendered yet -- deliberate, not an
-        // oversight. Wiring up playback lifecycle (visibility-driven play/pause, pooling) is its
-        // own follow-up.
+        // Video/YouTube/Vimeo need a real attached view to play at all -- a host that supports
+        // them positions one itself (see attachedViewBackgrounds) and never reaches this branch
+        // for that layer. A host that doesn't opt in just doesn't render it, same as before.
         if (layer.mediaType != MediaType.IMAGE) return
 
         val imageView = mediaViews.getOrPut(layer) { createCropImageView(layer, width, height) }

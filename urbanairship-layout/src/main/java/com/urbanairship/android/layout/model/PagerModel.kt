@@ -14,8 +14,10 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent.Hold
 import com.urbanairship.android.layout.info.AccessibilityAction
+import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
+import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.GestureLocation
@@ -24,6 +26,7 @@ import com.urbanairship.android.layout.property.Outcome.PagerJumpNavigation.Page
 import com.urbanairship.android.layout.property.Outcome.PagerPlayback.Command
 import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.BoundaryBehavior
 import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.Direction
+import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.earliestNavigationAction
@@ -150,6 +153,35 @@ internal class PagerModel(
             else -> defaultHandler(outcome)
         }
     }
+
+    /**
+     * A video `backgrounds` layer needs a real, attached view to play at all, so
+     * [com.urbanairship.android.layout.view.PagerView] renders one with an actual `MediaModel`/
+     * `MediaView` -- the same classes an in-flow `media` view uses -- instead of this model's own
+     * canvas-based [com.urbanairship.android.layout.widget.BackgroundsPainter]. `rawJson` already
+     * has everything [MediaInfo] needs (a `media`-type background and a `media` view parse the
+     * same fields), so no separate parsing path exists to drift out of sync with the real one.
+     *
+     * Reads the pager's own [pagerState] and the ancestor `video_controller`'s shared video state,
+     * exactly as [ModelFactory] wires up a real in-flow `MediaModel` -- so a `video_toggle_play`/
+     * `video_toggle_mute` button and the pager's page-change/story-pause signals reach this the
+     * same way they'd reach one. A background declared on the pager itself isn't inside any one
+     * page, so it's scoped to the first page for that lifecycle: current while page one is
+     * showing, paused (and rewound, if `auto_reset_position` is set) otherwise.
+     */
+    val videoBackgroundModels: Map<Background.MediaBackground, MediaModel> = viewInfo.backgrounds
+        .orEmpty()
+        .mapNotNull { it.background as? Background.MediaBackground }
+        .filter { it.mediaType == MediaType.VIDEO }
+        .associateWith { mediaBackground ->
+            MediaModel(
+                viewInfo = MediaInfo(mediaBackground.rawJson),
+                pagerState = pagerState,
+                videoState = environment.layoutState.video,
+                environment = environment,
+                properties = ModelProperties(pagerPageId = availablePages.firstOrNull()?.identifier)
+            )
+        }
 
     init {
         @OptIn(DelicateLayoutApi::class)

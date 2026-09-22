@@ -83,6 +83,15 @@ internal sealed class Background(
         @JvmField val mediaFit: MediaFit,
         @JvmField val position: Position?,
         @JvmField val video: Video?,
+        /**
+         * This layer's own JSON, unchanged. A video layer's playback is rendered by a real
+         * `MediaInfo`/`MediaModel`/`MediaView` -- the same classes an in-flow `media` view uses --
+         * rather than reimplementing WebView/video lifecycle handling here; this is what a host
+         * that renders video hands to `MediaInfo`'s constructor to get one. Its keys already match,
+         * since a `media`-type background and a `media` view parse the same `media_type`/`url`/
+         * `media_fit`/`position`/`video` fields.
+         */
+        @JvmField val rawJson: JsonMap,
         blendMode: BlendMode?,
         opacity: Float?
     ) : Background(blendMode, opacity) {
@@ -108,6 +117,7 @@ internal sealed class Background(
                     mediaFit = MediaFit.from(json.require(KEY_MEDIA_FIT)),
                     position = json[KEY_POSITION]?.let(Position::fromJson),
                     video = json.optionalField<JsonMap>(KEY_VIDEO)?.let(Video::fromJson),
+                    rawJson = json,
                     blendMode = blendMode,
                     opacity = opacity
                 )

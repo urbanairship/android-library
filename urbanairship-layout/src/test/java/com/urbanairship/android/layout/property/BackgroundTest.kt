@@ -75,6 +75,30 @@ public class BackgroundTest {
     }
 
     @Test
+    public fun testMediaBackgroundCarriesItsOwnRawJson() {
+        // rawJson is what a host hands to MediaInfo's constructor to render a video background
+        // as a real attached view (see PagerModel.videoBackgroundModels) -- it has to be the
+        // layer's own json, unchanged, since MediaInfo parses the same media_type/url/media_fit/
+        // position/video keys a `media` view does.
+        val json = """
+            {
+              "type": "media",
+              "media_type": "video",
+              "url": "https://test-layout.internal/video.mp4",
+              "media_fit": "fit_crop",
+              "video": { "autoplay": true, "muted": true, "loop": true, "show_controls": false }
+            }
+        """.trimIndent()
+        val jsonMap = JsonValue.parseString(json).requireMap()
+
+        val background = Background.fromJson(jsonMap)
+        assertTrue(background is Background.MediaBackground)
+        val media = background as Background.MediaBackground
+        assertEquals(MediaType.VIDEO, media.mediaType)
+        assertEquals(jsonMap, media.rawJson)
+    }
+
+    @Test
     public fun testBackgroundList() {
         val json = """
             [
