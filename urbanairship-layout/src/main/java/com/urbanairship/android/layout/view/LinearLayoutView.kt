@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.view
 
 import android.animation.LayoutTransition
 import android.content.Context
+import android.graphics.Canvas
 import android.view.Gravity.CENTER_HORIZONTAL
 import android.view.Gravity.CENTER_VERTICAL
 import android.view.View
@@ -15,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutInfo
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
@@ -22,12 +24,14 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LinearLayoutModel
+import com.urbanairship.android.layout.property.Background as BackgroundLayer
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size.DimensionType.ABSOLUTE
 import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
 import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
+import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.ShrinkableView
@@ -43,8 +47,11 @@ internal class LinearLayoutView(
 
     private val isListView: Boolean = model.viewInfo.accessibilityRole?.type == LinearLayoutInfo.AccessibilityRole.Type.LIST_VIEW
 
+    // Never touched by measure/layout above -- see `BackgroundsPainter`.
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) { invalidate() }
 
     init {
+        backgroundsPainter.backgrounds = model.viewInfo.backgrounds
         clipChildren = false
         orientation = if (model.viewInfo.direction == Direction.VERTICAL) OrientationMode.VERTICAL else OrientationMode.HORIZONTAL
         gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
@@ -105,6 +112,16 @@ internal class LinearLayoutView(
 
 
     override fun isShrinkable(): Boolean = model.isShrinkable
+
+    override fun dispatchDraw(canvas: Canvas) {
+        // TEMPORARY DEBUG LOGGING -- remove once the on-device blend-mode investigation is done.
+        UALog.d {
+            "LinearLayoutView: dispatchDraw reached, width=$width height=$height " +
+                "backgrounds=${model.viewInfo.backgrounds?.size ?: 0}"
+        }
+        backgroundsPainter.draw(canvas, width, height)
+        super.dispatchDraw(canvas)
+    }
 
     private fun addItems(items: List<LinearLayoutModel.Item>) {
         val listItems = if (isListView) {

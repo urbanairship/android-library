@@ -111,6 +111,22 @@ internal class PagerRecyclerView(
     private val recyclerScrollListener: OnScrollListener = object : OnScrollListener() {
         private var previousPosition = 0
 
+        override fun onScrolled(v: RecyclerView, dx: Int, dy: Int) {
+            // Relative to the *nearest* page, not absolute from page 0 -- unlike a ScrollLayout's
+            // scrollY (one continuous region, correctly unbounded), a pager has discrete pages, and
+            // computeHorizontalScrollOffset() alone is a full page-width even at complete rest on
+            // page N>0. That would apply a permanent factor*pageWidth translate the instant you're
+            // on any page but the first, with no dragging needed. Rounding to the nearest page and
+            // subtracting gives exactly 0 at rest on *any* page, ranging smoothly to +/- half a page
+            // width mid-drag. Fires on every scroll step, drag or fling/settle alike, so a background
+            // driven from this tracks whatever curve the real paging uses with no separate animation.
+            val pageWidth = width.toFloat()
+            if (pageWidth <= 0f) return
+            val absolute = computeHorizontalScrollOffset().toFloat()
+            val nearestPage = Math.round(absolute / pageWidth)
+            listener?.onContentOffsetChanged(absolute - nearestPage * pageWidth)
+        }
+
         override fun onScrollStateChanged(v: RecyclerView, state: Int) {
             val stateName = when (state) {
                 SCROLL_STATE_IDLE -> "IDLE"

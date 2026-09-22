@@ -107,4 +107,8 @@ dependencies {
     testImplementation project(':urbanairship-test')
     testImplementation(libs.roborazzi)
     testImplementation(libs.snakeyaml)
+    // `AirshipGlideImageLoader` itself is internal to urbanairship-core; this is only for driving
+    // real Glide directly in BackgroundsPainterRealGlideTest, to test its actual request/target
+    // lifecycle against a detached view rather than a synchronous fake ImageLoader.
+    testImplementation(libs.glide)
 }

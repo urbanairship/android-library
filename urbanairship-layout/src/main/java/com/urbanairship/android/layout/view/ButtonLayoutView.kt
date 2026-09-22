@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.graphics.Canvas
 import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
 import android.view.MotionEvent
@@ -18,6 +19,7 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.ItemProperties
+import com.urbanairship.android.layout.property.Background as BackgroundLayer
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.cancelClickIfReleasedOnClickableDescendant
@@ -27,6 +29,7 @@ import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionDown
 import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
@@ -54,7 +57,16 @@ internal class ButtonLayoutView(
     private val rippleAnimationDuration =
         resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds
 
+    // Never touched by measure/layout above -- see `BackgroundsPainter`.
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
+        // postInvalidate(), not invalidate() -- the image loader's onImageLoaded callback
+        // is not guaranteed to run on the UI thread, and invalidate() silently no-ops when
+        // called off it.
+        postInvalidate()
+    }
+
     init {
+        backgroundsPainter.backgrounds = model.viewInfo.backgrounds
         LayoutUtils.applyButtonLayoutModel(this, model)
 
         addView(view, MATCH_PARENT, MATCH_PARENT)
@@ -149,6 +161,11 @@ internal class ButtonLayoutView(
 
     /** Button layouts may be shrunk if they contain a media view. */
     override fun isShrinkable(): Boolean = model.isShrinkable
+
+    override fun dispatchDraw(canvas: Canvas) {
+        backgroundsPainter.draw(canvas, width, height)
+        super.dispatchDraw(canvas)
+    }
 
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(info)

@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.graphics.Canvas
 import android.view.View
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
@@ -15,6 +16,7 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.HorizontalScrollLayoutModel
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.PercentBaseProvider
 
 internal class HorizontalScrollLayoutView(
@@ -35,12 +37,28 @@ internal class HorizontalScrollLayoutView(
         private set
     override val percentBaseHeight: Int = 0
 
+    // Never touched by measure/layout above -- see `BackgroundsPainter`.
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
+        // postInvalidate(), not invalidate() -- the image loader's onImageLoaded callback
+        // is not guaranteed to run on the UI thread, and invalidate() silently no-ops when
+        // called off it.
+        postInvalidate()
+    }
+
     init {
+        backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds)
         isFillViewport = false
         clipToOutline = true
 
         contentView = model.view.createView(context, viewEnvironment, null)
         addView(contentView, LayoutParams(WRAP_CONTENT, MATCH_PARENT))
+
+        // Fires on every scroll step, drag or fling/settle alike -- see `BackgroundsPainter`'s
+        // class doc for why that's what keeps a parallax layer in step with no separate animation.
+        setOnScrollChangeListener { _, scrollX, _, _, _ ->
+            backgroundsPainter.offsetPx = scrollX.toFloat()
+            invalidate()
+        }
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
@@ -73,5 +91,10 @@ internal class HorizontalScrollLayoutView(
                 .coerceAtLeast(0)
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        backgroundsPainter.draw(canvas, width, height)
+        super.dispatchDraw(canvas)
     }
 }

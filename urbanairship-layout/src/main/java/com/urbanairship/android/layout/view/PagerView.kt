@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.graphics.Canvas
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -24,6 +25,7 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
+import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
 import com.urbanairship.util.stringResource
@@ -40,6 +42,9 @@ internal class PagerView(
     fun interface OnScrollListener {
         fun onScrollTo(position: Int, isInternalScroll: Boolean)
         fun onScrollStateChanged(isScrolling: Boolean) {}
+        /** The pager's absolute horizontal content offset, in pixels -- fires on every scroll
+         * step, whether from a drag or a settle/fling, same as `RecyclerView.onScrolled`. */
+        fun onContentOffsetChanged(offsetPx: Float) {}
     }
 
     interface OnPagerGestureListener {
@@ -100,6 +105,14 @@ internal class PagerView(
 
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
 
+    // Never touched by measure/layout above -- see `BackgroundsPainter`.
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
+        // postInvalidate(), not invalidate() -- the image loader's onImageLoaded callback
+        // is not guaranteed to run on the UI thread, and invalidate() silently no-ops when
+        // called off it.
+        postInvalidate()
+    }
+
     private val modelListener = object : PagerModel.Listener {
         override fun scrollTo(position: Int, animate: Boolean) {
             if (position != NO_POSITION) {
@@ -125,6 +138,7 @@ internal class PagerView(
     }
 
     init {
+        backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds)
         isFocusable = true
         isFocusedByDefault = true
         addView(view, MATCH_PARENT, MATCH_PARENT)
@@ -138,12 +152,22 @@ internal class PagerView(
             override fun onScrollStateChanged(isScrolling: Boolean) {
                 _isScrolling.value = isScrolling
             }
+
+            override fun onContentOffsetChanged(offsetPx: Float) {
+                backgroundsPainter.offsetPx = offsetPx
+                invalidate()
+            }
         })
 
         // Pass along any calls to apply insets to the view.
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
             ViewCompat.dispatchApplyWindowInsets(view, insets)
         }
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        backgroundsPainter.draw(canvas, width, height)
+        super.dispatchDraw(canvas)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {

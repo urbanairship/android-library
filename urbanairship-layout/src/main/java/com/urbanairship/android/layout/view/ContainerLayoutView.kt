@@ -5,6 +5,7 @@ import android.animation.LayoutTransition
 import kotlin.math.max
 import kotlin.math.roundToInt
 import android.content.Context
+import android.graphics.Canvas
 import android.util.SparseArray
 import android.util.SparseBooleanArray
 import android.view.View
@@ -22,11 +23,13 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel.Item
 import com.urbanairship.android.layout.model.ItemProperties
+import com.urbanairship.android.layout.property.Background as BackgroundLayer
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.widget.AutoSizeProvider
+import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
 import com.urbanairship.android.layout.widget.establishesLength
@@ -63,7 +66,16 @@ internal class ContainerLayoutView(
     // while the declaration never changes.
     private val itemDeclarations = mutableListOf<Pair<Size, View>>()
 
+    // Never touched by measure/layout above -- see `BackgroundsPainter`.
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
+        // postInvalidate(), not invalidate() -- the image loader's onImageLoaded callback
+        // is not guaranteed to run on the UI thread, and invalidate() silently no-ops when
+        // called off it.
+        postInvalidate()
+    }
+
     init {
+        backgroundsPainter.backgrounds = model.viewInfo.backgrounds
         clipChildren = true
         val constraintBuilder = ConstraintSetBuilder.newBuilder(context)
         addItems(model.items, constraintBuilder)
@@ -91,6 +103,11 @@ internal class ContainerLayoutView(
     }
 
     override fun isShrinkable(): Boolean = true
+
+    override fun dispatchDraw(canvas: Canvas) {
+        backgroundsPainter.draw(canvas, width, height)
+        super.dispatchDraw(canvas)
+    }
 
     private fun addItems(items: List<Item>, constraintBuilder: ConstraintSetBuilder) {
         for (item in items) {
