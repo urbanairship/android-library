@@ -130,34 +130,41 @@ internal class PagerRecyclerView(
         return ceil(abs(distancePx) * speedPerPixel).toLong().coerceAtLeast(1L)
     }
 
-    /** This item's offset relative to the *nearest* page -- see `onScrolled`'s doc comment below
-     * for why relative rather than absolute. */
-    private fun relativeToNearestPage(): Float {
+    /**
+     * This item's offset relative to the page it's dragging *away from* -- see `onScrolled`'s doc
+     * comment below for why relative rather than absolute, and why the starting page rather than
+     * whichever page ends up nearest.
+     *
+     * [previousPosition] is the reference: the last page a drag/settle actually came to rest on,
+     * held fixed for the whole of the next drag (it only moves in the `SCROLL_STATE_IDLE` branch
+     * below), so this ranges continuously from `0` up to a full page-width as a drag crosses from
+     * one page to the next -- no jump partway through.
+     */
+    private fun relativeToStartingPage(): Float {
         val pageWidth = width.toFloat()
         if (pageWidth <= 0f) return 0f
         val absolute = computeHorizontalScrollOffset().toFloat()
-        val nearestPage = Math.round(absolute / pageWidth)
-        return absolute - nearestPage * pageWidth
+        return absolute - previousPosition * pageWidth
     }
 
+    /** The last page a drag/settle came to rest on -- see [relativeToStartingPage]. */
+    private var previousPosition = 0
+
     private val recyclerScrollListener: OnScrollListener = object : OnScrollListener() {
-        private var previousPosition = 0
 
         override fun onScrolled(v: RecyclerView, dx: Int, dy: Int) {
-            // Relative to the *nearest* page, not absolute from page 0 -- unlike a ScrollLayout's
-            // scrollY (one continuous region, correctly unbounded), a pager has discrete pages, and
-            // computeHorizontalScrollOffset() alone is a full page-width even at complete rest on
-            // page N>0. That would apply a permanent factor*pageWidth translate the instant you're
-            // on any page but the first, with no dragging needed. Rounding to the nearest page and
-            // subtracting gives exactly 0 at rest on *any* page, ranging smoothly to +/- half a page
-            // width mid-drag.
+            // Relative to the page the drag started from, not absolute from page 0 -- unlike a
+            // ScrollLayout's scrollY (one continuous region, correctly unbounded), a pager has
+            // discrete pages, and computeHorizontalScrollOffset() alone is a full page-width even
+            // at complete rest on page N>0. That would apply a permanent factor*pageWidth translate
+            // the instant you're on any page but the first, with no dragging needed.
             //
             // Only reported live here while actually dragging -- once the finger lifts and the
             // RecyclerView starts its own snap/settle animation, backgroundSettleAnimator owns
             // offsetPx instead, matched to that animation's real duration/curve rather than
             // whatever raw per-frame deltas this callback happens to see during it.
             if (backgroundSettleAnimator?.isRunning != true) {
-                listener?.onContentOffsetChanged(relativeToNearestPage())
+                listener?.onContentOffsetChanged(relativeToStartingPage())
             }
         }
 
@@ -179,7 +186,7 @@ internal class PagerRecyclerView(
                     backgroundSettleAnimator?.cancel()
                 }
                 SCROLL_STATE_SETTLING -> {
-                    val start = relativeToNearestPage()
+                    val start = relativeToStartingPage()
                     backgroundSettleAnimator?.cancel()
                     backgroundSettleAnimator = ValueAnimator.ofFloat(start, 0f).apply {
                         duration = settleDurationMs(start)
@@ -192,8 +199,9 @@ internal class PagerRecyclerView(
                     backgroundSettleAnimator?.cancel()
                     backgroundSettleAnimator = null
                     // Whatever page this settled on, its own background offset is 0 by definition
-                    // (relativeToNearestPage() already resolves to this) -- stated explicitly in
-                    // case the animator above was skipped entirely (an instant/zero-distance snap).
+                    // (relativeToStartingPage() already resolves to this once previousPosition
+                    // below catches up) -- stated explicitly in case the animator above was
+                    // skipped entirely (an instant/zero-distance snap).
                     listener?.onContentOffsetChanged(0f)
                 }
             }

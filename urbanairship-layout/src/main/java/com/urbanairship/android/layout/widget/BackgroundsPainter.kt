@@ -56,10 +56,10 @@ import kotlin.math.sin
  * hosts only ever call the plain [backgrounds] setter, which leaves every layer's parallax `null`,
  * so [drawLayer] never has anything to offset for them. `offsetPx` is the driving host's own
  * scroll/drag position: `scrollY`/`scrollX` for `ScrollLayout` (one continuous region, correctly
- * unbounded), or, for `Pager`, the offset from the *nearest* page rather than the absolute offset
- * from page 0 -- a pager has discrete pages, so the absolute figure is a full page-width even at
- * complete rest on any page but the first, which would apply a permanent translate with no drag
- * involved. Not a separately-timed animation. Re-deriving the translate from
+ * unbounded), or, for `Pager`, the offset from the page the current drag started from rather than
+ * the absolute offset from page 0 -- a pager has discrete pages, so the absolute figure is a full
+ * page-width even at complete rest on any page but the first, which would apply a permanent
+ * translate with no drag involved. Not a separately-timed animation. Re-deriving the translate from
  * that same live position on every redraw, rather than running a second animation matched to it by
  * duration, is what keeps this in step with drag *and* whatever settle/fling curve the host's own
  * scrolling mechanism uses, automatically.
