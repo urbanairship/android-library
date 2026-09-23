@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.property
 
+import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
@@ -82,15 +83,6 @@ internal sealed class Background(
         @JvmField val urlSelectors: List<MediaUrlSelector>,
         @JvmField val mediaFit: MediaFit,
         @JvmField val position: Position?,
-        /**
-         * This layer's own JSON, unchanged. A video layer's playback is rendered by a real
-         * `MediaInfo`/`MediaModel`/`MediaView` -- the same classes an in-flow `media` view uses --
-         * rather than reimplementing WebView/video lifecycle handling here; this is what a host
-         * that renders video hands to `MediaInfo`'s constructor to get one. Its keys already match,
-         * since a `media`-type background and a `media` view parse the same `media_type`/`url`/
-         * `media_fit`/`position`/`video` fields.
-         */
-        @JvmField val rawJson: JsonMap,
         blendMode: BlendMode?,
         opacity: Float?
     ) : Background(blendMode, opacity) {
@@ -103,11 +95,10 @@ internal sealed class Background(
             urlSelectors: List<MediaUrlSelector>,
             mediaFit: MediaFit,
             position: Position?,
-            rawJson: JsonMap,
             blendMode: BlendMode?,
             opacity: Float?
         ) : MediaBackground(
-            MediaType.IMAGE, url, urlSelectors, mediaFit, position, rawJson, blendMode, opacity
+            MediaType.IMAGE, url, urlSelectors, mediaFit, position, blendMode, opacity
         )
 
         /**
@@ -118,18 +109,31 @@ internal sealed class Background(
          * regardless let a scene set it on an image and be silently ignored.
          */
         class VideoMediaBackground(
-            mediaType: MediaType,
-            url: String,
-            urlSelectors: List<MediaUrlSelector>,
-            mediaFit: MediaFit,
-            position: Position?,
-            @JvmField val video: Video?,
-            rawJson: JsonMap,
+            /**
+             * This layer as a `media` view's own info.
+             *
+             * Playback is rendered by a real `MediaInfo`/`MediaModel`/`MediaView` -- the same
+             * classes an in-flow `media` view uses -- rather than reimplementing WebView and
+             * video lifecycle handling for backgrounds. A `media`-type background and a `media`
+             * view parse the same `media_type`/`url`/`media_fit`/`position`/`video` fields, so
+             * this is that same parse, done here with the rest of the layer rather than by
+             * holding the layer's raw JSON to re-parse at render time.
+             */
+            @JvmField val mediaInfo: MediaInfo,
             blendMode: BlendMode?,
             opacity: Float?
         ) : MediaBackground(
-            mediaType, url, urlSelectors, mediaFit, position, rawJson, blendMode, opacity
-        )
+            mediaInfo.mediaType,
+            mediaInfo.url,
+            mediaInfo.urlSelectors,
+            mediaInfo.mediaFit,
+            mediaInfo.position,
+            blendMode,
+            opacity
+        ) {
+            /** Playback options, which only a layer with a playback surface can carry. */
+            val video: Video? get() = mediaInfo.video
+        }
 
         companion object {
             private const val KEY_MEDIA_TYPE = "media_type"
@@ -137,7 +141,6 @@ internal sealed class Background(
             private const val KEY_URL_SELECTORS = "url_selectors"
             private const val KEY_MEDIA_FIT = "media_fit"
             private const val KEY_POSITION = "position"
-            private const val KEY_VIDEO = "video"
 
             @Throws(JsonException::class)
             fun fromJson(json: JsonMap, blendMode: BlendMode?, opacity: Float?): MediaBackground {
@@ -150,13 +153,7 @@ internal sealed class Background(
 
                 return if (mediaType.isPlayable) {
                     VideoMediaBackground(
-                        mediaType = mediaType,
-                        url = url,
-                        urlSelectors = urlSelectors,
-                        mediaFit = mediaFit,
-                        position = position,
-                        video = json.optionalField<JsonMap>(KEY_VIDEO)?.let(Video::fromJson),
-                        rawJson = json,
+                        mediaInfo = MediaInfo(json),
                         blendMode = blendMode,
                         opacity = opacity
                     )
@@ -166,7 +163,6 @@ internal sealed class Background(
                         urlSelectors = urlSelectors,
                         mediaFit = mediaFit,
                         position = position,
-                        rawJson = json,
                         blendMode = blendMode,
                         opacity = opacity
                     )

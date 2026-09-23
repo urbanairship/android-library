@@ -11,7 +11,6 @@ import android.webkit.WebChromeClient
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.model.ModelProperties
 import com.urbanairship.android.layout.model.PagerModel
@@ -162,14 +161,14 @@ public class PagerViewVideoBackgroundTest {
     private fun View.hostsAMediaView(): Boolean =
         this is MediaView || (this as? ViewGroup)?.children?.any { it is MediaView } == true
 
-    private fun buildMediaModel(mediaBackground: Background.MediaBackground): MediaModel {
+    private fun buildMediaModel(mediaBackground: Background.MediaBackground.VideoMediaBackground): MediaModel {
         val environment: ModelEnvironment = mockk(relaxed = true) {
             every { modelScope } returns TestScope(StandardTestDispatcher())
             every { layoutEvents } returns emptyFlow()
             every { layoutState } returns mockk(relaxed = true)
         }
         return MediaModel(
-            viewInfo = MediaInfo(mediaBackground.rawJson),
+            viewInfo = mediaBackground.mediaInfo,
             pagerState = null,
             videoState = null,
             environment = environment,

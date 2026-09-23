@@ -75,11 +75,10 @@ public class BackgroundTest {
     }
 
     @Test
-    public fun testMediaBackgroundCarriesItsOwnRawJson() {
-        // rawJson is what a host hands to MediaInfo's constructor to render a video background
-        // as a real attached view (see PagerModel.videoBackgroundModels) -- it has to be the
-        // layer's own json, unchanged, since MediaInfo parses the same media_type/url/media_fit/
-        // position/video keys a `media` view does.
+    public fun testAPlayableMediaBackgroundParsesItsOwnMediaInfo() {
+        // A playable layer is rendered by a real MediaInfo/MediaModel/MediaView (see
+        // videoBackgroundModels), and that info is parsed here with the rest of the layer rather
+        // than by keeping the raw json around to re-parse at render time.
         val json = """
             {
               "type": "media",
@@ -92,10 +91,30 @@ public class BackgroundTest {
         val jsonMap = JsonValue.parseString(json).requireMap()
 
         val background = Background.fromJson(jsonMap)
-        assertTrue(background is Background.MediaBackground)
-        val media = background as Background.MediaBackground
+        assertTrue(background is Background.MediaBackground.VideoMediaBackground)
+        val media = background as Background.MediaBackground.VideoMediaBackground
         assertEquals(MediaType.VIDEO, media.mediaType)
-        assertEquals(jsonMap, media.rawJson)
+        assertEquals("https://test-layout.internal/video.mp4", media.mediaInfo.url)
+        assertEquals(MediaFit.FIT_CROP, media.mediaInfo.mediaFit)
+        assertEquals(true, media.video?.autoplay)
+    }
+
+    @Test
+    public fun testAnImageMediaBackgroundHasNoPlaybackInfoAtAll() {
+        val json = """
+            {
+              "type": "media",
+              "media_type": "image",
+              "url": "https://test-layout.internal/image.jpg",
+              "media_fit": "fit_crop"
+            }
+        """.trimIndent()
+
+        val background = Background.fromJson(JsonValue.parseString(json).requireMap())
+
+        // Not a VideoMediaBackground, so `video` isn't reachable on it -- an image has nothing
+        // for autoplay/mute/loop/controls to mean.
+        assertTrue(background is Background.MediaBackground.ImageMediaBackground)
     }
 
     @Test

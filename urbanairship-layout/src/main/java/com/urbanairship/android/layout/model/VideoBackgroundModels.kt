@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.model
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
-import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.Background.MediaBackground.VideoMediaBackground
 
@@ -14,9 +13,8 @@ import com.urbanairship.android.layout.property.Background.MediaBackground.Video
  * Video can't be painted onto a canvas the way a color, gradient or image layer is -- it needs a
  * real, attached view to play at all -- so a host with one of these layers renders it as an actual
  * child [com.urbanairship.android.layout.view.MediaView], and tells its
- * [com.urbanairship.android.layout.widget.BackgroundsPainter] to skip the layer. `rawJson` already
- * carries everything [MediaInfo] needs, since a `media`-type background and a `media` view parse
- * the same fields, so there's no second parsing path to drift.
+ * [com.urbanairship.android.layout.widget.BackgroundsPainter] to skip the layer. The layer
+ * already carries its own [MediaInfo], parsed with the rest of the scene.
  *
  * @param layers the host's own `backgrounds`, already unwrapped from any `parallax` pairing.
  * @param pagerState the enclosing pager's state, or `null` outside one.
@@ -35,7 +33,7 @@ internal fun videoBackgroundModels(
     .filterIsInstance<VideoMediaBackground>()
     .associateWith { layer ->
         MediaModel(
-            viewInfo = MediaInfo(layer.rawJson),
+            viewInfo = layer.mediaInfo,
             pagerState = pagerState,
             videoState = environment.layoutState.video,
             environment = environment,
