@@ -67,11 +67,11 @@ internal class HorizontalScrollLayoutView(
         contentView = model.view.createView(context, viewEnvironment, null)
         videoBackgrounds.addTo(contentFrame)
         contentFrame.videoBackgrounds = videoBackgrounds
-        contentFrame.drawLayersAfter = { canvas ->
+        contentFrame.drawLayersAfter = { canvas, attachedIndex ->
             canvas.save()
             canvas.translate(scrollX.toFloat(), scrollY.toFloat())
             try {
-                backgroundsPainter.drawLayersAfter(canvas, width, height)
+                backgroundsPainter.drawLayersAfter(canvas, width, height, attachedIndex)
             } finally {
                 canvas.restore()
             }
@@ -120,10 +120,25 @@ internal class HorizontalScrollLayoutView(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
+    /**
+     * How far the content can travel, which is what a parallaxing layer's spare room is a share of.
+     *
+     * Read from the measured content rather than on scroll: content that already fits has no
+     * travel to oversize a layer for and never fires a scroll event to say so, and content can
+     * grow after the first layout (an image loading in) without resizing this view.
+     */
+    private fun updateTravelBounds() {
+        backgroundsPainter.offsetBoundsPx =
+            0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()
+    }
+
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
+        // Before sizing below, which reads these bounds to work out a layer's spare room --
+        // `dispatchDraw` refreshes them too, but that runs after this.
+        updateTravelBounds()
         // Sized against the viewport, not the scrolling content it sits inside.
-        videoBackgrounds.layOutPinned(backgroundsPainter, width, height)
+        videoBackgrounds.placeInto(backgroundsPainter, width, height)
         pinVideoBackgrounds()
     }
 
@@ -140,8 +155,7 @@ internal class HorizontalScrollLayoutView(
         // Read here rather than on scroll: content that already fits has no travel to oversize a
         // parallaxing layer for, and never fires a scroll event to say so. Content can also grow
         // after the first layout (an image loading in), which doesn't necessarily resize us.
-        backgroundsPainter.offsetBoundsPx =
-            0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()
+        updateTravelBounds()
 
         canvas.save()
         canvas.translate(scrollX.toFloat(), scrollY.toFloat())

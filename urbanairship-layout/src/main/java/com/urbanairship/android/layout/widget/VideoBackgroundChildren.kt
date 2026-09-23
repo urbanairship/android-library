@@ -87,77 +87,18 @@ internal class VideoBackgroundChildren(
     }
 
     /**
-     * Sizes each child to the host's box plus whatever spare room its own parallax needs, placed
-     * so its unshifted position lines up with the box.
+     * Sizes and places each child against the host's box, plus whatever spare room its own
+     * parallax needs, so its unshifted position lines up with that box.
      *
-     * Margins rather than a centering gravity: the spare room can fall unevenly on the leading and
-     * trailing side, and a centered child would drift off the box's own position whenever it does.
-     * With no parallax this is simply the box's own size at its own origin.
+     * Never writes layout params: they stay at the zero [addTo] gave them, so the host measures
+     * as though these children weren't there. That is the whole point -- a `backgrounds` layer
+     * must not decide its host's size, and a host that sizes to its content would otherwise be
+     * held at whatever size the layer was last given and never able to shrink again. It also
+     * keeps a layer from lengthening the scrolling content it lives inside on a scroll host.
      *
-     * @param params builds the host's own `LayoutParams` from `(width, height, leftMargin, topMargin)`.
+     * Call from `onLayout`, after the host has placed its own content.
      */
-    fun layOut(
-        painter: BackgroundsPainter,
-        width: Int,
-        height: Int,
-        params: (Int, Int, Int, Int) -> ViewGroup.MarginLayoutParams
-    ) {
-        if (width <= 0 || height <= 0) return
-
-        children.forEach { child ->
-            val (oversizeX, oversizeY) = painter.parallaxOversize(child.parallax, width, height)
-            val (leadingX, leadingY) = painter.parallaxLeadingOversize(child.parallax, width, height)
-            val childWidth = width + oversizeX
-            val childHeight = height + oversizeY
-
-            // Reached on every scroll frame, so only a real change is written back -- assigning
-            // params unconditionally would relayout the video child on each one.
-            val current = child.view.layoutParams as? ViewGroup.MarginLayoutParams
-            if (current != null &&
-                current.width == childWidth && current.height == childHeight &&
-                current.leftMargin == -leadingX && current.topMargin == -leadingY
-            ) {
-                return@forEach
-            }
-
-            child.view.layoutParams = params(childWidth, childHeight, -leadingX, -leadingY)
-        }
-    }
-
-    /**
-     * Measures and positions each child against the host's own box.
-     *
-     * For a host that leaves these children out of its own measure/layout pass -- a stacking
-     * layout has to, or the layer would take a slot in the stack -- and so has to place them
-     * itself. A host that lays children out in place already (a `FrameLayout`) needs none of this.
-     */
-    fun measureAndLayout(hostWidth: Int, hostHeight: Int) {
-        children.forEach { child ->
-            val lp = child.view.layoutParams as? ViewGroup.MarginLayoutParams ?: return@forEach
-            val childWidth = if (lp.width > 0) lp.width else hostWidth
-            val childHeight = if (lp.height > 0) lp.height else hostHeight
-            child.view.measure(
-                View.MeasureSpec.makeMeasureSpec(childWidth, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(childHeight, View.MeasureSpec.EXACTLY)
-            )
-            child.view.layout(
-                lp.leftMargin,
-                lp.topMargin,
-                lp.leftMargin + childWidth,
-                lp.topMargin + childHeight
-            )
-        }
-    }
-
-    /**
-     * Sizes and places each child against a viewport [width] x [height] *without* writing layout
-     * params, for a host whose children scroll.
-     *
-     * Their params stay at zero, so a layer can never lengthen the scrolling content it lives
-     * inside -- which would feed back into the host's own scroll range. [applyParallax]'s
-     * `pinX`/`pinY` then hold them against the viewport as that content moves under them.
-     */
-    fun layOutPinned(painter: BackgroundsPainter, width: Int, height: Int) {
+    fun placeInto(painter: BackgroundsPainter, width: Int, height: Int) {
         if (width <= 0 || height <= 0) return
 
         children.forEach { child ->
@@ -196,10 +137,10 @@ internal class VideoBackgroundChildren(
     }
 
     /**
-     * Whether [view] is the last of these children, which is the point in a host's `drawChild`
-     * where every layer below the content has been drawn and the rest of the stack can go down.
+     * Which of these children [view] is, or `-1` for anything else -- a host's `drawChild` passes
+     * it on so the painter can put down the layers stacked directly above that one.
      */
-    fun isLast(view: View): Boolean = view === children.lastOrNull()?.view
+    fun indexOf(view: View): Int = children.indexOfFirst { it.view === view }
 
     /** Whether [view] is one of these children, for a host that must skip them in its own layout. */
     fun contains(view: View): Boolean = children.any { it.view === view }

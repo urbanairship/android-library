@@ -2072,7 +2072,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
         for (i in 0..<count) {
             val childIndex = start + dir * i
-            val child = getChildAt(childIndex)
+            val child = stackChildAt(childIndex) ?: continue
 
             if (child.visibility == GONE) {
                 continue

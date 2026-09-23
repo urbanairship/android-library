@@ -116,14 +116,9 @@ internal class ContainerLayoutView(
 
     override fun isShrinkable(): Boolean = true
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        videoBackgrounds.layOut(backgroundsPainter, w, h) { width, height, left, top ->
-            LayoutParams(width, height).apply {
-                leftMargin = left
-                topMargin = top
-            }
-        }
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        videoBackgrounds.placeInto(backgroundsPainter, width, height)
     }
 
     override fun dispatchDraw(canvas: Canvas) {
@@ -135,8 +130,9 @@ internal class ContainerLayoutView(
         val result = super.drawChild(canvas, child, drawingTime)
         // Anything stacked above a layer drawn as a real view has to blend against that view's
         // live pixels, so it goes down here rather than before the children.
-        if (videoBackgrounds.isLast(child)) {
-            backgroundsPainter.drawLayersAfter(canvas, width, height)
+        val attachedIndex = videoBackgrounds.indexOf(child)
+        if (attachedIndex >= 0) {
+            backgroundsPainter.drawLayersAfter(canvas, width, height, attachedIndex)
         }
         return result
     }

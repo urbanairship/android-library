@@ -71,7 +71,7 @@ public class BackgroundsPainterAttachedViewBlendTest {
         // canvas via `PagerView.drawChild`, before `drawLayersAfter` runs.
         canvas.drawRect(0f, 0f, 10f, 10f, Paint().apply { color = Color.RED })
 
-        painter.drawLayersAfter(canvas, 10, 10)
+        painter.drawLayersAfter(canvas, 10, 10, attachedIndex = 0)
 
         // multiply(green, red) = black. Blending against nothing (the bug) reads back plain
         // green instead, since an opaque source composited over a blank layer looks like

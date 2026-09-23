@@ -157,18 +157,23 @@ internal class PagerModel(
     /**
      * See [videoBackgroundModels].
      *
-     * The pager passes its own [properties] like any other host. That is never one of this
-     * pager's own pages -- a background declared on the pager isn't inside any of them, so it
-     * keeps playing across every page turn rather than pausing the instant the pager leaves one.
-     * It *is* the enclosing page when this pager is itself nested in another pager's page, which
-     * is exactly when the layer should pause with it.
+     * The only host that doesn't pass its own [properties] through: a page id is only meaningful
+     * against the pager state it came from, and the state handed over here is *this* pager's,
+     * while [properties] carries the id of the page this pager itself sits on when it's nested
+     * inside another one. Passing that through would compare an outer page's id against this
+     * pager's own page ids, which never match -- leaving the layer permanently "off page", so it
+     * never plays and its media-loading hold never applies.
+     *
+     * `null` is the honest answer for this state: a background declared on the pager isn't inside
+     * any of its pages, so it keeps playing across every page turn rather than pausing the
+     * instant the pager leaves whichever page it was otherwise scoped to.
      */
     val videoBackgroundModels: Map<Background.MediaBackground.VideoMediaBackground, MediaModel> =
         videoBackgroundModels(
             layers = viewInfo.backgrounds.orEmpty().map { it.background },
             pagerState = pagerState,
             environment = environment,
-            properties = properties
+            properties = ModelProperties(pagerPageId = null)
         )
 
     init {

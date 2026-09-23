@@ -5,7 +5,6 @@ import android.content.Context
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
 import androidx.core.view.children
 import android.webkit.WebChromeClient
 import androidx.test.core.app.ApplicationProvider
@@ -141,16 +140,20 @@ public class PagerViewVideoBackgroundTest {
         )
         pagerView.layout(0, 0, boxWidth, 600)
 
-        val params = pagerView.getChildAt(0).layoutParams as MarginLayoutParams
+        val videoChild = pagerView.getChildAt(0)
         assertEquals(
             "spare room should be the layer's share of every page's width, not of the " +
                 "${pageCount - 1} page-widths the track itself scrolls",
-            boxWidth + (factor * pageCount * boxWidth).toInt(), params.width
+            boxWidth + (factor * pageCount * boxWidth).toInt(), videoChild.width
         )
         assertEquals(
             "at rest the layer sits at the box's leading edge, with all of its spare room " +
                 "still ahead of it",
-            0, params.leftMargin
+            0, videoChild.left
+        )
+        assertEquals(
+            "and its layout params stay at zero, so it never decides the host's own size",
+            0, videoChild.layoutParams.width
         )
     }
 

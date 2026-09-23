@@ -22,8 +22,8 @@ internal class ScrollContentFrame(context: Context) : FrameLayout(context) {
 
     var videoBackgrounds: VideoBackgroundChildren? = null
 
-    /** Draws the layers stacked above the last real layer view, in the host's own space. */
-    var drawLayersAfter: ((Canvas) -> Unit)? = null
+    /** Draws the layers stacked above real layer view `n`, in the host's own space. */
+    var drawLayersAfter: ((Canvas, Int) -> Unit)? = null
 
     init {
         // A layer is deliberately oversized for its own parallax travel, so it overhangs.
@@ -32,8 +32,9 @@ internal class ScrollContentFrame(context: Context) : FrameLayout(context) {
 
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
         val result = super.drawChild(canvas, child, drawingTime)
-        if (videoBackgrounds?.isLast(child) == true) {
-            drawLayersAfter?.invoke(canvas)
+        val attachedIndex = videoBackgrounds?.indexOf(child) ?: -1
+        if (attachedIndex >= 0) {
+            drawLayersAfter?.invoke(canvas, attachedIndex)
         }
         return result
     }

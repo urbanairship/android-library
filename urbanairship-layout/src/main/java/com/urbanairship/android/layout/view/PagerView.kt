@@ -197,7 +197,11 @@ internal class PagerView(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         backgroundsPainter.offsetBoundsPx = 0f..pagerTravelRangePx(w)
-        layOutVideoBackgroundChildren(w, h)
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        videoBackgrounds.placeInto(backgroundsPainter, width, height)
     }
 
     /**
@@ -211,15 +215,6 @@ internal class PagerView(
      */
     private fun pagerTravelRangePx(w: Int): Float = (model.pages.size * w).toFloat()
 
-    private fun layOutVideoBackgroundChildren(w: Int, h: Int) {
-        videoBackgrounds.layOut(backgroundsPainter, w, h) { width, height, left, top ->
-            FrameLayout.LayoutParams(width, height).apply {
-                leftMargin = left
-                topMargin = top
-            }
-        }
-    }
-
     override fun dispatchDraw(canvas: Canvas) {
         // Layers before the first video child paint here; layers after the last one paint from
         // drawChild, once that child has actually drawn -- otherwise a blend_mode layer meant to
@@ -231,8 +226,9 @@ internal class PagerView(
 
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
         val result = super.drawChild(canvas, child, drawingTime)
-        if (videoBackgrounds.isLast(child)) {
-            backgroundsPainter.drawLayersAfter(canvas, width, height)
+        val attachedIndex = videoBackgrounds.indexOf(child)
+        if (attachedIndex >= 0) {
+            backgroundsPainter.drawLayersAfter(canvas, width, height, attachedIndex)
         }
         return result
     }

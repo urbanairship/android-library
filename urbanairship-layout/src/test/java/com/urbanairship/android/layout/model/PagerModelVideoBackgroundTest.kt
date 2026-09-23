@@ -54,7 +54,38 @@ public class PagerModelVideoBackgroundTest {
         }
     }
 
-    private fun buildModel(layers: List<ParallaxBackground>?): PagerModel {
+    /**
+     * A pager nested in another pager's page carries that *outer* page's id in its own
+     * `properties`, while the state its background layer is scoped against is this pager's.
+     * Handing the outer id to the layer compares it against inner page ids it can never equal,
+     * which reads as permanently off-page: never playing, and never holding a story.
+     */
+    @Test
+    public fun aNestedPagersBackgroundVideoStillPlaysOnEveryInnerPage() {
+        val videoLayer = videoBackground(url = "https://test-layout.internal/video.mp4")
+        val model = buildModel(
+            listOf(ParallaxBackground(background = videoLayer, parallax = null)),
+            properties = ModelProperties(pagerPageId = "a-page-of-the-enclosing-pager")
+        )
+        val mediaModel = model.videoBackgroundModels.getValue(videoLayer)
+
+        pagerState.update { it.copyWithPageIndex(0) }
+        assertTrue(mediaModel.shouldBePlaying())
+
+        pagerState.update { it.copyWithPageIndex(1) }
+        assertTrue(mediaModel.shouldBePlaying())
+
+        mediaModel.setMediaLoading(true)
+        assertTrue(
+            "and it still holds a story on the pager it actually belongs to",
+            pagerState.changes.value.isMediaPaused
+        )
+    }
+
+    private fun buildModel(
+        layers: List<ParallaxBackground>?,
+        properties: ModelProperties = ModelProperties(pagerPageId = null)
+    ): PagerModel {
         val viewInfo = mockk<PagerInfo>(relaxUnitFun = true) {
             every { backgrounds } returns layers
             every { gestures } returns emptyList()
@@ -65,7 +96,7 @@ public class PagerModelVideoBackgroundTest {
             viewInfo = viewInfo,
             pagerState = pagerState,
             environment = mockEnv,
-            properties = ModelProperties(pagerPageId = null)
+            properties = properties
         )
     }
 

@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.widget
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
@@ -135,17 +136,23 @@ internal class BackgroundsPainter(
     }
 
     /**
-     * Layers after the last of [attachedViewBackgrounds] in stack order.
+     * The layers stacked between attached layer [attachedIndex] and whichever attached layer
+     * comes next, or the end of the stack if there is none.
      *
-     * Drawn directly onto [canvas], unlike [drawLayersBefore] -- by the time this runs, the
-     * attached child has already composited its live pixels into this same [canvas] (see
-     * `PagerView.drawChild`), and a `blend_mode` here needs to read those back. Wrapping this in
-     * its own [Canvas.saveLayer] the way [drawLayersBefore] does would isolate it into a fresh,
-     * blank buffer instead -- blending against nothing rather than against the attached view.
+     * Drawn directly onto [canvas], unlike [drawLayersBefore] -- by the time this runs the
+     * attached child has already composited its live pixels into this same [canvas] (see a host's
+     * `drawChild`), and a `blend_mode` here needs to read those back. Wrapping this in its own
+     * [Canvas.saveLayer] the way [drawLayersBefore] does would isolate it into a fresh, blank
+     * buffer instead -- blending against nothing rather than against the attached view.
+     *
+     * Taking the index rather than always running to the end of the stack is what lets a layer
+     * sit between two attached ones and still be drawn.
      */
-    fun drawLayersAfter(canvas: Canvas, width: Int, height: Int) {
-        val lastAttached = layers.indexOfLast { it.background in attachedViewBackgrounds }
-        val toDraw = if (lastAttached < 0) emptyList() else layers.subList(lastAttached + 1, layers.size)
+    fun drawLayersAfter(canvas: Canvas, width: Int, height: Int, attachedIndex: Int) {
+        val attached = layers.indices.filter { layers[it].background in attachedViewBackgrounds }
+        val start = attached.getOrNull(attachedIndex) ?: return
+        val end = attached.getOrNull(attachedIndex + 1) ?: layers.size
+        val toDraw = layers.subList(start + 1, end)
         if (toDraw.isEmpty() || width <= 0 || height <= 0) return
         toDraw.forEach { layer -> drawLayer(canvas, layer, width, height) }
     }
@@ -312,7 +319,10 @@ internal class BackgroundsPainter(
         val colors = gradient.stops.map { it.color.resolve(context) }.toIntArray()
         val positions = gradient.stops.map { it.position }.toFloatArray()
 
-        val shader: Shader = when (gradient.style) {
+        // A shader interpolates between stops, so it needs at least two of them -- `LinearGradient`
+        // and `RadialGradient` both throw otherwise, and the DSL accepts a one-stop `stops` list.
+        // One stop has nothing to interpolate toward: it is that colour, everywhere.
+        val shader: Shader? = if (colors.size < 2) null else when (gradient.style) {
             Gradient.Style.LINEAR -> {
                 val line = linearGradientLine(gradient.angle ?: 0f, shaderWidth.toFloat(), shaderHeight.toFloat())
                 LinearGradient(line.x0, line.y0, line.x1, line.y1, colors, positions, Shader.TileMode.CLAMP)
@@ -322,13 +332,18 @@ internal class BackgroundsPainter(
                 RadialGradient(shaderWidth / 2f, shaderHeight / 2f, radius, colors, positions, Shader.TileMode.CLAMP)
             }
         }
-        shader.setLocalMatrix(centeringMatrix(shaderWidth, shaderHeight, drawWidth, drawHeight))
+        shader?.setLocalMatrix(centeringMatrix(shaderWidth, shaderHeight, drawWidth, drawHeight))
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.shader = shader
+        if (shader == null) {
+            paint.color = colors.first()
+        }
         applyBlendMode(paint, layer.blendMode)
-        // `Paint.alpha` modulates a shader's output the same way it does a flat color.
-        paint.alpha = (255 * layer.opacity.orFullyOpaque()).roundToInt()
+        // `Paint.alpha` modulates a shader's output the same way it does a flat color -- so for a
+        // solid fill it has to carry the stop's own alpha, which a shader's output already has.
+        val sourceAlpha = if (shader == null) Color.alpha(colors.first()) / 255f else 1f
+        paint.alpha = (255 * sourceAlpha * layer.opacity.orFullyOpaque()).roundToInt()
         canvas.drawRect(0f, 0f, drawWidth.toFloat(), drawHeight.toFloat(), paint)
     }
 
