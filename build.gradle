@@ -1,4 +1,5 @@
 import java.time.temporal.ChronoUnit
+import org.gradle.api.artifacts.dsl.LockMode
 
 buildscript {
     ext {
@@ -22,6 +23,10 @@ buildscript {
         classpath "com.google.gms:google-services:${libs.versions.googleServicesPlugin.get()}"
         classpath "org.jetbrains.kotlin:kotlin-allopen:${libs.versions.kotlin.get()}"
     }
+
+    configurations.classpath {
+        resolutionStrategy.activateDependencyLocking()
+    }
 }
 
 plugins {
@@ -30,6 +35,55 @@ plugins {
     id("com.gradleup.nmcp.aggregation")
     alias(libs.plugins.benmanes.versions)
     alias(libs.plugins.spotless)
+}
+
+allprojects {
+    dependencyLocking {
+        lockAllConfigurations()
+        lockMode = LockMode.STRICT
+
+        // Gradle resolves kotlin-stdlib-common as an artifact-less graph node but never writes it
+        // to the lock, so every configuration that sees it fails validation against a lock no
+        // generation route can produce. gradle/gradle#21396.
+        ignoredDependencies.add('org.jetbrains.kotlin:kotlin-stdlib-common')
+    }
+
+    // Gradle persists no lock state for a resolution that has failures, and nmcpAggregation always
+    // has some: it holds every project, including the four without a publication. STRICT would
+    // then fail publishAggregationToCentralPortal. It resolves no external module, so nothing goes
+    // unpinned -- what ships is pinned by each module's releaseRuntimeClasspath.
+    configurations.matching { it.name == 'nmcpAggregation' }.configureEach {
+        resolutionStrategy.deactivateDependencyLocking()
+    }
+
+    tasks.register('updateLocks') {
+        group = 'build setup'
+        description = 'Regenerates the dependency lockfiles. Must be run with --write-locks.'
+
+        notCompatibleWithConfigurationCache('Resolves configurations at execution time')
+
+        doLast {
+            // resolutionResult, not resolve(): locking records the graph, and resolving artifacts
+            // as well cannot choose between the Android variants of a project dependency.
+            configurations.findAll { it.canBeResolved }.each { it.incoming.resolutionResult.root }
+        }
+    }
+}
+
+rootProject.tasks.named('updateLocks') {
+    dependsOn subprojects.collect { "${it.path}:updateLocks" }
+}
+
+// --write-locks is a start parameter, so the task cannot turn it on for itself. Checked on the
+// graph so the build stops before any project resolves and writes nothing.
+gradle.taskGraph.whenReady { graph ->
+    def updating = graph.allTasks.any { it.name == 'updateLocks' }
+    if (updating && !gradle.startParameter.writeDependencyLocks) {
+        throw new GradleException(
+            "updateLocks rewrites the lockfiles, which requires the --write-locks flag:\n" +
+            "    ./gradlew updateLocks --write-locks"
+        )
+    }
 }
 
 def mavenUser = System.getenv("MAVEN_USER") ?: findProperty("maven.user") ?: ""
