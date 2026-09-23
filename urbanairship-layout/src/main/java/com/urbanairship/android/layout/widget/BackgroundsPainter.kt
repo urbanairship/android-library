@@ -57,11 +57,14 @@ import kotlin.math.sin
  * the only hosts that ever call [setParallaxBackgrounds] and update [offsetPx] -- the other four
  * hosts only ever call the plain [backgrounds] setter, which leaves every layer's parallax `null`,
  * so [drawLayer] never has anything to offset for them. `offsetPx` is the driving host's own
- * scroll/drag position: `scrollY`/`scrollX` for `ScrollLayout` (one continuous region, correctly
- * unbounded), or, for `Pager`, the offset from the page the current drag started from rather than
- * the absolute offset from page 0 -- a pager has discrete pages, so the absolute figure is a full
- * page-width even at complete rest on any page but the first, which would apply a permanent
- * translate with no drag involved. Not a separately-timed animation. Re-deriving the translate from
+ * absolute position: `scrollY`/`scrollX` for `ScrollLayout`, and the track's own offset from page
+ * 0 for `Pager`. A pager's figure is a full page-width at complete rest on page 2, with no drag
+ * involved, and that standing translate is the effect rather than something to cancel -- a
+ * background is meant to have drifted once you are on a later page, and to stay drifted while you
+ * sit there. Reporting each page's own relative offset instead rounds the effect away, leaving a
+ * background that wobbles through a drag and lands back where it started. iOS
+ * (`-(width * pageIndex) + drag`) and web (`currentIndex * -100%`) are both absolute for this same
+ * reason. Not a separately-timed animation. Re-deriving the translate from
  * that same live position on every redraw, rather than running a second animation matched to it by
  * duration, is what keeps this in step with drag *and* whatever settle/fling curve the host's own
  * scrolling mechanism uses, automatically.

@@ -123,6 +123,46 @@ public class PagerRecyclerViewContentOffsetTest {
         )
     }
 
+    /**
+     * The same standing offset, arrived at the way a real pager does -- settled onto a page by the
+     * snap helper rather than dragged there a pixel at a time.
+     *
+     * A pager has discrete pages, so `computeHorizontalScrollOffset` is a full page-width at
+     * complete rest on page two, with no drag involved. That figure is reported as-is, and the
+     * translate it produces is the parallax itself: iOS (`-(width * pageIndex) + drag`) and web
+     * (`currentIndex * -100%`) both stand a background off by exactly this much on a later page.
+     * Rounding it away to the nearest page -- which an earlier version did -- cancels the effect
+     * out, leaving a background that wobbles through a drag and lands back where it started.
+     */
+    @Test
+    public fun aPageSettledOntoByTheSnapHelperStillReportsItsStandingOffset() {
+        val recyclerView = buildRecyclerView(pageCount = 3)
+        var lastOffset = 0f
+        recyclerView.setPagerScrollListener(object : PagerView.OnScrollListener {
+            override fun onScrollTo(position: Int, isInternalScroll: Boolean) = Unit
+            override fun onContentOffsetChanged(offsetPx: Float) {
+                lastOffset = offsetPx
+            }
+        })
+
+        recyclerView.scrollToPosition(1)
+        layoutOnce(recyclerView)
+
+        assertEquals(
+            "a pager at rest on page two is a full page-width along, and that is the parallax",
+            pageWidthPx.toFloat(), lastOffset, 1f
+        )
+    }
+
+    /** Forces the second layout pass `scrollToPosition` needs before it has repositioned. */
+    private fun layoutOnce(recyclerView: PagerRecyclerView) {
+        recyclerView.measure(
+            MeasureSpec.makeMeasureSpec(recyclerView.width, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(recyclerView.height, MeasureSpec.EXACTLY)
+        )
+        recyclerView.layout(0, 0, recyclerView.width, recyclerView.height)
+    }
+
     private fun buildRecyclerView(pageCount: Int = 2): PagerRecyclerView {
         val pageModels = (0 until pageCount).map {
             mockk<AnyModel>(relaxed = true) {
