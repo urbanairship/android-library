@@ -1,13 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.widget
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Rect
 import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.View
-import android.view.animation.DecelerateInterpolator
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,7 +18,6 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.view.PagerView
 import kotlin.math.abs
-import kotlin.math.ceil
 
 internal class PagerRecyclerView(
     context: Context,
@@ -36,12 +33,6 @@ internal class PagerRecyclerView(
     private var isSettling = false
 
     private var listener: PagerView.OnScrollListener? = null
-
-    // The background's own settle animation, matched to ThomasSmoothScroller's real duration --
-    // see recyclerScrollListener.onScrollStateChanged.
-    internal var backgroundSettleAnimator: ValueAnimator? = null
-        private set
-    private val backgroundSettleInterpolator = DecelerateInterpolator()
 
     fun refresh() {
         adapter.setItems(model.pages)
@@ -117,55 +108,38 @@ internal class PagerRecyclerView(
         this.listener = listener
     }
 
-    /**
-     * The duration `ThomasSmoothScroller` would take to travel [distancePx] -- the same formula,
-     * not a restated copy of it, so a background's settle animation can never drift out of sync
-     * with what governs the real page-turn transition's own speed.
-     */
-    internal fun settleDurationMs(distancePx: Float): Long {
-        val speedPerPixel = ThomasSmoothScroller.MILLISECONDS_PER_INCH / resources.displayMetrics.densityDpi
-        // ceil, matching LinearSmoothScroller.calculateTimeForScrolling's own real formula --
-        // truncating would round *down*, occasionally finishing the animation a hair before the
-        // real page-turn's own timing does.
-        return ceil(abs(distancePx) * speedPerPixel).toLong().coerceAtLeast(1L)
-    }
-
-    /**
-     * This item's offset relative to the page it's dragging *away from* -- see `onScrolled`'s doc
-     * comment below for why relative rather than absolute, and why the starting page rather than
-     * whichever page ends up nearest.
-     *
-     * [previousPosition] is the reference: the last page a drag/settle actually came to rest on,
-     * held fixed for the whole of the next drag (it only moves in the `SCROLL_STATE_IDLE` branch
-     * below), so this ranges continuously from `0` up to a full page-width as a drag crosses from
-     * one page to the next -- no jump partway through.
-     */
-    private fun relativeToStartingPage(): Float {
-        val pageWidth = width.toFloat()
-        if (pageWidth <= 0f) return 0f
-        val absolute = computeHorizontalScrollOffset().toFloat()
-        return absolute - previousPosition * pageWidth
-    }
-
-    /** The last page a drag/settle came to rest on -- see [relativeToStartingPage]. */
+    /** The last page a drag/settle came to rest on. */
     private var previousPosition = 0
+
+    /**
+     * The track's own absolute position, from page 0 -- not a per-page figure that re-zeroes on
+     * each page.
+     *
+     * A `parallax` background is meant to have drifted once you're on a later page, and to stay
+     * drifted while you sit there: that permanent translate *is* the effect. Reporting each page's
+     * own relative offset instead cancels it out, so the background wobbles during a drag and
+     * lands back exactly where it started, with no net movement across the pager at all. iOS
+     * (`Pager.pagerContentOffset`, `-(width * pageIndex) + drag`) and web
+     * (`--parallax-x-offset`, `currentIndex * -100%`) are both absolute for this reason.
+     */
+    private fun contentOffset(): Float = computeHorizontalScrollOffset().toFloat()
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        // A parallax background reads this before the first scroll, not just after: a pager
+        // sitting on page one, never swiped, still has a resting offset to be placed against.
+        listener?.onContentOffsetChanged(contentOffset())
+    }
 
     private val recyclerScrollListener: OnScrollListener = object : OnScrollListener() {
 
         override fun onScrolled(v: RecyclerView, dx: Int, dy: Int) {
-            // Relative to the page the drag started from, not absolute from page 0 -- unlike a
-            // ScrollLayout's scrollY (one continuous region, correctly unbounded), a pager has
-            // discrete pages, and computeHorizontalScrollOffset() alone is a full page-width even
-            // at complete rest on page N>0. That would apply a permanent factor*pageWidth translate
-            // the instant you're on any page but the first, with no dragging needed.
-            //
-            // Only reported live here while actually dragging -- once the finger lifts and the
-            // RecyclerView starts its own snap/settle animation, backgroundSettleAnimator owns
-            // offsetPx instead, matched to that animation's real duration/curve rather than
-            // whatever raw per-frame deltas this callback happens to see during it.
-            if (backgroundSettleAnimator?.isRunning != true) {
-                listener?.onContentOffsetChanged(relativeToStartingPage())
-            }
+            // Read straight off the live scroll on every frame, drag and settle alike -- the same
+            // reason iOS hands its modern track a `nil` animation and web writes
+            // `--parallax-x-offset` directly: this already *is* the real position, so replaying it
+            // through a second animation of our own could only lag behind whatever curve the
+            // RecyclerView's own snap actually used.
+            listener?.onContentOffsetChanged(contentOffset())
         }
 
         override fun onScrollStateChanged(v: RecyclerView, state: Int) {
@@ -179,31 +153,11 @@ internal class PagerRecyclerView(
 
             listener?.onScrollStateChanged(state != SCROLL_STATE_IDLE)
 
-            when (state) {
-                SCROLL_STATE_DRAGGING -> {
-                    // A new drag interrupting a still-running settle -- let onScrolled's direct,
-                    // un-eased tracking take back over immediately.
-                    backgroundSettleAnimator?.cancel()
-                }
-                SCROLL_STATE_SETTLING -> {
-                    val start = relativeToStartingPage()
-                    backgroundSettleAnimator?.cancel()
-                    backgroundSettleAnimator = ValueAnimator.ofFloat(start, 0f).apply {
-                        duration = settleDurationMs(start)
-                        interpolator = backgroundSettleInterpolator
-                        addUpdateListener { listener?.onContentOffsetChanged(it.animatedValue as Float) }
-                        start()
-                    }
-                }
-                SCROLL_STATE_IDLE -> {
-                    backgroundSettleAnimator?.cancel()
-                    backgroundSettleAnimator = null
-                    // Whatever page this settled on, its own background offset is 0 by definition
-                    // (relativeToStartingPage() already resolves to this once previousPosition
-                    // below catches up) -- stated explicitly in case the animator above was
-                    // skipped entirely (an instant/zero-distance snap).
-                    listener?.onContentOffsetChanged(0f)
-                }
+            // Re-stated on settle, in case the snap was instant enough that onScrolled never ran
+            // for its final frame -- a page's resting offset is a real position like any other,
+            // not a return to zero.
+            if (state == SCROLL_STATE_IDLE) {
+                listener?.onContentOffsetChanged(contentOffset())
             }
 
             // Block new user swipes while the snap animation is playing so that

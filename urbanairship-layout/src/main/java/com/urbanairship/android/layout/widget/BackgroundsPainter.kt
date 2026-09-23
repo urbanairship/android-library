@@ -2,8 +2,6 @@
 package com.urbanairship.android.layout.widget
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Matrix
@@ -83,14 +81,12 @@ internal class BackgroundsPainter(
             field = value
             layers = value.orEmpty().map { Layer(it, null) }
             mediaViews.clear()
-            mediaClampBitmaps.clear()
         }
 
     /** Only `Pager`/`ScrollLayout` ever call this -- see the class doc. */
     fun setParallaxBackgrounds(value: List<ParallaxBackground>?) {
         layers = value.orEmpty().map { Layer(it.background, it.parallax) }
         mediaViews.clear()
-        mediaClampBitmaps.clear()
     }
 
     /**
@@ -98,6 +94,23 @@ internal class BackgroundsPainter(
      * does not itself redraw -- the host's own scroll/drag callback already invalidates.
      */
     var offsetPx: Float = 0f
+
+    /**
+     * The lowest and highest [offsetPx] will ever reach, which is what decides how much spare
+     * room a layer is drawn with and on which side -- see [parallaxOversize].
+     *
+     * Every host states its own: a `ScrollLayout` only ever travels one way from rest, `0` to its
+     * scrollable range, so its layers are oversized on one side only and by nothing at all when
+     * its content already fits; a `Pager` drags either way out of the page it started on, so its
+     * are oversized both ways by one page width. `null` falls back to that same both-ways page
+     * width, which is only ever the `Pager`'s own case anyway.
+     *
+     * Stating it, rather than assuming the worst, is what keeps a `factor: 0.2` layer from being
+     * oversized (and so zoomed, since `media_fit` crops into whatever box it is given) as if it
+     * were `factor: 1` -- the same reason iOS reads `scrollRange` and web reads
+     * `--parallax-y-range` rather than either taking the viewport's own size.
+     */
+    var offsetBoundsPx: ClosedFloatingPointRange<Float>? = null
 
     /**
      * Layers rendered by the host as a real attached child view instead of by this class's own
@@ -142,36 +155,83 @@ internal class BackgroundsPainter(
      * [drawLayer] and by a host positioning one of [attachedViewBackgrounds] as a real child, so
      * both move by the same amount.
      *
-     * Clamped to [width]/[height] on the axis(es) [parallax] moves along: [offsetPx] is
-     * unbounded for a driving host with a continuous scroll region (`ScrollLayout`), and a
-     * `factor` is only ever documented up to a magnitude of `1` (see [Parallax]), so without a
-     * clamp a layer could be asked to travel arbitrarily far from the box it's drawn into.
-     * Paired with [parallaxMargins], which oversizes that same layer by exactly this much, so the
-     * clamped range never outruns the content and exposes a gap at the box's edge.
+     * Clamped to exactly the spare room the layer was drawn with on the axis(es) [parallax] moves
+     * since that is how much extra the layer was actually drawn with -- travelling further would
+     * only pull it off its own edge. The clamp is what keeps a `ScrollLayout` honest either way:
+     * its [offsetPx] is raw, unbounded `scrollY`/`scrollX`, so absent [offsetBoundsPx] telling it
+     * otherwise, a long scroll would ask a layer to travel arbitrarily far from its box.
      */
     fun parallaxTranslation(parallax: Parallax?, width: Int, height: Int): Pair<Float, Float> {
         val dx = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
-            (-parallax.factor * offsetPx).coerceIn(-width.toFloat(), width.toFloat())
+            val (leading, trailing) = oversizeFor(parallax.factor, width)
+            (-parallax.factor * offsetPx).coerceIn(-trailing.toFloat(), leading.toFloat())
         } else 0f
         val dy = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
-            (-parallax.factor * offsetPx).coerceIn(-height.toFloat(), height.toFloat())
+            val (leading, trailing) = oversizeFor(parallax.factor, height)
+            (-parallax.factor * offsetPx).coerceIn(-trailing.toFloat(), leading.toFloat())
         } else 0f
         return dx to dy
     }
 
     /**
-     * The extra room a parallaxing layer needs on each side of [width]/[height], so it still
-     * fully covers the box at the far end of [parallaxTranslation]'s clamped range.
+     * How much larger than [width]/[height] a parallaxing layer is drawn, in total across both
+     * sides of each axis, so it still covers the box at either end of its own travel.
      *
-     * `0` on an axis [parallax] doesn't move along, or where [parallax] is `null`. Shared with a
-     * host positioning one of [attachedViewBackgrounds] as a real child (see `PagerView`), so
-     * that child is oversized and centered the same way [drawLayer] oversizes a canvas-painted
-     * one.
+     * `0` on an axis [parallax] doesn't move along, where [parallax] is `null`, and -- the case
+     * that matters most -- where the driving host cannot actually travel at all, such as a
+     * `ScrollLayout` whose content already fits without scrolling. A layer is only ever oversized
+     * by what its own `factor` will really use, because `media_fit` crops into the box it is
+     * given: oversize is zoom, so oversizing for travel that never happens reads as an image
+     * zoomed in for no reason (and cropped tighter than the same scene on iOS or web).
+     *
+     * Shared with a host positioning one of [attachedViewBackgrounds] as a real child (see
+     * `PagerView`), so that child is oversized the same way [drawLayer] oversizes a
+     * canvas-painted one.
      */
-    fun parallaxMargins(parallax: Parallax?, width: Int, height: Int): Pair<Int, Int> {
-        val marginX = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) width else 0
-        val marginY = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) height else 0
-        return marginX to marginY
+    fun parallaxOversize(parallax: Parallax?, width: Int, height: Int): Pair<Int, Int> {
+        val x = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
+            oversizeFor(parallax.factor, width).let { (leading, trailing) -> leading + trailing }
+        } else 0
+        val y = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
+            oversizeFor(parallax.factor, height).let { (leading, trailing) -> leading + trailing }
+        } else 0
+        return x to y
+    }
+
+    /**
+     * The share of [parallaxOversize] that sits before the box's own start on each axis -- what a
+     * host positioning one of [attachedViewBackgrounds] as a real child needs to place it so its
+     * unshifted (`offsetPx == 0`) position lines up with the box, the same way [drawLayer]'s
+     * `dx - leadingX` translate does. Centering that child instead (an even split of the total
+     * oversize) only matches this when [oversizeFor] happens to split evenly too -- it doesn't
+     * whenever [offsetBoundsPx] isn't itself centered on `0`, which is the common case.
+     */
+    fun parallaxLeadingOversize(parallax: Parallax?, width: Int, height: Int): Pair<Int, Int> {
+        val x = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
+            oversizeFor(parallax.factor, width).first
+        } else 0
+        val y = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
+            oversizeFor(parallax.factor, height).first
+        } else 0
+        return x to y
+    }
+
+    /**
+     * The spare room a layer moving at [factor] needs before the start of an axis [boxSize] long
+     * and after its end, in pixels.
+     *
+     * A layer's own travel is `-factor * offsetPx` over [offsetBoundsPx]' span, so each side only
+     * needs whatever that reaches in its own direction -- nothing at all on a side the layer
+     * never moves toward. A `ScrollLayout`, which only ever scrolls away from rest in one
+     * direction, is oversized on exactly one side as a result, matching iOS (one `.frame`
+     * alignment edge) and web (`contentSize` growing only the trailing edge).
+     */
+    private fun oversizeFor(factor: Float, boxSize: Int): Pair<Int, Int> {
+        val bounds = offsetBoundsPx ?: -boxSize.toFloat()..boxSize.toFloat()
+        val atStart = -factor * bounds.start
+        val atEnd = -factor * bounds.endInclusive
+        fun clamp(value: Float) = value.coerceIn(0f, boxSize.toFloat()).roundToInt()
+        return clamp(maxOf(atStart, atEnd)) to clamp(-minOf(atStart, atEnd))
     }
 
     private fun drawLayers(canvas: Canvas, width: Int, height: Int, toDraw: List<Layer>) {
@@ -186,20 +246,25 @@ internal class BackgroundsPainter(
     }
 
     /**
-     * Translates by [parallaxTranslation]'s clamped amount, offset by [parallaxMargins]' oversize
-     * so the box sees the *oversized* layer's own center at rest (`offsetPx == 0`) -- the same
-     * reasoning as centering any larger box over a smaller one. A layer with no [Layer.parallax]
-     * gets zero margin on both axes, so this is a no-op translate and an unchanged (`width`,
-     * `height`) draw size, exactly as before this existed.
+     * Translates by [parallaxTranslation]'s clamped amount, shifted back by whatever spare room
+     * [oversizeFor] put *before* the box's own start, so the box still sees the layer's resting
+     * position at `offsetPx == 0` however that spare room is split. A layer with no
+     * [Layer.parallax] -- or one whose host cannot travel -- is oversized by nothing, so this is
+     * a no-op translate and an unchanged (`width`, `height`) draw size.
      */
     private fun drawLayer(canvas: Canvas, layer: Layer, width: Int, height: Int) {
         val (dx, dy) = parallaxTranslation(layer.parallax, width, height)
-        val (marginX, marginY) = parallaxMargins(layer.parallax, width, height)
-        val drawWidth = width + 2 * marginX
-        val drawHeight = height + 2 * marginY
+        val (leadingX, trailingX) = layer.parallax
+            ?.takeIf { it.axis != Parallax.Axis.VERTICAL }
+            ?.let { oversizeFor(it.factor, width) } ?: (0 to 0)
+        val (leadingY, trailingY) = layer.parallax
+            ?.takeIf { it.axis != Parallax.Axis.HORIZONTAL }
+            ?.let { oversizeFor(it.factor, height) } ?: (0 to 0)
+        val drawWidth = width + leadingX + trailingX
+        val drawHeight = height + leadingY + trailingY
 
         canvas.save()
-        canvas.translate(dx - marginX, dy - marginY)
+        canvas.translate(dx - leadingX, dy - leadingY)
         try {
             when (val background = layer.background) {
                 is Background.ColorBackground -> drawColor(canvas, background, drawWidth, drawHeight)
@@ -268,12 +333,21 @@ internal class BackgroundsPainter(
     }
 
     /**
-     * [shaderWidth]/[shaderHeight] size the box the image is cropped/measured into -- the same
-     * box a non-parallaxing media background would use, so `media_fit` keeps the same zoom level
-     * -- while [drawWidth]/[drawHeight] size the rect it's painted onto. Cropping straight into
-     * the larger, oversized box instead would ask `fit_crop`'s own "cover" math to fill a much
-     * wider or taller aspect ratio than the layer's own box, zooming in far more than `media_fit`
-     * ever asked for.
+     * `media_fit` crops into [drawWidth]/[drawHeight] -- the layer's own box *plus* whatever
+     * [parallaxOversize] added for its travel -- not into the smaller [shaderWidth]/[shaderHeight]
+     * box, which is only the gradient's own shaping size (see [drawGradient]).
+     *
+     * A cropping fit always fills the box it is given, so cropping into the oversized box is what
+     * makes a gap at the end of the travel impossible: there is no size a source image can be
+     * that leaves the box short. Cropping into the smaller box and translating that within the
+     * larger one cannot promise this -- `cover` only ever leaves slack on whichever axis the
+     * image happens to have proportionally more of, never necessarily the axis about to move, so
+     * an image that merely isn't shaped like its box runs out mid-travel however large it is.
+     * The cost is that a parallaxing layer sits a little more zoomed in than a non-parallaxing
+     * sibling, in proportion to how far it can travel ([Parallax.factor] of [offsetBoundsPx]);
+     * iOS (`ThomasParallaxBackgroundLayerView`, cropping into its own oversized `.frame`) and web
+     * (`Backgrounds.tsx`, `object-fit: cover` on a `contentSize`-oversized `<img>`) both make
+     * exactly this trade, and matching it is what keeps the three rendering the same scene alike.
      */
     private fun drawMedia(
         canvas: Canvas,
@@ -289,49 +363,35 @@ internal class BackgroundsPainter(
         if (layer.mediaType != MediaType.IMAGE) return
         if (shaderWidth <= 0 || shaderHeight <= 0) return
 
-        val imageView = mediaViews.getOrPut(layer) { createCropImageView(layer, shaderWidth, shaderHeight) }
+        // Requested (and so decoded) at the oversized size, not the layer's own box: a source
+        // image with real spare resolution shouldn't be downsampled to the smaller box before a
+        // parallaxing layer ever gets to reveal it. Only has any say the first time, when this
+        // actually creates the view and starts the load.
+        val imageView = mediaViews.getOrPut(layer) { createCropImageView(layer, drawWidth, drawHeight) }
         // Re-affirmed on every draw in case the box has changed size since creation. Harmless to
-        // repeat -- the load itself, below, only ever happens once per layer.
+        // repeat -- the load itself, in createCropImageView, only ever happens once per layer.
         imageView.measure(
-            MeasureSpec.makeMeasureSpec(shaderWidth, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(shaderHeight, MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(drawWidth, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(drawHeight, MeasureSpec.EXACTLY)
         )
-        imageView.layout(0, 0, shaderWidth, shaderHeight)
+        imageView.layout(0, 0, drawWidth, drawHeight)
 
         val opacity = layer.opacity.orFullyOpaque()
         val hasBlend = layer.blendMode != null && layer.blendMode != BlendMode.NORMAL
 
-        if (shaderWidth == drawWidth && shaderHeight == drawHeight) {
-            // Not parallaxing (or at rest on an axis it doesn't move along) -- draws directly,
-            // exactly as it always has.
-            if (opacity >= 1f && !hasBlend) {
-                imageView.draw(canvas)
-                return
-            }
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            applyBlendMode(paint, layer.blendMode)
-            paint.alpha = (255 * opacity).roundToInt()
-            val saveCount = canvas.saveLayer(0f, 0f, shaderWidth.toFloat(), shaderHeight.toFloat(), paint)
-            try {
-                imageView.draw(canvas)
-            } finally {
-                canvas.restoreToCount(saveCount)
-            }
+        if (opacity >= 1f && !hasBlend) {
+            imageView.draw(canvas)
             return
         }
-
-        // Oversized for parallax travel: paint the correctly-cropped image (rendered once, at its
-        // own box size, and cached until that changes) through a CLAMP-tiled shader instead of
-        // re-measuring it into the larger box -- carries its edge pixels out into the margin the
-        // same way drawGradient's own CLAMP does, rather than re-cropping at the wrong aspect ratio.
-        val bitmap = clampBitmapFor(layer, imageView, shaderWidth, shaderHeight) ?: return
-        val shader = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-        shader.setLocalMatrix(centeringMatrix(shaderWidth, shaderHeight, drawWidth, drawHeight))
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.shader = shader
         applyBlendMode(paint, layer.blendMode)
         paint.alpha = (255 * opacity).roundToInt()
-        canvas.drawRect(0f, 0f, drawWidth.toFloat(), drawHeight.toFloat(), paint)
+        val saveCount = canvas.saveLayer(0f, 0f, drawWidth.toFloat(), drawHeight.toFloat(), paint)
+        try {
+            imageView.draw(canvas)
+        } finally {
+            canvas.restoreToCount(saveCount)
+        }
     }
 
     /**
@@ -345,33 +405,6 @@ internal class BackgroundsPainter(
         Matrix().apply {
             setTranslate((drawWidth - shaderWidth) / 2f, (drawHeight - shaderHeight) / 2f)
         }
-
-    private data class ClampBitmap(val bitmap: Bitmap, val width: Int, val height: Int)
-
-    private val mediaClampBitmaps = mutableMapOf<Background.MediaBackground, ClampBitmap>()
-
-    /**
-     * A snapshot of [imageView]'s current pixels at [width]/[height], reused across draws until
-     * either changes -- rendering a fresh [Bitmap] on every single frame of a drag would be a lot
-     * of allocation for a box that, once loaded, only actually changes content when [width]/
-     * [height] themselves do. Null while nothing has loaded yet (nothing to snapshot).
-     */
-    private fun clampBitmapFor(
-        layer: Background.MediaBackground,
-        imageView: CropImageView,
-        width: Int,
-        height: Int
-    ): Bitmap? {
-        if (imageView.drawable == null) return null
-
-        val cached = mediaClampBitmaps[layer]
-        if (cached != null && cached.width == width && cached.height == height) return cached.bitmap
-
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        imageView.draw(Canvas(bitmap))
-        mediaClampBitmaps[layer] = ClampBitmap(bitmap, width, height)
-        return bitmap
-    }
 
     /**
      * A detached `CropImageView` -- never added to the host's child list, so it can never be
@@ -413,6 +446,9 @@ internal class BackgroundsPainter(
 
         val options = ImageRequestOptions.newBuilder(url)
             .setImageSizeResolver(ThomasImageSizeResolver(null, cached?.size))
+            // This view is never attached (see the class doc above) -- a crossfade never
+            // completes against it, so the drawable would silently never get set.
+            .disableTransition()
             .setImageLoadedCallback { invalidate() }
             .build()
         Airship.imageLoader.load(context, imageView, options)

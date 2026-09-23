@@ -76,13 +76,12 @@ internal sealed class Background(
         }
     }
 
-    class MediaBackground constructor(
+    sealed class MediaBackground(
         @JvmField val mediaType: MediaType,
         @JvmField val url: String,
         @JvmField val urlSelectors: List<MediaUrlSelector>,
         @JvmField val mediaFit: MediaFit,
         @JvmField val position: Position?,
-        @JvmField val video: Video?,
         /**
          * This layer's own JSON, unchanged. A video layer's playback is rendered by a real
          * `MediaInfo`/`MediaModel`/`MediaView` -- the same classes an in-flow `media` view uses --
@@ -99,6 +98,39 @@ internal sealed class Background(
         fun resolveUrl(isDarkMode: Boolean): String =
             MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
 
+        class ImageMediaBackground(
+            url: String,
+            urlSelectors: List<MediaUrlSelector>,
+            mediaFit: MediaFit,
+            position: Position?,
+            rawJson: JsonMap,
+            blendMode: BlendMode?,
+            opacity: Float?
+        ) : MediaBackground(
+            MediaType.IMAGE, url, urlSelectors, mediaFit, position, rawJson, blendMode, opacity
+        )
+
+        /**
+         * A layer whose media has a playback surface, so [video] means something on it.
+         *
+         * An image layer is [ImageMediaBackground] instead, without the field: autoplay, mute,
+         * loop and controls have nothing to act on there, and one flat type carrying [video]
+         * regardless let a scene set it on an image and be silently ignored.
+         */
+        class VideoMediaBackground(
+            mediaType: MediaType,
+            url: String,
+            urlSelectors: List<MediaUrlSelector>,
+            mediaFit: MediaFit,
+            position: Position?,
+            @JvmField val video: Video?,
+            rawJson: JsonMap,
+            blendMode: BlendMode?,
+            opacity: Float?
+        ) : MediaBackground(
+            mediaType, url, urlSelectors, mediaFit, position, rawJson, blendMode, opacity
+        )
+
         companion object {
             private const val KEY_MEDIA_TYPE = "media_type"
             private const val KEY_URL = "url"
@@ -109,18 +141,36 @@ internal sealed class Background(
 
             @Throws(JsonException::class)
             fun fromJson(json: JsonMap, blendMode: BlendMode?, opacity: Float?): MediaBackground {
-                return MediaBackground(
-                    mediaType = MediaType.from(json.require(KEY_MEDIA_TYPE)),
-                    url = json.require(KEY_URL).requireString(),
-                    urlSelectors = json.optionalList(KEY_URL_SELECTORS)
-                        ?.let(MediaUrlSelector::fromJsonList) ?: emptyList(),
-                    mediaFit = MediaFit.from(json.require(KEY_MEDIA_FIT)),
-                    position = json[KEY_POSITION]?.let(Position::fromJson),
-                    video = json.optionalField<JsonMap>(KEY_VIDEO)?.let(Video::fromJson),
-                    rawJson = json,
-                    blendMode = blendMode,
-                    opacity = opacity
-                )
+                val mediaType = MediaType.from(json.require(KEY_MEDIA_TYPE))
+                val url = json.require(KEY_URL).requireString()
+                val urlSelectors = json.optionalList(KEY_URL_SELECTORS)
+                    ?.let(MediaUrlSelector::fromJsonList) ?: emptyList()
+                val mediaFit = MediaFit.from(json.require(KEY_MEDIA_FIT))
+                val position = json[KEY_POSITION]?.let(Position::fromJson)
+
+                return if (mediaType.isPlayable) {
+                    VideoMediaBackground(
+                        mediaType = mediaType,
+                        url = url,
+                        urlSelectors = urlSelectors,
+                        mediaFit = mediaFit,
+                        position = position,
+                        video = json.optionalField<JsonMap>(KEY_VIDEO)?.let(Video::fromJson),
+                        rawJson = json,
+                        blendMode = blendMode,
+                        opacity = opacity
+                    )
+                } else {
+                    ImageMediaBackground(
+                        url = url,
+                        urlSelectors = urlSelectors,
+                        mediaFit = mediaFit,
+                        position = position,
+                        rawJson = json,
+                        blendMode = blendMode,
+                        opacity = opacity
+                    )
+                }
             }
         }
     }

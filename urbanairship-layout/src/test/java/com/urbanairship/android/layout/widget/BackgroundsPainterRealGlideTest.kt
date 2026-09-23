@@ -12,7 +12,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.bumptech.glide.request.target.Target
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -200,7 +202,8 @@ public class BackgroundsPainterRealGlideTest {
     }
 
     /** Same shape as `AirshipGlideImageLoader` (unreachable here -- internal to another module),
-     * driving real Glide instead of a synchronous fake. */
+     * driving real Glide instead of a synchronous fake -- crossfade transition included, since
+     * that's the part a detached view actually breaks against. */
     private object RealGlideImageLoader : ImageLoader {
         override fun load(context: Context, imageView: ImageView, imageRequestOptions: ImageRequestOptions) {
             val listener = object : RequestListener<Drawable> {
@@ -229,7 +232,12 @@ public class BackgroundsPainterRealGlideTest {
             Glide.with(imageView)
                 .load(imageRequestOptions.url)
                 .addListener(listener)
-                .into(imageView)
+                .apply {
+                    if (!imageRequestOptions.disableTransition) {
+                        transition(withCrossFade(100))
+                    }
+                }
+                .into(DrawableImageViewTarget(imageView))
         }
     }
 }

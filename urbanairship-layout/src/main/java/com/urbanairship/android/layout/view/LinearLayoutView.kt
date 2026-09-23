@@ -16,7 +16,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutInfo
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
@@ -32,6 +31,7 @@ import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.ShrinkableView
@@ -55,8 +55,17 @@ internal class LinearLayoutView(
         postInvalidate()
     }
 
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it to null },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
+    )
+
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
+        videoBackgrounds.addTo(this)
         clipChildren = false
         orientation = if (model.viewInfo.direction == Direction.VERTICAL) OrientationMode.VERTICAL else OrientationMode.HORIZONTAL
         gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
@@ -118,14 +127,37 @@ internal class LinearLayoutView(
 
     override fun isShrinkable(): Boolean = model.isShrinkable
 
-    override fun dispatchDraw(canvas: Canvas) {
-        // TEMPORARY DEBUG LOGGING -- remove once the on-device blend-mode investigation is done.
-        UALog.d {
-            "LinearLayoutView: dispatchDraw reached, width=$width height=$height " +
-                "backgrounds=${model.viewInfo.backgrounds?.size ?: 0}"
+    override fun isExcludedFromStack(child: View): Boolean = videoBackgrounds.contains(child)
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        // Left out of the stack above, so it never got measured or placed there.
+        videoBackgrounds.measureAndLayout(width, height)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        videoBackgrounds.layOut(backgroundsPainter, w, h) { width, height, left, top ->
+            LayoutParams(width, height).apply {
+                leftMargin = left
+                topMargin = top
+            }
         }
-        backgroundsPainter.draw(canvas, width, height)
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        backgroundsPainter.drawLayersBefore(canvas, width, height)
         super.dispatchDraw(canvas)
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        // Anything stacked above a layer drawn as a real view has to blend against that view's
+        // live pixels, so it goes down here rather than before the children.
+        if (videoBackgrounds.isLast(child)) {
+            backgroundsPainter.drawLayersAfter(canvas, width, height)
+        }
+        return result
     }
 
     private fun addItems(items: List<LinearLayoutModel.Item>) {

@@ -30,6 +30,7 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
 import com.urbanairship.android.layout.widget.establishesLength
@@ -74,10 +75,21 @@ internal class ContainerLayoutView(
         postInvalidate()
     }
 
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it to null },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
+    )
+
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         clipChildren = true
         val constraintBuilder = ConstraintSetBuilder.newBuilder(context)
+        // Before the items, so the layer draws below them. Carries no constraints of its own --
+        // it's sized and placed against the container's box, not against its siblings.
+        videoBackgrounds.addTo(this)
         addItems(model.items, constraintBuilder)
         constraintBuilder.build().applyTo(this)
         ViewCompat.setOnApplyWindowInsetsListener(this, WindowInsetsListener(constraintBuilder))
@@ -104,9 +116,29 @@ internal class ContainerLayoutView(
 
     override fun isShrinkable(): Boolean = true
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        videoBackgrounds.layOut(backgroundsPainter, w, h) { width, height, left, top ->
+            LayoutParams(width, height).apply {
+                leftMargin = left
+                topMargin = top
+            }
+        }
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
-        backgroundsPainter.draw(canvas, width, height)
+        backgroundsPainter.drawLayersBefore(canvas, width, height)
         super.dispatchDraw(canvas)
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        // Anything stacked above a layer drawn as a real view has to blend against that view's
+        // live pixels, so it goes down here rather than before the children.
+        if (videoBackgrounds.isLast(child)) {
+            backgroundsPainter.drawLayersAfter(canvas, width, height)
+        }
+        return result
     }
 
     private fun addItems(items: List<Item>, constraintBuilder: ConstraintSetBuilder) {
@@ -406,6 +438,8 @@ internal class ContainerLayoutView(
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             if (child.visibility == GONE) continue
+            // A `backgrounds` layer fills whatever the container resolves to; it never decides it.
+            if (videoBackgrounds.contains(child)) continue
             // Absent from `percents` boxes to null: not a percent on this axis, so it counts.
             val percent = percents.get(child.id)
             if (percent != null && percent != 1f) continue
@@ -517,7 +551,9 @@ internal class ContainerLayoutView(
 
             var constraintsChanged = false
             for (i in 0 until childCount) {
-                val child = getChildAt(i) as ViewGroup
+                // Only the item frames below -- a `backgrounds` layer has no constraints to inset.
+                val child = getChildAt(i).takeUnless(videoBackgrounds::contains) as? ViewGroup
+                    ?: continue
                 val shouldIgnoreSafeArea = frameShouldIgnoreSafeArea[child.id, false]
                 if (shouldIgnoreSafeArea) {
                     ViewCompat.dispatchApplyWindowInsets(child, applied)

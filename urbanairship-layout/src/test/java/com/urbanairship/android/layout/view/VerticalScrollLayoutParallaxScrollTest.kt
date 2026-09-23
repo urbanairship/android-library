@@ -45,7 +45,7 @@ import org.robolectric.annotation.GraphicsMode
  * `parallax` translate landing on top of that, uncompensated: a `factor: 0` layer (pinned in
  * place, [Parallax] resolves this to zero translate of its own) still moved 1:1 with the scroll,
  * and a `factor: 1` layer (meant to move in lockstep with the content, i.e. also 1:1) moved at 2x.
- * Since `parallaxMargins`'s oversize is only ever sized to cover [BackgroundsPainter]'s own
+ * Since `parallaxOversize`'s oversize is only ever sized to cover [BackgroundsPainter]'s own
  * clamped, bounded translate, it was never going to also cover an unrelated, unbounded scroll
  * translate riding along with it -- a long scroll runs the layer out of margin no matter how
  * large the margin is.

@@ -487,7 +487,9 @@ internal class MediaView(
         wv.addJavascriptInterface(wv.getJavascriptInterface(), "VideoListenerInterface")
         val frameLayout = when (model.viewInfo.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
-            MediaType.VIDEO -> FixedAspectRatioFrameLayout(context).apply {
+            MediaType.VIDEO,
+            MediaType.YOUTUBE,
+            MediaType.VIMEO -> FixedAspectRatioFrameLayout(context).apply {
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                     gravity = Gravity.CENTER
                 }
@@ -506,19 +508,11 @@ internal class MediaView(
                         shouldEnforceAspectRatio = true
                     } else {
                         // If the width and height are known, we don't need to fix to the aspect
-                        // ratio of the video.
+                        // ratio of the video. A `backgrounds` layer is always this case, and
+                        // letterboxing one would leave bars the layer is there to fill.
                         aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: 1.77f
                         shouldEnforceAspectRatio = false
                     }
-                }
-            }
-            MediaType.YOUTUBE,
-            MediaType.VIMEO -> FixedAspectRatioFrameLayout(context).apply {
-                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
-                    gravity = Gravity.CENTER
-                }
-                model.viewInfo.video?.aspectRatio?.let {
-                    aspectRatio = it.toFloat()
                 }
             }
             // SVG images fall back to loading in a WebView, where we don't want to adjust the

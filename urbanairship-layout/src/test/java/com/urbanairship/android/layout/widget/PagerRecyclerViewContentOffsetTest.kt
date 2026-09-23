@@ -30,9 +30,8 @@ import org.robolectric.RobolectricTestRunner
  * reported offset jumped by very nearly a full page-width instantly, then continued on smoothly.
  * A parallax layer driven by that offset would snap backward mid-swipe, on every page turn.
  *
- * Fixed by tracking the page the drag actually *started* from ([PagerRecyclerView.previousPosition],
- * only updated once a drag/settle comes to rest) instead of the nearest one -- continuous from `0`
- * up to a full page-width, with no jump.
+ * Fixed by reporting the track's own absolute offset, which is continuous by construction -- there
+ * is no page to round to. See `PagerRecyclerView.contentOffset`.
  */
 @RunWith(RobolectricTestRunner::class)
 public class PagerRecyclerViewContentOffsetTest {
@@ -86,6 +85,42 @@ public class PagerRecyclerViewContentOffsetTest {
         // The old "nearest page" math capped this at half a page-width (540) -- a parallaxing
         // layer only ever traveled half its configured `factor * pageWidth` distance.
         assertEquals((pageWidthPx - 1).toFloat(), lastOffset, 0.5f)
+    }
+
+    /**
+     * Ryan's real-device report, comparing the same pager across platforms: "its not correct on
+     * pagers."
+     *
+     * The offset used to be measured from whichever page a drag started on, re-zeroing every time
+     * one settled -- so a background wobbled through the drag and landed back exactly where it
+     * began, with no net movement across the pager at all. That standing translate on a later
+     * page isn't a bug to cancel out; it *is* the parallax. iOS
+     * (`pagerContentOffset = -(width * pageIndex) + drag`) and web
+     * (`--parallax-x-offset = currentIndex * -100%`) both keep it.
+     */
+    @Test
+    public fun offsetKeepsItsGroundOnceAPageSettlesRatherThanReturningToZero() {
+        val recyclerView = buildRecyclerView(pageCount = 3)
+        var lastOffset = 0f
+        recyclerView.setPagerScrollListener(object : PagerView.OnScrollListener {
+            override fun onScrollTo(position: Int, isInternalScroll: Boolean) = Unit
+            override fun onContentOffsetChanged(offsetPx: Float) {
+                lastOffset = offsetPx
+            }
+        })
+
+        // Landed squarely on page 2: the drag is over and nothing is mid-flight.
+        recyclerView.scrollBy(pageWidthPx, 0)
+        assertEquals(
+            "sitting on page 2, the background should still be a page-width along",
+            pageWidthPx.toFloat(), lastOffset, 1f
+        )
+
+        recyclerView.scrollBy(pageWidthPx, 0)
+        assertEquals(
+            "sitting on page 3, it should be two page-widths along -- not back at zero",
+            (pageWidthPx * 2).toFloat(), lastOffset, 1f
+        )
     }
 
     private fun buildRecyclerView(pageCount: Int = 2): PagerRecyclerView {

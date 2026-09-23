@@ -98,9 +98,17 @@ internal class MediaModel(
     /** Media views are shrinkable by default. */
     override var isShrinkable: Boolean = true
 
+    /**
+     * Holds (or releases) a story's automated advance while this video loads.
+     *
+     * A null [ModelProperties.pagerPageId] is passed through rather than skipped: that's a video
+     * the pager itself owns (a `backgrounds` layer), which is on screen for every page and so
+     * gates whichever one is showing -- see [State.Pager.isMediaPaused].
+     */
     fun setMediaLoading(isLoading: Boolean) {
-        val pageId = properties.pagerPageId ?: return
-        pagerState?.update { state -> state.copyWithMediaPaused(pageId, videoId, isLoading) }
+        pagerState?.update { state ->
+            state.copyWithMediaPaused(properties.pagerPageId, videoId, isLoading)
+        }
     }
 
     fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {

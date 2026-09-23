@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
 import android.view.MotionEvent
+import android.view.View
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
@@ -30,6 +31,7 @@ import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionDown
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
@@ -65,8 +67,17 @@ internal class ButtonLayoutView(
         postInvalidate()
     }
 
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it to null },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
+    )
+
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
+        videoBackgrounds.addTo(this)
         LayoutUtils.applyButtonLayoutModel(this, model)
 
         addView(view, MATCH_PARENT, MATCH_PARENT)
@@ -162,9 +173,29 @@ internal class ButtonLayoutView(
     /** Button layouts may be shrunk if they contain a media view. */
     override fun isShrinkable(): Boolean = model.isShrinkable
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        videoBackgrounds.layOut(backgroundsPainter, w, h) { width, height, left, top ->
+            LayoutParams(width, height).apply {
+                leftMargin = left
+                topMargin = top
+            }
+        }
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
-        backgroundsPainter.draw(canvas, width, height)
+        backgroundsPainter.drawLayersBefore(canvas, width, height)
         super.dispatchDraw(canvas)
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        // Anything stacked above a layer drawn as a real view has to blend against that view's
+        // live pixels, so it goes down here rather than before the children.
+        if (videoBackgrounds.isLast(child)) {
+            backgroundsPainter.drawLayersAfter(canvas, width, height)
+        }
+        return result
     }
 
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {

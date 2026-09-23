@@ -22,6 +22,7 @@ import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -73,46 +74,86 @@ public class BackgroundsPainterParallaxAlignmentTest {
         assertEquals(Color.BLUE, bitmap.getPixel(299, 100))
     }
 
+    /** `factor: 0` oversizes by `abs(factor) * range` -- nothing -- so a pinned layer is the
+     * unparallaxed render exactly, not merely close to it. iOS (`oversize`) and web
+     * (`contentSize`) both fall out to the same no-op at zero. */
     @Test
-    public fun aParallaxingImageLayerAtRestCropsTheSameWayAnUnparallaxedOneDoes() {
+    public fun aPinnedImageLayerCropsExactlyLikeAnUnparallaxedOne() {
         mockkObject(Airship)
         mockkStatic(Airship::class)
-        // A square source with a distinct marker band a quarter of the way down -- close enough
-        // to center that a correct crop keeps it visible, but far enough that the wrong ("cover
-        // the oversized, much-wider box") crop zooms it out of frame.
         every { Airship.imageLoader } returns MarkerBandImageLoader(
             size = 1000, bandStart = 240, bandEnd = 260, background = Color.BLUE, band = Color.RED
         )
 
-        // offsetPx == 0, so the parallaxing layer's own translate is zero regardless of factor --
-        // at rest, it should render pixel-for-pixel like a plain, unparallaxed media background.
         val plain = BackgroundsPainter(context, viewEnvironment) {}
         plain.backgrounds = listOf(fitCropImageBackground())
         val plainBitmap = Bitmap.createBitmap(900, 600, Bitmap.Config.ARGB_8888)
         plain.draw(Canvas(plainBitmap), 900, 600)
 
-        val parallax = BackgroundsPainter(context, viewEnvironment) {}
-        parallax.setParallaxBackgrounds(
-            fitCropImage(parallaxJson = """{ "axis": "horizontal", "factor": 0.4 }""")
+        val pinned = BackgroundsPainter(context, viewEnvironment) {}
+        pinned.setParallaxBackgrounds(
+            fitCropImage(parallaxJson = """{ "axis": "horizontal", "factor": 0 }""")
         )
-        parallax.offsetPx = 0f
-        val parallaxBitmap = Bitmap.createBitmap(900, 600, Bitmap.Config.ARGB_8888)
-        parallax.draw(Canvas(parallaxBitmap), 900, 600)
+        val pinnedBitmap = Bitmap.createBitmap(900, 600, Bitmap.Config.ARGB_8888)
+        pinned.draw(Canvas(pinnedBitmap), 900, 600)
 
-        // Row 70 is where an unparallaxed (900x600) crop of this fixture shows the marker band --
-        // re-cropping into the oversized (2700x600) box instead zooms in far enough vertically
-        // that this same row would show background color instead.
         for (y in intArrayOf(0, 70, 300, 599)) {
             assertEquals(
-                "row $y should crop the same as an unparallaxed layer -- a parallaxing layer's " +
-                    "own oversize margin must not change its zoom",
+                "row $y of a factor-0 layer should be the unparallaxed render exactly",
                 plainBitmap.getPixel(450, y),
-                parallaxBitmap.getPixel(450, y)
+                pinnedBitmap.getPixel(450, y)
             )
         }
         // Sanity check the fixture itself: the unparallaxed render actually shows the marker at
         // the row above, so the loop is comparing real content, not two blank renders.
         assertEquals(Color.RED, plainBitmap.getPixel(450, 70))
+    }
+
+    /**
+     * Ryan's real-device report, comparing the same scene across platforms: "the image still
+     * clips on android but not ios/web... I tried different aspect ratios and still not clipping
+     * on those platforms."
+     *
+     * A cropping fit always fills the box it is handed, so cropping into the *oversized* box --
+     * what iOS's `ThomasParallaxBackgroundLayerView` and web's `object-fit: cover` on a
+     * `contentSize`-oversized `<img>` both do -- can never leave the box short, whatever shape
+     * the source image is. Cropping into the layer's own smaller box and sliding that within the
+     * oversized one (what Android did) can: `cover` only leaves slack on whichever axis the
+     * image has proportionally more of, so an image merely shaped unlike its box runs out
+     * mid-travel at any resolution. This fixture is exactly that shape -- a square source in a
+     * wide box, whose `cover` slack is all vertical while the parallax travels horizontally.
+     */
+    @Test
+    public fun aParallaxingImageLayerFullyCoversItsBoxAtEveryPointInItsTravel() {
+        mockkObject(Airship)
+        mockkStatic(Airship::class)
+        every { Airship.imageLoader } returns MarkerBandImageLoader(
+            size = 1000, bandStart = 240, bandEnd = 260, background = Color.BLUE, band = Color.RED
+        )
+
+        val painter = BackgroundsPainter(context, viewEnvironment) {}
+        painter.setParallaxBackgrounds(
+            fitCropImage(parallaxJson = """{ "axis": "horizontal", "factor": 0.4 }""")
+        )
+        painter.offsetBoundsPx = -900f..900f
+
+        for (offsetPx in floatArrayOf(0f, 450f, 900f, -900f)) {
+            painter.offsetPx = offsetPx
+            val bitmap = Bitmap.createBitmap(900, 600, Bitmap.Config.ARGB_8888)
+            painter.draw(Canvas(bitmap), 900, 600)
+
+            for (x in intArrayOf(0, 1, 450, 898, 899)) {
+                for (y in intArrayOf(0, 300, 599)) {
+                    assertNotEquals(
+                        "at offsetPx=$offsetPx, ($x, $y) is transparent -- the layer has been " +
+                            "cropped into a box smaller than the one it's drawn into, so its " +
+                            "own travel runs it off the edge",
+                        0,
+                        Color.alpha(bitmap.getPixel(x, y))
+                    )
+                }
+            }
+        }
     }
 
     private fun twoStopGradient(parallaxJson: String): List<ParallaxBackground> = ParallaxBackground.fromJsonList(

@@ -239,7 +239,7 @@ internal sealed class State(val type: Type): JsonSerializable {
         val pageIds: List<String> = emptyList(),
         val durations: List<Duration?> = emptyList(),
         val progress: Int = 0,
-        val mediaPausedVideos: Map<String, String> = emptyMap(),
+        val mediaPausedVideos: Map<String, String?> = emptyMap(),
         val isManuallyPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false,
         val branching: PagerControllerBranching? = null,
@@ -248,8 +248,16 @@ internal sealed class State(val type: Type): JsonSerializable {
     ) : State(Type.PAGER) {
 
 
+        /**
+         * Whether a video the current page is showing is still loading, so a story's automated
+         * advance should wait for it.
+         *
+         * A `null` page id is a video that belongs to the pager rather than to one page -- a
+         * `backgrounds` layer, which stays on screen across every page -- so it holds whichever
+         * page is showing, not just the one that happened to be up when it started loading.
+         */
         val isMediaPaused: Boolean
-            get() = mediaPausedVideos.any { it.value == currentPageId }
+            get() = mediaPausedVideos.any { (_, pageId) -> pageId == null || pageId == currentPageId }
 
         val isPaused
             get() = isMediaPaused || isManuallyPaused
@@ -302,7 +310,8 @@ internal sealed class State(val type: Type): JsonSerializable {
             return copy(isScrolling = isScrolling)
         }
 
-        fun copyWithMediaPaused(pageId: String, videoId: String, isPaused: Boolean): Pager {
+        /** @param pageId the page the video belongs to, or `null` for one the pager itself owns. */
+        fun copyWithMediaPaused(pageId: String?, videoId: String, isPaused: Boolean): Pager {
             val updatedMap = if (isPaused) {
                 mediaPausedVideos + (videoId to pageId)
             } else {

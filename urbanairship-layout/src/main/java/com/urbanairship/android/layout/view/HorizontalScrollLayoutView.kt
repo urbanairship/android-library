@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.graphics.Canvas
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
 import android.widget.HorizontalScrollView
@@ -17,6 +18,8 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.HorizontalScrollLayoutModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.ScrollContentFrame
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.PercentBaseProvider
 
 internal class HorizontalScrollLayoutView(
@@ -45,18 +48,42 @@ internal class HorizontalScrollLayoutView(
         postInvalidate()
     }
 
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it.background to it.parallax },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
+    )
+
+    /** The one direct child a scroll view allows -- see [ScrollContentFrame]. */
+    private val contentFrame = ScrollContentFrame(context)
+
     init {
         backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds)
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         isFillViewport = false
         clipToOutline = true
 
         contentView = model.view.createView(context, viewEnvironment, null)
-        addView(contentView, LayoutParams(WRAP_CONTENT, MATCH_PARENT))
+        videoBackgrounds.addTo(contentFrame)
+        contentFrame.videoBackgrounds = videoBackgrounds
+        contentFrame.drawLayersAfter = { canvas ->
+            canvas.save()
+            canvas.translate(scrollX.toFloat(), scrollY.toFloat())
+            try {
+                backgroundsPainter.drawLayersAfter(canvas, width, height)
+            } finally {
+                canvas.restore()
+            }
+        }
+        contentFrame.addView(contentView, FrameLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT))
+        addView(contentFrame, LayoutParams(WRAP_CONTENT, MATCH_PARENT))
 
         // Fires on every scroll step, drag or fling/settle alike -- see `BackgroundsPainter`'s
         // class doc for why that's what keeps a parallax layer in step with no separate animation.
         setOnScrollChangeListener { _, scrollX, _, _, _ ->
             backgroundsPainter.offsetPx = scrollX.toFloat()
+            pinVideoBackgrounds()
             invalidate()
         }
 
@@ -93,16 +120,33 @@ internal class HorizontalScrollLayoutView(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        // Sized against the viewport, not the scrolling content it sits inside.
+        videoBackgrounds.layOutPinned(backgroundsPainter, width, height)
+        pinVideoBackgrounds()
+    }
+
+    private fun pinVideoBackgrounds() {
+        videoBackgrounds.applyParallax(backgroundsPainter, width, height, scrollX.toFloat(), 0f)
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
         // View.draw() pre-translates this canvas by (-scrollX, -scrollY) before dispatchDraw runs,
         // the same way it does for onDraw -- undo it here so the painter draws against the fixed
         // viewport box it was sized against, the same way View's own drawBackground() stays put
         // regardless of scroll. Without this, every layer -- parallaxing or not -- would scroll
         // with the content at 1:1 on top of whatever parallax offset it already applies.
+        // Read here rather than on scroll: content that already fits has no travel to oversize a
+        // parallaxing layer for, and never fires a scroll event to say so. Content can also grow
+        // after the first layout (an image loading in), which doesn't necessarily resize us.
+        backgroundsPainter.offsetBoundsPx =
+            0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()
+
         canvas.save()
         canvas.translate(scrollX.toFloat(), scrollY.toFloat())
         try {
-            backgroundsPainter.draw(canvas, width, height)
+            backgroundsPainter.drawLayersBefore(canvas, width, height)
         } finally {
             canvas.restore()
         }

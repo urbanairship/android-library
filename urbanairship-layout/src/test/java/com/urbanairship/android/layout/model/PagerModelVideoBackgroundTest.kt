@@ -72,7 +72,7 @@ public class PagerModelVideoBackgroundTest {
     @Test
     public fun onlyVideoMediaLayersGetAModel() {
         val videoLayer = videoBackground(url = "https://test-layout.internal/video.mp4")
-        val imageLayer = videoBackground(mediaType = "image", url = "https://test-layout.internal/image.jpg")
+        val imageLayer = mediaBackground(mediaType = "image", url = "https://test-layout.internal/image.jpg")
         val colorLayer = Background.ColorBackground(
             color = Color.fromJson(JsonValue.parseString("""{"default":{"type":"hex","hex":"#000000","alpha":1}}""")),
             blendMode = null,
@@ -107,7 +107,7 @@ public class PagerModelVideoBackgroundTest {
     }
 
     @Test
-    public fun aPagerLevelVideoBackgroundIsScopedToTheFirstPageForPauseAndRewind() {
+    public fun aPagerLevelVideoBackgroundKeepsPlayingAcrossEveryPage() {
         val videoLayer = videoBackground(url = "https://test-layout.internal/video.mp4")
         val model = buildModel(listOf(ParallaxBackground(background = videoLayer, parallax = null)))
         val mediaModel = model.videoBackgroundModels.getValue(videoLayer)
@@ -116,17 +116,46 @@ public class PagerModelVideoBackgroundTest {
         // model this test inspects is the one actually driving playback state, not a mock.
         assertTrue(videoState.changes.value.videos.containsKey(mediaModel.videoId))
 
-        // Page one (index 0, matching availablePages.first()) is current: plays.
+        // It's the pager's own background, not any one page's -- unlike an in-flow video, a page
+        // turn is never a reason to pause (or, with auto_reset_position, rewind) it.
         pagerState.update { it.copyWithPageIndex(0) }
         assertTrue(mediaModel.shouldBePlaying())
 
-        // Swiped to page two: the same rule an in-flow video's page-deselect already follows.
         pagerState.update { it.copyWithPageIndex(1) }
-        assertFalse(mediaModel.shouldBePlaying())
+        assertTrue(mediaModel.shouldBePlaying())
 
-        // Back to page one: resumes.
         pagerState.update { it.copyWithPageIndex(0) }
         assertTrue(mediaModel.shouldBePlaying())
+    }
+
+    /**
+     * A story's automated advance waits for the videos its page is showing, and a pager-level
+     * background video is showing on all of them.
+     *
+     * `MediaModel.setMediaLoading` used to open with `properties.pagerPageId ?: return`, which
+     * for one of these models -- deliberately scoped to no page, see
+     * [aPagerLevelVideoBackgroundKeepsPlayingAcrossEveryPage] -- meant the hold was never taken
+     * out at all, and a story advanced off a page whose video hadn't loaded.
+     */
+    @Test
+    public fun aBackgroundVideoStillLoadingHoldsTheStoryOnWhicheverPageIsShowing() {
+        val videoLayer = videoBackground(url = "https://test-layout.internal/video.mp4")
+        val model = buildModel(listOf(ParallaxBackground(background = videoLayer, parallax = null)))
+        val mediaModel = model.videoBackgroundModels.getValue(videoLayer)
+
+        assertFalse(pagerState.changes.value.isMediaPaused)
+
+        mediaModel.setMediaLoading(true)
+        assertTrue(pagerState.changes.value.isMediaPaused)
+
+        pagerState.update { it.copyWithPageIndex(1) }
+        assertTrue(
+            "it's still on screen on page two, so it's still worth waiting for",
+            pagerState.changes.value.isMediaPaused
+        )
+
+        mediaModel.setMediaLoading(false)
+        assertFalse(pagerState.changes.value.isMediaPaused)
     }
 
     @Test
@@ -136,7 +165,7 @@ public class PagerModelVideoBackgroundTest {
         assertNull(videoState.changes.value.currentVideoId)
     }
 
-    private fun videoBackground(mediaType: String = "video", url: String): Background.MediaBackground {
+    private fun mediaBackground(mediaType: String, url: String): Background.MediaBackground {
         val json = """
             {
               "type": "media",
@@ -148,6 +177,9 @@ public class PagerModelVideoBackgroundTest {
         """.trimIndent()
         return Background.fromJson(JsonValue.parseString(json).requireMap()) as Background.MediaBackground
     }
+
+    private fun videoBackground(url: String): Background.MediaBackground.VideoMediaBackground =
+        mediaBackground(mediaType = "video", url = url) as Background.MediaBackground.VideoMediaBackground
 
     private companion object {
         private const val PAGER_ID = "video-pager"

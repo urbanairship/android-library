@@ -23,6 +23,14 @@ internal abstract class BaseToggleLayoutModel<T : View, I : BaseToggleLayoutInfo
     properties: ModelProperties
 ) : BaseModel<T, I, BaseModel.Listener>(viewInfo, environment, properties) {
 
+    /** See [videoBackgroundModels] -- a playable layer is a real child view, not painted. */
+    val videoBackgroundModels = videoBackgroundModels(
+        layers = viewInfo.backgrounds,
+        pagerState = environment.layoutState.pager,
+        environment = environment,
+        properties = properties
+    )
+
     /** Wraps a view without resizing it, so what it wraps answers for it. */
     override fun establishesLength(direction: Direction): Boolean =
         view.establishesLength(direction)

@@ -30,6 +30,7 @@ import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.isWithinBounds
 import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
@@ -64,8 +65,17 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
         postInvalidate()
     }
 
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it to null },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
+    )
+
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
+        videoBackgrounds.addTo(this)
         isClickable = true
         isFocusable = true
 
@@ -156,9 +166,29 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
 
     override fun taps(): Flow<Unit> = debouncedClicks()
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        videoBackgrounds.layOut(backgroundsPainter, w, h) { width, height, left, top ->
+            LayoutParams(width, height).apply {
+                leftMargin = left
+                topMargin = top
+            }
+        }
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
-        backgroundsPainter.draw(canvas, width, height)
+        backgroundsPainter.drawLayersBefore(canvas, width, height)
         super.dispatchDraw(canvas)
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        // Anything stacked above a layer drawn as a real view has to blend against that view's
+        // live pixels, so it goes down here rather than before the children.
+        if (videoBackgrounds.isLast(child)) {
+            backgroundsPainter.drawLayersAfter(canvas, width, height)
+        }
+        return result
     }
 
     private fun updateToggleVisualState(isOn: Boolean) {

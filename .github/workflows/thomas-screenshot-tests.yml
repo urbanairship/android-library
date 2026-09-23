@@ -121,7 +121,9 @@ jobs:
           path: |
             devapp/src/main/assets/sample_layouts/Scenes
             devapp/src/main/assets/sample_layouts/.layouts.version
-          key: thomas-layouts-${{ hashFiles('layouts.version') }}
+          # `uitests` is in the key because the sweep fetches the per-page scenes cut
+          # from each pager and the rest of the repo's jobs do not.
+          key: thomas-layouts-uitests-${{ hashFiles('layouts.version', 'scripts/fetch-layouts.sh') }}
 
       # ios-library-dev mints a token from the org's repo-reader GitHub App here,
       # but that org secret is not shared with this repo, so we authenticate with
@@ -138,7 +140,7 @@ jobs:
         env:
           LAYOUTS_REPO_URL: git@github.com:urbanairship/thomas-layouts.git
           GIT_SSH_COMMAND: ssh -i $HOME/.ssh/thomas_layouts_deploy -o StrictHostKeyChecking=accept-new
-        run: bash ./scripts/fetch-layouts.sh
+        run: bash ./scripts/fetch-layouts.sh --uitests
 
       - name: Setup Java Version
         uses: actions/setup-java@v4

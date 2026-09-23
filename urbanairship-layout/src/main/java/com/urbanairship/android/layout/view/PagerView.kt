@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.graphics.Canvas
 import android.os.SystemClock
-import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -30,6 +29,7 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.PagerRecyclerView
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.TouchAwareWebView
 import com.urbanairship.util.stringResource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,8 +45,10 @@ internal class PagerView(
     fun interface OnScrollListener {
         fun onScrollTo(position: Int, isInternalScroll: Boolean)
         fun onScrollStateChanged(isScrolling: Boolean) {}
-        /** The pager's absolute horizontal content offset, in pixels -- fires on every scroll
-         * step, whether from a drag or a settle/fling, same as `RecyclerView.onScrolled`. */
+        /**
+         * The pager's absolute horizontal content offset from page 0 -- fires on every scroll
+         * step, whether from a drag or a settle/fling, same as `RecyclerView.onScrolled`.
+         */
         fun onContentOffsetChanged(offsetPx: Float) {}
     }
 
@@ -117,29 +119,16 @@ internal class PagerView(
     }
 
     /**
-     * A video `backgrounds` layer, unlike color/gradient/image, is rendered as a real attached
-     * child (see [PagerModel.videoBackgroundModels]) rather than by [backgroundsPainter]'s own
-     * canvas painting -- video needs a real, attached WebView to play at all. Added as children
-     * before `view` (below it in z-order, see [dispatchDraw]) in their `backgrounds`-array order.
+     * A playable `backgrounds` layer, unlike color/gradient/image, is rendered as a real attached
+     * child rather than by [backgroundsPainter]'s own canvas painting -- video needs a real,
+     * attached WebView to play at all. Added below `view` in z-order (see [dispatchDraw]).
      */
-    private class VideoBackgroundChild(
-        val mediaBackground: BackgroundLayer.MediaBackground,
-        val parallax: Parallax?,
-        val mediaView: MediaView
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it.background to it.parallax },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
     )
-
-    private val videoBackgroundChildren: List<VideoBackgroundChild> = model.viewInfo.backgrounds
-        .orEmpty()
-        .mapNotNull { layer ->
-            val mediaBackground = layer.background as? BackgroundLayer.MediaBackground
-                ?: return@mapNotNull null
-            val mediaModel = model.videoBackgroundModels[mediaBackground] ?: return@mapNotNull null
-            VideoBackgroundChild(
-                mediaBackground = mediaBackground,
-                parallax = layer.parallax,
-                mediaView = mediaModel.createView(context, viewEnvironment, itemProperties = null)
-            )
-        }
 
     private val modelListener = object : PagerModel.Listener {
         override fun scrollTo(position: Int, animate: Boolean) {
@@ -167,11 +156,10 @@ internal class PagerView(
 
     init {
         backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds)
-        backgroundsPainter.attachedViewBackgrounds =
-            videoBackgroundChildren.map { it.mediaBackground }.toSet()
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         isFocusable = true
         isFocusedByDefault = true
-        videoBackgroundChildren.forEach { addView(it.mediaView, MATCH_PARENT, MATCH_PARENT) }
+        videoBackgrounds.addTo(this)
         addView(view, MATCH_PARENT, MATCH_PARENT)
         model.listener = modelListener
 
@@ -186,11 +174,7 @@ internal class PagerView(
 
             override fun onContentOffsetChanged(offsetPx: Float) {
                 backgroundsPainter.offsetPx = offsetPx
-                videoBackgroundChildren.forEach { child ->
-                    val (dx, dy) = backgroundsPainter.parallaxTranslation(child.parallax, width, height)
-                    child.mediaView.translationX = dx
-                    child.mediaView.translationY = dy
-                }
+                videoBackgrounds.applyParallax(backgroundsPainter, width, height)
                 invalidate()
             }
         })
@@ -205,18 +189,34 @@ internal class PagerView(
      * A video child needs the same oversize a canvas-painted parallax layer gets from
      * [BackgroundsPainter.drawLayer] -- without it, translating it by [Parallax] (see
      * `onContentOffsetChanged`) would slide its edge into view rather than reveal more of an
-     * already-larger view, the same gap [BackgroundsPainter.parallaxMargins] exists to prevent.
-     * `CENTER` gravity keeps it aligned with the box at rest (`offsetPx == 0`), matching that
-     * oversized layer's own centering.
+     * already-larger view, the same gap [BackgroundsPainter.parallaxOversize] exists to prevent.
+     * Margins (not `CENTER` gravity) place it at rest (`offsetPx == 0`): the oversize can split
+     * unevenly between the leading and trailing side, and a `CENTER` gravity always splits it
+     * evenly regardless, which drifts the child from the box's own position whenever it doesn't.
      */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        videoBackgroundChildren.forEach { child ->
-            val (marginX, marginY) = backgroundsPainter.parallaxMargins(child.parallax, w, h)
-            child.mediaView.layoutParams = FrameLayout.LayoutParams(
-                w + 2 * marginX,
-                h + 2 * marginY
-            ).apply { gravity = Gravity.CENTER }
+        backgroundsPainter.offsetBoundsPx = 0f..pagerTravelRangePx(w)
+        layOutVideoBackgroundChildren(w, h)
+    }
+
+    /**
+     * How far a parallaxing layer is sized and positioned against, which is a page wider than the
+     * track can actually scroll.
+     *
+     * A layer's spare room is its share of this, and it sits at the leading end of that room at
+     * rest -- so the extra page's worth is what holds the layer off-centre on page one and lets it
+     * arrive centred on the last page, rather than travelling symmetrically about the centre and
+     * looking unmoved at both ends. iOS and web both place it this way.
+     */
+    private fun pagerTravelRangePx(w: Int): Float = (model.pages.size * w).toFloat()
+
+    private fun layOutVideoBackgroundChildren(w: Int, h: Int) {
+        videoBackgrounds.layOut(backgroundsPainter, w, h) { width, height, left, top ->
+            FrameLayout.LayoutParams(width, height).apply {
+                leftMargin = left
+                topMargin = top
+            }
         }
     }
 
@@ -231,7 +231,7 @@ internal class PagerView(
 
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
         val result = super.drawChild(canvas, child, drawingTime)
-        if (child === videoBackgroundChildren.lastOrNull()?.mediaView) {
+        if (videoBackgrounds.isLast(child)) {
             backgroundsPainter.drawLayersAfter(canvas, width, height)
         }
         return result
