@@ -81,7 +81,7 @@ internal class HorizontalScrollLayoutView(
 
         // Fires on every scroll step, drag or fling/settle alike -- see `BackgroundsPainter`'s
         // class doc for why that's what keeps a parallax layer in step with no separate animation.
-        setOnScrollChangeListener { _, scrollX, _, _, _ ->
+        setOnScrollChangeListener { _, _, _, _, _ ->
             backgroundsPainter.offsetPx = contentOffset()
             pinVideoBackgrounds()
             invalidate()
@@ -123,22 +123,20 @@ internal class HorizontalScrollLayoutView(
         // sizes to its content would grow by its own padding on every pass and never shrink.
         // Nothing to hold when the size isn't imposed -- then the viewport *is* the content.
         if (!videoBackgrounds.isEmpty) {
-            contentFrame.minimumWidth = if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY) {
+            val frameMinimum = if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY) {
                 (MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd).coerceAtLeast(0)
             } else {
                 0
+            }
+            // `setMinimum*` always requests a layout, so writing the same value back would
+            // dirty the frame on every measure pass.
+            if (contentFrame.minimumWidth != frameMinimum) {
+                contentFrame.minimumWidth = frameMinimum
             }
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
-    /**
-     * How far the content can travel, which is what a parallaxing layer's spare room is a share of.
-     *
-     * Read from the measured content rather than on scroll: content that already fits has no
-     * travel to oversize a layer for and never fires a scroll event to say so, and content can
-     * grow after the first layout (an image loading in) without resizing this view.
-     */
     /**
      * How far the content has travelled from its own start, which is `0` at rest either way.
      *
@@ -154,6 +152,13 @@ internal class HorizontalScrollLayoutView(
         return range - scrollX.toFloat()
     }
 
+    /**
+     * How far the content can travel, which is what a parallaxing layer's spare room is a share of.
+     *
+     * Read from the measured content rather than on scroll: content that already fits has no
+     * travel to oversize a layer for and never fires a scroll event to say so, and content can
+     * grow after the first layout (an image loading in) without resizing this view.
+     */
     private fun updateTravelBounds() {
         backgroundsPainter.offsetBoundsPx =
             0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()

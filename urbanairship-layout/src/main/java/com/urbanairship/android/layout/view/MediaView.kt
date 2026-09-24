@@ -115,7 +115,7 @@ internal class MediaView(
     private var wholeImageAnchor: Position? = null
 
     val isNonInteractiveVideo: Boolean =
-        model.viewInfo.mediaType.isPlayable &&
+        model.viewInfo.mediaType == MediaType.VIDEO &&
                 !model.viewInfo.eventHandlers.hasTapHandler() &&
                 !(model.viewInfo.video ?: Video.defaultVideo()).showControls
 
@@ -635,7 +635,7 @@ internal class MediaView(
         }
 
         wv.visibility = INVISIBLE
-        wv.webViewClient = object : MediaWebViewClient(load) {
+        wv.webViewClient = object : MediaWebViewClient(load, { model.setMediaLoading(false) }) {
             override fun onPageFinished(webView: WebView) {
                 webView.visibility = VISIBLE
                 progressBar.visibility = GONE
@@ -691,17 +691,30 @@ internal class MediaView(
             }
         }
 
-    private abstract class MediaWebViewClient(private val onRetry: Runnable) : WebViewClient() {
+    private abstract class MediaWebViewClient(
+        private val onRetry: Runnable,
+        private val onGaveUp: Runnable
+    ) : WebViewClient() {
 
         var error = false
         var retryDelay = START_RETRY_DELAY
+        private var retries = 0
 
         override fun onPageFinished(view: WebView, url: String) {
             super.onPageFinished(view, url)
             if (error) {
-                UALog.v { "MediaWebViewClient onPageFinished with error, retrying in ${retryDelay}ms: url=$url" }
-                view.postDelayed(onRetry, retryDelay)
-                retryDelay *= 2
+                if (retries < MAX_PAGE_RETRIES) {
+                    retries++
+                    UALog.v { "MediaWebViewClient onPageFinished with error, retrying in ${retryDelay}ms: url=$url" }
+                    view.postDelayed(onRetry, retryDelay)
+                    retryDelay *= 2
+                } else {
+                    // Only the plain `video` page reports errors through its own JS callback;
+                    // a youtube/vimeo embed has none, so without a last attempt this retried
+                    // forever. A page that will never load has to stop holding up a story.
+                    UALog.w { "MediaWebViewClient giving up after $MAX_PAGE_RETRIES retries: url=$url" }
+                    onGaveUp.run()
+                }
             } else {
                 onPageFinished(view)
             }
@@ -727,6 +740,7 @@ internal class MediaView(
 
         companion object {
             private const val START_RETRY_DELAY: Long = 1000
+            private const val MAX_PAGE_RETRIES = 3
         }
     }
 

@@ -37,8 +37,7 @@ internal class VideoBackgroundChildren(
     class Child(
         val layer: VideoMediaBackground,
         val parallax: Parallax?,
-        val mediaView: MediaView,
-        /** What the host actually hosts -- [mediaView], or a wrapper that won't take touches. */
+        /** What the host hosts: the layer's own view, or a wrapper that won't take touches. */
         val view: View
     )
 
@@ -65,7 +64,6 @@ internal class VideoBackgroundChildren(
         Child(
             layer = layer,
             parallax = parallax,
-            mediaView = mediaView,
             view = if (mediaView.isNonInteractiveVideo) {
                 UntouchableFrame(context).apply { addView(mediaView, MATCH_PARENT, MATCH_PARENT) }
             } else {
@@ -83,13 +81,17 @@ internal class VideoBackgroundChildren(
      * Adds every child to [host], which must happen before the host's own content is added so the
      * content draws on top.
      *
-     * Added with no size at all, and given one by [layOut] once the host's box is known: a host
-     * that sizes itself to its content would otherwise measure a `MATCH_PARENT` layer as a
-     * content-sized child and grow to fill whatever space was offered. A `backgrounds` layer
-     * never contributes to its host's own size.
+     * Added at a single pixel, and given a real size by [placeInto] once the host's box is
+     * known: a host that sizes itself to its content would otherwise measure a `MATCH_PARENT`
+     * layer as a content-sized child and grow to fill whatever space was offered. A
+     * `backgrounds` layer never contributes to its host's own size.
+     *
+     * One pixel rather than none, because a `ConstraintLayout` reads a width or height of `0` as
+     * `MATCH_CONSTRAINT` and measures such a child against the whole container instead -- which
+     * is the very thing being avoided. A pixel is a fixed dimension everywhere.
      */
     fun addTo(host: ViewGroup) {
-        children.forEach { host.addView(it.view, 0, 0) }
+        children.forEach { host.addView(it.view, 1, 1) }
     }
 
     /**

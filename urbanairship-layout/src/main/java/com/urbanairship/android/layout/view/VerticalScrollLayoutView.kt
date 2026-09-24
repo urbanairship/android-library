@@ -123,10 +123,15 @@ internal class VerticalScrollLayoutView(
         // sizes to its content would grow by its own padding on every pass and never shrink.
         // Nothing to hold when the size isn't imposed -- then the viewport *is* the content.
         if (!videoBackgrounds.isEmpty) {
-            contentFrame.minimumHeight = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+            val frameMinimum = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
                 (MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom).coerceAtLeast(0)
             } else {
                 0
+            }
+            // `setMinimum*` always requests a layout, so writing the same value back would
+            // dirty the frame on every measure pass.
+            if (contentFrame.minimumHeight != frameMinimum) {
+                contentFrame.minimumHeight = frameMinimum
             }
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -150,10 +155,9 @@ internal class VerticalScrollLayoutView(
         // Before sizing below, which reads these bounds to work out a layer's spare room --
         // `dispatchDraw` refreshes them too, but that runs after this.
         updateTravelBounds()
-        // This view can already be scrolled before any scroll event reaches us: RTL rests a
-        // horizontal scroll view at its far end, and a restored instance state starts wherever
-        // it left off. Read here, the layer starts where the content actually is rather than
-        // snapping there on the first scroll.
+        // This view can already be scrolled before any scroll event reaches us -- a restored
+        // instance state starts wherever it left off. Read here, the layer starts where the
+        // content actually is rather than snapping there on the first scroll.
         backgroundsPainter.offsetPx = scrollY.toFloat()
         // Sized against the viewport, not the scrolling content it sits inside.
         videoBackgrounds.placeInto(backgroundsPainter, width, height)

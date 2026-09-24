@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.MediaUrlSelector
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.MediaView
@@ -75,7 +76,13 @@ internal class MediaModel(
      * stray pause event (e.g. the WebView pausing its own media pipeline during a
      * RecyclerView relayout) must not be allowed to latch the video off.
      */
-    private val hasPlaybackControls: Boolean = viewInfo.video?.showControls ?: false
+    private val hasPlaybackControls: Boolean = when (viewInfo.mediaType) {
+        // A youtube/vimeo embed draws its own player chrome whatever `show_controls` says -- the
+        // flag never even reaches their HTML -- so a pause arriving from one is always the
+        // viewer's, and must not be treated as a stray event to play back over.
+        MediaType.YOUTUBE, MediaType.VIMEO -> true
+        else -> viewInfo.video?.showControls ?: false
+    }
 
     /**
      * Local play intent used when there is no VideoController (videoState is null).

@@ -212,10 +212,17 @@ internal class PagerView(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        super.onLayout(changed, l, t, r, b)
+        // Both of these are read back during `super.onLayout`, not after it: laying the track
+        // out reports its content offset straight to the listener above, which moves the layers.
+        // Left until afterwards, that first pass runs against a stale direction and stale bounds
+        // and nothing re-runs it -- an RTL pager restored onto a later page would place its
+        // layer with an unmirrored offset and leave it there.
         backgroundsPainter.isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         updateTravelBounds()
+        super.onLayout(changed, l, t, r, b)
         videoBackgrounds.placeInto(backgroundsPainter, width, height)
+        // Sized above, then moved -- the same order both scroll hosts use.
+        videoBackgrounds.applyParallax(backgroundsPainter, width, height)
     }
 
     /**

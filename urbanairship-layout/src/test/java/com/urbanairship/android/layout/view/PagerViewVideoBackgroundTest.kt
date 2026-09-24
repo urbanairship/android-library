@@ -152,8 +152,8 @@ public class PagerViewVideoBackgroundTest {
             0, videoChild.left
         )
         assertEquals(
-            "and its layout params stay at zero, so it never decides the host's own size",
-            0, videoChild.layoutParams.width
+            "and its layout params stay at a pixel, so it never decides the host's own size",
+            1, videoChild.layoutParams.width
         )
     }
 

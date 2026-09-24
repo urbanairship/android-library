@@ -45,12 +45,12 @@ import org.robolectric.RobolectricTestRunner
  * pins the invariant ("the stack behaves as though the layer weren't there") rather than any
  * particular figure, and holds regardless of density or how the DSL sizes get resolved.
  *
- * The queries matter more than the positions. A layer is added at zero size and never given
- * layout params, so even left in the walk it would displace nothing; but it is a real child with
- * `lp.width == 0` and no percent, which is exactly the shape `statesLength` reads as "this child
- * states a definite length". Left in, a stack of `auto` content would claim a length it hasn't
- * got, and every ancestor resolving a percentage against it would resolve against the wrong
- * thing.
+ * The queries matter more than the positions. A layer is added at a single pixel and never given
+ * real layout params, so even left in the walk it displaces nothing worth seeing; but it is a
+ * real child with a fixed `lp.width` and no percent, which is exactly the shape `statesLength`
+ * reads as "this child states a definite length". Left in, a stack of `auto` content would claim
+ * a length it hasn't got, and every ancestor resolving a percentage against it would resolve
+ * against the wrong thing.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -116,8 +116,8 @@ public class LinearLayoutVideoBackgroundStackTest {
     }
 
     /**
-     * `statesLength` reads `lp.width`/`lp.height` straight off each child, and a layer's are `0`
-     * with no percent -- the shape it treats as a stated length. The stack's answer has to be the
+     * `statesLength` reads `lp.width`/`lp.height` straight off each child, and a layer's are a
+     * fixed pixel with no percent -- the shape it treats as a stated length. The stack's answer has to be the
      * one it would give with no layer at all.
      */
     @Test
@@ -161,8 +161,8 @@ public class LinearLayoutVideoBackgroundStackTest {
         assertEquals(Rect(0, 0, view.width, view.height), layer.frame)
         assertTrue("and the host has real bounds to have filled", view.width > 0 && view.height > 0)
         assertEquals(
-            "its layout params stay at zero, so it never decides the host's own size",
-            0, layer.layoutParams.width
+            "its layout params stay at a pixel, so it never decides the host's own size",
+            1, layer.layoutParams.width
         )
     }
 
