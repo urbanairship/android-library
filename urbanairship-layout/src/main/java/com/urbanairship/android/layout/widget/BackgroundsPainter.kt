@@ -77,6 +77,15 @@ internal class BackgroundsPainter(
 
     private data class Layer(val background: Background, val parallax: Parallax?)
 
+    private companion object {
+        /**
+         * Top to bottom, which is what a `gradient` with no `angle` means -- the same default
+         * iOS (`angle ?? 180`) and web (`gradient.angle ?? 180`) apply. `0` would run it
+         * bottom-to-top, rendering every angle-less gradient upside down.
+         */
+        const val DEFAULT_GRADIENT_ANGLE = 180f
+    }
+
     private var layers: List<Layer> = emptyList()
 
     /** `null`/empty draws nothing. Replacing the list drops any in-flight image loads. */
@@ -352,7 +361,7 @@ internal class BackgroundsPainter(
         // One stop has nothing to interpolate toward: it is that colour, everywhere.
         val shader: Shader? = if (colors.size < 2) null else when (gradient.style) {
             Gradient.Style.LINEAR -> {
-                val line = linearGradientLine(gradient.angle ?: 0f, drawWidth.toFloat(), drawHeight.toFloat())
+                val line = linearGradientLine(gradient.angle ?: DEFAULT_GRADIENT_ANGLE, drawWidth.toFloat(), drawHeight.toFloat())
                 LinearGradient(line.x0, line.y0, line.x1, line.y1, colors, positions, Shader.TileMode.CLAMP)
             }
             Gradient.Style.RADIAL -> {

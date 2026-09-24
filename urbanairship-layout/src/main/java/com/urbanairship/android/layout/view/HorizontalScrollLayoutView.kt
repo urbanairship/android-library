@@ -117,6 +117,18 @@ internal class HorizontalScrollLayoutView(
             percentBaseWidth = (MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight)
                 .coerceAtLeast(0)
         }
+        // A layer is sized to the viewport but hosted in the content frame, which this view
+        // clips to -- content shorter than the viewport would cut it off. Held to the viewport
+        // the parent imposes, never to our own measured size: taken from the latter, a host that
+        // sizes to its content would grow by its own padding on every pass and never shrink.
+        // Nothing to hold when the size isn't imposed -- then the viewport *is* the content.
+        if (!videoBackgrounds.isEmpty) {
+            contentFrame.minimumWidth = if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY) {
+                (MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd).coerceAtLeast(0)
+            } else {
+                0
+            }
+        }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
@@ -130,17 +142,6 @@ internal class HorizontalScrollLayoutView(
     private fun updateTravelBounds() {
         backgroundsPainter.offsetBoundsPx =
             0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        // A layer is sized to the viewport, but it is hosted in the content frame, which this
-        // view clips to -- content shorter than the viewport would cut the layer off short.
-        // Only the frame is held to the viewport; the content inside it still wraps, so the
-        // scroll range is unchanged (content that already fits has no range either way).
-        if (!videoBackgrounds.isEmpty) {
-            contentFrame.minimumWidth = w
-        }
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
