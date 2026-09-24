@@ -56,7 +56,7 @@ public class PagerViewVideoBackgroundTest {
         val pagerModel: PagerModel = mockk(relaxed = true) {
             every { viewInfo } returns mockk(relaxed = true) {
                 every { backgrounds } returns listOf(
-                    ParallaxBackground(background = mediaBackground, parallax = Parallax(Parallax.Axis.HORIZONTAL, 0.3f))
+                    ParallaxBackground(background = mediaBackground, parallax = Parallax(0.3f))
                 )
             }
             every { pages } returns emptyList()
@@ -123,7 +123,7 @@ public class PagerViewVideoBackgroundTest {
                 every { backgrounds } returns listOf(
                     ParallaxBackground(
                         background = mediaBackground,
-                        parallax = Parallax(Parallax.Axis.HORIZONTAL, factor)
+                        parallax = Parallax(factor)
                     )
                 )
             }

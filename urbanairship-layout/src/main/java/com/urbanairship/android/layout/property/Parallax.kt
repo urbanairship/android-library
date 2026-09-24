@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.property
 
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
-import com.urbanairship.json.JsonValue
 
 /**
  * How far a [ParallaxBackground] layer moves relative to the scroll or drag position of the
@@ -11,38 +10,21 @@ import com.urbanairship.json.JsonValue
  *
  * [factor] `0` pins the layer in place; `1` moves it in lockstep with the content (no visible
  * parallax); negative reverses direction.
+ *
+ * There is no axis to state: a host has exactly one scroll or drag position, and already knows
+ * which way it runs -- a pager drags horizontally, a `scroll_layout` scrolls along its own
+ * `direction`. A layer travels along that or not at all, and `factor: 0` is how it says "not at
+ * all".
  */
 internal class Parallax constructor(
-    @JvmField val axis: Axis,
     @JvmField val factor: Float
 ) {
 
-    enum class Axis(private val value: String) {
-        VERTICAL("vertical"),
-        HORIZONTAL("horizontal"),
-        BOTH("both");
-
-        companion object {
-
-            @Throws(JsonException::class)
-            fun from(value: JsonValue): Axis {
-                val content = value.requireString().lowercase()
-                return entries.firstOrNull { it.value == content }
-                    ?: throw JsonException("Unknown Parallax.Axis value: $value")
-            }
-        }
-    }
-
     companion object {
-        private const val KEY_AXIS = "axis"
         private const val KEY_FACTOR = "factor"
 
         @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): Parallax {
-            return Parallax(
-                axis = Axis.from(json.require(KEY_AXIS)),
-                factor = json.require(KEY_FACTOR).getDouble(0.0).toFloat()
-            )
-        }
+        fun fromJson(json: JsonMap): Parallax =
+            Parallax(factor = json.require(KEY_FACTOR).getDouble(0.0).toFloat())
     }
 }

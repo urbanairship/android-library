@@ -19,6 +19,7 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.BlendMode
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Gradient
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
@@ -86,11 +87,38 @@ internal class BackgroundsPainter(
             mediaViews.clear()
         }
 
-    /** Only `Pager`/`ScrollLayout` ever call this -- see the class doc. */
-    fun setParallaxBackgrounds(value: List<ParallaxBackground>?) {
+    /**
+     * Only `Pager`/`ScrollLayout` ever call this -- see the class doc.
+     *
+     * @param direction the one axis this host can move a layer along: a pager drags
+     *   horizontally, a `ScrollLayout` scrolls along its own `direction`.
+     */
+    fun setParallaxBackgrounds(value: List<ParallaxBackground>?, direction: Direction) {
         layers = value.orEmpty().map { Layer(it.background, it.parallax) }
+        this.direction = direction
         mediaViews.clear()
     }
+
+    /**
+     * The axis the host moves layers along, or `null` for a host that moves none.
+     *
+     * A host has exactly one scroll or drag position, so this is the only axis any layer of its
+     * can ever travel on -- which is why a layer states only a [Parallax.factor], never an axis
+     * of its own.
+     */
+    private var direction: Direction? = null
+
+    /** How much of the host's own movement this layer takes, or `0` for one that doesn't move. */
+    private fun factorFor(parallax: Parallax?): Float =
+        if (direction == null) 0f else parallax?.factor ?: 0f
+
+    /** The host's box along [direction]. */
+    private fun boxAlongHostAxis(width: Int, height: Int): Int =
+        if (direction == Direction.HORIZONTAL) width else height
+
+    /** Pairs [value] with `0` on whichever axis the host doesn't drive. */
+    private fun <T> alongHostAxis(value: T, zero: T): Pair<T, T> =
+        if (direction == Direction.HORIZONTAL) value to zero else zero to value
 
     /**
      * The driving host's current scroll/drag position, in pixels. `0` by default. Setting this
@@ -181,15 +209,12 @@ internal class BackgroundsPainter(
      * otherwise, a long scroll would ask a layer to travel arbitrarily far from its box.
      */
     fun parallaxTranslation(parallax: Parallax?, width: Int, height: Int): Pair<Float, Float> {
-        val dx = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
-            val (leading, trailing) = oversizeFor(parallax.factor, width)
-            (-parallax.factor * offsetPx).coerceIn(-trailing.toFloat(), leading.toFloat())
-        } else 0f
-        val dy = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
-            val (leading, trailing) = oversizeFor(parallax.factor, height)
-            (-parallax.factor * offsetPx).coerceIn(-trailing.toFloat(), leading.toFloat())
-        } else 0f
-        return dx to dy
+        val factor = factorFor(parallax)
+        if (factor == 0f) return 0f to 0f
+
+        val (leading, trailing) = oversizeFor(factor, boxAlongHostAxis(width, height))
+        val delta = (-factor * offsetPx).coerceIn(-trailing.toFloat(), leading.toFloat())
+        return alongHostAxis(delta, 0f)
     }
 
     /**
@@ -208,13 +233,11 @@ internal class BackgroundsPainter(
      * canvas-painted one.
      */
     fun parallaxOversize(parallax: Parallax?, width: Int, height: Int): Pair<Int, Int> {
-        val x = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
-            oversizeFor(parallax.factor, width).let { (leading, trailing) -> leading + trailing }
-        } else 0
-        val y = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
-            oversizeFor(parallax.factor, height).let { (leading, trailing) -> leading + trailing }
-        } else 0
-        return x to y
+        val factor = factorFor(parallax)
+        if (factor == 0f) return 0 to 0
+
+        val (leading, trailing) = oversizeFor(factor, boxAlongHostAxis(width, height))
+        return alongHostAxis(leading + trailing, 0)
     }
 
     /**
@@ -226,13 +249,10 @@ internal class BackgroundsPainter(
      * whenever [offsetBoundsPx] isn't itself centered on `0`, which is the common case.
      */
     fun parallaxLeadingOversize(parallax: Parallax?, width: Int, height: Int): Pair<Int, Int> {
-        val x = if (parallax != null && parallax.axis != Parallax.Axis.VERTICAL) {
-            oversizeFor(parallax.factor, width).first
-        } else 0
-        val y = if (parallax != null && parallax.axis != Parallax.Axis.HORIZONTAL) {
-            oversizeFor(parallax.factor, height).first
-        } else 0
-        return x to y
+        val factor = factorFor(parallax)
+        if (factor == 0f) return 0 to 0
+
+        return alongHostAxis(oversizeFor(factor, boxAlongHostAxis(width, height)).first, 0)
     }
 
     /**
@@ -276,14 +296,10 @@ internal class BackgroundsPainter(
      */
     private fun drawLayer(canvas: Canvas, layer: Layer, width: Int, height: Int) {
         val (dx, dy) = parallaxTranslation(layer.parallax, width, height)
-        val (leadingX, trailingX) = layer.parallax
-            ?.takeIf { it.axis != Parallax.Axis.VERTICAL }
-            ?.let { oversizeFor(it.factor, width) } ?: (0 to 0)
-        val (leadingY, trailingY) = layer.parallax
-            ?.takeIf { it.axis != Parallax.Axis.HORIZONTAL }
-            ?.let { oversizeFor(it.factor, height) } ?: (0 to 0)
-        val drawWidth = width + leadingX + trailingX
-        val drawHeight = height + leadingY + trailingY
+        val (leadingX, leadingY) = parallaxLeadingOversize(layer.parallax, width, height)
+        val (oversizeX, oversizeY) = parallaxOversize(layer.parallax, width, height)
+        val drawWidth = width + oversizeX
+        val drawHeight = height + oversizeY
 
         canvas.save()
         canvas.translate(dx - leadingX, dy - leadingY)

@@ -59,7 +59,7 @@ internal class VerticalScrollLayoutView(
     private val contentFrame = ScrollContentFrame(context)
 
     init {
-        backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds)
+        backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds, model.viewInfo.direction)
         backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         isFillViewport = false
         clipToOutline = true

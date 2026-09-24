@@ -10,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.property.Background
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ParallaxBackground
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.images.ImageRequestOptions
@@ -62,7 +63,7 @@ public class BackgroundsPainterParallaxAlignmentTest {
     @Test
     public fun aPinnedGradientLayerSweepsTheSameAsAnUnparallaxedOne() {
         val painter = BackgroundsPainter(context, viewEnvironment) {}
-        painter.setParallaxBackgrounds(twoStopGradient(parallaxJson = PINNED_HORIZONTAL_PARALLAX))
+        painter.setParallaxBackgrounds(twoStopGradient(parallaxJson = PINNED_HORIZONTAL_PARALLAX), Direction.HORIZONTAL)
         val bitmap = Bitmap.createBitmap(300, 200, Bitmap.Config.ARGB_8888)
         painter.draw(Canvas(bitmap), 300, 200)
 
@@ -92,8 +93,9 @@ public class BackgroundsPainterParallaxAlignmentTest {
 
         val pinned = BackgroundsPainter(context, viewEnvironment) {}
         pinned.setParallaxBackgrounds(
-            fitCropImage(parallaxJson = """{ "axis": "horizontal", "factor": 0 }""")
-        )
+            fitCropImage(parallaxJson = """{ "factor": 0 }""")
+        ,
+            Direction.HORIZONTAL)
         val pinnedBitmap = Bitmap.createBitmap(900, 600, Bitmap.Config.ARGB_8888)
         pinned.draw(Canvas(pinnedBitmap), 900, 600)
 
@@ -133,8 +135,9 @@ public class BackgroundsPainterParallaxAlignmentTest {
 
         val painter = BackgroundsPainter(context, viewEnvironment) {}
         painter.setParallaxBackgrounds(
-            fitCropImage(parallaxJson = """{ "axis": "horizontal", "factor": 0.4 }""")
-        )
+            fitCropImage(parallaxJson = """{ "factor": 0.4 }""")
+        ,
+            Direction.HORIZONTAL)
         painter.offsetBoundsPx = -900f..900f
 
         for (offsetPx in floatArrayOf(0f, 450f, 900f, -900f)) {
@@ -202,7 +205,7 @@ public class BackgroundsPainterParallaxAlignmentTest {
     )
 
     private companion object {
-        private const val PINNED_HORIZONTAL_PARALLAX = """{ "axis": "horizontal", "factor": 0 }"""
+        private const val PINNED_HORIZONTAL_PARALLAX = """{ "factor": 0 }"""
     }
 
     /** A synchronous loader handing back a square bitmap with a horizontal marker band. */

@@ -9,6 +9,7 @@ import android.widget.ImageView
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ParallaxBackground
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.images.ImageRequestOptions
@@ -79,7 +80,7 @@ public class BackgroundsPainterParallaxSizingTest {
         val painter = BackgroundsPainter(context, viewEnvironment) {}
 
         fun leftEdgePixelAt(offsetPx: Float): Int {
-            painter.setParallaxBackgrounds(maxFactorHorizontalImage())
+            painter.setParallaxBackgrounds(maxFactorHorizontalImage(), Direction.HORIZONTAL)
             painter.offsetPx = offsetPx
             val bitmap = Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888)
             painter.draw(Canvas(bitmap), 100, 50)
@@ -106,7 +107,7 @@ public class BackgroundsPainterParallaxSizingTest {
         every { Airship.imageLoader } returns SolidColorImageLoader(Color.RED)
 
         val painter = BackgroundsPainter(context, viewEnvironment) {}
-        painter.setParallaxBackgrounds(maxFactorHorizontalImage())
+        painter.setParallaxBackgrounds(maxFactorHorizontalImage(), Direction.HORIZONTAL)
         // The largest drag distance a Pager reports (see `BackgroundsPainter`'s class doc: the
         // offset from the *nearest* page, bounded to one page width) -- with `factor: 1`, this is
         // exactly the far end of the clamped range.
@@ -125,7 +126,7 @@ public class BackgroundsPainterParallaxSizingTest {
         every { Airship.imageLoader } returns SolidColorImageLoader(Color.RED)
 
         val painter = BackgroundsPainter(context, viewEnvironment) {}
-        painter.setParallaxBackgrounds(maxFactorHorizontalImage())
+        painter.setParallaxBackgrounds(maxFactorHorizontalImage(), Direction.HORIZONTAL)
         // Stands in for `ScrollLayout`'s raw, unbounded `scrollY` -- far past one box-width.
         painter.offsetPx = 1_000_000f
 
@@ -144,7 +145,7 @@ public class BackgroundsPainterParallaxSizingTest {
                   {
                     "type": "color",
                     "color": { "default": { "hex": "#FF0000", "alpha": 1 } },
-                    "parallax": { "axis": "horizontal", "factor": 1 }
+                    "parallax": { "factor": 1 }
                   }
                 ]
                 """.trimIndent()
@@ -152,7 +153,7 @@ public class BackgroundsPainterParallaxSizingTest {
         )
 
         val painter = BackgroundsPainter(context, viewEnvironment) {}
-        painter.setParallaxBackgrounds(backgrounds)
+        painter.setParallaxBackgrounds(backgrounds, Direction.HORIZONTAL)
         painter.offsetPx = 100f
 
         val bitmap = Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888)
@@ -181,7 +182,7 @@ public class BackgroundsPainterParallaxSizingTest {
         )
 
         val painter = BackgroundsPainter(context, viewEnvironment) {}
-        painter.setParallaxBackgrounds(backgrounds)
+        painter.setParallaxBackgrounds(backgrounds, Direction.HORIZONTAL)
         painter.offsetPx = 100f
 
         val bitmap = Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888)
@@ -204,7 +205,7 @@ public class BackgroundsPainterParallaxSizingTest {
     @Test
     public fun aParallaxingGradientSweepsAcrossTheBoxRatherThanClampingFlat() {
         val painter = BackgroundsPainter(context, viewEnvironment) {}
-        painter.setParallaxBackgrounds(halfFactorHorizontalGradient())
+        painter.setParallaxBackgrounds(halfFactorHorizontalGradient(), Direction.HORIZONTAL)
         painter.offsetBoundsPx = 0f..200f
         painter.offsetPx = 0f
 
@@ -240,7 +241,7 @@ public class BackgroundsPainterParallaxSizingTest {
                     { "color": { "default": { "type": "hex", "hex": "#0000FF", "alpha": 1 } }, "position": 1 }
                   ]
                 },
-                "parallax": { "axis": "horizontal", "factor": 0.5 }
+                "parallax": { "factor": 0.5 }
               }
             ]
             """.trimIndent()
@@ -254,7 +255,7 @@ public class BackgroundsPainterParallaxSizingTest {
               {
                 "type": "media", "media_type": "image", "url": "https://example/photo.jpg",
                 "media_fit": "fit_crop",
-                "parallax": { "axis": "horizontal", "factor": 1 }
+                "parallax": { "factor": 1 }
               }
             ]
             """.trimIndent()

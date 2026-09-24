@@ -133,7 +133,7 @@ public class VerticalScrollLayoutParallaxScrollTest {
                 {
                   "type": "color",
                   "color": { "default": { "hex": "#FF0000", "alpha": 1 } },
-                  "parallax": { "axis": "vertical", "factor": $factor }
+                  "parallax": { "factor": $factor }
                 }
               ],
               "view": {

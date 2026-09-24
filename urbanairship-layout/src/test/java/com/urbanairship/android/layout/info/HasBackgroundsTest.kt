@@ -49,7 +49,7 @@ public class HasBackgroundsTest {
                 "backgrounds": [
                     {
                         "type": "media", "media_type": "image", "url": "https://example/hero.jpg",
-                        "media_fit": "fit_crop", "parallax": { "axis": "vertical", "factor": 0.4 }
+                        "media_fit": "fit_crop", "parallax": { "factor": 0.4 }
                     }
                 ]
             }

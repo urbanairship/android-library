@@ -24,7 +24,7 @@ import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.property.Background as BackgroundLayer
-import com.urbanairship.android.layout.property.Parallax
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.BackgroundsPainter
@@ -155,7 +155,7 @@ internal class PagerView(
     }
 
     init {
-        backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds)
+        backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds, Direction.HORIZONTAL)
         backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         isFocusable = true
         isFocusedByDefault = true

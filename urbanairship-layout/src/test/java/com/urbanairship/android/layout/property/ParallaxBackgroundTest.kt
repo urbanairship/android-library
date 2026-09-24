@@ -21,13 +21,12 @@ public class ParallaxBackgroundTest {
               "media_type": "image",
               "url": "https://example/hero.jpg",
               "media_fit": "fit_crop",
-              "parallax": { "axis": "vertical", "factor": 0.4 }
+              "parallax": { "factor": 0.4 }
             }
         """.trimIndent()
 
         val layer = ParallaxBackground.fromJson(JsonValue.parseString(json).requireMap())
         assertTrue(layer.background is Background.MediaBackground)
-        assertEquals(Parallax.Axis.VERTICAL, layer.parallax?.axis)
         assertEquals(0.4f, layer.parallax?.factor)
     }
 
@@ -51,7 +50,7 @@ public class ParallaxBackgroundTest {
               { "type": "color", "color": { "default": { "type": "hex", "hex": "#0B1B33", "alpha": 1 } } },
               {
                 "type": "media", "media_type": "image", "url": "https://example/mid.jpg",
-                "media_fit": "fit_crop", "parallax": { "axis": "vertical", "factor": 0.5 }
+                "media_fit": "fit_crop", "parallax": { "factor": 0.5 }
               }
             ]
         """.trimIndent()
