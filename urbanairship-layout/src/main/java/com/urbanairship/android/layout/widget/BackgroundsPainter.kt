@@ -240,7 +240,13 @@ internal class BackgroundsPainter(
 
         val (leading, trailing) = oversizeFor(factor, boxAlongHostAxis(width, height))
         val delta = (-factor * offsetPx).coerceIn(-trailing.toFloat(), leading.toFloat())
-        return alongHostAxis(delta, 0f)
+
+        // A layer travels *into* its own slack, and right-to-left puts that slack on the other
+        // side (see `parallaxLeadingOversize`), so it has to travel the other way to reach it.
+        // Mirroring where it rests without mirroring where it goes walks its trailing edge into
+        // view, leaving a strip of whatever is underneath.
+        val mirrored = if (isRtl && direction == Direction.HORIZONTAL) -delta else delta
+        return alongHostAxis(mirrored, 0f)
     }
 
     /**

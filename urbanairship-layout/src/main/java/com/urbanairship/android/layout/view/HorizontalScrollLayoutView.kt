@@ -82,7 +82,7 @@ internal class HorizontalScrollLayoutView(
         // Fires on every scroll step, drag or fling/settle alike -- see `BackgroundsPainter`'s
         // class doc for why that's what keeps a parallax layer in step with no separate animation.
         setOnScrollChangeListener { _, scrollX, _, _, _ ->
-            backgroundsPainter.offsetPx = scrollX.toFloat()
+            backgroundsPainter.offsetPx = contentOffset()
             pinVideoBackgrounds()
             invalidate()
         }
@@ -139,6 +139,21 @@ internal class HorizontalScrollLayoutView(
      * travel to oversize a layer for and never fires a scroll event to say so, and content can
      * grow after the first layout (an image loading in) without resizing this view.
      */
+    /**
+     * How far the content has travelled from its own start, which is `0` at rest either way.
+     *
+     * A right-to-left scroll view rests at its physical end, so its raw `scrollX` starts at the
+     * full range and counts down -- taken as-is, a layer would start fully travelled. iOS
+     * measures from the trailing edge here for the same reason.
+     */
+    private fun contentOffset(): Float {
+        if (layoutDirection != LAYOUT_DIRECTION_RTL) return scrollX.toFloat()
+
+        val range = (computeHorizontalScrollRange() - computeHorizontalScrollExtent())
+            .coerceAtLeast(0).toFloat()
+        return range - scrollX.toFloat()
+    }
+
     private fun updateTravelBounds() {
         backgroundsPainter.offsetBoundsPx =
             0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()
@@ -154,7 +169,7 @@ internal class HorizontalScrollLayoutView(
         // horizontal scroll view at its far end, and a restored instance state starts wherever
         // it left off. Read here, the layer starts where the content actually is rather than
         // snapping there on the first scroll.
-        backgroundsPainter.offsetPx = scrollX.toFloat()
+        backgroundsPainter.offsetPx = contentOffset()
         // Sized against the viewport, not the scrolling content it sits inside.
         videoBackgrounds.placeInto(backgroundsPainter, width, height)
         pinVideoBackgrounds()
