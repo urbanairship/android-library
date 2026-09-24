@@ -228,6 +228,52 @@ public class BackgroundsPainterParallaxSizingTest {
         )
     }
 
+    /**
+     * A layer is drawn larger than its host's box to cover its own parallax travel, so the box
+     * has to be clipped -- or the spare room paints over whatever sits beside the host.
+     *
+     * `saveLayer` bounds its contents as well as isolating them, so a stack that blends gets this
+     * for free; one that doesn't, and so skips the offscreen buffer, has to clip explicitly. A
+     * real-device report caught the difference as neighbouring rows of a list bleeding into each
+     * other.
+     */
+    @Test
+    public fun anOversizedLayerDoesNotPaintOutsideItsHostsBox() {
+        val box = 50
+        val painter = BackgroundsPainter(context, viewEnvironment) {}
+        // No blend mode anywhere, so this is the stack that draws without an offscreen buffer.
+        painter.setParallaxBackgrounds(maxFactorHorizontalColor(), Direction.HORIZONTAL)
+        painter.offsetBoundsPx = 0f..box.toFloat()
+
+        // Deliberately larger than the box the painter is told to fill.
+        val bitmap = Bitmap.createBitmap(box * 2, box, Bitmap.Config.ARGB_8888)
+        painter.draw(Canvas(bitmap), box, box)
+
+        val outside = bitmap.getPixel(box + box / 2, box / 2)
+        assertEquals(
+            "everything past the host's own width should be untouched -- got #%08X, so the " +
+                "layer's spare room painted outside the box".format(outside),
+            0, outside
+        )
+        assertNotEquals(
+            "and the box itself should still be painted",
+            0, bitmap.getPixel(box / 2, box / 2)
+        )
+    }
+
+    private fun maxFactorHorizontalColor(): List<ParallaxBackground> = ParallaxBackground.fromJsonList(
+        JsonValue.parseString(
+            """
+            [
+              {
+                "type": "color", "color": { "default": { "hex": "#FF0000", "alpha": 1 } },
+                "parallax": { "factor": 1 }
+              }
+            ]
+            """.trimIndent()
+        ).optList()
+    )
+
     private fun halfFactorHorizontalGradient(): List<ParallaxBackground> = ParallaxBackground.fromJsonList(
         JsonValue.parseString(
             """

@@ -305,7 +305,11 @@ internal class BackgroundsPainter(
         val saveCount = if (needsIsolation) {
             canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
         } else {
-            canvas.save()
+            // `saveLayer` bounds every draw to that rect as well as isolating it; a plain `save`
+            // isolates nothing *and* bounds nothing, so the box has to be clipped explicitly or
+            // a layer drawn oversized for its parallax travel paints over whatever sits beside
+            // the host.
+            canvas.save().also { canvas.clipRect(0f, 0f, width.toFloat(), height.toFloat()) }
         }
         try {
             toDraw.forEachIndexed { index, layer ->
