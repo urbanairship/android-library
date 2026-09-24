@@ -122,6 +122,15 @@ internal class BackgroundsPainter(
      */
     private var direction: Direction? = null
 
+    /**
+     * Whether the host lays out right-to-left, which is the side its layers' spare room sits on.
+     *
+     * A layer rests against the host's *leading* edge with its slack trailing away behind it, and
+     * leading is the right-hand side in a right-to-left layout. Set from the host's own
+     * `layoutDirection` on every layout, since a scene can be shown either way.
+     */
+    var isRtl: Boolean = false
+
     /** How much of the host's own movement this layer takes, or `0` for one that doesn't move. */
     private fun factorFor(parallax: Parallax?): Float =
         if (direction == null) 0f else parallax?.factor ?: 0f
@@ -269,7 +278,13 @@ internal class BackgroundsPainter(
         val factor = factorFor(parallax)
         if (factor == 0f) return 0 to 0
 
-        return alongHostAxis(oversizeFor(factor, boxAlongHostAxis(width, height)).first, 0)
+        val (leading, trailing) = oversizeFor(factor, boxAlongHostAxis(width, height))
+        // How much of the spare room sits to the *physical* left (or top) of the host's own box.
+        // A layer rests against the leading edge, which a right-to-left layout puts on the right
+        // -- so its slack hangs off the left there, and the whole layer sits shifted back by it.
+        // iOS gets this from a `leading`-aligned frame, which resolves the same way.
+        val beforeBox = if (isRtl && direction == Direction.HORIZONTAL) trailing else leading
+        return alongHostAxis(beforeBox, 0)
     }
 
     /**

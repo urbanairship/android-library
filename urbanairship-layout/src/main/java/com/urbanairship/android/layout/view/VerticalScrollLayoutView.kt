@@ -146,6 +146,7 @@ internal class VerticalScrollLayoutView(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
+        backgroundsPainter.isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         // Before sizing below, which reads these bounds to work out a layer's spare room --
         // `dispatchDraw` refreshes them too, but that runs after this.
         updateTravelBounds()

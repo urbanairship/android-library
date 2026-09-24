@@ -213,6 +213,7 @@ internal class PagerView(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
+        backgroundsPainter.isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         updateTravelBounds()
         videoBackgrounds.placeInto(backgroundsPainter, width, height)
     }
