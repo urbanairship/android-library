@@ -30,6 +30,9 @@ import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.isWithinBounds
 import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.backgroundsBoxHeight
+import com.urbanairship.android.layout.widget.backgroundsBoxWidth
+import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
@@ -172,12 +175,13 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
-        videoBackgrounds.placeInto(backgroundsPainter, width, height)
+        videoBackgrounds.placeInto(
+            backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, paddingLeft, paddingTop
+        )
     }
 
-    // A `backgrounds` layer paints over the host's own rounded border, so the host has to clip
-    // to that radius or the layer squares its corners off inside the stroke. `Container` and
-    // `LinearLayout` already did this; the hosts that gained `backgrounds` needed it too.
+    // A `backgrounds` layer fills the host's box corner to corner, so a rounded host has to clip
+    // to its own radius or the layer squares those corners off again.
     override fun setClipPathBorderRadius(borderRadius: Float) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
     }
@@ -187,7 +191,7 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        backgroundsPainter.drawLayersBefore(canvas, width, height)
+        paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
         super.dispatchDraw(canvas)
     }
 
@@ -197,7 +201,9 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
         // live pixels, so it goes down here rather than before the children.
         val attachedIndex = videoBackgrounds.indexOf(child)
         if (attachedIndex >= 0) {
-            backgroundsPainter.drawLayersAfter(canvas, width, height, attachedIndex)
+            paintBackgroundsBox(canvas) { w, h ->
+                backgroundsPainter.drawLayersAfter(canvas, w, h, attachedIndex)
+            }
         }
         return result
     }

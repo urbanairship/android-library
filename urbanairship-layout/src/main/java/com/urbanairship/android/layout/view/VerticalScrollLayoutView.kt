@@ -18,6 +18,9 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.VerticalScrollLayoutModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.backgroundsBoxHeight
+import com.urbanairship.android.layout.widget.backgroundsBoxWidth
+import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.ScrollContentFrame
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.PercentBaseProvider
@@ -67,11 +70,15 @@ internal class VerticalScrollLayoutView(
         contentView = model.view.createView(context, viewEnvironment, null)
         videoBackgrounds.addTo(contentFrame)
         contentFrame.videoBackgrounds = videoBackgrounds
+        // Already drawing into the content frame, which this view lays out inside its own padding
+        // -- so this canvas starts at the content box, and only the scroll has to be undone.
         contentFrame.drawLayersAfter = { canvas, attachedIndex ->
             canvas.save()
             canvas.translate(scrollX.toFloat(), scrollY.toFloat())
             try {
-                backgroundsPainter.drawLayersAfter(canvas, width, height, attachedIndex)
+                backgroundsPainter.drawLayersAfter(
+                    canvas, backgroundsBoxWidth, backgroundsBoxHeight, attachedIndex
+                )
             } finally {
                 canvas.restore()
             }
@@ -159,13 +166,16 @@ internal class VerticalScrollLayoutView(
         // instance state starts wherever it left off. Read here, the layer starts where the
         // content actually is rather than snapping there on the first scroll.
         backgroundsPainter.offsetPx = scrollY.toFloat()
-        // Sized against the viewport, not the scrolling content it sits inside.
-        videoBackgrounds.placeInto(backgroundsPainter, width, height)
+        // Sized against the viewport, not the scrolling content it sits inside. Placed at the
+        // content frame's own origin, which already sits inside this view's padding.
+        videoBackgrounds.placeInto(backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight)
         pinVideoBackgrounds()
     }
 
     private fun pinVideoBackgrounds() {
-        videoBackgrounds.applyParallax(backgroundsPainter, width, height, 0f, scrollY.toFloat())
+        videoBackgrounds.applyParallax(
+            backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, 0f, scrollY.toFloat()
+        )
     }
 
     override fun dispatchDraw(canvas: Canvas) {
@@ -182,7 +192,7 @@ internal class VerticalScrollLayoutView(
         canvas.save()
         canvas.translate(scrollX.toFloat(), scrollY.toFloat())
         try {
-            backgroundsPainter.drawLayersBefore(canvas, width, height)
+            paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
         } finally {
             canvas.restore()
         }

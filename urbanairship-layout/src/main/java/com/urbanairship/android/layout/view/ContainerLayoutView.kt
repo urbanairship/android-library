@@ -30,6 +30,9 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.backgroundsBoxHeight
+import com.urbanairship.android.layout.widget.backgroundsBoxWidth
+import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
@@ -118,11 +121,13 @@ internal class ContainerLayoutView(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
-        videoBackgrounds.placeInto(backgroundsPainter, width, height)
+        videoBackgrounds.placeInto(
+            backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, paddingLeft, paddingTop
+        )
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        backgroundsPainter.drawLayersBefore(canvas, width, height)
+        paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
         super.dispatchDraw(canvas)
     }
 
@@ -132,7 +137,9 @@ internal class ContainerLayoutView(
         // live pixels, so it goes down here rather than before the children.
         val attachedIndex = videoBackgrounds.indexOf(child)
         if (attachedIndex >= 0) {
-            backgroundsPainter.drawLayersAfter(canvas, width, height, attachedIndex)
+            paintBackgroundsBox(canvas) { w, h ->
+                backgroundsPainter.drawLayersAfter(canvas, w, h, attachedIndex)
+            }
         }
         return result
     }

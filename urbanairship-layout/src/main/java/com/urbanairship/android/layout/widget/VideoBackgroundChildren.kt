@@ -105,8 +105,20 @@ internal class VideoBackgroundChildren(
      * keeps a layer from lengthening the scrolling content it lives inside on a scroll host.
      *
      * Call from `onLayout`, after the host has placed its own content.
+     *
+     * @param width the host's content box -- see [backgroundsBoxWidth].
+     * @param height the host's content box -- see [backgroundsBoxHeight].
+     * @param left where that box starts in the coordinates of whatever these children were added
+     *   to, which is `0` when they were added to the content box itself rather than to the host.
+     * @param top as [left], on the other axis.
      */
-    fun placeInto(painter: BackgroundsPainter, width: Int, height: Int) {
+    fun placeInto(
+        painter: BackgroundsPainter,
+        width: Int,
+        height: Int,
+        left: Int = 0,
+        top: Int = 0
+    ) {
         if (width <= 0 || height <= 0) return
 
         children.forEach { child ->
@@ -114,11 +126,13 @@ internal class VideoBackgroundChildren(
             val (leadingX, leadingY) = painter.parallaxLeadingOversize(child.parallax, width, height)
             val childWidth = width + oversizeX
             val childHeight = height + oversizeY
+            val childLeft = left - leadingX
+            val childTop = top - leadingY
             child.view.measure(
                 View.MeasureSpec.makeMeasureSpec(childWidth, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(childHeight, View.MeasureSpec.EXACTLY)
             )
-            child.view.layout(-leadingX, -leadingY, -leadingX + childWidth, -leadingY + childHeight)
+            child.view.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
         }
     }
 

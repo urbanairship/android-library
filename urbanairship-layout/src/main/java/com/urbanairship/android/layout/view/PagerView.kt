@@ -27,6 +27,9 @@ import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.backgroundsBoxHeight
+import com.urbanairship.android.layout.widget.backgroundsBoxWidth
+import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.PagerRecyclerView
@@ -181,7 +184,9 @@ internal class PagerView(
                 if (!backgroundsPainter.hasParallaxLayers && videoBackgrounds.isEmpty) return
 
                 backgroundsPainter.offsetPx = offsetPx
-                videoBackgrounds.applyParallax(backgroundsPainter, width, height)
+                videoBackgrounds.applyParallax(
+                    backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight
+                )
                 invalidate()
             }
         })
@@ -212,7 +217,7 @@ internal class PagerView(
      * a page count as much as a width.
      */
     private fun updateTravelBounds() {
-        backgroundsPainter.offsetBoundsPx = 0f..pagerTravelRangePx(width)
+        backgroundsPainter.offsetBoundsPx = 0f..pagerTravelRangePx(backgroundsBoxWidth)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -224,9 +229,11 @@ internal class PagerView(
         backgroundsPainter.isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         updateTravelBounds()
         super.onLayout(changed, l, t, r, b)
-        videoBackgrounds.placeInto(backgroundsPainter, width, height)
+        videoBackgrounds.placeInto(
+            backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, paddingLeft, paddingTop
+        )
         // Sized above, then moved -- the same order both scroll hosts use.
-        videoBackgrounds.applyParallax(backgroundsPainter, width, height)
+        videoBackgrounds.applyParallax(backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight)
     }
 
     /**
@@ -238,11 +245,10 @@ internal class PagerView(
      * arrive centred on the last page, rather than travelling symmetrically about the centre and
      * looking unmoved at both ends. iOS and web both place it this way.
      */
-    private fun pagerTravelRangePx(w: Int): Float = (model.pages.size * w).toFloat()
+    private fun pagerTravelRangePx(pageWidth: Int): Float = (model.pages.size * pageWidth).toFloat()
 
-    // A `backgrounds` layer paints over the host's own rounded border, so the host has to clip
-    // to that radius or the layer squares its corners off inside the stroke. `Container` and
-    // `LinearLayout` already did this; the hosts that gained `backgrounds` needed it too.
+    // A `backgrounds` layer fills the host's box corner to corner, so a rounded host has to clip
+    // to its own radius or the layer squares those corners off again.
     override fun setClipPathBorderRadius(borderRadius: Float) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
     }
@@ -256,7 +262,7 @@ internal class PagerView(
         // drawChild, once that child has actually drawn -- otherwise a blend_mode layer meant to
         // sit on top of the video (see PagerModel.videoBackgroundModels) would paint first and
         // land underneath it instead, since children always draw after this.
-        backgroundsPainter.drawLayersBefore(canvas, width, height)
+        paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
         super.dispatchDraw(canvas)
     }
 
@@ -264,7 +270,9 @@ internal class PagerView(
         val result = super.drawChild(canvas, child, drawingTime)
         val attachedIndex = videoBackgrounds.indexOf(child)
         if (attachedIndex >= 0) {
-            backgroundsPainter.drawLayersAfter(canvas, width, height, attachedIndex)
+            paintBackgroundsBox(canvas) { w, h ->
+                backgroundsPainter.drawLayersAfter(canvas, w, h, attachedIndex)
+            }
         }
         return result
     }
