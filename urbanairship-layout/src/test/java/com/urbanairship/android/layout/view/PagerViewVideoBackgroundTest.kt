@@ -182,6 +182,30 @@ public class PagerViewVideoBackgroundTest {
         )
     }
 
+    /**
+     * A pager that navigates by button alone still moves its layers.
+     *
+     * `disable_swipe` swaps in a `LayoutManager` that reports it cannot scroll horizontally, and
+     * `RecyclerView.computeHorizontalScrollOffset` answers `0` outright for one of those --
+     * however many pages the buttons have stepped through. Read from the pages themselves, the
+     * offset is the page index either way. Branching pagers are usually swipe-disabled, so this
+     * is what left their backgrounds sitting at rest through the whole route.
+     */
+    @Test
+    public fun aSwipeDisabledPagerStillReportsHowFarItHasStepped() {
+        val factor = 0.5f
+        val harness = pagerHarness(pageCount = 2, factor = factor, swipeDisabled = true)
+
+        assertEquals("at rest on the first page nothing has travelled", 0f, harness.layer.translationX)
+
+        harness.showPage(1)
+
+        assertEquals(
+            "one page along, the layer should have moved its share of one page-width",
+            -factor * BOX_WIDTH, harness.layer.translationX
+        )
+    }
+
     /** One page cannot scroll, so there is no travel to oversize for and nothing to zoom. */
     @Test
     public fun aSinglePagePagerOversizesNothing() {
@@ -189,7 +213,7 @@ public class PagerViewVideoBackgroundTest {
     }
 
     /** A laid-out pager whose page count can change the way branching changes it. */
-    private class Harness(
+    private inner class Harness(
         private val view: PagerView,
         private val listener: PagerModel.Listener,
         private val setPages: (Int) -> Unit
@@ -201,13 +225,27 @@ public class PagerViewVideoBackgroundTest {
             setPages(count)
             listener.onDataUpdated()
         }
+
+        /** Steps to a page the way a `pager_next` button does, with no drag involved. */
+        fun showPage(index: Int) {
+            listener.scrollTo(index, animate = false)
+            layOut(view)
+        }
     }
 
     /** The layer view of a pager laid out at [BOX_WIDTH] with [pageCount] pages. */
     private fun layerFor(pageCount: Int, factor: Float): View =
         pagerHarness(pageCount, factor).layer
 
-    private fun pagerHarness(pageCount: Int, factor: Float): Harness {
+    private fun layOut(view: View) {
+        view.measure(
+            MeasureSpec.makeMeasureSpec(BOX_WIDTH, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(BOX_HEIGHT, MeasureSpec.EXACTLY)
+        )
+        view.layout(0, 0, BOX_WIDTH, BOX_HEIGHT)
+    }
+
+    private fun pagerHarness(pageCount: Int, factor: Float, swipeDisabled: Boolean = false): Harness {
         val mediaBackground = videoBackground()
         val mediaModel = buildMediaModel(mediaBackground)
         fun pageModels(count: Int) = (0 until count).map {
@@ -221,7 +259,7 @@ public class PagerViewVideoBackgroundTest {
         val pagerModel: PagerModel = mockk(relaxed = true) {
             every { isSinglePage } returns (pageCount < 2)
             every { viewInfo } returns mockk(relaxed = true) {
-                every { isSwipeDisabled } returns false
+                every { isSwipeDisabled } returns swipeDisabled
                 every { backgrounds } returns listOf(
                     ParallaxBackground(background = mediaBackground, parallax = Parallax(factor))
                 )
@@ -232,11 +270,7 @@ public class PagerViewVideoBackgroundTest {
         }
 
         val pagerView = PagerView(context, pagerModel, viewEnvironment)
-        pagerView.measure(
-            MeasureSpec.makeMeasureSpec(BOX_WIDTH, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(BOX_HEIGHT, MeasureSpec.EXACTLY)
-        )
-        pagerView.layout(0, 0, BOX_WIDTH, BOX_HEIGHT)
+        layOut(pagerView)
         return Harness(pagerView, listenerSlot.captured) { currentPages = pageModels(it) }
     }
 

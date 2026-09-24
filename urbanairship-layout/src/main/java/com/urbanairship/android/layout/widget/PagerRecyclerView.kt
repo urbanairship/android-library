@@ -123,18 +123,33 @@ internal class PagerRecyclerView(
      * (`--parallax-x-offset`, `currentIndex * -100%`) are both absolute for this reason.
      */
     private fun contentOffset(): Float {
-        val absolute = computeHorizontalScrollOffset().toFloat()
-        if (layoutDirection != LAYOUT_DIRECTION_RTL) return absolute
+        if (width == 0) return 0f
 
-        // `LinearLayoutManager` lays out reversed in RTL, so this counts *down* from its maximum
-        // as you advance -- the first page would report a full page-width and start a background
-        // already fully travelled. What a layer follows is how far the pager has come from its
-        // first page, which is the same journey whichever way the pages run, so undo the
-        // mirroring. iOS derives the same figure from the page index (`-(width * pageIndex)`),
-        // which never had a direction to mirror in the first place.
-        val range = (computeHorizontalScrollRange() - computeHorizontalScrollExtent())
-            .coerceAtLeast(0).toFloat()
-        return range - absolute
+        // The lowest-numbered page still on screen, and how far it has been pushed out of the
+        // viewport: whole pages from its index, the fraction of a page from its own edge.
+        //
+        // Read from the pages rather than from `computeHorizontalScrollOffset`, which
+        // `RecyclerView` answers `0` for whenever its `LayoutManager` reports it cannot scroll
+        // -- which is exactly what a `disable_swipe` pager's does, leaving a layer pinned at
+        // rest however many pages the buttons had stepped through.
+        var position = NO_POSITION
+        var page: View? = null
+        for (index in 0 until childCount) {
+            val child = getChildAt(index) ?: continue
+            val childPosition = getChildAdapterPosition(child)
+            if (childPosition != NO_POSITION && (position == NO_POSITION || childPosition < position)) {
+                position = childPosition
+                page = child
+            }
+        }
+        val firstPage = page ?: return 0f
+
+        // A page slides the way its own direction advances, so the sign of the fraction follows
+        // the layout direction; the index never does. What a layer follows is how far the pager
+        // has come from its first page, which is the same journey whichever way the pages run --
+        // iOS derives it from the page index (`-(width * pageIndex)`) for the same reason.
+        val pushedOut = if (layoutDirection == LAYOUT_DIRECTION_RTL) firstPage.left else -firstPage.left
+        return (position * width + pushedOut).toFloat()
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
