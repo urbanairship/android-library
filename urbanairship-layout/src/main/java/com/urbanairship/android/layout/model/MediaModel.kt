@@ -75,7 +75,7 @@ internal class MediaModel(
      * stray pause event (e.g. the WebView pausing its own media pipeline during a
      * RecyclerView relayout) must not be allowed to latch the video off.
      */
-    private val hasPlaybackControls: Boolean = viewInfo.video?.showControls ?: true
+    private val hasPlaybackControls: Boolean = viewInfo.video?.showControls ?: false
 
     /**
      * Local play intent used when there is no VideoController (videoState is null).
