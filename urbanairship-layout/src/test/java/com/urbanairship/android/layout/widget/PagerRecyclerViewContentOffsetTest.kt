@@ -154,6 +154,42 @@ public class PagerRecyclerViewContentOffsetTest {
         )
     }
 
+    /**
+     * The offset is how far the pager has come from its first page, which is the same journey
+     * whichever way the pages run.
+     *
+     * `LinearLayoutManager` lays out reversed in RTL, so `computeHorizontalScrollOffset` counts
+     * down from its maximum instead of up from zero -- taken raw, the first page reports a full
+     * page-width and a background starts already fully travelled, which is what a side-by-side
+     * against iOS showed. iOS derives the figure from the page index, which never had a
+     * direction to mirror.
+     *
+     * A guard rather than a reproduction: Robolectric's `LinearLayoutManager` does not lay out
+     * reversed for a view marked RTL, so this passes against the unfixed code too. It was
+     * verified on a device instead -- the pager reported a full page-width at rest on page one
+     * with an Arabic locale, and zero after the fix.
+     */
+    @Test
+    public fun theOffsetStartsAtZeroOnTheFirstPageInRightToLeftToo() {
+        val recyclerView = buildRecyclerView(pageCount = 3)
+        recyclerView.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        layoutOnce(recyclerView)
+
+        var lastOffset = -1f
+        recyclerView.setPagerScrollListener(object : PagerView.OnScrollListener {
+            override fun onScrollTo(position: Int, isInternalScroll: Boolean) = Unit
+            override fun onContentOffsetChanged(offsetPx: Float) {
+                lastOffset = offsetPx
+            }
+        })
+        layoutOnce(recyclerView)
+
+        assertEquals(
+            "at rest on the first page a background has not travelled, in either direction",
+            0f, lastOffset, 1f
+        )
+    }
+
     /** Forces the second layout pass `scrollToPosition` needs before it has repositioned. */
     private fun layoutOnce(recyclerView: PagerRecyclerView) {
         recyclerView.measure(

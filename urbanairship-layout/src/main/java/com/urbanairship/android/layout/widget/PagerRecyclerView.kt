@@ -122,7 +122,20 @@ internal class PagerRecyclerView(
      * (`Pager.pagerContentOffset`, `-(width * pageIndex) + drag`) and web
      * (`--parallax-x-offset`, `currentIndex * -100%`) are both absolute for this reason.
      */
-    private fun contentOffset(): Float = computeHorizontalScrollOffset().toFloat()
+    private fun contentOffset(): Float {
+        val absolute = computeHorizontalScrollOffset().toFloat()
+        if (layoutDirection != LAYOUT_DIRECTION_RTL) return absolute
+
+        // `LinearLayoutManager` lays out reversed in RTL, so this counts *down* from its maximum
+        // as you advance -- the first page would report a full page-width and start a background
+        // already fully travelled. What a layer follows is how far the pager has come from its
+        // first page, which is the same journey whichever way the pages run, so undo the
+        // mirroring. iOS derives the same figure from the page index (`-(width * pageIndex)`),
+        // which never had a direction to mirror in the first place.
+        val range = (computeHorizontalScrollRange() - computeHorizontalScrollExtent())
+            .coerceAtLeast(0).toFloat()
+        return range - absolute
+    }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
