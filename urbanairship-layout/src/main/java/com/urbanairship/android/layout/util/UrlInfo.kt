@@ -1,5 +1,7 @@
 package com.urbanairship.android.layout.util
 
+import com.urbanairship.android.layout.info.HasBackgrounds
+import com.urbanairship.android.layout.info.HasParallaxBackgrounds
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.info.StackImageButtonInfo
@@ -8,6 +10,7 @@ import com.urbanairship.android.layout.info.StackItemInfo
 import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.WebViewInfo
+import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.MediaType
 
@@ -26,6 +29,23 @@ public class UrlInfo(
 
         public fun from(info: ViewInfo): Set<UrlInfo> {
             val result = mutableSetOf<UrlInfo>()
+
+            // A `backgrounds` media layer is as much a part of the scene as an in-flow one: it
+            // has to be prefetched, and it has to count toward whether the scene can be shown
+            // without a network. The host itself is some other kind of view, so this runs
+            // alongside the branch below rather than as one of its cases.
+            backgroundLayers(info).forEach { layer ->
+                when (layer) {
+                    // Carries a real `MediaInfo`, so it resolves urls, selectors and overrides
+                    // through exactly the same branch an in-flow `media` view does.
+                    is Background.MediaBackground.VideoMediaBackground -> result.addAll(from(layer.mediaInfo))
+                    is Background.MediaBackground.ImageMediaBackground -> {
+                        result.add(UrlInfo(UrlType.IMAGE, layer.url))
+                        layer.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
+                    }
+                    else -> {}
+                }
+            }
 
             when(info) {
                 is MediaInfo -> {
@@ -94,6 +114,13 @@ public class UrlInfo(
             }
 
             return result
+        }
+
+        /** A view's own `backgrounds`, whether or not they can carry `parallax`. */
+        private fun backgroundLayers(info: ViewInfo): List<Background> = when (info) {
+            is HasBackgrounds -> info.backgrounds.orEmpty()
+            is HasParallaxBackgrounds -> info.backgrounds.orEmpty().map { it.background }
+            else -> emptyList()
         }
     }
 }

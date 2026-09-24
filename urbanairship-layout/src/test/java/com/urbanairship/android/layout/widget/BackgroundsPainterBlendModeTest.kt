@@ -125,6 +125,57 @@ public class BackgroundsPainterBlendModeTest {
         )
     }
 
+    /**
+     * A blend mode with nothing beneath it still has to draw.
+     *
+     * Below API 29 a mode is approximated with a `PorterDuffXfermode`, which multiplies the
+     * alphas as well as the colours -- against the empty isolated layer that is a `multiply` by
+     * zero, so the layer vanishes rather than simply drawing. API 29+ composites source-over and
+     * blends only the colour, so it draws the layer plainly; the two have to agree.
+     */
+    @Test
+    @Config(sdk = [28])
+    public fun aBlendModeWithNothingBeneathItStillDrawsAtApi28() {
+        assertFirstLayerDraws(sdkLabel = "28")
+    }
+
+    @Test
+    @Config(sdk = [30])
+    public fun aBlendModeWithNothingBeneathItStillDrawsAtApi30() {
+        assertFirstLayerDraws(sdkLabel = "30")
+    }
+
+    private fun assertFirstLayerDraws(sdkLabel: String) {
+        val backgrounds = Background.fromJsonList(
+            JsonValue.parseString(
+                """
+                [
+                  {
+                    "type": "color",
+                    "color": { "default": { "hex": "#00FF00", "alpha": 1 } },
+                    "blend_mode": "multiply"
+                  }
+                ]
+                """.trimIndent()
+            ).optList()
+        )
+
+        val painter = BackgroundsPainter(context, viewEnvironment) {}
+        painter.backgrounds = backgrounds
+
+        val bitmap = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
+        painter.draw(Canvas(bitmap), 10, 10)
+
+        val pixel = bitmap.getPixel(5, 5)
+        assertEquals(
+            "a multiply layer with nothing under it should just draw at API $sdkLabel -- " +
+                "got #%08X, and fully transparent means the Porter-Duff stand-in erased it"
+                    .format(pixel),
+            String.format("#%08X", Color.GREEN),
+            String.format("#%08X", pixel)
+        )
+    }
+
     private fun assertBlendResult(blendMode: String, expected: Int) {
         val backgrounds = Background.fromJsonList(
             JsonValue.parseString(

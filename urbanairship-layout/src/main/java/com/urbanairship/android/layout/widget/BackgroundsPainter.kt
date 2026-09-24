@@ -200,7 +200,9 @@ internal class BackgroundsPainter(
         canvas.save()
         canvas.clipRect(0f, 0f, width.toFloat(), height.toFloat())
         try {
-            toDraw.forEach { layer -> drawLayer(canvas, layer, width, height) }
+            // Drawn onto the host's own canvas, over an attached view that has already put its
+            // pixels there -- so unlike the isolated stack, there is always something beneath.
+            toDraw.forEach { layer -> drawLayer(canvas, layer, width, height, hasBackdrop = true) }
         } finally {
             canvas.restore()
         }
@@ -290,7 +292,9 @@ internal class BackgroundsPainter(
 
         val saveCount = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
         try {
-            toDraw.forEach { layer -> drawLayer(canvas, layer, width, height) }
+            toDraw.forEachIndexed { index, layer ->
+                drawLayer(canvas, layer, width, height, hasBackdrop = index > 0)
+            }
         } finally {
             canvas.restoreToCount(saveCount)
         }
@@ -303,7 +307,7 @@ internal class BackgroundsPainter(
      * [Layer.parallax] -- or one whose host cannot travel -- is oversized by nothing, so this is
      * a no-op translate and an unchanged (`width`, `height`) draw size.
      */
-    private fun drawLayer(canvas: Canvas, layer: Layer, width: Int, height: Int) {
+    private fun drawLayer(canvas: Canvas, layer: Layer, width: Int, height: Int, hasBackdrop: Boolean) {
         val (dx, dy) = parallaxTranslation(layer.parallax, width, height)
         val (leadingX, leadingY) = parallaxLeadingOversize(layer.parallax, width, height)
         val (oversizeX, oversizeY) = parallaxOversize(layer.parallax, width, height)
@@ -314,21 +318,27 @@ internal class BackgroundsPainter(
         canvas.translate(dx - leadingX, dy - leadingY)
         try {
             when (val background = layer.background) {
-                is Background.ColorBackground -> drawColor(canvas, background, drawWidth, drawHeight)
+                is Background.ColorBackground -> drawColor(canvas, background, drawWidth, drawHeight, hasBackdrop)
                 is Background.GradientBackground ->
-                    drawGradient(canvas, background, drawWidth, drawHeight)
+                    drawGradient(canvas, background, drawWidth, drawHeight, hasBackdrop)
                 is Background.MediaBackground ->
-                    drawMedia(canvas, background, width, height, drawWidth, drawHeight)
+                    drawMedia(canvas, background, width, height, drawWidth, drawHeight, hasBackdrop)
             }
         } finally {
             canvas.restore()
         }
     }
 
-    private fun drawColor(canvas: Canvas, layer: Background.ColorBackground, width: Int, height: Int) {
+    private fun drawColor(
+        canvas: Canvas,
+        layer: Background.ColorBackground,
+        width: Int,
+        height: Int,
+        hasBackdrop: Boolean
+    ) {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.color = layer.color.resolve(context)
-        applyBlendMode(paint, layer.blendMode)
+        applyBlendMode(paint, layer.blendMode, hasBackdrop)
         // The color's own alpha and the layer's opacity both apply -- multiply rather than replace.
         paint.alpha = (paint.alpha * layer.opacity.orFullyOpaque()).roundToInt()
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
@@ -348,7 +358,8 @@ internal class BackgroundsPainter(
         canvas: Canvas,
         layer: Background.GradientBackground,
         drawWidth: Int,
-        drawHeight: Int
+        drawHeight: Int,
+        hasBackdrop: Boolean
     ) {
         val gradient = layer.gradient
         if (gradient.stops.isEmpty()) return
@@ -375,7 +386,7 @@ internal class BackgroundsPainter(
         if (shader == null) {
             paint.color = colors.first()
         }
-        applyBlendMode(paint, layer.blendMode)
+        applyBlendMode(paint, layer.blendMode, hasBackdrop)
         // `Paint.alpha` modulates a shader's output the same way it does a flat color -- so for a
         // solid fill it has to carry the stop's own alpha, which a shader's output already has.
         val sourceAlpha = if (shader == null) Color.alpha(colors.first()) / 255f else 1f
@@ -406,7 +417,8 @@ internal class BackgroundsPainter(
         shaderWidth: Int,
         shaderHeight: Int,
         drawWidth: Int,
-        drawHeight: Int
+        drawHeight: Int,
+        hasBackdrop: Boolean
     ) {
         // Video/YouTube/Vimeo need a real attached view to play at all -- a host that supports
         // them positions one itself (see attachedViewBackgrounds) and never reaches this branch
@@ -435,7 +447,7 @@ internal class BackgroundsPainter(
             return
         }
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        applyBlendMode(paint, layer.blendMode)
+        applyBlendMode(paint, layer.blendMode, hasBackdrop)
         paint.alpha = (255 * opacity).roundToInt()
         val saveCount = canvas.saveLayer(0f, 0f, drawWidth.toFloat(), drawHeight.toFloat(), paint)
         try {
@@ -497,16 +509,24 @@ internal class BackgroundsPainter(
 
     private fun Float?.orFullyOpaque(): Float = (this ?: 1f).coerceIn(0f, 1f)
 
-    private fun applyBlendMode(paint: Paint, mode: BlendMode?) {
+    private fun applyBlendMode(paint: Paint, mode: BlendMode?, hasBackdrop: Boolean) {
         if (mode == null || mode == BlendMode.NORMAL) return
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             paint.blendMode = mode.toPlatformBlendMode()
-        } else {
-            // No Porter-Duff equivalent below API 29 for color_dodge/color_burn/hard_light/
-            // soft_light/difference/exclusion -- draws as normal there rather than wrong.
-            mode.toLegacyPorterDuffMode()?.let { paint.xfermode = PorterDuffXfermode(it) }
+            return
         }
+
+        // A real blend mode composites source-over and only blends its *colour* with the
+        // backdrop; the Porter-Duff stand-ins below multiply the alphas too, so with nothing
+        // beneath them they resolve to fully transparent and erase the layer instead of drawing
+        // it. Where there is no backdrop there is also nothing to blend with, so drawing it
+        // plainly is both correct and what API 29+ does.
+        if (!hasBackdrop) return
+
+        // No Porter-Duff equivalent below API 29 for color_dodge/color_burn/hard_light/
+        // soft_light/difference/exclusion -- draws as normal there rather than wrong.
+        mode.toLegacyPorterDuffMode()?.let { paint.xfermode = PorterDuffXfermode(it) }
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
