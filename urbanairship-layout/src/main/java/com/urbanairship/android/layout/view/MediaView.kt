@@ -499,20 +499,17 @@ internal class MediaView(
                     val isWrapWidth = params.width == WRAP_CONTENT
                     val isWrapHeight = params.height == WRAP_CONTENT
 
-                    if (isWrapWidth || isWrapHeight) {
-                        // If either dimension is wrap_content, the aspect ratio will be adjusted
-                        // based on the video's aspect ratio.
-                        model.viewInfo.video?.aspectRatio?.let {
-                            aspectRatio = it.toFloat()
-                        }
-                        shouldEnforceAspectRatio = true
-                    } else {
-                        // If the width and height are known, we don't need to fix to the aspect
-                        // ratio of the video. A `backgrounds` layer is always this case, and
-                        // letterboxing one would leave bars the layer is there to fill.
-                        aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: 1.77f
-                        shouldEnforceAspectRatio = false
-                    }
+                    aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: aspectRatio
+
+                    // Keep the media's own shape while either dimension is still being decided by
+                    // it. Once both are fixed the layout has already chosen the box, and a `video`
+                    // fills it -- as does any `backgrounds` layer, which exists to fill its host.
+                    // An in-flow youtube/vimeo embed keeps its aspect either way: its player
+                    // letterboxes inside whatever box it is given, so stretching the view only
+                    // moves the bars.
+                    val fillsItsBox = !isWrapWidth && !isWrapHeight &&
+                        (model.viewInfo.mediaType == MediaType.VIDEO || model.isBackgroundLayer)
+                    shouldEnforceAspectRatio = !fillsItsBox
                 }
             }
             // SVG images fall back to loading in a WebView, where we don't want to adjust the

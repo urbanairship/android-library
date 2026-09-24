@@ -28,7 +28,14 @@ internal class MediaModel(
     environment: ModelEnvironment,
     properties: ModelProperties,
     /** See [setMediaLoading]. Only a pager's own `backgrounds` layer sets this. */
-    private val holdsStoryOnEveryPage: Boolean = false
+    private val holdsStoryOnEveryPage: Boolean = false,
+    /**
+     * Whether this renders a `backgrounds` layer rather than an in-flow `media` view.
+     *
+     * A layer fills its host's box by definition -- that is what a background is -- where an
+     * in-flow view is placed in the layout and keeps its own shape.
+     */
+    val isBackgroundLayer: Boolean = false
 ) : BaseModel<MediaView, MediaInfo, MediaModel.Listener>(
     viewInfo = viewInfo,
     environment = environment,

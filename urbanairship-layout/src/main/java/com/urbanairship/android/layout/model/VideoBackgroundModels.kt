@@ -39,6 +39,7 @@ internal fun videoBackgroundModels(
             videoState = environment.layoutState.video,
             environment = environment,
             properties = properties,
-            holdsStoryOnEveryPage = holdsStoryOnEveryPage
+            holdsStoryOnEveryPage = holdsStoryOnEveryPage,
+            isBackgroundLayer = true
         )
     }

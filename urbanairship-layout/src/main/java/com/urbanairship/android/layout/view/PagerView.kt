@@ -196,11 +196,21 @@ internal class PagerView(
      */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        backgroundsPainter.offsetBoundsPx = 0f..pagerTravelRangePx(w)
+        updateTravelBounds()
+    }
+
+    /**
+     * Refreshed on every layout, not only on a resize: branching can add or remove pages long
+     * after the pager has settled at its final size, and the travel a layer is sized against is
+     * a page count as much as a width.
+     */
+    private fun updateTravelBounds() {
+        backgroundsPainter.offsetBoundsPx = 0f..pagerTravelRangePx(width)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
+        updateTravelBounds()
         videoBackgrounds.placeInto(backgroundsPainter, width, height)
     }
 
