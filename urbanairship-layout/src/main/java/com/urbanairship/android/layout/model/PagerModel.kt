@@ -14,11 +14,9 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent.Hold
 import com.urbanairship.android.layout.info.AccessibilityAction
-import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.Background
-import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.Outcome
@@ -26,11 +24,9 @@ import com.urbanairship.android.layout.property.Outcome.PagerJumpNavigation.Page
 import com.urbanairship.android.layout.property.Outcome.PagerPlayback.Command
 import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.BoundaryBehavior
 import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.Direction
-import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.earliestNavigationAction
-import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasPagerPauseOrResumeAction
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.util.Timer

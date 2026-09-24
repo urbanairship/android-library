@@ -286,7 +286,6 @@ internal class PagerRecyclerView(
         }
 
         companion object {
-            /** Also what a background's settle animation is timed from -- see `settleDurationMs`. */
             const val MILLISECONDS_PER_INCH = 65f
         }
     }

@@ -93,7 +93,7 @@ internal class BackgroundsPainter(
 
     private var layers: List<Layer> = emptyList()
 
-    /** `null`/empty draws nothing. Replacing the list drops any in-flight image loads. */
+    /** `null`/empty draws nothing. Replacing the list drops the views drawing the old one. */
     var backgrounds: List<Background>? = null
         set(value) {
             field = value
@@ -144,11 +144,9 @@ internal class BackgroundsPainter(
      * The lowest and highest [offsetPx] will ever reach, which is what decides how much spare
      * room a layer is drawn with and on which side -- see [parallaxOversize].
      *
-     * Every host states its own: a `ScrollLayout` only ever travels one way from rest, `0` to its
-     * scrollable range, so its layers are oversized on one side only and by nothing at all when
-     * its content already fits; a `Pager` drags either way out of the page it started on, so its
-     * are oversized both ways by one page width. `null` falls back to that same both-ways page
-     * width, which is only ever the `Pager`'s own case anyway.
+     * Every host states its own, and both travel one way from rest: a `ScrollLayout` from `0` to
+     * its scrollable range -- nothing at all when its content already fits -- and a `Pager` from
+     * `0` across its pages. So a layer is oversized on one side only, the side it travels toward.
      *
      * Stating it, rather than assuming the worst, is what keeps a `factor: 0.2` layer from being
      * oversized (and so zoomed, since `media_fit` crops into whatever box it is given) as if it
@@ -414,7 +412,7 @@ internal class BackgroundsPainter(
 
     /**
      * `media_fit` crops into [drawWidth]/[drawHeight] -- the layer's own box *plus* whatever
-     * [parallaxOversize] added for its travel -- not into the smaller [shaderWidth]/[shaderHeight]
+     * [parallaxOversize] added for its travel -- not into the smaller box the host resolved to
      * box, which is only the gradient's own shaping size (see [drawGradient]).
      *
      * A cropping fit always fills the box it is given, so cropping into the oversized box is what
