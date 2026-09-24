@@ -218,8 +218,9 @@ public open class ActionRunRequest {
             val result = try {
                 runSuspending()
             } catch (e: Exception) {
-                UALog.e(e, "Failed to run action with arguments ${createActionArguments()}")
-                ActionRunResult(createActionArguments(), ActionResult.newErrorResult(e))
+                val arguments = createActionArguments()
+                UALog.e(e, "Failed to run action with arguments $arguments")
+                ActionRunResult(arguments, ActionResult.newErrorResult(e))
             }
 
             handler.post { callback?.onFinish(result.arguments, result.result) }
