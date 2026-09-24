@@ -149,6 +149,11 @@ internal class VerticalScrollLayoutView(
         // Before sizing below, which reads these bounds to work out a layer's spare room --
         // `dispatchDraw` refreshes them too, but that runs after this.
         updateTravelBounds()
+        // This view can already be scrolled before any scroll event reaches us: RTL rests a
+        // horizontal scroll view at its far end, and a restored instance state starts wherever
+        // it left off. Read here, the layer starts where the content actually is rather than
+        // snapping there on the first scroll.
+        backgroundsPainter.offsetPx = scrollY.toFloat()
         // Sized against the viewport, not the scrolling content it sits inside.
         videoBackgrounds.placeInto(backgroundsPainter, width, height)
         pinVideoBackgrounds()
