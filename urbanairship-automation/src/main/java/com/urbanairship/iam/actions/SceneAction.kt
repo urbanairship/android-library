@@ -5,6 +5,7 @@ import com.urbanairship.Airship
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
+import com.urbanairship.actions.SuspendingAction
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.inAppAutomation
@@ -21,7 +22,6 @@ import com.urbanairship.util.base64Decoded
 import com.urbanairship.util.rawDeflateInflate
 import java.nio.charset.StandardCharsets
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
 
 /**
  * Scene action that creates and schedules an in-app message with Airship layout content.
@@ -42,7 +42,7 @@ internal class SceneAction(
         Airship.inAppAutomation.upsertSchedules(listOf(it))
     },
     private val clock: Clock = Clock.DEFAULT_CLOCK
-) : Action() {
+) : SuspendingAction() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when(arguments.situation) {
@@ -55,7 +55,7 @@ internal class SceneAction(
         }
     }
 
-    override fun perform(arguments: ActionArguments): ActionResult {
+    override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
         val pushMessage = BundleCompat.getParcelable(
             arguments.metadata,
             ActionArguments.PUSH_MESSAGE_METADATA,
@@ -90,7 +90,7 @@ internal class SceneAction(
             sendMetadata = pushMessage?.metadata
         )
 
-        runBlocking { scheduler(schedule) }
+        scheduler(schedule)
 
         return ActionResult.newEmptyResult()
     }
