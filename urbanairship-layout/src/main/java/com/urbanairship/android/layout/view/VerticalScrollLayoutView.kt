@@ -12,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
@@ -95,6 +96,12 @@ internal class VerticalScrollLayoutView(
         }
 
         model.listener = object : BaseModel.Listener {
+            // An image layer resolves its own `view_overrides` against this; a video layer is
+            // its own `MediaModel` and gets the state through that.
+            override fun onStateUpdated(state: ThomasState) {
+                backgroundsPainter.state = state
+            }
+
             override fun setVisibility(visible: Boolean) {
                 this@VerticalScrollLayoutView.isVisible = visible
             }

@@ -16,6 +16,7 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import com.urbanairship.Airship
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.BlendMode
@@ -174,7 +175,43 @@ internal class BackgroundsPainter(
      */
     var attachedViewBackgrounds: Set<Background> = emptySet()
 
-    private val mediaViews = mutableMapOf<Background.MediaBackground, CropImageView>()
+    /**
+     * The scene's current state, which an image layer's `view_overrides` resolve against.
+     *
+     * Setting it reloads any layer the new state gives a different url -- a layer whose url it
+     * doesn't change keeps the image it already has, rather than restarting its load on every
+     * unrelated form edit. A host sets this from its model's `onStateUpdated`; a video layer is
+     * its own `MediaModel`, which already gets the state that way.
+     */
+    var state: ThomasState? = null
+        set(value) {
+            field = value
+            mediaViews.forEach { (layer, held) -> held.load(layer) }
+        }
+
+    /** An image layer's view, and the url currently in it. */
+    private inner class HeldImage(val view: CropImageView) {
+        private var loadedUrl: String? = null
+
+        /** Loads [layer]'s url for the current [state], unless that is already what's showing. */
+        fun load(layer: Background.MediaBackground) {
+            val resolvedUrl = layer.mediaInfo.resolveUrl(state, ResourceUtils.isUiModeNight(context))
+            if (resolvedUrl == loadedUrl) return
+            loadedUrl = resolvedUrl
+
+            val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
+            val options = ImageRequestOptions.newBuilder(cached?.path ?: resolvedUrl)
+                .setImageSizeResolver(ThomasImageSizeResolver(null, cached?.size))
+                // This view is never attached (see `createCropImageView`) -- a crossfade never
+                // completes against it, so the drawable would silently never get set.
+                .disableTransition()
+                .setImageLoadedCallback { invalidate() }
+                .build()
+            Airship.imageLoader.load(context, view, options)
+        }
+    }
+
+    private val mediaViews = mutableMapOf<Background.MediaBackground, HeldImage>()
 
     /** Whether any layer actually moves, so a host can skip repainting for an offset change. */
     val hasParallaxLayers: Boolean get() = layers.any { it.parallax != null && it.parallax.factor != 0f }
@@ -471,9 +508,11 @@ internal class BackgroundsPainter(
         // image with real spare resolution shouldn't be downsampled to the smaller box before a
         // parallaxing layer ever gets to reveal it. Only has any say the first time, when this
         // actually creates the view and starts the load.
-        val imageView = mediaViews.getOrPut(layer) { createCropImageView(layer, drawWidth, drawHeight) }
+        val imageView = mediaViews.getOrPut(layer) {
+            HeldImage(createCropImageView(layer, drawWidth, drawHeight)).apply { load(layer) }
+        }.view
         // Re-affirmed on every draw in case the box has changed size since creation. Harmless to
-        // repeat -- the load itself, in createCropImageView, only ever happens once per layer.
+        // repeat -- a load only happens when the layer's resolved url actually changes.
         imageView.measure(
             MeasureSpec.makeMeasureSpec(drawWidth, MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(drawHeight, MeasureSpec.EXACTLY)
@@ -502,10 +541,10 @@ internal class BackgroundsPainter(
      * A detached `CropImageView` -- never added to the host's child list, so it can never be
      * seen by the host's own measure/layout, only manually sized here in [drawMedia].
      *
-     * Measured and laid out to [width]/[height] *before* the image loader is asked to load,
-     * critically -- the loader's `Target.getSize()` reads `view.width`/`view.height` synchronously
-     * on this same call, and a detached view's `ViewTreeObserver` never fires, so if it fell back
-     * to `addOnPreDrawListener` instead, the load would never be sized and would never complete.
+     * Measured and laid out to [width]/[height] before [HeldImage.load] is called, critically --
+     * the loader's `Target.getSize()` reads `view.width`/`view.height` synchronously on that
+     * call, and a detached view's `ViewTreeObserver` never fires, so if it fell back to
+     * `addOnPreDrawListener` instead, the load would never be sized and would never complete.
      */
     private fun createCropImageView(
         layer: Background.MediaBackground,
@@ -531,19 +570,6 @@ internal class BackgroundsPainter(
             MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
         )
         imageView.layout(0, 0, width, height)
-
-        val resolvedUrl = layer.resolveUrl(ResourceUtils.isUiModeNight(context))
-        val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
-        val url = cached?.path ?: resolvedUrl
-
-        val options = ImageRequestOptions.newBuilder(url)
-            .setImageSizeResolver(ThomasImageSizeResolver(null, cached?.size))
-            // This view is never attached (see the class doc above) -- a crossfade never
-            // completes against it, so the drawable would silently never get set.
-            .disableTransition()
-            .setImageLoadedCallback { invalidate() }
-            .build()
-        Airship.imageLoader.load(context, imageView, options)
 
         return imageView
     }

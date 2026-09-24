@@ -129,17 +129,8 @@ internal class MediaModel(
         pagerState?.update { state -> state.copyWithMediaPaused(pageId, videoId, isLoading) }
     }
 
-    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {
-        val url = state?.resolveRequired(
-            overrides = viewInfo.viewOverrides?.url,
-            default = viewInfo.url
-        ) ?: viewInfo.url
-        val urlSelectors = state?.resolveOptional(
-            overrides = viewInfo.viewOverrides?.urlSelectors,
-            default = viewInfo.urlSelectors
-        ) ?: viewInfo.urlSelectors
-        return MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
-    }
+    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String =
+        viewInfo.resolveUrl(state, isDarkMode)
 
     init {
         if (isPlayableMedia) { registerVideoState() }

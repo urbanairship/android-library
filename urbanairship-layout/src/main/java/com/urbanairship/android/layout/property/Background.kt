@@ -7,7 +7,6 @@ import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
-import com.urbanairship.json.optionalList
 
 /**
  * A layer painted behind a view's own content -- see `HasBackgrounds`.
@@ -78,28 +77,30 @@ internal sealed class Background(
     }
 
     sealed class MediaBackground(
-        @JvmField val mediaType: MediaType,
-        @JvmField val url: String,
-        @JvmField val urlSelectors: List<MediaUrlSelector>,
-        @JvmField val mediaFit: MediaFit,
-        @JvmField val position: Position?,
+        /**
+         * This layer as a `media` view's own info.
+         *
+         * A `media`-type background and a `media` view state the same
+         * `media_type`/`url`/`url_selectors`/`media_fit`/`position`/`video`/`view_overrides`
+         * fields, so this is that same parse, done here with the rest of the layer rather than by
+         * holding the layer's raw JSON to re-parse at render time. It is also what a video layer
+         * hands to the `MediaModel`/`MediaView` that plays it, so a layer and an in-flow view
+         * resolve their url, position and overrides through one implementation.
+         */
+        @JvmField val mediaInfo: MediaInfo,
         blendMode: BlendMode?,
         opacity: Float?
     ) : Background(blendMode, opacity) {
 
-        fun resolveUrl(isDarkMode: Boolean): String =
-            MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
+        val mediaType: MediaType get() = mediaInfo.mediaType
+        val mediaFit: MediaFit get() = mediaInfo.mediaFit
+        val position: Position get() = mediaInfo.position
 
         class ImageMediaBackground(
-            url: String,
-            urlSelectors: List<MediaUrlSelector>,
-            mediaFit: MediaFit,
-            position: Position?,
+            mediaInfo: MediaInfo,
             blendMode: BlendMode?,
             opacity: Float?
-        ) : MediaBackground(
-            MediaType.IMAGE, url, urlSelectors, mediaFit, position, blendMode, opacity
-        )
+        ) : MediaBackground(mediaInfo, blendMode, opacity)
 
         /**
          * A layer whose media has a playback surface, so [video] means something on it.
@@ -109,63 +110,22 @@ internal sealed class Background(
          * regardless let a scene set it on an image and be silently ignored.
          */
         class VideoMediaBackground(
-            /**
-             * This layer as a `media` view's own info.
-             *
-             * Playback is rendered by a real `MediaInfo`/`MediaModel`/`MediaView` -- the same
-             * classes an in-flow `media` view uses -- rather than reimplementing WebView and
-             * video lifecycle handling for backgrounds. A `media`-type background and a `media`
-             * view parse the same `media_type`/`url`/`media_fit`/`position`/`video` fields, so
-             * this is that same parse, done here with the rest of the layer rather than by
-             * holding the layer's raw JSON to re-parse at render time.
-             */
-            @JvmField val mediaInfo: MediaInfo,
+            mediaInfo: MediaInfo,
             blendMode: BlendMode?,
             opacity: Float?
-        ) : MediaBackground(
-            mediaInfo.mediaType,
-            mediaInfo.url,
-            mediaInfo.urlSelectors,
-            mediaInfo.mediaFit,
-            mediaInfo.position,
-            blendMode,
-            opacity
-        ) {
+        ) : MediaBackground(mediaInfo, blendMode, opacity) {
             /** Playback options, which only a layer with a playback surface can carry. */
             val video: Video? get() = mediaInfo.video
         }
 
         companion object {
-            private const val KEY_MEDIA_TYPE = "media_type"
-            private const val KEY_URL = "url"
-            private const val KEY_URL_SELECTORS = "url_selectors"
-            private const val KEY_MEDIA_FIT = "media_fit"
-            private const val KEY_POSITION = "position"
-
             @Throws(JsonException::class)
             fun fromJson(json: JsonMap, blendMode: BlendMode?, opacity: Float?): MediaBackground {
-                val mediaType = MediaType.from(json.require(KEY_MEDIA_TYPE))
-                val url = json.require(KEY_URL).requireString()
-                val urlSelectors = json.optionalList(KEY_URL_SELECTORS)
-                    ?.let(MediaUrlSelector::fromJsonList) ?: emptyList()
-                val mediaFit = MediaFit.from(json.require(KEY_MEDIA_FIT))
-                val position = json[KEY_POSITION]?.let(Position::fromJson)
-
-                return if (mediaType.isPlayable) {
-                    VideoMediaBackground(
-                        mediaInfo = MediaInfo(json),
-                        blendMode = blendMode,
-                        opacity = opacity
-                    )
+                val mediaInfo = MediaInfo(json)
+                return if (mediaInfo.mediaType.isPlayable) {
+                    VideoMediaBackground(mediaInfo, blendMode, opacity)
                 } else {
-                    ImageMediaBackground(
-                        url = url,
-                        urlSelectors = urlSelectors,
-                        mediaFit = mediaFit,
-                        position = position,
-                        blendMode = blendMode,
-                        opacity = opacity
-                    )
+                    ImageMediaBackground(mediaInfo, blendMode, opacity)
                 }
             }
         }

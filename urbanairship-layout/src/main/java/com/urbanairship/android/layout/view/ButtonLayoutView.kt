@@ -14,6 +14,7 @@ import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.model.Background
@@ -118,6 +119,12 @@ internal class ButtonLayoutView(
 
         val baseBackground = this.background
         model.listener = object : ButtonModel.Listener {
+            // An image layer resolves its own `view_overrides` against this; a video layer is
+            // its own `MediaModel` and gets the state through that.
+            override fun onStateUpdated(state: ThomasState) {
+                backgroundsPainter.state = state
+            }
+
             override fun setVisibility(visible: Boolean) {
                 this@ButtonLayoutView.isVisible = visible
             }

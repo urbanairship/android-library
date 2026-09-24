@@ -16,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutInfo
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
@@ -75,6 +76,12 @@ internal class LinearLayoutView(
         addItems(model.items)
 
         model.listener = object : BaseModel.Listener {
+            // An image layer resolves its own `view_overrides` against this; a video layer is
+            // its own `MediaModel` and gets the state through that.
+            override fun onStateUpdated(state: ThomasState) {
+                backgroundsPainter.state = state
+            }
+
             override fun setVisibility(visible: Boolean) {
                 isVisible = visible
             }

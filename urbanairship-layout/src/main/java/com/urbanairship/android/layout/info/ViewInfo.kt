@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.info
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
@@ -598,8 +599,26 @@ internal class MediaInfo(
     val video: Video? = json.optionalMap("video")?.let { Video.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
-    fun resolveUrl(isDarkMode: Boolean): String =
-        MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
+    /**
+     * The url to show for [state]: the `view_overrides` this state selects, then the
+     * `url_selectors` that pick between light and dark.
+     *
+     * @param state the scene's current state, or `null` before any has arrived, which resolves to
+     *   the declared url.
+     * @param isDarkMode whether to prefer a dark-mode selector.
+     * @return the url to load.
+     */
+    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {
+        val resolvedUrl = state?.resolveRequired(
+            overrides = viewOverrides?.url,
+            default = url
+        ) ?: url
+        val resolvedSelectors = state?.resolveOptional(
+            overrides = viewOverrides?.urlSelectors,
+            default = urlSelectors
+        ) ?: urlSelectors
+        return MediaUrlSelector.resolve(resolvedUrl, resolvedSelectors, isDarkMode)
+    }
 
     internal class ViewOverrides(json: JsonMap) {
         val url = json.optionalList("url")?.map {

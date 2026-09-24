@@ -40,18 +40,12 @@ public class UrlInfo(
             // essential is not something this can know -- a full-bleed backdrop may well be the
             // whole design. Deciding one is decorative on the author's behalf is the call not to
             // make.
-            backgroundLayers(info).forEach { layer ->
-                when (layer) {
-                    // Carries a real `MediaInfo`, so it resolves urls, selectors and overrides
-                    // through exactly the same branch an in-flow `media` view does.
-                    is Background.MediaBackground.VideoMediaBackground -> result.addAll(from(layer.mediaInfo))
-                    is Background.MediaBackground.ImageMediaBackground -> {
-                        result.add(UrlInfo(UrlType.IMAGE, layer.url))
-                        layer.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
-                    }
-                    else -> {}
-                }
-            }
+            backgroundLayers(info)
+                .filterIsInstance<Background.MediaBackground>()
+                // Every media layer carries a real `MediaInfo`, so its urls, selectors and
+                // overrides are collected through exactly the same branch an in-flow `media`
+                // view goes through.
+                .forEach { result.addAll(from(it.mediaInfo)) }
 
             when(info) {
                 is MediaInfo -> {

@@ -17,6 +17,7 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
@@ -103,6 +104,12 @@ internal class ContainerLayoutView(
         }
 
         model.listener = object : BaseModel.Listener {
+            // An image layer resolves its own `view_overrides` against this; a video layer is
+            // its own `MediaModel` and gets the state through that.
+            override fun onStateUpdated(state: ThomasState) {
+                backgroundsPainter.state = state
+            }
+
             override fun setVisibility(visible: Boolean) {
                 this@ContainerLayoutView.isVisible = visible
             }
