@@ -31,6 +31,8 @@ import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionDown
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.Clippable
+import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
@@ -45,7 +47,7 @@ internal class ButtonLayoutView(
     val model: ButtonLayoutModel,
     viewEnvironment: ViewEnvironment,
     val itemProperties: ItemProperties?
-) : FrameLayout(context), BaseView, TappableView, ShrinkableView {
+) : FrameLayout(context), BaseView, TappableView, ShrinkableView, Clippable {
 
     private val isButtonForAccessibility: Boolean
         get() = when (model.viewInfo.accessibilityRole) {
@@ -58,6 +60,8 @@ internal class ButtonLayoutView(
 
     private val rippleAnimationDuration =
         resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds
+
+    private val clippableViewDelegate: ClippableViewDelegate = ClippableViewDelegate()
 
     // Never touched by measure/layout above -- see `BackgroundsPainter`.
     private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
@@ -178,6 +182,17 @@ internal class ButtonLayoutView(
         videoBackgrounds.placeInto(backgroundsPainter, width, height)
     }
 
+    // A `backgrounds` layer paints over the host's own rounded border, so the host has to clip
+    // to that radius or the layer squares its corners off inside the stroke. `Container` and
+    // `LinearLayout` already did this; the hosts that gained `backgrounds` needed it too.
+    override fun setClipPathBorderRadius(borderRadius: Float) {
+        clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
+    }
+
+    override fun setClipPathBorderRadius(borderRadii: FloatArray?) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii)
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
         backgroundsPainter.drawLayersBefore(canvas, width, height)
         super.dispatchDraw(canvas)
@@ -239,4 +254,5 @@ internal val Context.isTouchExplorationEnabled: Boolean
     get() {
         return ContextCompat.getSystemService(this, AccessibilityManager::class.java)?.isTouchExplorationEnabled
             ?: false
-    }
+    
+}

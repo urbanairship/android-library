@@ -30,6 +30,8 @@ import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.isWithinBounds
 import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.Clippable
+import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
@@ -43,7 +45,7 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
     viewEnvironment: ViewEnvironment,
     val itemProperties: ItemProperties?,
     val type: ToggleLayoutType
-) : FrameLayout(context), BaseView, TappableView, Checkable {
+) : FrameLayout(context), BaseView, TappableView, Checkable, Clippable {
 
     enum class ToggleLayoutType {
         SCORE,
@@ -56,6 +58,8 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
 
     private val rippleAnimationDuration =
         resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds
+
+    private val clippableViewDelegate: ClippableViewDelegate = ClippableViewDelegate()
 
     // Never touched by measure/layout above -- see `BackgroundsPainter`.
     private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
@@ -169,6 +173,17 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
         videoBackgrounds.placeInto(backgroundsPainter, width, height)
+    }
+
+    // A `backgrounds` layer paints over the host's own rounded border, so the host has to clip
+    // to that radius or the layer squares its corners off inside the stroke. `Container` and
+    // `LinearLayout` already did this; the hosts that gained `backgrounds` needed it too.
+    override fun setClipPathBorderRadius(borderRadius: Float) {
+        clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
+    }
+
+    override fun setClipPathBorderRadius(borderRadii: FloatArray?) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii)
     }
 
     override fun dispatchDraw(canvas: Canvas) {

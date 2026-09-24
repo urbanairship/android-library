@@ -34,6 +34,12 @@ public class UrlInfo(
             // has to be prefetched, and it has to count toward whether the scene can be shown
             // without a network. The host itself is some other kind of view, so this runs
             // alongside the branch below rather than as one of its cases.
+            //
+            // That includes a layer nothing in the scene interacts with. A message is not shown
+            // at all when its assets are missing, and which of them the author considered
+            // essential is not something this can know -- a full-bleed backdrop may well be the
+            // whole design. Deciding one is decorative on the author's behalf is the call not to
+            // make.
             backgroundLayers(info).forEach { layer ->
                 when (layer) {
                     // Carries a real `MediaInfo`, so it resolves urls, selectors and overrides

@@ -27,6 +27,8 @@ import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.Clippable
+import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.TouchAwareWebView
@@ -39,7 +41,7 @@ internal class PagerView(
     context: Context,
     val model: PagerModel,
     viewEnvironment: ViewEnvironment
-) : FrameLayout(context), BaseView, KeyEvent.Callback {
+) : FrameLayout(context), BaseView, Clippable, KeyEvent.Callback {
 
     fun interface OnScrollListener {
         fun onScrollTo(position: Int, isInternalScroll: Boolean)
@@ -108,6 +110,8 @@ internal class PagerView(
     private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? = null
 
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
+
+    private val clippableViewDelegate: ClippableViewDelegate = ClippableViewDelegate()
 
     // Never touched by measure/layout above -- see `BackgroundsPainter`.
     private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
@@ -236,6 +240,17 @@ internal class PagerView(
      */
     private fun pagerTravelRangePx(w: Int): Float = (model.pages.size * w).toFloat()
 
+    // A `backgrounds` layer paints over the host's own rounded border, so the host has to clip
+    // to that radius or the layer squares its corners off inside the stroke. `Container` and
+    // `LinearLayout` already did this; the hosts that gained `backgrounds` needed it too.
+    override fun setClipPathBorderRadius(borderRadius: Float) {
+        clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
+    }
+
+    override fun setClipPathBorderRadius(borderRadii: FloatArray?) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii)
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
         // Layers before the first video child paint here; layers after the last one paint from
         // drawChild, once that child has actually drawn -- otherwise a blend_mode layer meant to
@@ -361,5 +376,4 @@ internal class PagerView(
         }
         return false
     }
-
 }
