@@ -267,5 +267,5 @@ internal val Context.isTouchExplorationEnabled: Boolean
     get() {
         return ContextCompat.getSystemService(this, AccessibilityManager::class.java)?.isTouchExplorationEnabled
             ?: false
-    
+
 }
