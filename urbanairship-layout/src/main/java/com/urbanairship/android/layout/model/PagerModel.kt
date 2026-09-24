@@ -173,7 +173,8 @@ internal class PagerModel(
             layers = viewInfo.backgrounds.orEmpty().map { it.background },
             pagerState = pagerState,
             environment = environment,
-            properties = ModelProperties(pagerPageId = null)
+            properties = ModelProperties(pagerPageId = null),
+            holdsStoryOnEveryPage = true
         )
 
     init {
@@ -267,7 +268,10 @@ internal class PagerModel(
                 .distinctUntilChanged()
                 .filter { !it }
                 .collect {
-                    if (!isManuallyPaused) {
+                    // Touch exploration pauses the story without going through `isManuallyPaused`,
+                    // so checking that alone would auto-advance out from under a screen-reader
+                    // user the moment a video happened to finish loading.
+                    if (!isManuallyPaused && !pagerState.changes.value.isTouchExplorationEnabled) {
                         UALog.v { "Media ready: restarting timers" }
                         navigationActionTimer?.start()
                         for (timer in automatedActionsTimers) {

@@ -26,7 +26,9 @@ internal class MediaModel(
     val pagerState: SharedState<State.Pager>?,
     val videoState: SharedState<State.Video>?,
     environment: ModelEnvironment,
-    properties: ModelProperties
+    properties: ModelProperties,
+    /** See [setMediaLoading]. Only a pager's own `backgrounds` layer sets this. */
+    private val holdsStoryOnEveryPage: Boolean = false
 ) : BaseModel<MediaView, MediaInfo, MediaModel.Listener>(
     viewInfo = viewInfo,
     environment = environment,
@@ -101,14 +103,16 @@ internal class MediaModel(
     /**
      * Holds (or releases) a story's automated advance while this video loads.
      *
-     * A null [ModelProperties.pagerPageId] is passed through rather than skipped: that's a video
-     * the pager itself owns (a `backgrounds` layer), which is on screen for every page and so
-     * gates whichever one is showing -- see [State.Pager.isMediaPaused].
+     * Scoped to [ModelProperties.pagerPageId], so the hold only applies while the pager is on
+     * that page. A video with no page of its own holds nothing -- it isn't inside the pager at
+     * all, it just happens to share a `pager_controller` with one -- unless it is
+     * [holdsStoryOnEveryPage], which is the pager's own `backgrounds` layer: that one is on
+     * screen for every page, so it holds whichever page is showing.
      */
     fun setMediaLoading(isLoading: Boolean) {
-        pagerState?.update { state ->
-            state.copyWithMediaPaused(properties.pagerPageId, videoId, isLoading)
-        }
+        val pageId = properties.pagerPageId
+        if (pageId == null && !holdsStoryOnEveryPage) return
+        pagerState?.update { state -> state.copyWithMediaPaused(pageId, videoId, isLoading) }
     }
 
     fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {

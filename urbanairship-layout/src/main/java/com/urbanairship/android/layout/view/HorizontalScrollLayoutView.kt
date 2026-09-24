@@ -132,6 +132,17 @@ internal class HorizontalScrollLayoutView(
             0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        // A layer is sized to the viewport, but it is hosted in the content frame, which this
+        // view clips to -- content shorter than the viewport would cut the layer off short.
+        // Only the frame is held to the viewport; the content inside it still wraps, so the
+        // scroll range is unchanged (content that already fits has no range either way).
+        if (!videoBackgrounds.isEmpty) {
+            contentFrame.minimumWidth = w
+        }
+    }
+
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
         // Before sizing below, which reads these bounds to work out a layer's spare room --

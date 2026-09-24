@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
-import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
@@ -157,7 +156,17 @@ internal class BackgroundsPainter(
         val end = attached.getOrNull(attachedIndex + 1) ?: layers.size
         val toDraw = layers.subList(start + 1, end)
         if (toDraw.isEmpty() || width <= 0 || height <= 0) return
-        toDraw.forEach { layer -> drawLayer(canvas, layer, width, height) }
+
+        // Drawn straight onto the host's canvas rather than into a layer of its own, so unlike
+        // `drawLayers` there is no `saveLayer` bounding it -- a parallaxing layer's spare room
+        // would otherwise paint over whatever sits beside the host in the wider scene.
+        canvas.save()
+        canvas.clipRect(0f, 0f, width.toFloat(), height.toFloat())
+        try {
+            toDraw.forEach { layer -> drawLayer(canvas, layer, width, height) }
+        } finally {
+            canvas.restore()
+        }
     }
 
     /**
@@ -240,8 +249,11 @@ internal class BackgroundsPainter(
         val bounds = offsetBoundsPx ?: -boxSize.toFloat()..boxSize.toFloat()
         val atStart = -factor * bounds.start
         val atEnd = -factor * bounds.endInclusive
-        fun clamp(value: Float) = value.coerceIn(0f, boxSize.toFloat()).roundToInt()
-        return clamp(maxOf(atStart, atEnd)) to clamp(-minOf(atStart, atEnd))
+        // Only floored, never capped: a cap would be reached partway through the host's travel
+        // and the layer would simply stop moving for the rest of it, with nothing on screen to
+        // say why. `factor * travel` is what the layer actually uses, so that is what it gets.
+        fun room(value: Float) = value.coerceAtLeast(0f).roundToInt()
+        return room(maxOf(atStart, atEnd)) to room(-minOf(atStart, atEnd))
     }
 
     private fun drawLayers(canvas: Canvas, width: Int, height: Int, toDraw: List<Layer>) {
@@ -279,7 +291,7 @@ internal class BackgroundsPainter(
             when (val background = layer.background) {
                 is Background.ColorBackground -> drawColor(canvas, background, drawWidth, drawHeight)
                 is Background.GradientBackground ->
-                    drawGradient(canvas, background, width, height, drawWidth, drawHeight)
+                    drawGradient(canvas, background, drawWidth, drawHeight)
                 is Background.MediaBackground ->
                     drawMedia(canvas, background, width, height, drawWidth, drawHeight)
             }
@@ -298,21 +310,18 @@ internal class BackgroundsPainter(
     }
 
     /**
-     * [shaderWidth]/[shaderHeight] shape the gradient itself (so it doesn't stretch when a
-     * parallaxing layer draws oversized), while [drawWidth]/[drawHeight] size the rect it's
-     * painted onto -- `CLAMP` tiling carries the end-stop color out into that extra margin.
+     * The gradient is shaped to the whole rect it fills, spare parallax room included, so its
+     * stops stay spread across the layer wherever that layer has travelled to.
      *
-     * A [Shader]'s own coordinates and the rect it paints share one coordinate space, both anchored
-     * at that space's `(0, 0)` -- so a gradient built from [shaderWidth]/[shaderHeight] alone would
-     * land in the drawn rect's own top-left corner, not its center, the moment the two sizes
-     * differ. [Shader.setLocalMatrix] re-centers it by the same margin [drawWidth]/[drawHeight]
-     * added.
+     * Shaping it to the box instead and offsetting it into the oversized rect leaves the stops
+     * fixed to one part of the layer: since the rect is anchored at its leading edge and `CLAMP`
+     * carries the end stops outward, the box then shows flat end-colour over whatever part of the
+     * spare room it currently overlaps, and never reaches the far stop at all. Web sizes the
+     * gradient to the same oversized element for this reason.
      */
     private fun drawGradient(
         canvas: Canvas,
         layer: Background.GradientBackground,
-        shaderWidth: Int,
-        shaderHeight: Int,
         drawWidth: Int,
         drawHeight: Int
     ) {
@@ -327,15 +336,14 @@ internal class BackgroundsPainter(
         // One stop has nothing to interpolate toward: it is that colour, everywhere.
         val shader: Shader? = if (colors.size < 2) null else when (gradient.style) {
             Gradient.Style.LINEAR -> {
-                val line = linearGradientLine(gradient.angle ?: 0f, shaderWidth.toFloat(), shaderHeight.toFloat())
+                val line = linearGradientLine(gradient.angle ?: 0f, drawWidth.toFloat(), drawHeight.toFloat())
                 LinearGradient(line.x0, line.y0, line.x1, line.y1, colors, positions, Shader.TileMode.CLAMP)
             }
             Gradient.Style.RADIAL -> {
-                val radius = hypot(shaderWidth / 2f, shaderHeight / 2f).coerceAtLeast(1f)
-                RadialGradient(shaderWidth / 2f, shaderHeight / 2f, radius, colors, positions, Shader.TileMode.CLAMP)
+                val radius = hypot(drawWidth / 2f, drawHeight / 2f).coerceAtLeast(1f)
+                RadialGradient(drawWidth / 2f, drawHeight / 2f, radius, colors, positions, Shader.TileMode.CLAMP)
             }
         }
-        shader?.setLocalMatrix(centeringMatrix(shaderWidth, shaderHeight, drawWidth, drawHeight))
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.shader = shader
@@ -411,18 +419,6 @@ internal class BackgroundsPainter(
             canvas.restoreToCount(saveCount)
         }
     }
-
-    /**
-     * Centers a [shaderWidth]x[shaderHeight] shader pattern within a [drawWidth]x[drawHeight]
-     * rect that shares its coordinate space -- both a `Shader`'s own coordinates and the rect a
-     * `Paint` carrying it fills are read in that one shared space, anchored at its `(0, 0)`, so
-     * without this a smaller pattern lands in the larger rect's top-left corner instead of its
-     * center.
-     */
-    private fun centeringMatrix(shaderWidth: Int, shaderHeight: Int, drawWidth: Int, drawHeight: Int): Matrix =
-        Matrix().apply {
-            setTranslate((drawWidth - shaderWidth) / 2f, (drawHeight - shaderHeight) / 2f)
-        }
 
     /**
      * A detached `CropImageView` -- never added to the host's child list, so it can never be

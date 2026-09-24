@@ -28,7 +28,8 @@ internal fun videoBackgroundModels(
     layers: List<Background>?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
-    properties: ModelProperties
+    properties: ModelProperties,
+    holdsStoryOnEveryPage: Boolean = false
 ): Map<VideoMediaBackground, MediaModel> = layers.orEmpty()
     .filterIsInstance<VideoMediaBackground>()
     .associateWith { layer ->
@@ -37,6 +38,7 @@ internal fun videoBackgroundModels(
             pagerState = pagerState,
             videoState = environment.layoutState.video,
             environment = environment,
-            properties = properties
+            properties = properties,
+            holdsStoryOnEveryPage = holdsStoryOnEveryPage
         )
     }

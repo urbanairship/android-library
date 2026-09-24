@@ -659,6 +659,11 @@ internal class MediaView(
                 wv.postDelayed(load, delay)
             } else {
                 UALog.w { "MediaView[${model.videoId}] video failed to load after $MAX_VIDEO_ERROR_RETRIES retries: code=$errorCode, description=$description" }
+                // A video that has given up will never report ready, and only ready releases the
+                // hold this view took on a story's automated advance. Left held, a story with an
+                // unreachable video sits on its first page forever, and no later resume can free
+                // it -- `PagerModel.resumeStory` defers precisely while media is still loading.
+                model.setMediaLoading(false)
             }
         }
 

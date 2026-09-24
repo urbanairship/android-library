@@ -49,6 +49,12 @@ internal class VideoBackgroundChildren(
      * the host, and a layer that *does* show controls is hosted directly so it still gets them.
      */
     private class UntouchableFrame(context: Context) : FrameLayout(context) {
+        init {
+            // ConstraintLayout's own `ConstraintSet.clone`/`readFallback` throw on any child
+            // without one, and a host is free to use those even though the current ones don't.
+            id = generateViewId()
+        }
+
         override fun dispatchTouchEvent(ev: MotionEvent): Boolean = false
     }
 

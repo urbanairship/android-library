@@ -22,6 +22,7 @@ import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -188,6 +189,63 @@ public class BackgroundsPainterParallaxSizingTest {
 
         assertFullyCovered(bitmap, Color.RED)
     }
+
+    /**
+     * A parallaxing gradient's stops have to be spread across the whole layer, spare room
+     * included, not across the box with the layer offset underneath it.
+     *
+     * Shaping the gradient to the box and centring it in the oversized rect leaves the stops
+     * fixed to the middle of the layer: because the rect is anchored at its leading edge and
+     * `CLAMP` carries the end stops outward, the box then shows flat start-colour across the part
+     * of the spare room it overlaps, and never reaches the far stop at all. Here that would make
+     * the whole left half of the box flat red. A `factor: 0` layer can't show this -- it has no
+     * spare room, so the two sizes are equal and any offset between them is zero.
+     */
+    @Test
+    public fun aParallaxingGradientSweepsAcrossTheBoxRatherThanClampingFlat() {
+        val painter = BackgroundsPainter(context, viewEnvironment) {}
+        painter.setParallaxBackgrounds(halfFactorHorizontalGradient())
+        painter.offsetBoundsPx = 0f..200f
+        painter.offsetPx = 0f
+
+        val bitmap = Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888)
+        painter.draw(Canvas(bitmap), 100, 50)
+
+        val leftEdge = bitmap.getPixel(0, 25)
+        val quarterIn = bitmap.getPixel(25, 25)
+        val halfIn = bitmap.getPixel(50, 25)
+
+        assertTrue(
+            "the sweep still starts at the box's leading edge -- got #%08X".format(leftEdge),
+            Color.red(leftEdge) > 240 && Color.blue(leftEdge) < 16
+        )
+        assertTrue(
+            "a quarter and half into the box should each be further along the sweep than the " +
+                "last -- got #%08X then #%08X then #%08X, so the gradient is clamped flat"
+                    .format(leftEdge, quarterIn, halfIn),
+            Color.blue(quarterIn) > Color.blue(leftEdge) && Color.blue(halfIn) > Color.blue(quarterIn)
+        )
+    }
+
+    private fun halfFactorHorizontalGradient(): List<ParallaxBackground> = ParallaxBackground.fromJsonList(
+        JsonValue.parseString(
+            """
+            [
+              {
+                "type": "gradient",
+                "gradient": {
+                  "style": "linear", "angle": 90,
+                  "stops": [
+                    { "color": { "default": { "type": "hex", "hex": "#FF0000", "alpha": 1 } }, "position": 0 },
+                    { "color": { "default": { "type": "hex", "hex": "#0000FF", "alpha": 1 } }, "position": 1 }
+                  ]
+                },
+                "parallax": { "axis": "horizontal", "factor": 0.5 }
+              }
+            ]
+            """.trimIndent()
+        ).optList()
+    )
 
     private fun maxFactorHorizontalImage(): List<ParallaxBackground> = ParallaxBackground.fromJsonList(
         JsonValue.parseString(
