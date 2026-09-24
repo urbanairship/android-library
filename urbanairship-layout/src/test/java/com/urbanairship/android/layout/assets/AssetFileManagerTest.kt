@@ -62,4 +62,59 @@ public class AssetFileManagerTest {
             assertTrue(e.message!!.contains("Invalid cache identifier"))
         }
     }
+
+    @Test
+    public fun testEnsureCacheDirectory_rejectsEmptyIdentifier() {
+        try {
+            fileManager.ensureCacheDirectory("")
+            fail("expected IOException")
+        } catch (e: IOException) {
+            assertTrue(e.message!!.contains("Invalid cache identifier"))
+        }
+    }
+
+    @Test
+    public fun testClearAssets_deletesSubDirectoryUnderRoot() {
+        val dir = fileManager.ensureCacheDirectory("schedule-id")
+        val file = File(dir, "asset.txt")
+        file.writeText("asset contents")
+        assertTrue(file.exists())
+
+        fileManager.clearAssets("schedule-id")
+
+        assertFalse(dir.exists())
+    }
+
+    @Test
+    public fun testClearAssets_rejectsIdentifierThatTraversesAboveRoot() {
+        val victimDir = File(context.cacheDir, "databases")
+        victimDir.mkdirs()
+        val victim = File(victimDir, "airship.db")
+        victim.writeText("pretend this is the automation database")
+        assertTrue(victim.exists())
+
+        try {
+            fileManager.clearAssets("../databases")
+            fail("expected IOException")
+        } catch (e: IOException) {
+            assertTrue(e.message!!.contains("Invalid cache identifier"))
+        }
+
+        assertTrue(victim.exists())
+    }
+
+    @Test
+    public fun testClearAssets_rejectsEmptyIdentifier() {
+        fileManager.ensureCacheDirectory("schedule-id")
+        assertTrue(root.exists())
+
+        try {
+            fileManager.clearAssets("")
+            fail("expected IOException")
+        } catch (e: IOException) {
+            assertTrue(e.message!!.contains("Invalid cache identifier"))
+        }
+
+        assertTrue(root.exists())
+    }
 }
