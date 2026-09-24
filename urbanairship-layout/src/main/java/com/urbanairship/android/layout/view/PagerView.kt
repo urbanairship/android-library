@@ -146,6 +146,13 @@ internal class PagerView(
 
         override fun onDataUpdated() {
             view.refresh()
+            // A layer's spare room is a share of how far this pager's route scrolls, and
+            // branching resolves that route as it goes. Nothing else will ask: an answer on the
+            // page showing can lengthen or shorten what follows it without turning a page, which
+            // leaves the pager the same size on the same page and so triggers no layout at all.
+            updateTravelBounds()
+            placeVideoBackgrounds()
+            invalidate()
         }
 
         override fun setVisibility(visible: Boolean) {
@@ -219,9 +226,9 @@ internal class PagerView(
     }
 
     /**
-     * Refreshed on every layout, not only on a resize: branching can add or remove pages long
-     * after the pager has settled at its final size, and the travel a layer is sized against is
-     * a page count as much as a width.
+     * Refreshed on every layout and on every page-list change, not only on a resize: the travel
+     * a layer is sized against is a page count as much as a width, and branching moves the count
+     * long after the pager has settled at its final size.
      */
     private fun updateTravelBounds() {
         backgroundsPainter.offsetBoundsPx = 0f..pagerTravelRangePx(backgroundsBoxWidth)
@@ -236,6 +243,10 @@ internal class PagerView(
         backgroundsPainter.isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         updateTravelBounds()
         super.onLayout(changed, l, t, r, b)
+        placeVideoBackgrounds()
+    }
+
+    private fun placeVideoBackgrounds() {
         videoBackgrounds.placeInto(
             backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, paddingLeft, paddingTop
         )
@@ -244,15 +255,21 @@ internal class PagerView(
     }
 
     /**
-     * How far a parallaxing layer is sized and positioned against, which is a page wider than the
-     * track can actually scroll.
+     * How far a parallaxing layer travels across this pager: exactly as far as the track can
+     * scroll, which is every page after the first.
      *
-     * A layer's spare room is its share of this, and it sits at the leading end of that room at
-     * rest -- so the extra page's worth is what holds the layer off-centre on page one and lets it
-     * arrive centred on the last page, rather than travelling symmetrically about the centre and
-     * looking unmoved at both ends. iOS and web both place it this way.
+     * A layer's spare room is its share of this, so it arrives at the far end of that room on the
+     * last page and nowhere short of it. Sized for one page more, a layer is only ever
+     * `(pages - 1) / pages` of the way through its own slack, which leaves a strip of it
+     * permanently unreachable and crops the rest tighter than it needs to be.
+     *
+     * Read live rather than from the declared item list, since branching resolves a route as it
+     * goes. A page's progress is then `index / (pages - 1)`, so the last page is fully travelled
+     * however many pages the route turned out to have. Web sizes `--parallax-x-range` the same
+     * way.
      */
-    private fun pagerTravelRangePx(pageWidth: Int): Float = (model.pages.size * pageWidth).toFloat()
+    private fun pagerTravelRangePx(pageWidth: Int): Float =
+        ((model.pages.size - 1).coerceAtLeast(0) * pageWidth).toFloat()
 
     // A `backgrounds` layer fills the host's box corner to corner, so a rounded host has to clip
     // to its own radius or the layer squares those corners off again.
