@@ -173,6 +173,10 @@ internal class PagerView(
             }
 
             override fun onContentOffsetChanged(offsetPx: Float) {
+                // Every scroll frame of every pager reaches here, so a pager with no layers to
+                // move must not repaint itself for one.
+                if (!backgroundsPainter.hasParallaxLayers && videoBackgrounds.isEmpty) return
+
                 backgroundsPainter.offsetPx = offsetPx
                 videoBackgrounds.applyParallax(backgroundsPainter, width, height)
                 invalidate()

@@ -42,10 +42,15 @@ import kotlin.math.sin
  * content -- exactly as it does when `backgrounds` doesn't exist. Each layer is sized to that
  * already-resolved box, never the other way around.
  *
- * The whole stack composites through one isolated offscreen layer, so a layer's `blend_mode`
+ * A stack that blends composites through one isolated offscreen layer, so a layer's `blend_mode`
  * only ever sees the layers drawn before it in this same stack -- never the host's own
  * `background_color`/`border`, and never whatever the host sits on top of in the wider scene.
  * Same idea as `.compositingGroup()` on iOS or `isolation: isolate` in CSS.
+ *
+ * With one deliberate exception: a layer stacked *after* one drawn as a real view has to read
+ * that view's live pixels back, which an isolated buffer would hide (see [drawLayersAfter]). Such
+ * a layer blends against the host's own canvas, so its `blend_mode` sees whatever else is already
+ * there, not only this stack.
  *
  * An image `MediaBackground` reuses [CropImageView] and the existing image loader, so its crop
  * math and caching stay identical to a real `media` view. Video needs a real attached view to
@@ -163,6 +168,9 @@ internal class BackgroundsPainter(
     var attachedViewBackgrounds: Set<Background> = emptySet()
 
     private val mediaViews = mutableMapOf<Background.MediaBackground, CropImageView>()
+
+    /** Whether any layer actually moves, so a host can skip repainting for an offset change. */
+    val hasParallaxLayers: Boolean get() = layers.any { it.parallax != null && it.parallax.factor != 0f }
 
     fun draw(canvas: Canvas, width: Int, height: Int) {
         drawLayers(canvas, width, height, layers)
@@ -290,7 +298,17 @@ internal class BackgroundsPainter(
     private fun drawLayers(canvas: Canvas, width: Int, height: Int, toDraw: List<Layer>) {
         if (toDraw.isEmpty() || width <= 0 || height <= 0) return
 
-        val saveCount = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
+        // The isolation only shows when something actually blends against what's beneath it.
+        // Without that, `saveLayer` is a full-size offscreen buffer allocated per frame -- on a
+        // pager drag, per frame of the drag -- for a result identical to drawing straight on.
+        val needsIsolation = toDraw.any {
+            it.background.blendMode != null && it.background.blendMode != BlendMode.NORMAL
+        }
+        val saveCount = if (needsIsolation) {
+            canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
+        } else {
+            canvas.save()
+        }
         try {
             toDraw.forEachIndexed { index, layer ->
                 drawLayer(canvas, layer, width, height, hasBackdrop = index > 0)
