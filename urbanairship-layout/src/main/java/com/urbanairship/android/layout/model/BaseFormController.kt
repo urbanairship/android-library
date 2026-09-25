@@ -121,7 +121,10 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 // to receive updates from the form state changes flow, so we're using a map here
                 // instead of a combine.
                 .map {
-                    it to formState.prepareSubmit()
+                    it to formState.prepareSubmit(
+                        registrationOverrides = viewInfo.registrationOverrides,
+                        thomasState = layoutState.thomasState
+                    )
                 }.distinctUntilChanged().collect { (event, formResult) ->
                     formResult?.let {
                         val (result, context) = formResult

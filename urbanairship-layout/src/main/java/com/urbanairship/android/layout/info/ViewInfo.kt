@@ -371,6 +371,8 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(),
         json.optionalMap("validation_mode")?.let {
             FormValidationMode.from(it.requireField("type"))
         } ?: FormValidationMode.IMMEDIATE
+    val registrationOverrides: ThomasFormRegistrationOverrides? =
+        json["registration_overrides"]?.let(ThomasFormRegistrationOverrides::fromJson)
 }
 
 internal interface Button : View, Accessible, Identifiable {

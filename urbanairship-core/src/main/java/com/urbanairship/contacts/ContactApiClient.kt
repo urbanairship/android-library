@@ -102,7 +102,12 @@ internal class ContactApiClient (
 
                 COMMERCIAL_OPTED_IN_KEY to options.commercialOptedIn.optInTimestamp(),
 
-                TRANSACTIONAL_OPTED_IN_KEY to options.transactionalOptedIn.optInTimestamp()
+                TRANSACTIONAL_OPTED_IN_KEY to options.transactionalOptedIn.optInTimestamp(),
+
+                OPEN_TRACKING_OPTED_IN_KEY to options.openTracking.optedInDate().optInTimestamp(),
+                OPEN_TRACKING_OPTED_OUT_KEY to options.openTracking.optedOutDate().optInTimestamp(),
+                CLICK_TRACKING_OPTED_IN_KEY to options.clickTracking.optedInDate().optInTimestamp(),
+                CLICK_TRACKING_OPTED_OUT_KEY to options.clickTracking.optedOutDate().optInTimestamp()
                 ), OPT_IN_MODE_KEY to options.isDoubleOptIn.let {
                 if (options.isDoubleOptIn) {
                     OPT_IN_DOUBLE
@@ -498,6 +503,10 @@ internal class ContactApiClient (
         private const val ASSOCIATE_KEY = "associate"
         private const val COMMERCIAL_OPTED_IN_KEY = "commercial_opted_in"
         private const val TRANSACTIONAL_OPTED_IN_KEY = "transactional_opted_in"
+        private const val OPEN_TRACKING_OPTED_IN_KEY = "open_tracking_opted_in"
+        private const val OPEN_TRACKING_OPTED_OUT_KEY = "open_tracking_opted_out"
+        private const val CLICK_TRACKING_OPTED_IN_KEY = "click_tracking_opted_in"
+        private const val CLICK_TRACKING_OPTED_OUT_KEY = "click_tracking_opted_out"
         private const val PROPERTIES_KEY = "properties"
         private const val POSSIBLY_ORPHANED_CONTACT_ID_KEY = "possibly_orphaned_contact_id"
     }
