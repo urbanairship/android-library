@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.MediaUrlSelector
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.MediaView
@@ -26,7 +27,16 @@ internal class MediaModel(
     val pagerState: SharedState<State.Pager>?,
     val videoState: SharedState<State.Video>?,
     environment: ModelEnvironment,
-    properties: ModelProperties
+    properties: ModelProperties,
+    /** See [setMediaLoading]. Only a pager's own `backgrounds` layer sets this. */
+    private val holdsStoryOnEveryPage: Boolean = false,
+    /**
+     * Whether this renders a `backgrounds` layer rather than an in-flow `media` view.
+     *
+     * A layer fills its host's box by definition -- that is what a background is -- where an
+     * in-flow view is placed in the layout and keeps its own shape.
+     */
+    val isBackgroundLayer: Boolean = false
 ) : BaseModel<MediaView, MediaInfo, MediaModel.Listener>(
     viewInfo = viewInfo,
     environment = environment,
@@ -66,7 +76,13 @@ internal class MediaModel(
      * stray pause event (e.g. the WebView pausing its own media pipeline during a
      * RecyclerView relayout) must not be allowed to latch the video off.
      */
-    private val hasPlaybackControls: Boolean = viewInfo.video?.showControls ?: true
+    private val hasPlaybackControls: Boolean = when (viewInfo.mediaType) {
+        // A youtube/vimeo embed draws its own player chrome whatever `show_controls` says -- the
+        // flag never even reaches their HTML -- so a pause arriving from one is always the
+        // viewer's, and must not be treated as a stray event to play back over.
+        MediaType.YOUTUBE, MediaType.VIMEO -> true
+        else -> viewInfo.video?.showControls ?: false
+    }
 
     /**
      * Local play intent used when there is no VideoController (videoState is null).
@@ -98,22 +114,23 @@ internal class MediaModel(
     /** Media views are shrinkable by default. */
     override var isShrinkable: Boolean = true
 
+    /**
+     * Holds (or releases) a story's automated advance while this video loads.
+     *
+     * Scoped to [ModelProperties.pagerPageId], so the hold only applies while the pager is on
+     * that page. A video with no page of its own holds nothing -- it isn't inside the pager at
+     * all, it just happens to share a `pager_controller` with one -- unless it is
+     * [holdsStoryOnEveryPage], which is the pager's own `backgrounds` layer: that one is on
+     * screen for every page, so it holds whichever page is showing.
+     */
     fun setMediaLoading(isLoading: Boolean) {
-        val pageId = properties.pagerPageId ?: return
+        val pageId = properties.pagerPageId
+        if (pageId == null && !holdsStoryOnEveryPage) return
         pagerState?.update { state -> state.copyWithMediaPaused(pageId, videoId, isLoading) }
     }
 
-    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {
-        val url = state?.resolveRequired(
-            overrides = viewInfo.viewOverrides?.url,
-            default = viewInfo.url
-        ) ?: viewInfo.url
-        val urlSelectors = state?.resolveOptional(
-            overrides = viewInfo.viewOverrides?.urlSelectors,
-            default = viewInfo.urlSelectors
-        ) ?: viewInfo.urlSelectors
-        return MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
-    }
+    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String =
+        viewInfo.resolveUrl(state, isDarkMode)
 
     init {
         if (isPlayableMedia) { registerVideoState() }

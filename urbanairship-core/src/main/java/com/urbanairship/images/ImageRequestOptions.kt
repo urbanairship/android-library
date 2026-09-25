@@ -35,6 +35,15 @@ public class ImageRequestOptions private constructor(builder: Builder) {
     public val imageSizeResolver: ImageSizeResolver? = builder.imageSizeResolver
 
     /**
+     * Whether the loader should set the resolved drawable immediately rather than animate it in.
+     *
+     * A crossfade only ever completes on a target view that's attached to a window -- set this for
+     * a view that is never attached (e.g. one only ever drawn into a `Canvas` directly), or the
+     * drawable silently never gets set at all.
+     */
+    public val disableTransition: Boolean = builder.disableTransition
+
+    /**
      * Image request option builder.
      *
      * @hide
@@ -47,6 +56,8 @@ public class ImageRequestOptions private constructor(builder: Builder) {
         public var callback: ImageLoadedCallback? = null
             private set
         public var imageSizeResolver: ImageSizeResolver? = null
+            private set
+        public var disableTransition: Boolean = false
             private set
 
         /**
@@ -68,6 +79,11 @@ public class ImageRequestOptions private constructor(builder: Builder) {
 
         public fun setImageSizeResolver(imageSizeResolver: ImageSizeResolver?): Builder {
             return this.also { it.imageSizeResolver = imageSizeResolver }
+        }
+
+        /** See [ImageRequestOptions.disableTransition]. */
+        public fun disableTransition(disableTransition: Boolean = true): Builder {
+            return this.also { it.disableTransition = disableTransition }
         }
 
         /**

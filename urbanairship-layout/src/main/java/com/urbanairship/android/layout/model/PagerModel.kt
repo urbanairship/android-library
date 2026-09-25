@@ -16,7 +16,7 @@ import com.urbanairship.android.layout.gestures.PagerGestureEvent.Hold
 import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
-import com.urbanairship.android.layout.property.ButtonClickBehaviorType
+import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.Outcome
@@ -27,7 +27,6 @@ import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.Dire
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.earliestNavigationAction
-import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasPagerPauseOrResumeAction
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.util.Timer
@@ -151,6 +150,29 @@ internal class PagerModel(
         }
     }
 
+    /**
+     * See [videoBackgroundModels].
+     *
+     * The only host that doesn't pass its own [properties] through: a page id is only meaningful
+     * against the pager state it came from, and the state handed over here is *this* pager's,
+     * while [properties] carries the id of the page this pager itself sits on when it's nested
+     * inside another one. Passing that through would compare an outer page's id against this
+     * pager's own page ids, which never match -- leaving the layer permanently "off page", so it
+     * never plays and its media-loading hold never applies.
+     *
+     * `null` is the honest answer for this state: a background declared on the pager isn't inside
+     * any of its pages, so it keeps playing across every page turn rather than pausing the
+     * instant the pager leaves whichever page it was otherwise scoped to.
+     */
+    val videoBackgroundModels: Map<Background.MediaBackground.VideoMediaBackground, MediaModel> =
+        videoBackgroundModels(
+            layers = viewInfo.backgrounds.orEmpty().map { it.background },
+            pagerState = pagerState,
+            environment = environment,
+            properties = ModelProperties(pagerPageId = null),
+            holdsStoryOnEveryPage = true
+        )
+
     init {
         @OptIn(DelicateLayoutApi::class)
         val state = pagerState.value
@@ -242,7 +264,10 @@ internal class PagerModel(
                 .distinctUntilChanged()
                 .filter { !it }
                 .collect {
-                    if (!isManuallyPaused) {
+                    // Touch exploration pauses the story without going through `isManuallyPaused`,
+                    // so checking that alone would auto-advance out from under a screen-reader
+                    // user the moment a video happened to finish loading.
+                    if (!isManuallyPaused && !pagerState.changes.value.isTouchExplorationEnabled) {
                         UALog.v { "Media ready: restarting timers" }
                         navigationActionTimer?.start()
                         for (timer in automatedActionsTimers) {
@@ -693,14 +718,25 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
+        pagerState.update {
+            it.copyWithStoryManuallyPaused(false)
+        }
+
+        // A video the page is still waiting on holds the story on its own, and that hold outlives
+        // whatever this resume was about: starting the timers here anyway lets any resume -- the
+        // accessibility state settling as the layout displays, a `pager_resume` action -- cancel
+        // a wait it knows nothing about. The media-ready collector starts them instead, once
+        // there is nothing left to wait for.
+        if (pagerState.changes.value.isMediaPaused) {
+            UALog.v { "Resuming story: deferred, media still loading" }
+            return
+        }
+
         UALog.v { "Resuming story" }
 
         navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
             timer.start()
-        }
-        pagerState.update {
-            it.copyWithStoryManuallyPaused(false)
         }
     }
 

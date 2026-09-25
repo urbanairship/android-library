@@ -197,7 +197,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      */
     override fun statesLength(horizontal: Boolean): Boolean {
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             val lp = child.layoutParams as? LayoutParams ?: continue
@@ -225,7 +225,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      */
     override fun establishesLength(horizontal: Boolean): Boolean {
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             val lp = child.layoutParams as? LayoutParams ?: return true
@@ -267,7 +267,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         if (this !is ShrinkableView || !isShrinkable()) return false
 
         return this !is WeightlessLinearLayout ||
-                (0..<childCount).any { getChildAt(it)?.givesOnShrink(horizontal) == true }
+                (0..<childCount).any { stackChildAt(it)?.givesOnShrink(horizontal) == true }
     }
 
     /**
@@ -283,7 +283,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      */
     private fun hasFullPercentChild(horizontal: Boolean): Boolean {
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             val lp = child.layoutParams as? LayoutParams ?: continue
@@ -294,6 +294,20 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         }
         return false
     }
+
+    /**
+     * The child at [index] if this layout stacks it, or `null` if the child positions itself.
+     *
+     * A `backgrounds` layer rendered as a real view is a child of its host but never part of the
+     * stack: it fills the host's own box, so it must not take a slot, add to the measured length,
+     * or shift the items after it. A host that excludes a child this way is responsible for
+     * measuring and positioning it -- see `LinearLayoutView`.
+     */
+    protected fun stackChildAt(index: Int): View? =
+        getChildAt(index)?.takeUnless(::isExcludedFromStack)
+
+    /** Whether [child] positions itself rather than taking a place in the stack. */
+    protected open fun isExcludedFromStack(child: View): Boolean = false
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // Recorded before any child is measured, since that's when they ask. Anything short of
@@ -395,7 +409,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             }
 
         for (i in 0..<count) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
 
             if (child.visibility == GONE) {
                 continue
@@ -592,7 +606,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             var totalShrinkableHeight = 0
 
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -676,7 +690,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 percentMaxWidth = 0
                 alternativeMaxWidth = 0
                 for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
+                    val child = stackChildAt(i) ?: continue
                     if (child.visibility == GONE) {
                         continue
                     }
@@ -821,7 +835,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // about to be counted again — including the ones already in there.
             totalLength = 0
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -874,7 +888,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // slots they were given, so the ratio children were offered space already spoken for.
             var consumed = paddingTop + paddingBottom
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE || child in ratioFillChildren) continue
                 val lp = child.layoutParams as LayoutParams
                 consumed += child.measuredHeight + lp.topMargin + lp.bottomMargin
@@ -985,7 +999,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         ) {
             totalLength = paddingTop + paddingBottom
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) continue
                 val lp = child.layoutParams as LayoutParams
                 totalLength += child.measuredHeight + lp.topMargin + lp.bottomMargin
@@ -1011,7 +1025,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         val uniformMeasureSpec =
             MeasureSpec.makeMeasureSpec(measuredWidth, MeasureSpec.EXACTLY)
         for (i in 0..<count) {
-            val child = getChildAt(i)
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) { continue }
 
             val lp = child.layoutParams as LayoutParams
@@ -1110,7 +1124,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             }
 
         for (i in 0..<count) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
 
             if (child.visibility == GONE) {
                 continue
@@ -1304,7 +1318,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             var totalShrinkableWidth = 0
 
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -1380,7 +1394,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 percentMaxHeight = 0
                 alternativeMaxHeight = 0
                 for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
+                    val child = stackChildAt(i) ?: continue
                     if (child.visibility == GONE) {
                         continue
                     }
@@ -1524,7 +1538,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // about to be counted again — including the ones already in there.
             totalLength = 0
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -1572,7 +1586,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // slots they were given, so the ratio children were offered space already spoken for.
             var consumed = paddingStart + paddingEnd
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE || child in ratioFillChildren) continue
                 val lp = child.layoutParams as LayoutParams
                 consumed += child.measuredWidth + lp.marginStart + lp.marginEnd
@@ -1674,7 +1688,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         ) {
             totalLength = paddingStart + paddingEnd
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) continue
                 val lp = child.layoutParams as LayoutParams
                 totalLength += child.measuredWidth + lp.marginStart + lp.marginEnd
@@ -1711,7 +1725,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
         var sharers = 0
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             // Only an all-auto row, as on web. A child with a length of its own is a demand rather
@@ -1745,7 +1759,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // What each child would take with nothing holding it back. Measured against an unbounded
         // width, which is what asks a label for its whole line rather than for a wrapped one.
         for (i in 0..<count) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
             val lp = child.layoutParams as LayoutParams
 
@@ -1834,7 +1848,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         var bending = 0
 
         for (i in 0..<count) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             val lp = child.layoutParams as LayoutParams
@@ -1935,7 +1949,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         val uniformMeasureSpec =
             MeasureSpec.makeMeasureSpec(measuredHeight, MeasureSpec.EXACTLY)
         for (i in 0..<count) {
-            val child = getChildAt(i)
+            val child = stackChildAt(i) ?: continue
             if (child.visibility != GONE) {
                 val lp = child.layoutParams as LayoutParams
 
@@ -1986,7 +2000,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         }
 
         for (i in 0..<count) {
-            val child = getChildAt(i)
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) {
                 continue
             }
@@ -2058,7 +2072,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
         for (i in 0..<count) {
             val childIndex = start + dir * i
-            val child = getChildAt(childIndex)
+            val child = stackChildAt(childIndex) ?: continue
 
             if (child.visibility == GONE) {
                 continue
@@ -2175,7 +2189,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
     private fun mainAxisPercentTotal(vertical: Boolean): Float {
         var total = 0f
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
             val lp = child.layoutParams as LayoutParams
             total += if (vertical) lp.maxHeightPercent else lp.maxWidthPercent

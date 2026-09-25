@@ -115,7 +115,7 @@ internal class MediaView(
     private var wholeImageAnchor: Position? = null
 
     val isNonInteractiveVideo: Boolean =
-        model.viewInfo.mediaType.isPlayable &&
+        model.viewInfo.mediaType == MediaType.VIDEO &&
                 !model.viewInfo.eventHandlers.hasTapHandler() &&
                 !(model.viewInfo.video ?: Video.defaultVideo()).showControls
 
@@ -487,7 +487,9 @@ internal class MediaView(
         wv.addJavascriptInterface(wv.getJavascriptInterface(), "VideoListenerInterface")
         val frameLayout = when (model.viewInfo.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
-            MediaType.VIDEO -> FixedAspectRatioFrameLayout(context).apply {
+            MediaType.VIDEO,
+            MediaType.YOUTUBE,
+            MediaType.VIMEO -> FixedAspectRatioFrameLayout(context).apply {
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                     gravity = Gravity.CENTER
                 }
@@ -497,28 +499,17 @@ internal class MediaView(
                     val isWrapWidth = params.width == WRAP_CONTENT
                     val isWrapHeight = params.height == WRAP_CONTENT
 
-                    if (isWrapWidth || isWrapHeight) {
-                        // If either dimension is wrap_content, the aspect ratio will be adjusted
-                        // based on the video's aspect ratio.
-                        model.viewInfo.video?.aspectRatio?.let {
-                            aspectRatio = it.toFloat()
-                        }
-                        shouldEnforceAspectRatio = true
-                    } else {
-                        // If the width and height are known, we don't need to fix to the aspect
-                        // ratio of the video.
-                        aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: 1.77f
-                        shouldEnforceAspectRatio = false
-                    }
-                }
-            }
-            MediaType.YOUTUBE,
-            MediaType.VIMEO -> FixedAspectRatioFrameLayout(context).apply {
-                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
-                    gravity = Gravity.CENTER
-                }
-                model.viewInfo.video?.aspectRatio?.let {
-                    aspectRatio = it.toFloat()
+                    aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: aspectRatio
+
+                    // Keep the media's own shape while either dimension is still being decided by
+                    // it. Once both are fixed the layout has already chosen the box, and a `video`
+                    // fills it -- as does any `backgrounds` layer, which exists to fill its host.
+                    // An in-flow youtube/vimeo embed keeps its aspect either way: its player
+                    // letterboxes inside whatever box it is given, so stretching the view only
+                    // moves the bars.
+                    val fillsItsBox = !isWrapWidth && !isWrapHeight &&
+                        (model.viewInfo.mediaType == MediaType.VIDEO || model.isBackgroundLayer)
+                    shouldEnforceAspectRatio = !fillsItsBox
                 }
             }
             // SVG images fall back to loading in a WebView, where we don't want to adjust the
@@ -644,7 +635,7 @@ internal class MediaView(
         }
 
         wv.visibility = INVISIBLE
-        wv.webViewClient = object : MediaWebViewClient(load) {
+        wv.webViewClient = object : MediaWebViewClient(load, { model.setMediaLoading(false) }) {
             override fun onPageFinished(webView: WebView) {
                 webView.visibility = VISIBLE
                 progressBar.visibility = GONE
@@ -665,6 +656,11 @@ internal class MediaView(
                 wv.postDelayed(load, delay)
             } else {
                 UALog.w { "MediaView[${model.videoId}] video failed to load after $MAX_VIDEO_ERROR_RETRIES retries: code=$errorCode, description=$description" }
+                // A video that has given up will never report ready, and only ready releases the
+                // hold this view took on a story's automated advance. Left held, a story with an
+                // unreachable video sits on its first page forever, and no later resume can free
+                // it -- `PagerModel.resumeStory` defers precisely while media is still loading.
+                model.setMediaLoading(false)
             }
         }
 
@@ -695,17 +691,30 @@ internal class MediaView(
             }
         }
 
-    private abstract class MediaWebViewClient(private val onRetry: Runnable) : WebViewClient() {
+    private abstract class MediaWebViewClient(
+        private val onRetry: Runnable,
+        private val onGaveUp: Runnable
+    ) : WebViewClient() {
 
         var error = false
         var retryDelay = START_RETRY_DELAY
+        private var retries = 0
 
         override fun onPageFinished(view: WebView, url: String) {
             super.onPageFinished(view, url)
             if (error) {
-                UALog.v { "MediaWebViewClient onPageFinished with error, retrying in ${retryDelay}ms: url=$url" }
-                view.postDelayed(onRetry, retryDelay)
-                retryDelay *= 2
+                if (retries < MAX_PAGE_RETRIES) {
+                    retries++
+                    UALog.v { "MediaWebViewClient onPageFinished with error, retrying in ${retryDelay}ms: url=$url" }
+                    view.postDelayed(onRetry, retryDelay)
+                    retryDelay *= 2
+                } else {
+                    // Only the plain `video` page reports errors through its own JS callback;
+                    // a youtube/vimeo embed has none, so without a last attempt this retried
+                    // forever. A page that will never load has to stop holding up a story.
+                    UALog.w { "MediaWebViewClient giving up after $MAX_PAGE_RETRIES retries: url=$url" }
+                    onGaveUp.run()
+                }
             } else {
                 onPageFinished(view)
             }
@@ -731,6 +740,7 @@ internal class MediaView(
 
         companion object {
             private const val START_RETRY_DELAY: Long = 1000
+            private const val MAX_PAGE_RETRIES = 3
         }
     }
 

@@ -1,11 +1,13 @@
 package com.urbanairship.android.layout.info
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.AutomatedAction
+import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
@@ -26,6 +28,7 @@ import com.urbanairship.android.layout.property.OutcomeResolver
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.PagerGesture
+import com.urbanairship.android.layout.property.ParallaxBackground
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
@@ -234,6 +237,34 @@ internal class BaseViewInfo(json: JsonMap) : View {
 
 private fun view(json: JsonMap): View = BaseViewInfo(json)
 
+/**
+ * A view whose `backgrounds` array is painted behind its own content.
+ *
+ * A layer never affects this view's own resolved size -- the view sizes itself first, using its
+ * normal rules, and only afterward are these laid into the resulting box.
+ */
+internal interface HasBackgrounds {
+    val backgrounds: List<Background>?
+}
+
+private fun hasBackgrounds(json: JsonMap): HasBackgrounds = object : HasBackgrounds {
+    override val backgrounds: List<Background>? =
+        json.optionalList("backgrounds")?.let(Background::fromJsonList)
+}
+
+/**
+ * Like [HasBackgrounds], but each layer may also declare `parallax` -- only `pager` and
+ * `scroll_layout` have a scroll or drag position for it to read.
+ */
+internal interface HasParallaxBackgrounds {
+    val backgrounds: List<ParallaxBackground>?
+}
+
+private fun hasParallaxBackgrounds(json: JsonMap): HasParallaxBackgrounds = object : HasParallaxBackgrounds {
+    override val backgrounds: List<ParallaxBackground>? =
+        json.optionalList("backgrounds")?.let(ParallaxBackground::fromJsonList)
+}
+
 internal interface Accessible {
     val contentDescription: String?
     val localizedContentDescription: LocalizedContentDescription?
@@ -397,7 +428,9 @@ internal open class ButtonInfo(
 }
 
 /** ButtonLayout is a bit special because it's both a ViewGroup and a Button. */
-internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Button by ButtonInfo(json), Accessible by accessible(json) {
+internal class ButtonLayoutInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), Button by ButtonInfo(json), Accessible by accessible(json), HasBackgrounds by hasBackgrounds(json) {
     val view = viewInfoFromJson(json.requireField("view"))
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
@@ -474,7 +507,7 @@ internal open class CheckableInfo(
 
 // ------ Components ------
 
-internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json) {
+internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
     private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.require("direction"))
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
@@ -529,7 +562,7 @@ internal class LinearLayoutItemInfo(
 
 internal class ContainerLayoutInfo(
     json: JsonMap
-) : ViewGroupInfo<ContainerLayoutItemInfo>(), View by view(json) {
+) : ViewGroupInfo<ContainerLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
     val items = json.requireField<JsonList>("items").map { ContainerLayoutItemInfo(it.requireMap()) }
 
     override val children: List<ContainerLayoutItemInfo> = items
@@ -543,7 +576,9 @@ internal class ContainerLayoutItemInfo(
     val margin: Margin? = json["margin"]?.let(Margin::fromJson)
 }
 
-internal class ScrollLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
+internal class ScrollLayoutInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), View by view(json), HasParallaxBackgrounds by hasParallaxBackgrounds(json) {
     val view = viewInfoFromJson(json.requireField("view"))
     val direction: Direction = Direction.from(json.require("direction"))
 
@@ -564,8 +599,26 @@ internal class MediaInfo(
     val video: Video? = json.optionalMap("video")?.let { Video.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
-    fun resolveUrl(isDarkMode: Boolean): String =
-        MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
+    /**
+     * The url to show for [state]: the `view_overrides` this state selects, then the
+     * `url_selectors` that pick between light and dark.
+     *
+     * @param state the scene's current state, or `null` before any has arrived, which resolves to
+     *   the declared url.
+     * @param isDarkMode whether to prefer a dark-mode selector.
+     * @return the url to load.
+     */
+    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {
+        val resolvedUrl = state?.resolveRequired(
+            overrides = viewOverrides?.url,
+            default = url
+        ) ?: url
+        val resolvedSelectors = state?.resolveOptional(
+            overrides = viewOverrides?.urlSelectors,
+            default = urlSelectors
+        ) ?: urlSelectors
+        return MediaUrlSelector.resolve(resolvedUrl, resolvedSelectors, isDarkMode)
+    }
 
     internal class ViewOverrides(json: JsonMap) {
         val url = json.optionalList("url")?.map {
@@ -931,7 +984,9 @@ internal class WebViewInfo(json: JsonMap) : ViewInfo(), View by view(json) {
     val url: String = json.requireField("url")
 }
 
-internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View by view(json) {
+internal class PagerInfo(
+    json: JsonMap
+) : ViewGroupInfo<PagerItemInfo>(), View by view(json), HasParallaxBackgrounds by hasParallaxBackgrounds(json) {
     val items = json.requireField<JsonList>("items").map { PagerItemInfo(it.requireMap()) }
     val isSwipeDisabled = json.optionalField("disable_swipe") ?: false
     val gestures = json.optionalList("gestures")?.let { PagerGesture.fromList(it) }
@@ -1225,7 +1280,9 @@ internal class AsyncViewControllerInfo(json: JsonMap) : ViewInfo(), View by view
     }
 }
 
-internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json), Accessible by accessible(json) {
+internal open class BaseToggleLayoutInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json), Accessible by accessible(json), HasBackgrounds by hasBackgrounds(json) {
     val onToggleOn: ToggleActions = ToggleActions(
         stateActions = json.requireMap("on_toggle_on")
             .optionalList("state_actions")

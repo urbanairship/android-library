@@ -5,6 +5,7 @@ import android.animation.LayoutTransition
 import kotlin.math.max
 import kotlin.math.roundToInt
 import android.content.Context
+import android.graphics.Canvas
 import android.util.SparseArray
 import android.util.SparseBooleanArray
 import android.view.View
@@ -16,17 +17,24 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel.Item
 import com.urbanairship.android.layout.model.ItemProperties
+import com.urbanairship.android.layout.property.Background as BackgroundLayer
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.widget.AutoSizeProvider
+import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.backgroundsBoxHeight
+import com.urbanairship.android.layout.widget.backgroundsBoxWidth
+import com.urbanairship.android.layout.widget.paintBackgroundsBox
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
 import com.urbanairship.android.layout.widget.establishesLength
@@ -63,9 +71,29 @@ internal class ContainerLayoutView(
     // while the declaration never changes.
     private val itemDeclarations = mutableListOf<Pair<Size, View>>()
 
+    // Never touched by measure/layout above -- see `BackgroundsPainter`.
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
+        // postInvalidate(), not invalidate() -- the image loader's onImageLoaded callback
+        // is not guaranteed to run on the UI thread, and invalidate() silently no-ops when
+        // called off it.
+        postInvalidate()
+    }
+
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it to null },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
+    )
+
     init {
+        backgroundsPainter.backgrounds = model.viewInfo.backgrounds
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         clipChildren = true
         val constraintBuilder = ConstraintSetBuilder.newBuilder(context)
+        // Before the items, so the layer draws below them. Carries no constraints of its own --
+        // it's sized and placed against the container's box, not against its siblings.
+        videoBackgrounds.addTo(this)
         addItems(model.items, constraintBuilder)
         constraintBuilder.build().applyTo(this)
         ViewCompat.setOnApplyWindowInsetsListener(this, WindowInsetsListener(constraintBuilder))
@@ -76,6 +104,12 @@ internal class ContainerLayoutView(
         }
 
         model.listener = object : BaseModel.Listener {
+            // An image layer resolves its own `view_overrides` against this; a video layer is
+            // its own `MediaModel` and gets the state through that.
+            override fun onStateUpdated(state: ThomasState) {
+                backgroundsPainter.state = state
+            }
+
             override fun setVisibility(visible: Boolean) {
                 this@ContainerLayoutView.isVisible = visible
             }
@@ -91,6 +125,31 @@ internal class ContainerLayoutView(
     }
 
     override fun isShrinkable(): Boolean = true
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        videoBackgrounds.placeInto(
+            backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, paddingLeft, paddingTop
+        )
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
+        super.dispatchDraw(canvas)
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        // Anything stacked above a layer drawn as a real view has to blend against that view's
+        // live pixels, so it goes down here rather than before the children.
+        val attachedIndex = videoBackgrounds.indexOf(child)
+        if (attachedIndex >= 0) {
+            paintBackgroundsBox(canvas) { w, h ->
+                backgroundsPainter.drawLayersAfter(canvas, w, h, attachedIndex)
+            }
+        }
+        return result
+    }
 
     private fun addItems(items: List<Item>, constraintBuilder: ConstraintSetBuilder) {
         for (item in items) {
@@ -389,6 +448,8 @@ internal class ContainerLayoutView(
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             if (child.visibility == GONE) continue
+            // A `backgrounds` layer fills whatever the container resolves to; it never decides it.
+            if (videoBackgrounds.contains(child)) continue
             // Absent from `percents` boxes to null: not a percent on this axis, so it counts.
             val percent = percents.get(child.id)
             if (percent != null && percent != 1f) continue
@@ -500,7 +561,9 @@ internal class ContainerLayoutView(
 
             var constraintsChanged = false
             for (i in 0 until childCount) {
-                val child = getChildAt(i) as ViewGroup
+                // Only the item frames below -- a `backgrounds` layer has no constraints to inset.
+                val child = getChildAt(i).takeUnless(videoBackgrounds::contains) as? ViewGroup
+                    ?: continue
                 val shouldIgnoreSafeArea = frameShouldIgnoreSafeArea[child.id, false]
                 if (shouldIgnoreSafeArea) {
                     ViewCompat.dispatchApplyWindowInsets(child, applied)

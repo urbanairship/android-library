@@ -92,6 +92,7 @@ public class PagerModelTest {
             viewInfo = mockk<PagerInfo>(relaxUnitFun = true) {
                 every { gestures } returns emptyList()
                 every { disableSwipeWhen } returns null
+                every { backgrounds } returns null
             },
             pagerState = pagerState,
             environment = mockEnv,
