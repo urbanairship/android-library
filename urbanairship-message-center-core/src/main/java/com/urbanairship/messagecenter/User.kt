@@ -109,7 +109,7 @@ public class User internal constructor(
      * @param userCredentials The user credentials
      */
     internal fun setUser(userCredentials: UserCredentials?) {
-        UALog.d("Setting Rich Push user: %s", userCredentials)
+        UALog.d("Setting Rich Push user: %s", userCredentials?.username)
         val username = userCredentials?.username
         val password = userCredentials?.password
         preferences.put(USER_ID_KEY, username)
