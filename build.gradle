@@ -40,7 +40,8 @@ plugins {
 allprojects {
     dependencyLocking {
         lockAllConfigurations()
-        lockMode = LockMode.STRICT
+        // IDE sync resolves unlockable detached copies (e.g. debugRuntimeClasspathCopy); locked configurations stay enforced.
+        lockMode = System.getProperty('idea.sync.active') == 'true' ? LockMode.DEFAULT : LockMode.STRICT
 
         // Gradle resolves kotlin-stdlib-common as an artifact-less graph node but never writes it
         // to the lock, so every configuration that sees it fails validation against a lock no
