@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.12.1 - September 25, 2026
+
+Patch release that fixes stale contact and channel subscription list reads.
+
+### Changes
+- Fixed `Contact.fetchSubscriptionLists()`, `Contact.contactChannelsFlow`, and `AirshipChannel.fetchSubscriptionLists()` returning a previous, stale result when read shortly after a prior subscriber had already stopped observing
+
 ## Version 20.12.0 - August 25, 2026
 
 Minor release that fixes an issue where active Live Updates could stop receiving updates.
