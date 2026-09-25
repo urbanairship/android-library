@@ -36,9 +36,9 @@ public class MessageCenterMessageState internal constructor(
     /** The message ID, or `null` if no message is displayed */
     public var messageId: String?
         get() = viewState.messageId
-        set(_) {
+        set(value) {
             onAction(
-                messageId?.let { Action.LoadMessage(it) } ?: Action.ClearMessage
+                value?.let { Action.LoadMessage(it) } ?: Action.ClearMessage
             )
         }
 
