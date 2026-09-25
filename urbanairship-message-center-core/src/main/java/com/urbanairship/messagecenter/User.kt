@@ -18,7 +18,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class User internal constructor(
-    private val preferences: PreferenceStore
+    private val preferences: PreferenceStore,
+    private val tokenCipher: UserTokenCipher = KeystoreUserTokenCipher()
 ) {
 
     /**
@@ -115,12 +116,15 @@ public class User internal constructor(
         preferences.put(
             USER_TOKEN_KEY,
             if (!username.isNullOrEmpty() && !password.isNullOrEmpty()) {
-                xorHexEncode(password, username)
+                encryptToken(password)
             } else {
                 null
             }
         )
     }
+
+    private fun encryptToken(token: String): String? =
+        tokenCipher.encrypt(token)?.let { ENCRYPTED_TOKEN_PREFIX + it }
 
     internal val userCredentials: UserCredentials?
         get() {
@@ -150,7 +154,14 @@ public class User internal constructor(
         get() {
             val id = id ?: return null
             val token = preferences.get(USER_TOKEN_KEY) ?: return null
-            return xorHexDecode(token, id)
+
+            if (token.startsWith(ENCRYPTED_TOKEN_PREFIX)) {
+                return tokenCipher.decrypt(token.removePrefix(ENCRYPTED_TOKEN_PREFIX))
+            }
+
+            val legacyToken = xorHexDecode(token, id) ?: return null
+            encryptToken(legacyToken)?.let { preferences.put(USER_TOKEN_KEY, it) }
+            return legacyToken
         }
 
     /** The registered Channel ID stored in the DataStore, or `null` if no Channel ID is stored. */
@@ -176,20 +187,13 @@ public class User internal constructor(
         public val isCreated: Boolean
             get() = Airship.messageCenter.user.isUserCreated
 
-        /** XOR [input] with [key] (cycling), return result as lowercase hex. */
-        private fun xorHexEncode(input: String, key: String): String {
-            val inputBytes = input.toByteArray()
-            val keyBytes = key.toByteArray()
-            val out = ByteArray(inputBytes.size)
-            for (i in inputBytes.indices) {
-                out[i] = (inputBytes[i].toInt() xor keyBytes[i % keyBytes.size].toInt()).toByte()
-            }
-            return buildString(out.size * 2) {
-                for (b in out) append(String.format("%02x", b))
-            }
-        }
+        /** Marks a token stored by [KeystoreUserTokenCipher]; anything else is the legacy XOR format. */
+        private const val ENCRYPTED_TOKEN_PREFIX = "v1:"
 
-        /** Inverse of [xorHexEncode]. Returns `null` on malformed input. */
+        /**
+         * Decodes the legacy XOR-obfuscated token format, read-only for migration.
+         * Returns `null` on malformed input.
+         */
         private fun xorHexDecode(hex: String, key: String): String? {
             if (hex.length % 2 != 0) return null
             return try {
