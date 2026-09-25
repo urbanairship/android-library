@@ -436,6 +436,127 @@ public class DefaultMessageCenterMessageViewModelTest {
     }
 
     @Test
+    public fun inboxUpdateKeepsLoadedWebViewState(): TestResult = runTest {
+        val message = createMessage("message-id")
+        val updatedMessage = createMessage("message-id", extras = mapOf("k" to "v"))
+        val inbox = mockInbox {
+            coEvery { getMessage("message-id") } returnsMany listOf(message, updatedMessage)
+        }
+        val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
+
+        viewModel.states.test {
+            assertThat(awaitItem()).isEqualTo(State.Empty)
+            viewModel.handle(Action.LoadMessage("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
+            awaitItem()
+            viewModel.handle(Action.UpdateWebViewState(WebViewState.LOADED))
+            awaitItem()
+            advanceUntilIdle()
+
+            inboxUpdates.emit(Unit)
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(updatedMessage, Content.Html(WebViewState.LOADED)))
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    public fun inboxUpdateKeepsErrorWebViewState(): TestResult = runTest {
+        val message = createMessage("message-id")
+        val updatedMessage = createMessage("message-id", extras = mapOf("k" to "v"))
+        val inbox = mockInbox {
+            coEvery { getMessage("message-id") } returnsMany listOf(message, updatedMessage)
+        }
+        val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
+
+        viewModel.states.test {
+            assertThat(awaitItem()).isEqualTo(State.Empty)
+            viewModel.handle(Action.LoadMessage("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
+            awaitItem()
+            viewModel.handle(Action.UpdateWebViewState(WebViewState.ERROR))
+            awaitItem()
+            advanceUntilIdle()
+
+            inboxUpdates.emit(Unit)
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(updatedMessage, Content.Html(WebViewState.ERROR)))
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    public fun inboxUpdateWithNewBodyUrlResetsWebViewState(): TestResult = runTest {
+        val message = createMessage("message-id")
+        val movedMessage = createMessage("message-id", bodyUrl = "https://example.com/new-body")
+        val inbox = mockInbox {
+            coEvery { getMessage("message-id") } returnsMany listOf(message, movedMessage)
+        }
+        val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
+
+        viewModel.states.test {
+            assertThat(awaitItem()).isEqualTo(State.Empty)
+            viewModel.handle(Action.LoadMessage("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
+            awaitItem()
+            viewModel.handle(Action.UpdateWebViewState(WebViewState.LOADED))
+            awaitItem()
+            advanceUntilIdle()
+
+            inboxUpdates.emit(Unit)
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(movedMessage, Content.Html(WebViewState.INIT)))
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    public fun refreshAfterWebViewErrorReloadsMessage(): TestResult = runTest {
+        val message = createMessage("message-id")
+        val inbox = mockInbox { coEvery { getMessage("message-id") } returns message }
+        val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
+
+        viewModel.states.test {
+            assertThat(awaitItem()).isEqualTo(State.Empty)
+            viewModel.handle(Action.LoadMessage("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
+            awaitItem()
+            viewModel.handle(Action.UpdateWebViewState(WebViewState.ERROR))
+            awaitItem()
+
+            viewModel.handle(Action.Refresh)
+            assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(message, Content.Html(WebViewState.INIT)))
+
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify(exactly = 2) { inbox.getMessage("message-id") }
+    }
+
+    @Test
+    public fun refreshAfterLoadFailedReloadsMessage(): TestResult = runTest {
+        val message = createMessage("message-id")
+        val inbox = mockInbox {
+            coEvery { getMessage("message-id") } returnsMany listOf(null, message)
+            coEvery { fetchMessages() } returns false
+        }
+        val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
+
+        viewModel.states.test {
+            assertThat(awaitItem()).isEqualTo(State.Empty)
+            viewModel.handle(Action.LoadMessage("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.Error(State.Error.Type.LOAD_FAILED, "message-id"))
+
+            viewModel.handle(Action.Refresh)
+            assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(message, Content.Html(WebViewState.INIT)))
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     public fun makeAnalyticsDelegatesToInbox() {
         val message = createMessage("message-id")
         val listener = mockk<ThomasListenerInterface>()

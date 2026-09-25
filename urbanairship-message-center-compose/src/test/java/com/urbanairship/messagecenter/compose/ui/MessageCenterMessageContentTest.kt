@@ -73,6 +73,13 @@ public class MessageCenterMessageContentTest {
     }
 
     @Test
+    public fun htmlInitShowsProgressOverlay() {
+        setContent(State.MessageContent(message, Content.Html(WebViewState.INIT)))
+
+        composeRule.onNode(progressIndicator).assertExists()
+    }
+
+    @Test
     public fun htmlLoadingShowsProgressOverlay() {
         setContent(State.MessageContent(message, Content.Html(WebViewState.LOADING)))
 
