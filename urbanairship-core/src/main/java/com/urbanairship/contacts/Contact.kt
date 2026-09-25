@@ -34,6 +34,7 @@ import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.push.PushManager
+import com.urbanairship.util.AutoRefreshingDataProvider
 import com.urbanairship.util.Clock
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
@@ -49,6 +50,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Airship contact. A contact is distinct from a channel and represents a "user"
@@ -548,23 +550,36 @@ public class Contact internal constructor(
 
     @JvmSynthetic
     public suspend fun fetchSubscriptionLists(): Result<Map<String, Set<Scope>>> {
-        return combine(
-            contactManager.stableContactIdUpdates,
-            subscriptionsProvider.updates
-        ) { stableId, identifiableResult ->
-            // Only return the data if the provider's data matches the manager's current stable ID
-            if (identifiableResult.identifier == stableId) {
-                identifiableResult.data
-            } else {
-                null
-            }
-        }.filterNotNull().first()
+        return subscriptionListsFlow.first()
     }
 
     /**
-     * A flow of contact channels for the contact.
+     * Only emits data that belongs to the current, stable contact ID. Otherwise a `first()` read
+     * taken right after a [reset] or [identify] gets the previous contact's replayed data. Nothing
+     * is emitted while the contact ID is unstable - an empty result would be indistinguishable
+     * from "this contact has no data".
      */
-    public val contactChannelsFlow: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.updates.map { it.data }
+    private fun <T> Flow<AutoRefreshingDataProvider.IdentifiableResult<T>>.gatedByStableContactId(): Flow<Result<T>> =
+        combine(contactManager.contactIdUpdates, this) { contactIdUpdate, update ->
+            if (contactIdUpdate?.isStable == true && contactIdUpdate.contactId == update.identifier) {
+                update.identifier to update.data
+            } else {
+                null
+            }
+        }.filterNotNull()
+            // The combine re-fires far more often than the data changes. Keyed on the contact
+            // ID too, so a switch between contacts holding identical data still emits.
+            .distinctUntilChanged()
+            .map { (_, data) -> data }
+
+    /**
+     * A flow of contact channels for the contact.
+     *
+     * Does not emit channels belonging to a previous contact. While a [reset] or [identify] is in
+     * flight, emits nothing until data for the new contact is available.
+     */
+    public val contactChannelsFlow: Flow<Result<List<ContactChannel>>> =
+        contactChannelsProvider.updates.gatedByStableContactId()
 
     /**
      * @suppress
@@ -574,8 +589,12 @@ public class Contact internal constructor(
 
     /**
      * A flow of subscription list updates for the contact.
+     *
+     * Does not emit subscription lists belonging to a previous contact. While a [reset] or
+     * [identify] is in flight, emits nothing until data for the new contact is available.
      */
-    public val subscriptionListsFlow: Flow<Result<Map<String, Set<Scope>>>> = subscriptionsProvider.updates.map { it.data }
+    public val subscriptionListsFlow: Flow<Result<Map<String, Set<Scope>>>> =
+        subscriptionsProvider.updates.gatedByStableContactId()
 
     /**
      * @suppress
@@ -589,12 +608,53 @@ public class Contact internal constructor(
      *
      * An empty set indicates that this contact is not subscribed to any lists.
      *
+     * Results in `null` if the fetch failed, or if the contact has not resolved within
+     * [FETCH_TIMEOUT].
+     *
      * @return A [PendingResult] of the current set of subscription lists.
      */
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
         subscriptionsScope.launch {
-            pendingResult.setResult(fetchSubscriptionLists().getOrNull())
+            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchSubscriptionLists() }
+            if (result == null) {
+                UALog.w { "Timed out fetching subscription lists." }
+            }
+            pendingResult.setResult(result?.getOrNull())
+        }
+        return pendingResult
+    }
+
+    /**
+     * Returns the contact channels for the current contact.
+     *
+     * Suspends until channels for the current contact are available rather than returning a
+     * previous contact's. Apply a timeout if you cannot wait indefinitely -
+     * [fetchContactChannelsPendingResult] applies a default one.
+     *
+     * @return A [Result] of the current contact channels.
+     */
+    @JvmSynthetic
+    public suspend fun fetchContactChannels(): Result<List<ContactChannel>> {
+        return contactChannelsFlow.first()
+    }
+
+    /**
+     * Returns the contact channels for the current contact.
+     *
+     * Results in `null` if the fetch failed, or if the contact has not resolved within
+     * [FETCH_TIMEOUT].
+     *
+     * @return A [PendingResult] of the current contact channels.
+     */
+    public fun fetchContactChannelsPendingResult(): PendingResult<List<ContactChannel>?> {
+        val pendingResult = PendingResult<List<ContactChannel>?>()
+        subscriptionsScope.launch {
+            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchContactChannels() }
+            if (result == null) {
+                UALog.w { "Timed out fetching contact channels." }
+            }
+            pendingResult.setResult(result?.getOrNull())
         }
         return pendingResult
     }
@@ -622,6 +682,9 @@ public class Contact internal constructor(
 
         /** Default CRA max age. */
         private val CRA_MAX_AGE = TimeUnit.MINUTES.toMillis(10)
+
+        /** How long the PendingResult fetches wait for the contact to resolve. */
+        private val FETCH_TIMEOUT = TimeUnit.SECONDS.toMillis(30)
 
         private const val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
 
