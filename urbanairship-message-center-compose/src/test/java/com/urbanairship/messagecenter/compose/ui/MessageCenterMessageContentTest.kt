@@ -2,13 +2,21 @@
 package com.urbanairship.messagecenter.compose.ui
 
 import android.content.Context
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.hasProgressBarRangeInfo
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import com.urbanairship.Airship
@@ -36,7 +44,8 @@ import org.junit.runner.RunWith
 public class MessageCenterMessageContentTest {
 
     @get:Rule
-    public val composeRule: ComposeContentTestRule = createComposeRule()
+    public val composeRule: AndroidComposeTestRule<ActivityScenarioRule<ComponentActivity>, ComponentActivity> =
+        createAndroidComposeRule<ComponentActivity>()
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val message = createMessage("message-id")
@@ -50,6 +59,9 @@ public class MessageCenterMessageContentTest {
         mockkObject(Airship)
         every { Airship.messageCenter } returns mockk {
             every { user } returns mockk<User>(relaxed = true)
+        }
+        every { Airship.urlAllowList } returns mockk {
+            every { isAllowed(any(), any()) } returns false
         }
     }
 
@@ -95,19 +107,109 @@ public class MessageCenterMessageContentTest {
     }
 
     @Test
-    public fun htmlErrorShowsErrorViewWithRetry() {
+    public fun htmlErrorShowsErrorView() {
         setContent(State.MessageContent(message, Content.Html(WebViewState.ERROR)))
 
         composeRule.onNode(progressIndicator).assertDoesNotExist()
         composeRule.onNodeWithText(context.getString(CoreR.string.ua_mc_failed_to_load)).assertExists()
-
-        composeRule.onNodeWithText(context.getString(CoreR.string.ua_retry_button).uppercase()).performClick()
-        assertThat(actions).contains(Action.Refresh)
     }
 
-    private fun setContent(viewState: State) {
-        val state = MessageCenterMessageState(
-            onAction = { actions.add(it) },
+    @Test
+    public fun htmlErrorRetryReloadsWebViewWithoutRefresh() {
+        setContent(State.MessageContent(message, Content.Html(WebViewState.ERROR)))
+        assertThat(actions.count { it == Action.UpdateWebViewState(WebViewState.LOADING) }).isEqualTo(1)
+
+        composeRule.onNodeWithText(context.getString(CoreR.string.ua_retry_button).uppercase()).performClick()
+        composeRule.waitForIdle()
+
+        assertThat(actions.count { it == Action.UpdateWebViewState(WebViewState.LOADING) }).isEqualTo(2)
+        assertThat(actions).doesNotContain(Action.Refresh)
+    }
+
+    @Test
+    public fun pageFinishedReportsLoadedAndMarksRead() {
+        setContent(State.MessageContent(message, Content.Html(WebViewState.INIT)))
+        val webView = findWebView()
+
+        composeRule.runOnUiThread {
+            webView.webViewClient.onPageFinished(webView, message.bodyUrl)
+        }
+
+        assertThat(actions).contains(Action.UpdateWebViewState(WebViewState.LOADED))
+        assertThat(actions).contains(Action.MarkCurrentMessageRead)
+    }
+
+    @Test
+    public fun pageFinishedAfterMainFrameErrorKeepsError() {
+        setContent(State.MessageContent(message, Content.Html(WebViewState.INIT)))
+        val webView = findWebView()
+
+        composeRule.runOnUiThread { webView.failMainFrameLoad() }
+
+        assertThat(actions).contains(Action.UpdateWebViewState(WebViewState.ERROR))
+        assertThat(actions).doesNotContain(Action.UpdateWebViewState(WebViewState.LOADED))
+        assertThat(actions).doesNotContain(Action.MarkCurrentMessageRead)
+    }
+
+    @Test
+    public fun retryAfterPageErrorRecoversOnSuccessfulLoad() {
+        setContent(State.MessageContent(message, Content.Html(WebViewState.INIT)), applyWebViewState = true)
+        val failedWebView = findWebView()
+
+        composeRule.runOnUiThread { failedWebView.failMainFrameLoad() }
+        composeRule.onNodeWithText(context.getString(CoreR.string.ua_mc_failed_to_load)).assertExists()
+
+        composeRule.onNodeWithText(context.getString(CoreR.string.ua_retry_button).uppercase()).performClick()
+        composeRule.waitForIdle()
+        val retriedWebView = findWebView()
+        assertThat(retriedWebView).isNotSameInstanceAs(failedWebView)
+        composeRule.onNode(progressIndicator).assertExists()
+
+        composeRule.runOnUiThread { retriedWebView.webViewClient.onPageFinished(retriedWebView, message.bodyUrl) }
+        composeRule.waitForIdle()
+
+        composeRule.onNode(progressIndicator).assertDoesNotExist()
+        composeRule.onNodeWithText(context.getString(CoreR.string.ua_mc_failed_to_load)).assertDoesNotExist()
+        assertThat(actions).contains(Action.MarkCurrentMessageRead)
+    }
+
+    /** Replays WebView's callback order for a failed main-frame load: the error, then a finish. */
+    private fun WebView.failMainFrameLoad() {
+        val request = mockk<WebResourceRequest>(relaxed = true) { every { isForMainFrame } returns true }
+        val error = mockk<WebResourceError>(relaxed = true) {
+            every { errorCode } returns WebViewClient.ERROR_HOST_LOOKUP
+            every { description } returns "net::ERR_INTERNET_DISCONNECTED"
+        }
+        webViewClient.onReceivedError(this, request, error)
+        webViewClient.onPageFinished(this, message.bodyUrl)
+    }
+
+    private fun findWebView(): WebView {
+        fun View.find(): WebView? = when (this) {
+            is WebView -> this
+            is ViewGroup -> (0 until childCount).firstNotNullOfOrNull { getChildAt(it).find() }
+            else -> null
+        }
+        return requireNotNull(composeRule.activity.window.decorView.find())
+    }
+
+    /**
+     * Shows [MessageCenterMessage] for [viewState], recording every action it sends.
+     *
+     * @param viewState The state to display.
+     * @param applyWebViewState Whether to apply [Action.UpdateWebViewState] to the displayed state, as the
+     *   view model would. Off by default so a test's state stays exactly as given.
+     */
+    private fun setContent(viewState: State, applyWebViewState: Boolean = false) {
+        lateinit var state: MessageCenterMessageState
+        state = MessageCenterMessageState(
+            onAction = { action ->
+                actions.add(action)
+                val current = state.viewState
+                if (applyWebViewState && action is Action.UpdateWebViewState && current is State.MessageContent) {
+                    state.viewState = current.copy(content = Content.Html(action.state))
+                }
+            },
             makeAnalytics = { _, _ -> mockk() },
         )
         state.viewState = viewState

@@ -37,7 +37,14 @@ internal fun MessageCenterWebView(
 
     DisposableEffect(message?.bodyUrl) {
         val listener = object : AirshipWebViewClient.Listener {
+            private var hasError = false
+
             override fun onPageFinished(view: WebView, url: String?) {
+                // WebView still finishes after a main-frame error, having drawn its own error page.
+                if (hasError) {
+                    UALog.v { "onPageFinished after error, ignoring: $url" }
+                    return
+                }
                 UALog.v("onPageFinished: $url")
                 onPageReady()
             }
@@ -48,6 +55,7 @@ internal fun MessageCenterWebView(
                 error: WebResourceError
             ) {
                 UALog.v { "WebView error: ${error.errorCode} ${error.description}" }
+                hasError = true
                 onPageError()
             }
 

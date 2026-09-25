@@ -25,8 +25,12 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -167,30 +171,35 @@ private fun ContentView(
     onClose: () -> Unit,
     onAction: ((Action) -> Unit),
 ) {
+    var webViewKey by remember(message.id) { mutableIntStateOf(0) }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        MessageCenterWebView(
-            message = message,
-            onClose = onClose,
-            onPageStarted = {
-                onAction(Action.UpdateWebViewState(WebViewState.LOADING))
-            },
-            onPageError = {
-                onAction(Action.UpdateWebViewState(WebViewState.ERROR))
-            },
-            onPageReady = {
-                onAction(Action.UpdateWebViewState(WebViewState.LOADED))
-                onAction(Action.MarkCurrentMessageRead)
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+        key(webViewKey) {
+            MessageCenterWebView(
+                message = message,
+                onClose = onClose,
+                onPageStarted = {
+                    onAction(Action.UpdateWebViewState(WebViewState.LOADING))
+                },
+                onPageError = {
+                    onAction(Action.UpdateWebViewState(WebViewState.ERROR))
+                },
+                onPageReady = {
+                    onAction(Action.UpdateWebViewState(WebViewState.LOADED))
+                    onAction(Action.MarkCurrentMessageRead)
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
-        // Show the error if we have one, otherwise show loading if we're loading
-        if (content.webViewState == WebViewState.ERROR) {
-            ErrorView(State.Error.Type.LOAD_FAILED) { onAction(Action.Refresh) }
-        } else if (content.webViewState == WebViewState.LOADING) {
-            LoadingView()
+        when (content.webViewState) {
+            // Not Action.Refresh: Compose can skip the Loading frame and keep the failed web view.
+            WebViewState.ERROR -> ErrorView(State.Error.Type.LOAD_FAILED) { webViewKey++ }
+            // INIT covers the first frame, before onPageStarted runs from the web view's effect.
+            WebViewState.INIT, WebViewState.LOADING -> LoadingView()
+            WebViewState.LOADED -> Unit
         }
     }
 }
