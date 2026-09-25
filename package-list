@@ -6,11 +6,9 @@ com.urbanairship.push.adm
 module:urbanairship-automation
 com.urbanairship.automation
 com.urbanairship.embedded
-com.urbanairship.embedded.ai
 com.urbanairship.iam
 com.urbanairship.iam.actions
 com.urbanairship.iam.adapter
-com.urbanairship.iam.ai
 com.urbanairship.iam.content
 com.urbanairship.iam.info
 com.urbanairship.iam.legacy
@@ -21,7 +19,6 @@ com.urbanairship
 com.urbanairship.actions
 com.urbanairship.actions.tags
 com.urbanairship.activity
-com.urbanairship.ai
 com.urbanairship.analytics
 com.urbanairship.analytics.location
 com.urbanairship.analytics.templates

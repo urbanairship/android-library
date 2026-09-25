@@ -97,7 +97,7 @@
     <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">JsonValue</a> : <a href="https://developer.android.com/reference/kotlin/android/os/Parcelable.html">Parcelable</a>, <a href="../-json-serializable/index.html">JsonSerializable</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/main/urbanairship-core/src/main/java/com/urbanairship/json/JsonValue.kt#L25">source</a>)</span></span></div><p class="paragraph">A JsonValue is a representation of any value that can be described using JSON. It can contain one of the following: a <a href="../-json-map/index.html">JsonMap</a>, a <a href="../-json-list/index.html">JsonList</a>, a <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-number/index.html">Number</a>, a <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a>, or it can contain null.</p><p class="paragraph">JsonValues can be created from Java Objects by calling <a href="-companion/wrap.html">wrap</a> or from a JSON String by calling <a href="-companion/parse-string.html">parseString</a>. The JsonValue <a href="to-string.html">toString</a> returns the JSON String representation of the object.</p></div></div>
   </div>
   <div class="tabbedcontent">
-    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="TYPE">
         <h2 class="tableheader">Types</h2>
@@ -675,25 +675,6 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="write-to-parcel.html"><span class="token function">writeToParcel</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dest<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Parcel.html">Parcel</a><span class="token punctuation">, </span></span><span class="parameter ">flags<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div data-togglable="EXTENSION_FUNCTION">
-        <h2 class="tableheader">Inherited functions</h2>
-        <div class="table"><a data-name="-1751648051%2FFunctions%2F-708863246" anchor-label="requireEpochMillis" id="-1751648051%2FFunctions%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="../require-epoch-millis.html"><span>require</span><wbr><span>Epoch</span><wbr><span><span>Millis</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1751648051%2FFunctions%2F-708863246"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">JsonValue</a><span class="token punctuation">.</span><a href="../require-epoch-millis.html"><span class="token function">requireEpochMillis</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">key<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/time/Instant.html">Instant</a></div><div class="brief "><p class="paragraph">Reads a <a href="index.html">JsonValue</a> holding epoch milliseconds as an <a href="https://developer.android.com/reference/kotlin/java/time/Instant.html">Instant</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
