@@ -154,7 +154,7 @@ internal class DefaultMessageCenterMessageViewModel(
             is Action.ClearMessage -> clearMessage()
             is Action.MarkCurrentMessageRead -> markDisplayedMessageRead()
             is Action.DeleteCurrentMessage -> deleteDisplayedMessage()
-            is Action.Refresh -> currentMessage?.let { loadMessage(it.id) }
+            is Action.Refresh -> refresh()
             is Action.UpdateWebViewState -> updateWebViewState(action.state)
         }
     }
@@ -170,6 +170,10 @@ internal class DefaultMessageCenterMessageViewModel(
             return
         }
 
+        reloadMessage(messageId)
+    }
+
+    private fun reloadMessage(messageId: String) {
         _states.value = State.Loading(messageId)
 
         viewModelScope.launch {
@@ -206,11 +210,11 @@ internal class DefaultMessageCenterMessageViewModel(
         refreshJob?.cancel()
     }
 
+    /** Reloads the current message, including after a load error. */
     fun refresh() {
-        currentMessage?.let {
-            UALog.v { "Refreshing message: ${it.id}" }
-            loadMessage(it.id)
-        }
+        val messageId = _states.value.messageId ?: return
+        UALog.v { "Refreshing message: $messageId" }
+        reloadMessage(messageId)
     }
 
     fun updateWebViewState(state: WebViewState) {
@@ -232,9 +236,26 @@ internal class DefaultMessageCenterMessageViewModel(
         viewModelScope.launch {
             inbox.inboxUpdated.collect {
                 val messageId = currentMessage?.id ?: return@collect
-                _states.value = getOrFetchMessage(messageId)
+                val refreshed = getOrFetchMessage(messageId)
+                _states.value = refreshed.withWebViewStateFrom(_states.value)
             }
         }
+
+    /**
+     * Returns this state with [previous]'s web view state, if both show the same HTML body.
+     *
+     * The web view only reloads when the body URL changes, so an inbox update for the same body
+     * must not reset a loaded or failed page back to [WebViewState.INIT].
+     *
+     * @param previous The state being replaced.
+     * @return This state, carrying over [previous]'s web view state when the body URL is unchanged.
+     */
+    private fun State.withWebViewStateFrom(previous: State): State {
+        if (this !is State.MessageContent || content !is State.MessageContent.Content.Html) return this
+        if (previous !is State.MessageContent || previous.message.bodyUrl != message.bodyUrl) return this
+        val previousContent = previous.content as? State.MessageContent.Content.Html ?: return this
+        return copy(content = previousContent)
+    }
 
     private suspend fun getOrFetchMessage(messageId: String): State {
         // Try to load the message from local storage
