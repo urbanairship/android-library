@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -46,7 +47,10 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
         view.establishesLength(direction)
 
     abstract val view: AnyModel
-    abstract fun buildFormData(state: State.Form): ThomasFormField.BaseForm
+    abstract fun buildFormData(
+        state: State.Form,
+        fieldType: ThomasFormField.FieldType<Set<ThomasFormField<*>>>
+    ): ThomasFormField.BaseForm
 
     private val isChildForm = viewInfo.submitBehavior == null
 
@@ -84,15 +88,34 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
     private fun initChildForm() {
         checkNotNull(parentFormState) { "Child form requires parent form state!" }
 
-        // Update the parent form with the child form's data whenever it changes.
+        // A submitted child form becomes one valid field of its parent, carrying its channels
+        // and attributes; the parent reports and registers them when it submits.
         modelScope.launch {
             environment.layoutEvents.filterIsInstance<LayoutEvent.SubmitForm>()
+                .filter { it.targets(viewInfo.identifier) }
                 .map {
-                    it to formState.prepareSubmit()
+                    it to formState.prepareSubmit(
+                        registrationOverrides = viewInfo.registrationOverrides,
+                        thomasState = layoutState.thomasState
+                    )
                 }
                 .distinctUntilChanged().collect { (event, formResult) ->
-                    formResult?.let {
-                        // TODO send the data into the parent as a formField
+                    formResult?.let { (result, _) ->
+                        val submitted = formState.formUpdates.value
+                        val children = submitted.filteredFields.values.toSet()
+                        parentFormState.updateFormInput(
+                            value = buildFormData(
+                                state = submitted,
+                                fieldType = ThomasFormField.FieldType.Instant(
+                                    ThomasFormField.Result(
+                                        value = children,
+                                        channels = result.channels,
+                                        attributes = result.attributes
+                                    )
+                                )
+                            ),
+                            pageId = properties.pagerPageId
+                        )
                         event.onSubmitted()
                     }
                 }
@@ -117,6 +140,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
     private fun initParentForm() {
         modelScope.launch {
             environment.layoutEvents.filterIsInstance<LayoutEvent.SubmitForm>()
+                .filter { it.targets(viewInfo.identifier) }
                 // We want to combine the submit event with the latest form state, but don't want
                 // to receive updates from the form state changes flow, so we're using a map here
                 // instead of a combine.
@@ -179,6 +203,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
         modelScope.launch {
             environment.layoutEvents
                 .filterIsInstance<LayoutEvent.ValidateForm>()
+                .filter { it.targets(viewInfo.identifier) }
                 .collect {
                     if (formState.formUpdates.value.isSubmitted) {
                         return@collect

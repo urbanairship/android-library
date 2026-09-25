@@ -93,15 +93,27 @@ internal class LayoutEventHandler(coroutineScope: CoroutineScope) {
 }
 
 internal sealed class LayoutEvent {
+    /**
+     * Submits [formIdentifier], the form enclosing the button, or every form when `null`.
+     */
     data class SubmitForm(
         val buttonIdentifier: String,
+        val formIdentifier: String? = null,
         val onSubmitted: (suspend () -> Unit) = {}
-    ) : LayoutEvent()
+    ) : LayoutEvent() {
+        fun targets(identifier: String): Boolean = formIdentifier == null || formIdentifier == identifier
+    }
 
+    /**
+     * Validates [formIdentifier], the form enclosing the button, or every form when `null`.
+     */
     data class ValidateForm(
         val buttonIdentifier: String,
+        val formIdentifier: String? = null,
         val onValidated: (suspend () -> Unit) = {}
-    ) : LayoutEvent()
+    ) : LayoutEvent() {
+        fun targets(identifier: String): Boolean = formIdentifier == null || formIdentifier == identifier
+    }
 
     data class Report(
         val event: ReportingEvent

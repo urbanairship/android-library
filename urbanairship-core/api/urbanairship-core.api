@@ -2224,9 +2224,13 @@ public final class com/urbanairship/contacts/ContactChannel$Email$RegistrationIn
 public final class com/urbanairship/contacts/ContactChannel$Email$RegistrationInfo$Registered : com/urbanairship/contacts/ContactChannel$Email$RegistrationInfo {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getChannelId ()Ljava/lang/String;
+	public final fun getClickTrackingOptedIn ()Ljava/time/Instant;
+	public final fun getClickTrackingOptedOut ()Ljava/time/Instant;
 	public final fun getCommercialOptedIn ()Ljava/time/Instant;
 	public final fun getCommercialOptedOut ()Ljava/time/Instant;
 	public final fun getMaskedAddress ()Ljava/lang/String;
+	public final fun getOpenTrackingOptedIn ()Ljava/time/Instant;
+	public final fun getOpenTrackingOptedOut ()Ljava/time/Instant;
 	public final fun getTransactionalOptedIn ()Ljava/time/Instant;
 	public final fun getTransactionalOptedOut ()Ljava/time/Instant;
 	public fun hashCode ()I

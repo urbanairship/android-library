@@ -111,6 +111,9 @@ internal abstract class ButtonModel<T, I: Button>(
         }
     }
 
+    private val enclosingFormIdentifier: String?
+        get() = layoutState.thomasForm?.formUpdates?.value?.identifier
+
     private suspend fun handleSubmit(
         context: Context,
         resolved: List<Outcome>
@@ -119,7 +122,10 @@ internal abstract class ButtonModel<T, I: Button>(
 
         val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
         val delegation = buttonOutcomeHandler(context)
-        val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
+        val submitEvent = LayoutEvent.SubmitForm(
+            buttonIdentifier = viewInfo.identifier,
+            formIdentifier = enclosingFormIdentifier
+        ) {
             outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)
         }
 
@@ -134,7 +140,10 @@ internal abstract class ButtonModel<T, I: Button>(
         listener?.dismissSoftKeyboard()
 
         val delegation = buttonOutcomeHandler(context)
-        val validateEvent = LayoutEvent.ValidateForm(buttonIdentifier = viewInfo.identifier) {
+        val validateEvent = LayoutEvent.ValidateForm(
+            buttonIdentifier = viewInfo.identifier,
+            formIdentifier = enclosingFormIdentifier
+        ) {
             if (hasFormSubmit) {
                 handleSubmit(context, resolved)
             } else {
