@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.property.GridLayoutConfigs
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
@@ -51,6 +52,7 @@ import com.urbanairship.android.layout.property.ViewType.CONTAINER
 import com.urbanairship.android.layout.property.ViewType.CUSTOM_VIEW
 import com.urbanairship.android.layout.property.ViewType.EMPTY_VIEW
 import com.urbanairship.android.layout.property.ViewType.FORM_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.GRID_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.ICON_VIEW
 import com.urbanairship.android.layout.property.ViewType.IMAGE_BUTTON
 import com.urbanairship.android.layout.property.ViewType.LABEL
@@ -110,6 +112,7 @@ public sealed class ViewInfo : View {
             return when (ViewType.from(type)) {
                 CONTAINER -> ContainerLayoutInfo(json)
                 LINEAR_LAYOUT -> LinearLayoutInfo(json)
+                GRID_LAYOUT -> GridLayoutInfo(json)
                 SCROLL_LAYOUT -> ScrollLayoutInfo(json)
                 EMPTY_VIEW -> EmptyInfo(json)
                 WEB_VIEW -> WebViewInfo(json)
@@ -557,6 +560,40 @@ internal class LinearLayoutItemInfo(
                 }?: throw JsonException("Invalid LinearLayoutItemInfo.AccessibilityRole type: $value")
             }
         }
+    }
+}
+
+/**
+ * Rows of equal-width cells, laid out with the first config selector that matches, or the default.
+ *
+ * The grid's own width sets the columns; its items never do. A width of `auto` fills the room the
+ * parent offers rather than hugging the items.
+ */
+internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<GridLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
+    val config: GridLayoutConfigs = GridLayoutConfigs.fromJson(json.requireField("config"))
+    val items = json.requireField<JsonList>("items").map { GridLayoutItemInfo(it.requireMap()) }
+
+    override val children: List<GridLayoutItemInfo> = items
+
+    /** Announced as a list of its visible items when set, as a linear layout's `list_view` is. */
+    val isListView: Boolean = json.optionalMap("accessibility_role")?.let {
+        LinearLayoutInfo.AccessibilityRole.Type.fromJson(it.requireField("type"))
+    } == LinearLayoutInfo.AccessibilityRole.Type.LIST_VIEW
+}
+
+/** One cell of a grid. [size] resolves against the cell, so `100%` wide is the cell's width. */
+internal class GridLayoutItemInfo(
+    json: JsonMap
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))) {
+    val identifier: String? = json.optionalField("identifier")
+    val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_SIZE
+    /** The columns the cell asks to cover, at least 1; placement caps it at the column count. */
+    val columnSpan: Int = (json.optionalField<Double>("column_span") ?: 1.0).toInt().coerceAtLeast(1)
+    val margin: Margin? = json["margin"]?.let(Margin::fromJson)
+    val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
+
+    private companion object {
+        val DEFAULT_SIZE = Size(width = "100%", height = "auto")
     }
 }
 

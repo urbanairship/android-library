@@ -8,6 +8,7 @@ public enum class ViewType(
 ) {
     CONTAINER("container"),
     LINEAR_LAYOUT("linear_layout"),
+    GRID_LAYOUT("grid_layout"),
     SCROLL_LAYOUT("scroll_layout"),
     EMPTY_VIEW("empty_view"),
     WEB_VIEW("web_view"),
