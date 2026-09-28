@@ -41,6 +41,36 @@ public class UrlInfoBackgroundsTest {
         )
     }
 
+    /** A grid's cells and its own layers are both part of the scene. */
+    @Test
+    public fun aGridsItemsAndLayersAreCollected() {
+        val urls = urlsFor(
+            """
+            {
+              "type": "grid_layout",
+              "config": { "default": { "max_columns": 2 } },
+              "backgrounds": [
+                { "type": "media", "media_type": "video", "media_fit": "fit_crop",
+                  "url": "https://example/grid-layer.mp4" }
+              ],
+              "items": [
+                { "view": { "type": "media", "media_type": "image", "media_fit": "center_inside",
+                            "url": "https://example/cell.jpg" } }
+              ]
+            }
+            """
+        )
+
+        assertTrue(
+            "the cell's image should be prefetched -- got $urls",
+            urls.any { it.type == UrlInfo.UrlType.IMAGE && it.url == "https://example/cell.jpg" }
+        )
+        assertTrue(
+            "and the grid's own video layer -- got $urls",
+            urls.any { it.type == UrlInfo.UrlType.VIDEO && it.url == "https://example/grid-layer.mp4" }
+        )
+    }
+
     /** A parallax host states its layers differently, and must be walked just the same. */
     @Test
     public fun aVideoLayerOnAParallaxHostIsCollected() {
