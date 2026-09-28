@@ -195,7 +195,7 @@ private fun ContentView(
         }
 
         when (content.webViewState) {
-            // Not Action.Refresh: Compose can skip the Loading frame and keep the failed web view.
+            // Not Action.Refresh: if Compose skips the Loading frame, the web view isn't recreated and stays at INIT.
             WebViewState.ERROR -> ErrorView(State.Error.Type.LOAD_FAILED) { webViewKey++ }
             // INIT covers the first frame, before onPageStarted runs from the web view's effect.
             WebViewState.INIT, WebViewState.LOADING -> LoadingView()
