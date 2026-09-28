@@ -84,6 +84,8 @@ internal fun MessageCenterWebView(
 
     AndroidView(
         modifier = modifier.graphicsLayer(alpha = 0.99f, clip = true), //fixes a weird web view crash
-        factory = { webView }
+        factory = { webView },
+        // Not in the effect's onDispose: that runs on every bodyUrl change, and the web view is reused across them.
+        onRelease = { it.destroy() }
     )
 }

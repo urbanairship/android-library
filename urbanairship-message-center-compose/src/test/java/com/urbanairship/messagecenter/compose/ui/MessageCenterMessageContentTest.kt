@@ -39,6 +39,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 public class MessageCenterMessageContentTest {
@@ -173,6 +174,43 @@ public class MessageCenterMessageContentTest {
         assertThat(actions).contains(Action.MarkCurrentMessageRead)
     }
 
+    @Test
+    public fun retryDestroysTheFailedWebView() {
+        setContent(State.MessageContent(message, Content.Html(WebViewState.ERROR)))
+        val failedWebView = findWebView()
+
+        composeRule.onNodeWithText(context.getString(CoreR.string.ua_retry_button).uppercase()).performClick()
+        composeRule.waitForIdle()
+
+        assertThat(shadowOf(failedWebView).wasDestroyCalled()).isTrue()
+        assertThat(shadowOf(findWebView()).wasDestroyCalled()).isFalse()
+    }
+
+    @Test
+    public fun leavingTheMessageDestroysTheWebView() {
+        val state = setContent(State.MessageContent(message, Content.Html(WebViewState.LOADED)))
+        val webView = findWebView()
+
+        composeRule.runOnUiThread { state.viewState = State.Empty }
+        composeRule.waitForIdle()
+
+        assertThat(shadowOf(webView).wasDestroyCalled()).isTrue()
+    }
+
+    @Test
+    public fun switchingMessagesReusesTheWebView() {
+        val state = setContent(State.MessageContent(message, Content.Html(WebViewState.LOADED)))
+        val webView = findWebView()
+
+        composeRule.runOnUiThread {
+            state.viewState = State.MessageContent(createMessage("other-id"), Content.Html(WebViewState.INIT))
+        }
+        composeRule.waitForIdle()
+
+        assertThat(findWebView()).isSameInstanceAs(webView)
+        assertThat(shadowOf(webView).wasDestroyCalled()).isFalse()
+    }
+
     /** Replays WebView's callback order for a failed main-frame load: the error, then a finish. */
     private fun WebView.failMainFrameLoad() {
         val request = mockk<WebResourceRequest>(relaxed = true) { every { isForMainFrame } returns true }
@@ -199,8 +237,9 @@ public class MessageCenterMessageContentTest {
      * @param viewState The state to display.
      * @param applyWebViewState Whether to apply [Action.UpdateWebViewState] to the displayed state, as the
      *   view model would. Off by default so a test's state stays exactly as given.
+     * @return The displayed state, for tests that change it afterwards.
      */
-    private fun setContent(viewState: State, applyWebViewState: Boolean = false) {
+    private fun setContent(viewState: State, applyWebViewState: Boolean = false): MessageCenterMessageState {
         lateinit var state: MessageCenterMessageState
         state = MessageCenterMessageState(
             onAction = { action ->
@@ -220,5 +259,6 @@ public class MessageCenterMessageContentTest {
             }
         }
         composeRule.waitForIdle()
+        return state
     }
 }
