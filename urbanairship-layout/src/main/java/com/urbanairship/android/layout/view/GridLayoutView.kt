@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Path
 import android.graphics.Rect
 import android.view.Gravity
 import android.view.View
@@ -44,6 +43,7 @@ import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.backgroundsBoxHeight
 import com.urbanairship.android.layout.widget.backgroundsBoxWidth
+import com.urbanairship.android.layout.widget.clipInsideStroke
 import com.urbanairship.android.layout.widget.establishesLength
 import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.statesLength
@@ -79,10 +79,6 @@ internal class GridLayoutView(
     )
 
     private val cells: List<GridCell>
-
-    /** The border's corner radii in pixels, or null for square corners. */
-    private var borderRadii: FloatArray? = null
-    private val insideStroke = Path()
 
     /** Where each row starts below the first, from the last measure. */
     private var rowTops = IntArray(0)
@@ -286,40 +282,15 @@ internal class GridLayoutView(
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        // The stroke is drawn under the children, so the outline clip alone lets corner tiles paint over it.
+        // Corner tiles would paint over the stroke, and rows taller than the grid past its edge.
         val saveCount = canvas.save()
-        clipToInsideStroke(canvas)
+        clipInsideStroke(canvas)
         try {
             paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
             super.dispatchDraw(canvas)
         } finally {
             canvas.restoreToCount(saveCount)
         }
-    }
-
-    /**
-     * Clips [canvas] to the box inside the border stroke, which arrives as padding.
-     *
-     * Also what stops rows taller than the grid at its edge, since a parent stack doesn't clip its
-     * children. Each corner's radius shrinks by the stroke beside it: a 20 radius inside a 3 stroke
-     * clips at 17, as a CSS padding box does.
-     */
-    private fun clipToInsideStroke(canvas: Canvas) {
-        val left = paddingLeft.toFloat()
-        val top = paddingTop.toFloat()
-        val right = (width - paddingRight).toFloat()
-        val bottom = (height - paddingBottom).toFloat()
-        val radii = borderRadii
-        if (radii == null) {
-            canvas.clipRect(left, top, right, bottom)
-            return
-        }
-        // Outline radii run top-left, top-right, bottom-right, bottom-left, each as an x then a y.
-        val insets = floatArrayOf(left, top, width - right, top, width - right, height - bottom, left, height - bottom)
-        val inner = FloatArray(8) { (radii[it] - insets[it]).coerceAtLeast(0f) }
-        insideStroke.rewind()
-        insideStroke.addRoundRect(left, top, right, bottom, inner, Path.Direction.CW)
-        canvas.clipPath(insideStroke)
     }
 
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
@@ -337,15 +308,11 @@ internal class GridLayoutView(
     override fun shouldDelayChildPressedState(): Boolean = false
 
     override fun setClipPathBorderRadius(borderRadius: Float) {
-        borderRadii = if (borderRadius == 0f) null else FloatArray(8) { borderRadius }
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
-        invalidate()
     }
 
     override fun setClipPathBorderRadius(borderRadii: FloatArray?) {
-        this.borderRadii = borderRadii
         clippableViewDelegate.setClipPathBorderRadii(this, borderRadii)
-        invalidate()
     }
 
     /** Announces the grid as a list of its visible items, in item order rather than screen order. */

@@ -34,6 +34,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlin.math.sqrt
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
@@ -111,6 +112,30 @@ public class BackgroundsBorderStrokeTest {
         )
     }
 
+    /**
+     * The box inside the stroke has rounded corners too, with each radius less the stroke: a
+     * rectangular layer's corners otherwise cover the curve of the stroke.
+     */
+    @Test
+    public fun aPaintedLayerLeavesARoundedStrokeVisible() {
+        val view = bordered(container(COLOR_LAYER), radius = CORNER_RADIUS_DP)
+        val stroke = view.paddingLeft
+        val radius = CORNER_RADIUS_DP * context.resources.displayMetrics.density
+        val bitmap = render(view)
+
+        // Halfway through the stroke, on the diagonal of the top-left corner's curve.
+        val depth = radius - stroke / 2f
+        val onCurve = (radius - depth / sqrt(2f)).toInt()
+        assertEquals(
+            "the stroke should still be there at the corner",
+            STROKE_COLOR, bitmap.getPixel(onCurve, onCurve)
+        )
+        assertEquals(
+            "and the layer should still fill the rest of the box",
+            LAYER_COLOR, bitmap.getPixel(BOX / 2, BOX / 2)
+        )
+    }
+
     /** The other path to the same box: a layer that plays, so it has to be a real child view. */
     @Test
     public fun aLayerHostedAsAChildFillsTheSameBox() {
@@ -171,6 +196,16 @@ public class BackgroundsBorderStrokeTest {
 
     private val View.frame: Rect get() = Rect(left, top, right, bottom)
 
+    private fun container(layer: String): ContainerLayoutView = build(
+        """
+        {
+          "type": "container",
+          $layer
+          "items": []
+        }
+        """
+    )
+
     private fun linearLayout(layer: String): LinearLayoutView = build(
         """
         {
@@ -187,11 +222,11 @@ public class BackgroundsBorderStrokeTest {
      *
      * Laid out afterwards, since the padding is what the layout has to account for.
      */
-    private fun <T : View> bordered(view: T): T {
+    private fun <T : View> bordered(view: T, radius: Int = 0): T {
         LayoutUtils.applyBorderAndBackground(
             view,
             null,
-            Border(radius = 0, strokeWidth = STROKE_WIDTH_DP, strokeColor = thomasColor(STROKE_COLOR)),
+            Border(radius = radius, strokeWidth = STROKE_WIDTH_DP, strokeColor = thomasColor(STROKE_COLOR)),
             null
         )
         layOut(view)
@@ -222,6 +257,7 @@ public class BackgroundsBorderStrokeTest {
     private companion object {
         private const val BOX = 300
         private const val STROKE_WIDTH_DP = 8
+        private const val CORNER_RADIUS_DP = 60
         private const val STROKE_COLOR = Color.YELLOW
         private const val LAYER_COLOR = Color.MAGENTA
 

@@ -2,7 +2,9 @@
 package com.urbanairship.android.layout.widget
 
 import android.graphics.Canvas
+import android.graphics.Path
 import android.view.View
+import com.urbanairship.android.layout.R
 
 /**
  * The box a host's `backgrounds` layers fill: its own box, less its padding.
@@ -33,10 +35,42 @@ internal inline fun View.paintBackgroundsBox(canvas: Canvas, paint: (Int, Int) -
     if (boxWidth <= 0 || boxHeight <= 0) return
 
     val saveCount = canvas.save()
+    // Rounded, the box's corners would paint over the stroke's curve.
+    if (borderRadii != null) clipInsideStroke(canvas)
     canvas.translate(paddingLeft.toFloat(), paddingTop.toFloat())
     try {
         paint(boxWidth, boxHeight)
     } finally {
         canvas.restoreToCount(saveCount)
     }
+}
+
+/** The border's corner radii in pixels, as the view's outline clips to them, or null for square corners. */
+internal val View.borderRadii: FloatArray?
+    get() = getTag(R.id.ua_border_radii) as? FloatArray
+
+/**
+ * Clips [canvas] to the box inside this view's border stroke, which arrives as padding.
+ *
+ * Each corner's radius shrinks by the stroke beside it, as a CSS padding box does: a 20 radius
+ * inside a 3 stroke clips at 17. With square corners it is the padding box.
+ *
+ * @param canvas the view's own canvas, positioned at the view's box.
+ */
+internal fun View.clipInsideStroke(canvas: Canvas) {
+    val left = paddingLeft.toFloat()
+    val top = paddingTop.toFloat()
+    val right = (width - paddingRight).toFloat()
+    val bottom = (height - paddingBottom).toFloat()
+    val radii = borderRadii
+    if (radii == null) {
+        canvas.clipRect(left, top, right, bottom)
+        return
+    }
+    // Outline radii run top-left, top-right, bottom-right, bottom-left, each as an x then a y.
+    val insets = floatArrayOf(
+        left, top, width - right, top, width - right, height - bottom, left, height - bottom
+    )
+    val inner = FloatArray(8) { (radii[it] - insets[it]).coerceAtLeast(0f) }
+    canvas.clipPath(Path().apply { addRoundRect(left, top, right, bottom, inner, Path.Direction.CW) })
 }

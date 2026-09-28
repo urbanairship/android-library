@@ -3,4 +3,6 @@
 <resources>
     <!-- View tag used by LayoutUtils to track applied line-height bottom padding -->
     <item name="ua_line_height_padding" type="id" />
+    <!-- View tag used by ClippableViewDelegate to record a view's border corner radii -->
+    <item name="ua_border_radii" type="id" />
 </resources>
