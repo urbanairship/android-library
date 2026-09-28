@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
 import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.property.ScoreStyle
+import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.shape.Shape
 import com.urbanairship.android.layout.util.LayoutUtils
 
@@ -61,17 +62,16 @@ internal class ScoreItemView(
     }
 
     private fun updateTextState() {
-        val selectedTextAppearance = bindings.selected.textAppearance
-        val unselectedTextAppearance = bindings.unselected.textAppearance
-        val appearance = if (isChecked) selectedTextAppearance else unselectedTextAppearance
-
-        LayoutUtils.applyTextAppearance(this, appearance)
+        LayoutUtils.applyTextAppearance(this, currentTextAppearance())
 
         // Once from the paint as it stands, and again after anything the appearance loads in the
         // background — a font family among it — has settled and changed the measurements.
         applySmallestSize()
         post { applySmallestSize() }
     }
+
+    private fun currentTextAppearance() =
+        if (isChecked) bindings.selected.textAppearance else bindings.unselected.textAppearance
 
     /**
      * Sizes the item to the number it holds, never smaller than something that can be tapped.
@@ -81,19 +81,35 @@ internal class ScoreItemView(
      * alone, an item was the number and nothing else — a row of large digits in circles barely
      * wider than they were.
      *
+     * Measured against both the selected and unselected appearance, so toggling selection can
+     * change the number's size without changing the box around it.
+     *
      * Square, so the shape drawn in it is the shape the layout asked for.
      */
     private fun applySmallestSize() {
-        val textWidth = paint.measureText(sizingLabel)
-        val textHeight = paint.fontMetrics.let { it.descent - it.ascent }
         val minimumTouchTarget = LayoutUtils.dpToPx(context, MIN_TAPPABLE_DP).toFloat()
 
-        val side = maxOf(minimumTouchTarget, textWidth * 2f, textHeight * 2f).toInt()
+        val side = maxOf(
+            minimumTouchTarget,
+            sideFor(bindings.selected.textAppearance),
+            sideFor(bindings.unselected.textAppearance)
+        ).toInt()
+
+        // Measuring the other appearance moved the paint off of the one that's showing.
+        LayoutUtils.applyTextAppearance(this, currentTextAppearance())
+
         if (side == minimumWidth && side == minimumHeight) return
 
         minimumHeight = side
         minimumWidth = side
         requestLayout()
+    }
+
+    private fun sideFor(appearance: TextAppearance): Float {
+        LayoutUtils.applyTextAppearance(this, appearance)
+        val textWidth = paint.measureText(sizingLabel)
+        val textHeight = paint.fontMetrics.let { it.descent - it.ascent }
+        return maxOf(textWidth, textHeight) * 2f
     }
 
     override fun setChecked(checked: Boolean) {
