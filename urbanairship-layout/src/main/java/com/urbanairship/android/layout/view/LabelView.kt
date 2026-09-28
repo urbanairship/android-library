@@ -111,20 +111,41 @@ internal class LabelView(
         isFocusable = false
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    /** True while [onMeasure] runs, so a `maxLines` change it makes for itself stays inside it. */
+    private var isMeasuring = false
 
-        // When truncating to height, we need to measure once first so that we can know how many
-        // lines exist, then we can clamp and remeasure with the number of lines that can fit.
-        if (truncatesToHeight && clampMaxLinesTo(heightMeasureSpec)) {
+    override fun requestLayout() {
+        // A `maxLines` change made while measuring is used by that same measure; passed up, it
+        // would schedule another pass that makes the same change again.
+        if (!isMeasuring) super.requestLayout()
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (!truncatesToHeight) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            return
+        }
+
+        isMeasuring = true
+        try {
+            // Lines are counted from the whole text. Left at an earlier clamp, the label could
+            // never ask for, or grow back into, more room than the box that clamped it.
+            if (maxLines != Int.MAX_VALUE) maxLines = Int.MAX_VALUE
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+            if (clampMaxLinesTo(heightMeasureSpec)) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            }
+        } finally {
+            isMeasuring = false
         }
     }
 
     /**
-     * Limit the line count to what [heightMeasureSpec] has room for.
+     * Limits the line count to what [heightMeasureSpec] has room for, when the text doesn't fit.
      *
-     * @return a `Boolean` that indicates whether a remeasure is needed.
+     * @param heightMeasureSpec the height this measure was offered.
+     * @return whether the line count changed, so the label needs measuring again.
      */
     private fun clampMaxLinesTo(heightMeasureSpec: Int): Boolean {
         if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) {
@@ -142,16 +163,12 @@ internal class LabelView(
             fits++
         }
 
-        // Always clamp to at least one line, even if it can't fit the text we need to draw into it.
-        val clamped = fits.coerceAtLeast(1)
-
-        // Return if we aren't changing anything. Setting maxLines triggers a layout,
-        // so we need to bail out here to avoid a measurement loop.
-        if (clamped == maxLines) {
+        if (fits >= laidOut.lineCount) {
             return false
         }
 
-        maxLines = clamped
+        // Always clamp to at least one line, even if it can't fit the text we need to draw into it.
+        maxLines = fits.coerceAtLeast(1)
         return true
     }
 
@@ -287,6 +304,10 @@ internal class LabelView(
         }
 
         this.lastState = resolvedState
+
+        // `TextView` decides whether new text needs a layout from the old line count, which a
+        // clamp holds, so text that needs more lines than the last box allowed would never ask.
+        if (truncatesToHeight) requestLayout()
     }
 
     /**

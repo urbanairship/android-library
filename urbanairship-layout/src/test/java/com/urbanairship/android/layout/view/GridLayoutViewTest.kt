@@ -360,6 +360,31 @@ public class GridLayoutViewTest {
 
     private fun View.boundsInCell() = Rect(left, top, right, bottom)
 
+    @Test
+    public fun testAFullHeightLabelGrowsItsRowWhenItsTextGrows() {
+        val grid = grid(
+            config = """{"max_columns": 2}""",
+            items = listOf(
+                label("short", size = """{"width": "100%", "height": "auto"}"""),
+                label("Two short lines of text in this cell.", size = """{"width": "100%", "height": "100%"}""")
+            )
+        )
+        layout(grid, width = 200)
+        val before = cells(grid)[0].height
+
+        val long = items(grid)[1] as android.widget.TextView
+        long.text = "Now much longer text that needs several more lines in this same cell, so the row has to grow taller"
+        assertTrue("the new text asks for a layout", grid.isLayoutRequested)
+
+        layout(grid, width = 200)
+        assertTrue("the row grows: $before -> ${cells(grid)[0].height}", cells(grid)[0].height > before)
+        assertEquals("to the whole of the new text", long.layout.height + long.totalPaddingTop + long.totalPaddingBottom, long.height)
+
+        long.text = "Two short lines of text in this cell."
+        layout(grid, width = 200)
+        assertEquals("and shrinks back", before, cells(grid)[0].height)
+    }
+
     private fun grid(config: String): String = """
         {"type": "grid_layout", "config": {"default": $config},
          "items": [${List(4) { box() }.joinToString()}]}
