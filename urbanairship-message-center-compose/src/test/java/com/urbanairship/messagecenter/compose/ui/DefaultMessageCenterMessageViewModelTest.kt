@@ -21,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.time.Instant
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -551,6 +552,35 @@ public class DefaultMessageCenterMessageViewModelTest {
             viewModel.handle(Action.Refresh)
             assertThat(awaitItem()).isEqualTo(State.Loading("message-id"))
             assertThat(awaitItem()).isEqualTo(State.MessageContent(message, Content.Html(WebViewState.INIT)))
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    public fun loadingAnotherMessageCancelsThePreviousLoad(): TestResult = runTest {
+        val first = createMessage("first")
+        val second = createMessage("second")
+        val firstResult = CompletableDeferred<Message?>()
+        val inbox = mockInbox {
+            coEvery { getMessage("first") } coAnswers { firstResult.await() }
+            coEvery { getMessage("second") } returns second
+        }
+        val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
+
+        viewModel.states.test {
+            assertThat(awaitItem()).isEqualTo(State.Empty)
+            viewModel.handle(Action.LoadMessage("first"))
+            assertThat(awaitItem()).isEqualTo(State.Loading("first"))
+            advanceUntilIdle()
+
+            viewModel.handle(Action.LoadMessage("second"))
+            assertThat(awaitItem()).isEqualTo(State.Loading("second"))
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(second, Content.Html(WebViewState.INIT)))
+
+            firstResult.complete(first)
+            advanceUntilIdle()
+            expectNoEvents()
 
             cancelAndIgnoreRemainingEvents()
         }

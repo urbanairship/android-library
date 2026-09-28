@@ -135,6 +135,7 @@ internal class DefaultMessageCenterMessageViewModel(
     val currentMessage: Message?
         get() = (_states.value as? State.MessageContent)?.message
 
+    private var loadJob: Job? = null
     private var refreshJob: Job? = null
 
     init {
@@ -176,7 +177,8 @@ internal class DefaultMessageCenterMessageViewModel(
     private fun reloadMessage(messageId: String) {
         _states.value = State.Loading(messageId)
 
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _states.value = getOrFetchMessage(messageId)
         }
 
