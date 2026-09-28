@@ -119,13 +119,8 @@ public class BackgroundsBorderStrokeTest {
     @Test
     public fun aPaintedLayerLeavesARoundedStrokeVisible() {
         val view = bordered(container(COLOR_LAYER), radius = CORNER_RADIUS_DP)
-        val stroke = view.paddingLeft
-        val radius = CORNER_RADIUS_DP * context.resources.displayMetrics.density
         val bitmap = render(view)
-
-        // Halfway through the stroke, on the diagonal of the top-left corner's curve.
-        val depth = radius - stroke / 2f
-        val onCurve = (radius - depth / sqrt(2f)).toInt()
+        val onCurve = onCornerCurve(view.paddingLeft)
         assertEquals(
             "the stroke should still be there at the corner",
             STROKE_COLOR, bitmap.getPixel(onCurve, onCurve)
@@ -134,6 +129,44 @@ public class BackgroundsBorderStrokeTest {
             "and the layer should still fill the rest of the box",
             LAYER_COLOR, bitmap.getPixel(BOX / 2, BOX / 2)
         )
+    }
+
+    /** A child that fills its host stops inside a rounded stroke too, in every host that clips like web's `overflow: clip`. */
+    @Test
+    public fun aChildLeavesARoundedStrokeVisible() {
+        val hosts = mapOf(
+            "container" to """
+                {"type": "container", "items": [{
+                  "position": {"horizontal": "center", "vertical": "center"},
+                  "size": {"width": "100%", "height": "100%"}, "view": $FILLED_CHILD
+                }]}
+            """,
+            "linear_layout" to """
+                {"type": "linear_layout", "direction": "vertical", "items": [{
+                  "size": {"width": "100%", "height": "100%"}, "view": $FILLED_CHILD
+                }]}
+            """,
+            "button_layout" to """
+                {"type": "button_layout", "identifier": "button", "button_click": [], "view": $FILLED_CHILD}
+            """
+        )
+        for ((host, json) in hosts) {
+            val view = bordered(build<View>(json), radius = CORNER_RADIUS_DP)
+            val bitmap = render(view)
+            val onCurve = onCornerCurve(view.paddingLeft)
+            assertEquals(
+                "$host: the stroke should still be there at the corner",
+                STROKE_COLOR, bitmap.getPixel(onCurve, onCurve)
+            )
+            assertEquals("$host: and the child fills the rest", LAYER_COLOR, bitmap.getPixel(BOX / 2, BOX / 2))
+        }
+    }
+
+    /** Halfway through a [stroke]-wide stroke, on the diagonal of the top-left corner's curve. */
+    private fun onCornerCurve(stroke: Int): Int {
+        val radius = CORNER_RADIUS_DP * context.resources.displayMetrics.density
+        val depth = radius - stroke / 2f
+        return (radius - depth / sqrt(2f)).toInt()
     }
 
     /** The other path to the same box: a layer that plays, so it has to be a real child view. */
@@ -265,6 +298,10 @@ public class BackgroundsBorderStrokeTest {
             "backgrounds": [
               { "type": "color", "color": { "default": { "hex": "#FF00FF", "alpha": 1 } } }
             ],
+        """.trimIndent()
+
+        private val FILLED_CHILD = """
+            {"type": "container", "background_color": {"default": {"hex": "#FF00FF", "alpha": 1}}, "items": []}
         """.trimIndent()
 
         private val VIDEO_LAYER = """

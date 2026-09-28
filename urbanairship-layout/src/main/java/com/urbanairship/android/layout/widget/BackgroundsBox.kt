@@ -74,3 +74,20 @@ internal fun View.clipInsideStroke(canvas: Canvas) {
     val inner = FloatArray(8) { (radii[it] - insets[it]).coerceAtLeast(0f) }
     canvas.clipPath(Path().apply { addRoundRect(left, top, right, bottom, inner, Path.Direction.CW) })
 }
+
+/**
+ * Runs [draw] with [canvas] clipped to the box inside this view's border stroke, as a web layout's
+ * `overflow: clip` does, then restores the canvas.
+ *
+ * @param canvas the view's own canvas, positioned at the view's box.
+ * @param draw what to draw inside the stroke: typically the backgrounds and the children.
+ */
+internal inline fun View.drawInsideStroke(canvas: Canvas, draw: () -> Unit) {
+    val saveCount = canvas.save()
+    clipInsideStroke(canvas)
+    try {
+        draw()
+    } finally {
+        canvas.restoreToCount(saveCount)
+    }
+}

@@ -43,7 +43,7 @@ import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.backgroundsBoxHeight
 import com.urbanairship.android.layout.widget.backgroundsBoxWidth
-import com.urbanairship.android.layout.widget.clipInsideStroke
+import com.urbanairship.android.layout.widget.drawInsideStroke
 import com.urbanairship.android.layout.widget.establishesLength
 import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.statesLength
@@ -283,13 +283,9 @@ internal class GridLayoutView(
 
     override fun dispatchDraw(canvas: Canvas) {
         // Corner tiles would paint over the stroke, and rows taller than the grid past its edge.
-        val saveCount = canvas.save()
-        clipInsideStroke(canvas)
-        try {
+        drawInsideStroke(canvas) {
             paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
             super.dispatchDraw(canvas)
-        } finally {
-            canvas.restoreToCount(saveCount)
         }
     }
 

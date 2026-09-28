@@ -34,6 +34,7 @@ import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.backgroundsBoxHeight
 import com.urbanairship.android.layout.widget.backgroundsBoxWidth
 import com.urbanairship.android.layout.widget.paintBackgroundsBox
+import com.urbanairship.android.layout.widget.drawInsideStroke
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
@@ -134,8 +135,11 @@ internal class ContainerLayoutView(
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
-        super.dispatchDraw(canvas)
+        // Children stop inside the stroke, so a rounded one isn't painted over at the corners.
+        drawInsideStroke(canvas) {
+            paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
+            super.dispatchDraw(canvas)
+        }
     }
 
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
