@@ -88,6 +88,16 @@ internal interface AutoSizeProvider {
 }
 
 /**
+ * A view whose `auto` width is all the width it is offered, rather than its content's.
+ *
+ * A row sharing its width out asks each child for its unbounded width, which for a label is its
+ * whole line. This view's unbounded width is only what it would draw with no room at all, so the
+ * row treats its demand as the whole row and pays it last: beside a label it takes what the label
+ * leaves.
+ */
+internal interface FillsOfferedWidth
+
+/**
  * A view that exists only to carry one item's declared size, holding that item at `MATCH_PARENT` on
  * both axes.
  *

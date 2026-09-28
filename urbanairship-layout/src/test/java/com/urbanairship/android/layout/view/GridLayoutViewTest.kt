@@ -303,7 +303,74 @@ public class GridLayoutViewTest {
         assertEquals(listOf(0, 0, 200), cells(grid).map { it.left })
     }
 
+    @Test
+    public fun testAnAutoGridFillsTheStackLessItsMargins() {
+        val stack = stack(
+            direction = "vertical",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"}, "margin": {"start": 16, "end": 16},
+                 "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                """
+            )
+        )
+        layout(stack, width = 300)
+
+        val grid = (stack as ViewGroup).getChildAt(0)
+        assertEquals("inset by one margin", 16, grid.left)
+        assertEquals("300 less both margins", 268, grid.width)
+    }
+
+    @Test
+    public fun testAnAutoGridBesideALabelTakesWhatTheLabelLeaves() {
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                """,
+                """{"size": {"width": "auto", "height": "auto"}, "view": ${label("beside")}}"""
+            )
+        )
+        layout(stack, width = 300)
+
+        val grid = (stack as ViewGroup).getChildAt(0)
+        val beside = stack.getChildAt(1)
+        assertTrue("the label is drawn whole: ${beside.width}", beside.width > 20)
+        assertEquals("the grid takes the rest", 300 - beside.width, grid.width)
+    }
+
+    @Test
+    public fun testAFullHeightItemsContentGrowsARowWithABasis() {
+        val longText = "Now much longer text that needs several more lines in this same cell"
+        val grid = grid(
+            config = """{"max_columns": 2}""",
+            items = listOf(
+                label("short", size = """{"width": "100%", "height": "auto"}"""),
+                label(longText, size = """{"width": "100%", "height": "100%"}""")
+            )
+        )
+        layout(grid, width = 200)
+
+        val (short, long) = items(grid)
+        assertTrue("the long label wraps onto several lines: ${long.height} vs ${short.height}", long.height > 2 * short.height)
+        assertEquals("and sets the row", long.height, cells(grid)[0].height)
+    }
+
     private fun View.boundsInCell() = Rect(left, top, right, bottom)
+
+    private fun grid(config: String): String = """
+        {"type": "grid_layout", "config": {"default": $config},
+         "items": [${List(4) { box() }.joinToString()}]}
+    """.trimIndent()
+
+    private fun stack(direction: String, items: List<String>): View = build(
+        """{"type": "linear_layout", "direction": "$direction", "items": [${items.joinToString()}]}"""
+    ).also { view ->
+        Robolectric.buildActivity(Activity::class.java).setup().get()
+            .setContentView(FrameLayout(view.context).apply { addView(view) })
+    }
 
     private fun cells(grid: ViewGroup): List<View> = (0 until grid.childCount).map { grid.getChildAt(it) }
 

@@ -1753,6 +1753,11 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             if (child.visibility == GONE) continue
             val lp = child.layoutParams as LayoutParams
 
+            if (child is FillsOfferedWidth) {
+                content[i] = Int.MAX_VALUE
+                continue
+            }
+
             child.measure(
                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
                 getChildMeasureSpec(

@@ -38,6 +38,7 @@ import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
+import com.urbanairship.android.layout.widget.FillsOfferedWidth
 import com.urbanairship.android.layout.widget.LengthBasisProvider
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
@@ -61,7 +62,7 @@ internal class GridLayoutView(
     context: Context,
     private val model: GridLayoutModel,
     viewEnvironment: ViewEnvironment
-) : ViewGroup(context), BaseView, Clippable, ShrinkableView, LengthBasisProvider {
+) : ViewGroup(context), BaseView, Clippable, ShrinkableView, LengthBasisProvider, FillsOfferedWidth {
 
     private val clippableViewDelegate = ClippableViewDelegate()
 
@@ -225,9 +226,10 @@ internal class GridLayoutView(
     /**
      * Measures one row's cells and returns the row's height.
      *
-     * With a ratio every row is that tall. Otherwise a row is as tall as its tallest cell, and a
-     * percentage height follows a horizontal stack's cross axis: a share of the row where something
-     * in it has a height of its own, and otherwise its content, unless it is the whole row.
+     * With a ratio every row is that tall. Otherwise a row is as tall as its tallest cell's
+     * content, and a percentage height follows a horizontal stack's cross axis: a share of the row
+     * where something in it has a height of its own, and otherwise its content, unless it is the
+     * whole row.
      */
     private fun measureRow(row: List<GridCell>, ratioRowHeight: Int?, density: Float): Int {
         if (ratioRowHeight != null) {
@@ -244,9 +246,10 @@ internal class GridLayoutView(
             height.isPercent && (hasBasis || height.getFloat() >= 1f)
         }
 
+        // Every cell's content counts toward the row, a share of it included: a `100%` label that
+        // wraps grows its row, as a percentage item's content does an auto grid track on web.
         var rowHeight = 0
         row.forEach { cell ->
-            if (hasBasis && cell in sharesOfRow) return@forEach
             cell.measureItem(rowHeight = null, density = density)
             rowHeight = max(rowHeight, cell.item.measuredHeight + cell.verticalMargins)
         }
