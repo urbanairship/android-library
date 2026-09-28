@@ -494,13 +494,8 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                     else -> totalLength
                 }
 
-                measureChildWithMargins(
-                    child,
-                    widthMeasureSpec,
-                    childHorizontalMargins,
-                    heightMeasureSpec,
-                    heightUsed
-                )
+                // No width used: `measureChildWithMargins` takes the margins off itself.
+                measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, heightUsed)
 
                 if (oldWidth != Int.MIN_VALUE) {
                     lp.width = oldWidth
@@ -1205,13 +1200,8 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                     else -> 0
                 }
 
-                measureChildWithMargins(
-                    child,
-                    widthMeasureSpec,
-                    widthUsed,
-                    heightMeasureSpec,
-                    childVerticalMargins
-                )
+                // No height used: `measureChildWithMargins` takes the margins off itself.
+                measureChildWithMargins(child, widthMeasureSpec, widthUsed, heightMeasureSpec, 0)
 
                 if (oldHeight != Int.MIN_VALUE) {
                     lp.height = oldHeight
