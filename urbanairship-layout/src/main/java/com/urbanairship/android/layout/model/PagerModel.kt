@@ -282,6 +282,7 @@ internal class PagerModel(
         // Handle pager events from ButtonModel and other sources.
         environment.layoutEvents
             .filterIsInstance<LayoutEvent.Pager>()
+            .filter { it.pager === pagerState }
             .onEach { event ->
                 when (event) {
                     is LayoutEvent.Pager.Next -> handlePagerNext(event.fallback)

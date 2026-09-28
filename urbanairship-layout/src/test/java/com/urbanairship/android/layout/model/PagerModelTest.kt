@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model
 import android.content.Context
 import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
@@ -55,6 +56,7 @@ public class PagerModelTest {
     private val testScope = TestScope(testDispatcher)
 
     private val scrollsFlow = MutableSharedFlow<PagerScrollEvent>()
+    private val layoutEventsFlow = MutableSharedFlow<LayoutEvent>()
     private val isScrollingFlow = MutableStateFlow(false)
 
     private val mockReporter: Reporter = mockk(relaxUnitFun = true)
@@ -68,7 +70,7 @@ public class PagerModelTest {
         every { layoutState } returns mockk(relaxed = true) {
             every { reportingContext(any(), any(), any()) } returns mockk()
         }
-        every { layoutEvents } returns emptyFlow()
+        every { layoutEvents } returns layoutEventsFlow
     }
     private val mockView: PagerView = mockk(relaxUnitFun = true) {
         every { context } returns mockk {
@@ -138,6 +140,27 @@ public class PagerModelTest {
         assertEquals(3, pagerModel.pages.size)
         // Verify that actions were run for the initial page display
         coVerify(exactly = 1) { mockActionsRunner.run(any(), any()) }
+    }
+
+    @Test
+    public fun testNavigationFollowsOnlyItsOwnController(): TestResult = runTest {
+        pagerState.changes.test {
+            pagerModel.onViewAttached(mockView)
+            advanceUntilIdle()
+            assertEquals(0, awaitItem().pageIndex)
+
+            // Sent from outside this pager's controller, as an enclosing pager's Next button is.
+            val enclosingPager = SharedState(State.Pager(identifier = "enclosing"))
+            layoutEventsFlow.emit(LayoutEvent.Pager.Next(PagerNextFallback.NONE, enclosingPager))
+            advanceUntilIdle()
+            expectNoEvents()
+
+            layoutEventsFlow.emit(LayoutEvent.Pager.Next(PagerNextFallback.NONE, pagerState))
+            advanceUntilIdle()
+            assertEquals(1, awaitItem().pageIndex)
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
