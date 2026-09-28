@@ -3,6 +3,81 @@ public final class com/urbanairship/debug/DebugActivity : androidx/appcompat/app
 	public fun <init> ()V
 }
 
+public final class com/urbanairship/debug/ui/ai/ComposableSingletons$AiNavKt {
+	public static final field INSTANCE Lcom/urbanairship/debug/ui/ai/ComposableSingletons$AiNavKt;
+	public fun <init> ()V
+	public final fun getLambda$-1798134010$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/debug/ui/ai/ComposableSingletons$AiRootScreenKt {
+	public static final field INSTANCE Lcom/urbanairship/debug/ui/ai/ComposableSingletons$AiRootScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-352756850$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/debug/ui/ai/ComposableSingletons$AirshipDebugAIContextSectionKt {
+	public static final field INSTANCE Lcom/urbanairship/debug/ui/ai/ComposableSingletons$AirshipDebugAIContextSectionKt;
+	public fun <init> ()V
+	public final fun getLambda$-1069459218$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-260219375$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1072977143$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$1475562665$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/urbanairship/debug/ui/ai/ComposableSingletons$AirshipDebugAITestDataSectionKt {
+	public static final field INSTANCE Lcom/urbanairship/debug/ui/ai/ComposableSingletons$AirshipDebugAITestDataSectionKt;
+	public fun <init> ()V
+	public final fun getLambda$-1034673990$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-1513814306$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-1812348704$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-1946910504$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-1960598770$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-821003159$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-866054464$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1615089301$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$1693210390$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$177118862$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1812257921$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$2045549136$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$2060045511$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$290573897$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$324429213$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$538103716$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$949103190$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/urbanairship/debug/ui/ai/ComposableSingletons$IaaSuppressionScreenKt {
+	public static final field INSTANCE Lcom/urbanairship/debug/ui/ai/ComposableSingletons$IaaSuppressionScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$-2060963874$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1645041694$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/urbanairship/debug/ui/ai/ComposableSingletons$SceneTextInputScreenKt {
+	public static final field INSTANCE Lcom/urbanairship/debug/ui/ai/ComposableSingletons$SceneTextInputScreenKt;
+	public fun <init> ()V
+	public final fun getLambda$1007909793$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1908977728$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$969015355$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/urbanairship/debug/ui/ai/ComposableSingletons$SchemaBuilderKt {
+	public static final field INSTANCE Lcom/urbanairship/debug/ui/ai/ComposableSingletons$SchemaBuilderKt;
+	public fun <init> ()V
+	public final fun getLambda$-1106961881$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-149523209$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-208431008$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-450570798$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$-595042982$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-615629643$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1033694683$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1081878486$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1517820103$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$1846418477$urbanairship_debug ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$325604203$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$425184901$urbanairship_debug ()Lkotlin/jvm/functions/Function3;
+}
+
 public final class com/urbanairship/debug/ui/appinfo/ComposableSingletons$AppInfoScreenKt {
 	public static final field INSTANCE Lcom/urbanairship/debug/ui/appinfo/ComposableSingletons$AppInfoScreenKt;
 	public fun <init> ()V
