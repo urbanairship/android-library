@@ -94,3 +94,15 @@ public open class TextAppearance {
         }
     }
 }
+
+/** Returns a copy of this appearance with [alignment] in place of its own. */
+internal fun TextAppearance.withAlignment(alignment: TextAlignment): TextAppearance = TextAppearance(
+    color = color,
+    fontSize = fontSize,
+    alignment = alignment,
+    textStyles = textStyles,
+    fontWeight = fontWeight,
+    fontFamilies = fontFamilies,
+    lineHeightMultiplier = lineHeightMultiplier,
+    kerning = kerning
+)
