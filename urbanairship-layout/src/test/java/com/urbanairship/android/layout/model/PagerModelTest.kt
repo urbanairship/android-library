@@ -164,6 +164,22 @@ public class PagerModelTest {
     }
 
     @Test
+    public fun testNavigationFromOutsideAnyControllerStillReachesThePager(): TestResult = runTest {
+        pagerState.changes.test {
+            pagerModel.onViewAttached(mockView)
+            advanceUntilIdle()
+            assertEquals(0, awaitItem().pageIndex)
+
+            // A button with no enclosing pager_controller sends no pager state.
+            layoutEventsFlow.emit(LayoutEvent.Pager.Next(PagerNextFallback.NONE, pager = null))
+            advanceUntilIdle()
+            assertEquals(1, awaitItem().pageIndex)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     public fun testUserScrolls(): TestResult = runTest {
         pagerState.changes.test {
             pagerModel.onViewAttached(mockView)
