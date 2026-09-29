@@ -114,6 +114,9 @@ internal class LabelView(
     /** True while [onMeasure] runs, so a `maxLines` change it makes for itself stays inside it. */
     private var isMeasuring = false
 
+    /** The height, less padding, that the current `maxLines` clamp was made for. */
+    private var clampedFor = 0
+
     override fun requestLayout() {
         // A `maxLines` change made while measuring is used by that same measure; passed up, it
         // would schedule another pass that makes the same change again.
@@ -128,9 +131,17 @@ internal class LabelView(
 
         isMeasuring = true
         try {
-            // Lines are counted from the whole text. Left at an earlier clamp, the label could
-            // never ask for, or grow back into, more room than the box that clamped it.
-            if (maxLines != Int.MAX_VALUE) maxLines = Int.MAX_VALUE
+            // A clamp holds for a box no taller than the one that made it. Unbounded, or taller,
+            // the lines are counted from the whole text again, or the label could never ask for,
+            // or grow back into, more room than that box. Resetting rebuilds the text layout.
+            val available = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) {
+                null
+            } else {
+                MeasureSpec.getSize(heightMeasureSpec) - compoundPaddingTop - compoundPaddingBottom
+            }
+            if (maxLines != Int.MAX_VALUE && (available == null || available > clampedFor)) {
+                maxLines = Int.MAX_VALUE
+            }
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
             if (clampMaxLinesTo(heightMeasureSpec)) {
@@ -169,10 +180,13 @@ internal class LabelView(
 
         // Always clamp to at least one line, even if it can't fit the text we need to draw into it.
         maxLines = fits.coerceAtLeast(1)
+        clampedFor = available
         return true
     }
 
     override fun setText(text: CharSequence?, type: BufferType?) {
+        // New text may set lines of another height, so its clamp is worked out afresh.
+        if (truncatesToHeight && maxLines != Int.MAX_VALUE) maxLines = Int.MAX_VALUE
         // Swap in a PrecomputedText to ensure we're using StaticLayout and not DynamicLayout.
         // We need to be a StaticLayout because maxLines and ellipsize won't work otherwise.
         super.setText(precomputedOrNull(text) ?: text, type)
