@@ -25,7 +25,6 @@ import com.urbanairship.android.layout.info.CustomViewInfo
 import com.urbanairship.android.layout.info.EmptyInfo
 import com.urbanairship.android.layout.info.FormControllerInfo
 import com.urbanairship.android.layout.info.GridLayoutInfo
-import com.urbanairship.android.layout.info.GridLayoutItemInfo
 import com.urbanairship.android.layout.info.IconViewInfo
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.info.ItemInfo
@@ -584,16 +583,20 @@ internal class ThomasModelFactory : ModelFactory {
                 environment = environment,
                 properties = properties
             )
-            is GridLayoutInfo -> GridLayoutModel(
-                viewInfo = info,
-                items = children.map { (model, itemInfo) ->
-                    (itemInfo as? GridLayoutItemInfo)?.let {
-                        GridLayoutModel.Item(it, model)
-                    } ?: throw ModelFactoryException("GridLayoutItemInfo expected")
-                },
-                environment = environment,
-                properties = properties
-            )
+            is GridLayoutInfo -> {
+                fun modelFor(itemInfo: ItemInfo): AnyModel =
+                    children.firstOrNull { it.second === itemInfo }?.first
+                        ?: throw ModelFactoryException("No model built for a grid child")
+
+                GridLayoutModel(
+                    viewInfo = info,
+                    items = info.items.map { GridLayoutModel.Item(it, modelFor(it)) },
+                    header = info.header?.let { GridLayoutModel.Edge(it, modelFor(it)) },
+                    footer = info.footer?.let { GridLayoutModel.Edge(it, modelFor(it)) },
+                    environment = environment,
+                    properties = properties
+                )
+            }
             is PagerInfo -> PagerModel(
                 viewInfo = info,
                 availablePages = children.map { (model, itemInfo) ->

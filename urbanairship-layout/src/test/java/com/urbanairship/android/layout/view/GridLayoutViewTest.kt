@@ -403,6 +403,64 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testAHeaderAndFooterLineUpWithACappedBlockAndStayOutOfTheList() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(7) { box() },
+            extra = """
+                "accessibility_role": {"type": "list_view"},
+                "header": {"size": {"width": "auto", "height": "auto"},
+                           "position": {"horizontal": "start", "vertical": "center"}, "view": ${label("low")}},
+                "footer": {"size": {"width": "auto", "height": "auto"},
+                           "position": {"horizontal": "end", "vertical": "center"}, "view": ${label("high")}},
+            """.trimIndent()
+        )
+        layout(grid, width = 400)
+
+        val all = cells(grid)
+        val (header, footer) = all.first() to all.last()
+        val itemCells = all.drop(1).dropLast(1)
+        val blockRight = 4 * 64 + 3 * 8
+        assertEquals("the header spans the block", blockRight, header.width)
+        assertEquals("the low label at the block's start", 0, header.left + (header as ViewGroup).getChildAt(0).left)
+        assertEquals("the high label at the block's end", blockRight, footer.left + (footer as ViewGroup).getChildAt(0).right)
+        assertTrue("the header above the cells", header.bottom + 8 <= itemCells.first().top)
+        assertTrue("the footer below them", footer.top >= itemCells.last().bottom + 8)
+
+        val info = android.view.accessibility.AccessibilityNodeInfo.obtain()
+        grid.onInitializeAccessibilityNodeInfo(info)
+        assertEquals("only the seven items are list items", 7, info.collectionInfo.rowCount)
+    }
+
+    @Test
+    public fun testAHeaderAndFooterKeepTheirOwnHeightBesideRatioRows() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(7) { box() },
+            extra = """"header": {"view": ${label("heading")}}, "footer": {"view": ${label("note")}},"""
+        )
+        layout(grid, width = 400)
+
+        val all = cells(grid)
+        assertEquals(64, all[1].height)
+        assertTrue("the header's own height: ${all.first().height}", all.first().height < 40)
+        assertTrue("the footer's own height: ${all.last().height}", all.last().height < 40)
+    }
+
+    @Test
+    public fun testAHiddenHeaderLeavesNoRow() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(7) { box() },
+            extra = """"header": {"view": ${label("hidden heading")}},"""
+        )
+        (cells(grid).first() as ViewGroup).getChildAt(0).visibility = View.GONE
+        layout(grid, width = 400)
+
+        assertEquals(0, cells(grid)[1].top)
+    }
+
+    @Test
     public fun testASpanThatDoesNotFitStartsANewRow() {
         val grid = grid(
             config = """{"columns": {"type": "fixed", "count": 3}, "cell_aspect_ratio": 1}""",

@@ -19,11 +19,14 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionIt
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.GridLayoutItemInfo
+import com.urbanairship.android.layout.info.GridCellInfo
 import com.urbanairship.android.layout.model.Background
+import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
+import com.urbanairship.android.layout.property.GridConfigs
+import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
@@ -84,10 +87,14 @@ internal class GridLayoutView(
         viewEnvironment = viewEnvironment
     )
 
+    /** The items' cells, in item order. */
     private val cells: List<GridCell>
+    private val header: GridCell?
+    private val footer: GridCell?
 
-    /** Where each row starts below the first, from the last measure. */
-    private var rowTops = IntArray(0)
+    /** Every cell, header and footer included, in reading order. */
+    private val allCells: List<GridCell>
+
     private var contentHeight = 0
     /** How wide the block of columns is, which is less than the grid once `max_width` caps them. */
     private var blockWidth = 0
@@ -98,12 +105,17 @@ internal class GridLayoutView(
         backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         videoBackgrounds.addTo(this)
 
-        cells = model.items.map { item ->
-            val itemView = item.model.createView(
-                context, viewEnvironment, ItemProperties(item.info.size, item.info.position)
-            )
-            GridCell(context, item.info, itemView).also { addView(it) }
-        }
+        fun cell(info: GridCellInfo, itemModel: AnyModel, spans: GridConfigs<GridItemConfig>?) =
+            GridCell(
+                context, info,
+                itemModel.createView(context, viewEnvironment, ItemProperties(info.size, info.position)),
+                spans
+            ).also { addView(it) }
+
+        header = model.header?.let { cell(it.info, it.model, spans = null) }
+        cells = model.items.map { cell(it.info, it.model, it.info.config) }
+        footer = model.footer?.let { cell(it.info, it.model, spans = null) }
+        allCells = listOfNotNull(header) + cells + listOfNotNull(footer)
 
         model.listener = object : BaseModel.Listener {
             override fun onStateUpdated(state: ThomasState) {
@@ -131,7 +143,7 @@ internal class GridLayoutView(
             val noInsets = WindowInsetsCompat.Builder()
                 .setInsets(systemBars(), Insets.NONE)
                 .build()
-            cells.forEach { ViewCompat.dispatchApplyWindowInsets(it, noInsets) }
+            allCells.forEach { ViewCompat.dispatchApplyWindowInsets(it, noInsets) }
             noInsets
         }
     }
@@ -174,12 +186,15 @@ internal class GridLayoutView(
         contentPosition = config.contentPosition
 
         val shown = cells.filter { it.holdsItem }
-        cells.forEach { if (!it.holdsItem) it.measure(exactly(0), exactly(0)) }
+        // A hidden header or footer leaves no row.
+        val edges = listOfNotNull(header, footer).filter { it.holdsItem }
+        allCells.forEach { if (!it.holdsItem) it.measure(exactly(0), exactly(0)) }
 
         // Against the same width as the grid's config, so a span and the count capping it agree.
-        val spans = shown.map { resolveGridConfig(it.info.config, environment).columnSpan }
+        val spans = shown.map { cell -> cell.spans?.let { resolveGridConfig(it, environment).columnSpan } ?: 1 }
         val placements = placeGridItems(spans, columns, config.partialRowAlignment)
         shown.forEachIndexed { index, cell -> cell.placement = placements[index] }
+        edges.forEach { it.placement = GridPlacement(row = 0, halfColumn = 0, span = columns) }
 
         val share = innerWidth?.let { (it - (columns - 1) * gap) / columns }
         val cap = gridMaxColumnWidth(config, textScale)?.let { it * density }
@@ -189,13 +204,14 @@ internal class GridLayoutView(
             capped -> cap
             share != null -> share
             else -> gridMinColumnWidth(config, textScale)?.let { it * density }
-                ?: huggedColumnWidth(shown, gap)
+                ?: huggedColumnWidth(shown + edges, gap)
         }.coerceAtLeast(0f)
 
         val hugsWidth = innerWidth == null && gridMinColumnWidth(config, textScale) == null
-        shown.forEach { cell ->
+        (shown + edges).forEach { cell ->
             cell.hugsWidth = hugsWidth
-            cell.heightFromRatio = config.cellAspectRatio != null
+            // A header or footer keeps its own height beside ratio rows.
+            cell.heightFromRatio = config.cellAspectRatio != null && cell.spans != null
             val placement = cell.placement
             val start = placement.halfColumn * (cellWidth + gap) / 2
             val end = start + placement.span * cellWidth + (placement.span - 1) * gap
@@ -203,14 +219,16 @@ internal class GridLayoutView(
             cell.cellWidth = end.roundToInt() - cell.start
         }
 
-        val rows = shown.groupBy { it.placement.row }.toSortedMap().values.toList()
         val ratioRowHeight = config.cellAspectRatio?.let { (cellWidth / it).roundToInt() }
-        rowTops = IntArray(rows.size)
+        val rows = shown.groupBy { it.placement.row }.toSortedMap().values.map { it to ratioRowHeight }
+        // Header and footer rows size to their own content, a percentage a share of it.
+        val bands = listOfNotNull(header?.takeIf { it.holdsItem }?.let { listOf(it) to null }) +
+            rows + listOfNotNull(footer?.takeIf { it.holdsItem }?.let { listOf(it) to null })
         var top = 0
-        rows.forEachIndexed { index, row ->
+        bands.forEachIndexed { index, (row, rowHeight) ->
             if (index > 0) top += rowGap
-            rowTops[index] = top
-            top += measureRow(row, ratioRowHeight)
+            row.forEach { it.rowTop = top }
+            top += measureRow(row, rowHeight, isEdge = row.first().spans == null)
         }
         contentHeight = top
 
@@ -241,7 +259,7 @@ internal class GridLayoutView(
      * where something in it has a height of its own, and otherwise its content, unless it is the
      * whole row.
      */
-    private fun measureRow(row: List<GridCell>, ratioRowHeight: Int?): Int {
+    private fun measureRow(row: List<GridCell>, ratioRowHeight: Int?, isEdge: Boolean): Int {
         if (ratioRowHeight != null) {
             row.forEach {
                 it.measureItem(ratioRowHeight)
@@ -250,7 +268,7 @@ internal class GridLayoutView(
             return ratioRowHeight
         }
 
-        val hasBasis = row.any { it.establishesRowHeight() }
+        val hasBasis = isEdge || row.any { it.establishesRowHeight() }
         val sharesOfRow = row.filter { cell ->
             val height = cell.info.size.height
             height.isPercent && (hasBasis || height.getFloat() >= 1f)
@@ -284,14 +302,14 @@ internal class GridLayoutView(
         }
         val rtl = isLayoutRtl
 
-        cells.forEach { cell ->
+        allCells.forEach { cell ->
             if (!cell.holdsItem) {
                 cell.layout(0, 0, 0, 0)
                 return@forEach
             }
             val start = startOffset + cell.start
             val left = if (rtl) width - paddingRight - start - cell.measuredWidth else paddingLeft + start
-            val top = paddingTop + offset + rowTops[cell.placement.row]
+            val top = paddingTop + offset + cell.rowTop
             cell.layout(left, top, left + cell.measuredWidth, top + cell.measuredHeight)
         }
 
@@ -364,13 +382,17 @@ internal class GridLayoutView(
      */
     private class GridCell(
         context: Context,
-        val info: GridLayoutItemInfo,
-        val item: View
+        val info: GridCellInfo,
+        val item: View,
+        /** The item's span configs, or null for a header or footer, which spans every column. */
+        val spans: GridConfigs<GridItemConfig>?
     ) : ViewGroup(context), AutoSizeProvider {
 
         lateinit var placement: GridPlacement
-        /** Offset from the grid's start edge. */
+        /** Offset from the block's start edge. */
         var start = 0
+        /** Offset from the top of the rows. */
+        var rowTop = 0
         var cellWidth = 0
 
         private val margins = Rect()

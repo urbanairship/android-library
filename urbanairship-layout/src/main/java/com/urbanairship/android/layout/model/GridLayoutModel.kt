@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.GridLayoutEdgeInfo
 import com.urbanairship.android.layout.info.GridLayoutInfo
 import com.urbanairship.android.layout.info.GridLayoutItemInfo
 import com.urbanairship.android.layout.property.Direction
@@ -14,6 +15,8 @@ import com.urbanairship.android.layout.view.GridLayoutView
 internal class GridLayoutModel(
     viewInfo: GridLayoutInfo,
     val items: List<Item>,
+    val header: Edge? = null,
+    val footer: Edge? = null,
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : BaseModel<GridLayoutView, GridLayoutInfo, BaseModel.Listener>(
@@ -56,6 +59,12 @@ internal class GridLayoutModel(
             }
         }
     }
+
+    /** The header or footer, and its model. */
+    data class Edge(
+        val info: GridLayoutEdgeInfo,
+        val model: AnyModel
+    )
 
     override fun onCreateView(
         context: Context,
