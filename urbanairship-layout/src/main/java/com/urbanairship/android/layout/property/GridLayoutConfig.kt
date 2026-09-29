@@ -122,8 +122,10 @@ internal data class GridLayoutConfigs(
 ) {
 
     /** Every config the grid could lay out with. */
-    val all: List<GridLayoutConfig>
-        get() = listOf(default) + selectors.map { it.config }
+    val all: List<GridLayoutConfig> = listOf(default) + selectors.map { it.config }
+
+    /** Whether the grid sets its row heights from a ratio whichever config it lays out with. */
+    val everyConfigHasRatio: Boolean = all.all { it.cellAspectRatio != null }
 
     companion object {
         @Throws(JsonException::class)

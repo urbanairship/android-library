@@ -31,6 +31,7 @@ import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.gridColumnCount
+import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.util.gridMinColumnWidth
 import com.urbanairship.android.layout.util.placeGridItems
 import com.urbanairship.android.layout.util.resolveGridConfig
@@ -133,17 +134,14 @@ internal class GridLayoutView(
 
     /** Ratio rows take their height from the grid's width, but only every config setting one makes that certain. */
     override fun establishesLength(horizontal: Boolean): Boolean {
-        if (!horizontal && everyConfigHasRatio) return true
+        if (!horizontal && model.viewInfo.config.everyConfigHasRatio) return true
         return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.establishesLength(horizontal) } }
     }
 
     override fun statesLength(horizontal: Boolean): Boolean {
-        if (!horizontal && everyConfigHasRatio) return true
+        if (!horizontal && model.viewInfo.config.everyConfigHasRatio) return true
         return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.statesLength(horizontal) } }
     }
-
-    private val everyConfigHasRatio: Boolean
-        get() = model.viewInfo.config.all.all { it.cellAspectRatio != null }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density
@@ -266,7 +264,7 @@ internal class GridLayoutView(
             VerticalPosition.CENTER -> spare / 2
             VerticalPosition.BOTTOM -> spare
         }
-        val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+        val rtl = isLayoutRtl
 
         cells.forEach { cell ->
             if (!cell.holdsItem) {
@@ -357,6 +355,8 @@ internal class GridLayoutView(
         var cellWidth = 0
 
         private val margins = Rect()
+        private val insideMargins = Rect()
+        private val itemBounds = Rect()
 
         /** Whether the grid sets this cell's height from its width rather than from the row's items. */
         var heightFromRatio = false
@@ -451,7 +451,7 @@ internal class GridLayoutView(
             val margin = info.margin
             val start = dpToPx((margin?.start ?: 0).toFloat(), density)
             val end = dpToPx((margin?.end ?: 0).toFloat(), density)
-            val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+            val rtl = isLayoutRtl
             margins.set(
                 if (rtl) end else start,
                 dpToPx((margin?.top ?: 0).toFloat(), density),
@@ -471,13 +471,12 @@ internal class GridLayoutView(
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
             if (!holdsItem) return
             val margin = resolveMargins()
-            val container = Rect(margin.left, margin.top, width - margin.right, height - margin.bottom)
-            val out = Rect()
+            insideMargins.set(margin.left, margin.top, width - margin.right, height - margin.bottom)
             Gravity.apply(
                 info.position.getGravity(), item.measuredWidth, item.measuredHeight,
-                container, out, layoutDirection
+                insideMargins, itemBounds, layoutDirection
             )
-            item.layout(out.left, out.top, out.right, out.bottom)
+            item.layout(itemBounds.left, itemBounds.top, itemBounds.right, itemBounds.bottom)
         }
 
         override fun isAutoSized(horizontal: Boolean): Boolean =

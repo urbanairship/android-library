@@ -33,7 +33,7 @@ internal class GridLayoutModel(
 
     /** Ratio cells take their height from the grid's width, but only every config setting one makes that certain. */
     override fun establishesLength(direction: Direction): Boolean {
-        if (direction == Direction.VERTICAL && viewInfo.config.all.all { it.cellAspectRatio != null }) {
+        if (direction == Direction.VERTICAL && viewInfo.config.everyConfigHasRatio) {
             return true
         }
         return items.any { it.establishesLength(direction) }
