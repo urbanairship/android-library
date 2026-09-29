@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.info.GridLayoutInfo
 import com.urbanairship.android.layout.info.GridLayoutItemInfo
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.everyConfigHasRatio
 import com.urbanairship.android.layout.view.GridLayoutView
 
 internal class GridLayoutModel(

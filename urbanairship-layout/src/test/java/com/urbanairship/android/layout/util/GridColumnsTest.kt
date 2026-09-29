@@ -2,9 +2,12 @@
 package com.urbanairship.android.layout.util
 
 import com.urbanairship.android.layout.property.GridLayoutConfig
-import com.urbanairship.android.layout.property.GridLayoutConfigSelector
-import com.urbanairship.android.layout.property.GridLayoutConfigs
+import com.urbanairship.android.layout.property.GridColumns
+import com.urbanairship.android.layout.property.GridConfigSelector
+import com.urbanairship.android.layout.property.GridConfigs
+import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridMinColumnWidth
+import com.urbanairship.android.layout.property.GridSelectorConditions
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.LengthRange
 import com.urbanairship.android.layout.property.Orientation
@@ -31,18 +34,18 @@ public class GridColumnsTest {
 
     @Test
     public fun testFitsAsManyMinimumWidthColumnsAsTheWidthAllows() {
-        val config = GridLayoutConfig(maxColumns = 11, minColumnWidth = fixed(44f), columnSpacing = 8f)
+        val config = GridLayoutConfig(columns = GridColumns.Fit(max = 11, minWidth = fixed(44f)), columnSpacing = 8f)
         assertEquals(6, gridColumnCount(config, 320f))
     }
 
     @Test
-    public fun testCapsTheFitAtMaxColumns() {
-        assertEquals(4, gridColumnCount(GridLayoutConfig(maxColumns = 4, minColumnWidth = fixed(44f)), 1000f))
+    public fun testCapsTheFitAtMax() {
+        assertEquals(4, gridColumnCount(GridLayoutConfig(columns = GridColumns.Fit(max = 4, minWidth = fixed(44f))), 1000f))
     }
 
     @Test
     public fun testCountsAnExactFitAndAFitShortByLessThanTheEpsilon() {
-        val config = GridLayoutConfig(maxColumns = 10, minColumnWidth = fixed(50f), columnSpacing = 10f)
+        val config = GridLayoutConfig(columns = GridColumns.Fit(max = 10, minWidth = fixed(50f)), columnSpacing = 10f)
         assertEquals(3, gridColumnCount(config, 170f))
         assertEquals(3, gridColumnCount(config, 169.6f))
         assertEquals(2, gridColumnCount(config, 169f))
@@ -50,27 +53,27 @@ public class GridColumnsTest {
 
     @Test
     public fun testNeverDropsBelowOneColumn() {
-        assertEquals(1, gridColumnCount(GridLayoutConfig(maxColumns = 4, minColumnWidth = fixed(200f)), 100f))
+        assertEquals(1, gridColumnCount(GridLayoutConfig(columns = GridColumns.Fit(max = 4, minWidth = fixed(200f))), 100f))
     }
 
     @Test
-    public fun testDrawsMaxColumnsWithoutAMinimumOrWithoutAWidth() {
-        assertEquals(3, gridColumnCount(GridLayoutConfig(maxColumns = 3), 50f))
-        assertEquals(3, gridColumnCount(GridLayoutConfig(maxColumns = 3, minColumnWidth = fixed(44f)), null))
+    public fun testDrawsFixedColumnsAtAnyWidthAndMaxFitColumnsWithoutAWidth() {
+        assertEquals(3, gridColumnCount(GridLayoutConfig(columns = GridColumns.Fixed(count = 3)), 50f))
+        assertEquals(3, gridColumnCount(GridLayoutConfig(columns = GridColumns.Fit(max = 3, minWidth = fixed(44f))), null))
     }
 
     @Test
     public fun testScalesTheMinimumByTheTextSizeOnlyWhenAskedTo() {
-        val plain = GridLayoutConfig(maxColumns = 11, minColumnWidth = fixed(44f), columnSpacing = 8f)
-        val scaled = plain.copy(minColumnWidth = textScaled(44f))
+        val plain = GridLayoutConfig(columns = GridColumns.Fit(max = 11, minWidth = fixed(44f)), columnSpacing = 8f)
+        val scaled = plain.copy(columns = GridColumns.Fit(max = 11, minWidth = textScaled(44f)))
         assertEquals(6, gridColumnCount(plain, 320f, 2f))
         assertEquals(3, gridColumnCount(scaled, 320f, 2f))
         assertEquals(6, gridColumnCount(scaled, 320f, 1f))
     }
 
     @Test
-    public fun testTreatsMaxColumnsBelowOneAsOne() {
-        assertEquals(1, gridColumnCount(GridLayoutConfig(maxColumns = 0), 300f))
+    public fun testTreatsACountBelowOneAsOne() {
+        assertEquals(1, gridColumnCount(GridLayoutConfig(columns = GridColumns.Fixed(count = 0)), 300f))
     }
 
     @Test
@@ -84,15 +87,15 @@ public class GridColumnsTest {
         assertTrue(0f in LengthRange())
     }
 
-    private val narrow = GridLayoutConfig(maxColumns = 2)
-    private val wide = GridLayoutConfig(maxColumns = 6)
-    private val tablet = GridLayoutConfig(maxColumns = 8)
-    private val configs = GridLayoutConfigs(
-        default = GridLayoutConfig(maxColumns = 4),
+    private val narrow = GridLayoutConfig(columns = GridColumns.Fixed(count = 2))
+    private val wide = GridLayoutConfig(columns = GridColumns.Fixed(count = 6))
+    private val tablet = GridLayoutConfig(columns = GridColumns.Fixed(count = 8))
+    private val configs = GridConfigs(
+        default = GridLayoutConfig(columns = GridColumns.Fixed(count = 4)),
         selectors = listOf(
-            GridLayoutConfigSelector(gridWidth = LengthRange(atMost = 300f), config = narrow),
-            GridLayoutConfigSelector(windowSize = WindowSize.LARGE, config = tablet),
-            GridLayoutConfigSelector(gridWidth = LengthRange(atLeast = 300f), platform = "android", config = wide)
+            GridConfigSelector(GridSelectorConditions(gridWidth = LengthRange(atMost = 300f)), narrow),
+            GridConfigSelector(GridSelectorConditions(windowSize = WindowSize.LARGE), tablet),
+            GridConfigSelector(GridSelectorConditions(gridWidth = LengthRange(atLeast = 300f), platform = "android"), wide)
         )
     )
 
@@ -115,11 +118,23 @@ public class GridColumnsTest {
 
     @Test
     public fun testAPlatformThisSdkDoesNotKnowNeverMatches() {
-        val unknown = GridLayoutConfigs(
-            default = GridLayoutConfig(maxColumns = 4),
-            selectors = listOf(GridLayoutConfigSelector(platform = "none", config = wide))
+        val unknown = GridConfigs(
+            default = GridLayoutConfig(columns = GridColumns.Fixed(count = 4)),
+            selectors = listOf(GridConfigSelector(GridSelectorConditions(platform = "none"), wide))
         )
         assertSame(unknown.default, resolveGridConfig(unknown, environment))
+    }
+
+    @Test
+    public fun testResolvesAnItemsConfigByTheSameRules() {
+        val item = GridConfigs(
+            default = GridItemConfig(columnSpan = 6),
+            selectors = listOf(
+                GridConfigSelector(GridSelectorConditions(gridWidth = LengthRange(atMost = 280f)), GridItemConfig(columnSpan = 12))
+            )
+        )
+        assertEquals(12, resolveGridConfig(item, environment.copy(gridWidth = 250f)).columnSpan)
+        assertEquals(6, resolveGridConfig(item, environment.copy(gridWidth = 300f)).columnSpan)
     }
 
     @Test
@@ -169,13 +184,14 @@ public class GridColumnsTest {
 
     @Test
     public fun testMinColumnWidthIsNullWithoutAPositiveMinimum() {
-        assertNull(gridMinColumnWidth(GridLayoutConfig(maxColumns = 3), 2f))
-        assertNull(gridMinColumnWidth(GridLayoutConfig(maxColumns = 3, minColumnWidth = fixed(0f)), 2f))
+        assertNull(gridMinColumnWidth(GridLayoutConfig(columns = GridColumns.Fixed(count = 3)), 2f))
+        assertEquals(3, gridColumnCount(GridLayoutConfig(columns = GridColumns.Fit(max = 3, minWidth = fixed(0f))), 50f))
+        assertNull(gridMinColumnWidth(GridLayoutConfig(columns = GridColumns.Fit(max = 3, minWidth = fixed(0f))), 2f))
     }
 
     @Test
     public fun testScalesOnlyATextScaledMinimum() {
-        assertEquals(44f, gridMinColumnWidth(GridLayoutConfig(maxColumns = 3, minColumnWidth = fixed(44f)), 1.5f))
-        assertEquals(66f, gridMinColumnWidth(GridLayoutConfig(maxColumns = 3, minColumnWidth = textScaled(44f)), 1.5f))
+        assertEquals(44f, gridMinColumnWidth(GridLayoutConfig(columns = GridColumns.Fit(max = 3, minWidth = fixed(44f))), 1.5f))
+        assertEquals(66f, gridMinColumnWidth(GridLayoutConfig(columns = GridColumns.Fit(max = 3, minWidth = textScaled(44f))), 1.5f))
     }
 }

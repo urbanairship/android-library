@@ -8,17 +8,9 @@ import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import com.urbanairship.json.requireMap
 
-/**
- * How a grid divides its width into columns and places its rows.
- *
- * The column count is as many columns of at least [minColumnWidth] as fit, up to [maxColumns]:
- * 320 across with a 44 minimum and 8 spacing fits floor(328 / 52) = 6. Without a minimum the grid
- * always draws [maxColumns].
- */
+/** How a grid divides its width into columns and places its rows. */
 internal data class GridLayoutConfig(
-    /** At least 1. */
-    val maxColumns: Int,
-    val minColumnWidth: GridMinColumnWidth? = null,
+    val columns: GridColumns,
     /** Points between columns. */
     val columnSpacing: Float = 0f,
     /** Points between rows. */
@@ -34,14 +26,60 @@ internal data class GridLayoutConfig(
     companion object {
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): GridLayoutConfig = GridLayoutConfig(
-            maxColumns = json.requireField<Double>("max_columns").toInt().coerceAtLeast(1),
-            minColumnWidth = json.optionalMap("min_column_width")?.let(GridMinColumnWidth::fromJson),
+            columns = GridColumns.fromJson(json.requireField("columns")),
             columnSpacing = json.optionalField<Float>("column_spacing") ?: 0f,
             rowSpacing = json.optionalField<Float>("row_spacing") ?: 0f,
             partialRowAlignment = json["partial_row_alignment"]?.let(HorizontalPosition::from)
                 ?: HorizontalPosition.START,
             rowAlignment = json["row_alignment"]?.let(VerticalPosition::from) ?: VerticalPosition.TOP,
             cellAspectRatio = json.optionalField<Double>("cell_aspect_ratio")?.takeIf { it > 0 }
+        )
+    }
+}
+
+/**
+ * How many columns a grid has: always a count, or as many as fit its width.
+ *
+ * [Fixed] suits layouts built from spans, since a span keeps its share of the row: a span of 6 is
+ * half of a 12-column grid at every width. [Fit] suits rows of like options, whose count should
+ * follow the width: 44pt columns 8 apart fit floor(328 / 52) = 6 across a 320pt grid.
+ */
+internal sealed class GridColumns {
+
+    /** A column count that never changes. Below 1 counts as 1. */
+    data class Fixed(val count: Int) : GridColumns()
+
+    /**
+     * As many columns of at least [minWidth] as fit the grid's width, from 1 up to [max].
+     *
+     * Spans still count columns, not shares of the row, so a span tuned for the widest count takes
+     * a bigger share as columns drop out.
+     */
+    data class Fit(val max: Int, val minWidth: GridMinColumnWidth) : GridColumns()
+
+    companion object {
+        @Throws(JsonException::class)
+        fun fromJson(json: JsonMap): GridColumns =
+            when (val type = json.requireField<String>("type")) {
+                "fixed" -> Fixed(count = json.requireField<Double>("count").toInt())
+                "fit" -> Fit(
+                    max = json.requireField<Double>("max").toInt(),
+                    minWidth = GridMinColumnWidth.fromJson(json.requireField("min_width"))
+                )
+                else -> throw JsonException("Unknown GridColumns type: $type")
+            }
+    }
+}
+
+/** How one grid item is placed among its grid's columns. */
+internal data class GridItemConfig(
+    /** The columns the cell asks to cover. Placement caps it between 1 and the column count. */
+    val columnSpan: Int = 1
+) {
+
+    companion object {
+        fun fromJson(json: JsonMap): GridItemConfig = GridItemConfig(
+            columnSpan = (json.optionalField<Double>("column_span") ?: 1.0).toInt()
         )
     }
 }
@@ -90,50 +128,67 @@ internal data class LengthRange(val atLeast: Float? = null, val atMost: Float? =
 }
 
 /**
- * A config for the conditions it names; a condition left out matches anything. The config
- * replaces the grid's default whole rather than merging into it.
+ * What a grid or grid item config selector matches on; a condition left out matches anything.
  */
-internal data class GridLayoutConfigSelector(
+internal data class GridSelectorConditions(
     /** Kept as written, so a platform this SDK doesn't know never matches rather than failing the scene. */
     val platform: String? = null,
     val windowSize: WindowSize? = null,
     val orientation: Orientation? = null,
     /** Matched against the grid's own width. Never matches a grid with no width. */
-    val gridWidth: LengthRange? = null,
-    val config: GridLayoutConfig
+    val gridWidth: LengthRange? = null
 ) {
 
     companion object {
         @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): GridLayoutConfigSelector = GridLayoutConfigSelector(
+        fun fromJson(json: JsonMap): GridSelectorConditions = GridSelectorConditions(
             platform = json["platform"]?.requireString()?.lowercase(),
             windowSize = json["window_size"]?.let(WindowSize::from),
             orientation = json["orientation"]?.let(Orientation::from),
-            gridWidth = json.optionalMap("grid_width")?.let(LengthRange::fromJson),
-            config = GridLayoutConfig.fromJson(json.requireField<JsonMap>("config"))
+            gridWidth = json.optionalMap("grid_width")?.let(LengthRange::fromJson)
         )
     }
 }
 
-/** A grid's `config`: the default, and the selectors that can replace it. */
-internal data class GridLayoutConfigs(
-    val default: GridLayoutConfig,
-    val selectors: List<GridLayoutConfigSelector> = emptyList()
+/** A config for the conditions it names. */
+internal data class GridConfigSelector<T>(val conditions: GridSelectorConditions, val config: T)
+
+/**
+ * A grid's or a grid item's `config`: the default, and the selectors that can replace it.
+ *
+ * The first selector whose conditions all match supplies the config, replacing the default whole
+ * rather than merging into it.
+ */
+internal data class GridConfigs<T>(
+    val default: T,
+    val selectors: List<GridConfigSelector<T>> = emptyList()
 ) {
 
-    /** Every config the grid could lay out with. */
-    val all: List<GridLayoutConfig> = listOf(default) + selectors.map { it.config }
-
-    /** Whether the grid sets its row heights from a ratio whichever config it lays out with. */
-    val everyConfigHasRatio: Boolean = all.all { it.cellAspectRatio != null }
+    /** Every config this could resolve to. */
+    val all: List<T> = listOf(default) + selectors.map { it.config }
 
     companion object {
+        /**
+         * Parses a `config` object.
+         *
+         * @param json the `config` object, holding `default` and optionally `selectors`.
+         * @param parse parses one config.
+         * @return the parsed configs.
+         */
         @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): GridLayoutConfigs = GridLayoutConfigs(
-            default = GridLayoutConfig.fromJson(json.requireField<JsonMap>("default")),
+        fun <T> fromJson(json: JsonMap, parse: (JsonMap) -> T): GridConfigs<T> = GridConfigs(
+            default = parse(json.requireField("default")),
             selectors = json["selectors"]?.optList()?.map {
-                GridLayoutConfigSelector.fromJson(it.requireMap())
+                val selector = it.requireMap()
+                GridConfigSelector(
+                    conditions = GridSelectorConditions.fromJson(selector),
+                    config = parse(selector.requireField("config"))
+                )
             } ?: emptyList()
         )
     }
 }
+
+/** Whether the grid sets its row heights from a ratio whichever config it lays out with. */
+internal val GridConfigs<GridLayoutConfig>.everyConfigHasRatio: Boolean
+    get() = all.all { it.cellAspectRatio != null }

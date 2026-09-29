@@ -18,7 +18,9 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.FormInputType
-import com.urbanairship.android.layout.property.GridLayoutConfigs
+import com.urbanairship.android.layout.property.GridConfigs
+import com.urbanairship.android.layout.property.GridItemConfig
+import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
@@ -570,7 +572,8 @@ internal class LinearLayoutItemInfo(
  * parent offers rather than hugging the items.
  */
 internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<GridLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
-    val config: GridLayoutConfigs = GridLayoutConfigs.fromJson(json.requireField("config"))
+    val config: GridConfigs<GridLayoutConfig> =
+        GridConfigs.fromJson(json.requireField("config"), GridLayoutConfig::fromJson)
     val items = json.requireField<JsonList>("items").map { GridLayoutItemInfo(it.requireMap()) }
 
     override val children: List<GridLayoutItemInfo> = items
@@ -587,8 +590,10 @@ internal class GridLayoutItemInfo(
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))) {
     val identifier: String? = json.optionalField("identifier")
     val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_SIZE
-    /** The columns the cell asks to cover, at least 1; placement caps it at the column count. */
-    val columnSpan: Int = (json.optionalField<Double>("column_span") ?: 1.0).toInt().coerceAtLeast(1)
+    /** Where the item sits among the grid's columns, resolved by the grid's own selector rules. */
+    val config: GridConfigs<GridItemConfig> = json.optionalMap("config")
+        ?.let { GridConfigs.fromJson(it, GridItemConfig::fromJson) }
+        ?: GridConfigs(GridItemConfig())
     val margin: Margin? = json["margin"]?.let(Margin::fromJson)
     val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
 

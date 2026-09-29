@@ -48,7 +48,7 @@ public class UrlInfoBackgroundsTest {
             """
             {
               "type": "grid_layout",
-              "config": { "default": { "max_columns": 2 } },
+              "config": { "default": { "columns": { "type": "fixed", "count": 2 } } },
               "backgrounds": [
                 { "type": "media", "media_type": "video", "media_fit": "fit_crop",
                   "url": "https://example/grid-layer.mp4" }

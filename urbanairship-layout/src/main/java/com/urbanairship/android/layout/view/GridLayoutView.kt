@@ -26,6 +26,7 @@ import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
+import com.urbanairship.android.layout.property.everyConfigHasRatio
 import com.urbanairship.android.layout.util.GridEnvironment
 import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -155,14 +156,12 @@ internal class GridLayoutView(
             (MeasureSpec.getSize(widthMeasureSpec) - horizontalPadding).coerceAtLeast(0)
         }
 
-        val config = resolveGridConfig(
-            model.viewInfo.config,
-            GridEnvironment(
-                windowSize = ResourceUtils.getWindowSize(context),
-                orientation = ResourceUtils.getOrientation(context),
-                gridWidth = innerWidth?.let { it / density }
-            )
+        val environment = GridEnvironment(
+            windowSize = ResourceUtils.getWindowSize(context),
+            orientation = ResourceUtils.getOrientation(context),
+            gridWidth = innerWidth?.let { it / density }
         )
+        val config = resolveGridConfig(model.viewInfo.config, environment)
         val textScale = resources.configuration.fontScale
         val columns = gridColumnCount(config, innerWidth?.let { it / density }, textScale)
         val gap = config.columnSpacing * density
@@ -172,7 +171,9 @@ internal class GridLayoutView(
         val shown = cells.filter { it.holdsItem }
         cells.forEach { if (!it.holdsItem) it.measure(exactly(0), exactly(0)) }
 
-        val placements = placeGridItems(shown.map { it.info.columnSpan }, columns, config.partialRowAlignment)
+        // Against the same width as the grid's config, so a span and the count capping it agree.
+        val spans = shown.map { resolveGridConfig(it.info.config, environment).columnSpan }
+        val placements = placeGridItems(spans, columns, config.partialRowAlignment)
         shown.forEachIndexed { index, cell -> cell.placement = placements[index] }
 
         val cellWidth = when {

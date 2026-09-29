@@ -1,9 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.util
 
+import com.urbanairship.android.layout.property.GridColumns
+import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridLayoutConfig
-import com.urbanairship.android.layout.property.GridLayoutConfigs
 import com.urbanairship.android.layout.property.GridMinColumnWidth
+import com.urbanairship.android.layout.property.GridSelectorConditions
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Orientation
 import com.urbanairship.android.layout.property.Platform
@@ -23,32 +25,33 @@ internal data class GridEnvironment(
 )
 
 /**
- * Picks the config for a grid: the first selector whose conditions all match, or the default.
+ * Picks a grid's or a grid item's config: the first selector whose conditions all match, or the default.
  *
  * A selector naming `grid_width` never matches a grid with no width.
  *
- * @param configs the grid's `config`.
- * @param environment what the selectors are matched against.
- * @return the config to lay the grid out with.
+ * @param configs the grid's or the item's `config`.
+ * @param environment what the selectors are matched against: the grid's, for an item too.
+ * @return the config to lay the grid or the item out with.
  */
-internal fun resolveGridConfig(configs: GridLayoutConfigs, environment: GridEnvironment): GridLayoutConfig =
-    configs.selectors.firstOrNull { selector ->
-        (selector.platform == null || selector.platform == environment.platform.toString()) &&
-            (selector.windowSize == null || selector.windowSize == environment.windowSize) &&
-            (selector.orientation == null || selector.orientation == environment.orientation) &&
-            (selector.gridWidth == null ||
-                (environment.gridWidth != null && environment.gridWidth in selector.gridWidth))
-    }?.config ?: configs.default
+internal fun <T> resolveGridConfig(configs: GridConfigs<T>, environment: GridEnvironment): T =
+    configs.selectors.firstOrNull { it.conditions.matches(environment) }?.config ?: configs.default
+
+private fun GridSelectorConditions.matches(environment: GridEnvironment): Boolean =
+    (platform == null || platform == environment.platform.toString()) &&
+        (windowSize == null || windowSize == environment.windowSize) &&
+        (orientation == null || orientation == environment.orientation) &&
+        (gridWidth == null || (environment.gridWidth != null && environment.gridWidth in gridWidth))
 
 /**
  * Returns a grid's minimum column width in points, after any text scaling the config asks for.
  *
  * @param config the resolved config.
  * @param textScale the accessibility text scale, 1 at the default size.
- * @return the minimum width, or null where the config sets none or a non-positive one.
+ * @return the minimum width, or null for `fixed` columns or a minimum of 0 or less.
  */
 internal fun gridMinColumnWidth(config: GridLayoutConfig, textScale: Float): Float? {
-    val minWidth = config.minColumnWidth?.takeIf { it.points > 0 } ?: return null
+    val columns = config.columns as? GridColumns.Fit ?: return null
+    val minWidth = columns.minWidth.takeIf { it.points > 0 } ?: return null
     return when (minWidth.type) {
         GridMinColumnWidth.Type.FIXED -> minWidth.points
         GridMinColumnWidth.Type.TEXT_SCALED -> minWidth.points * textScale
@@ -58,9 +61,9 @@ internal fun gridMinColumnWidth(config: GridLayoutConfig, textScale: Float): Flo
 /**
  * Counts the columns a grid draws at a width.
  *
- * As many columns of at least the minimum as fit, from 1 up to `max_columns`: 170 across at a 50
- * minimum and 10 apart is 3 columns, and so is 169.6, but 169 is 2. Without a minimum, or without a
- * width to fit into, it is `max_columns`.
+ * `fixed` is always its count. `fit` is as many columns of at least the minimum as fit, from 1 up
+ * to `max`: 170 across at a 50 minimum and 10 apart is 3 columns, and so is 169.6, but 169 is 2.
+ * Without a width to fit into, or with a minimum of 0 or less, it is `max`.
  *
  * @param config the resolved config.
  * @param width the grid's inner width in points, or null when unbounded.
@@ -68,7 +71,10 @@ internal fun gridMinColumnWidth(config: GridLayoutConfig, textScale: Float): Flo
  * @return the column count, at least 1.
  */
 internal fun gridColumnCount(config: GridLayoutConfig, width: Float?, textScale: Float = 1f): Int {
-    val max = config.maxColumns.coerceAtLeast(1)
+    val max = when (val columns = config.columns) {
+        is GridColumns.Fixed -> columns.count
+        is GridColumns.Fit -> columns.max
+    }.coerceAtLeast(1)
     val minWidth = gridMinColumnWidth(config, textScale)
     if (minWidth == null || width == null) return max
     val spacing = config.columnSpacing
