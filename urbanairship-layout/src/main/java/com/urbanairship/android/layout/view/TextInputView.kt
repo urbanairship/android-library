@@ -140,7 +140,7 @@ internal class TextInputView(
         val adapter = SmsLocaleAdapter(
             context = context,
             locales = model.viewInfo.smsLocales ?: emptyList(),
-            appearance = model.viewInfo.textAppearance)
+            appearance = model.viewInfo.textAppearance.localePickerAppearance)
 
         return Spinner(context).apply {
             background = null

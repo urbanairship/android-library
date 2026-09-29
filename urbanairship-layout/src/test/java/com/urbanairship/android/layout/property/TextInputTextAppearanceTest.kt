@@ -22,6 +22,14 @@ public class TextInputTextAppearanceTest {
     }
 
     @Test
+    public fun testTheSmsLocalePickerStaysCentred() {
+        val appearance = parse(alignment = null)
+        assertEquals(TextAlignment.START, appearance.alignment)
+        assertEquals(TextAlignment.CENTER, appearance.localePickerAppearance.alignment)
+        assertEquals(TextAlignment.END, parse(alignment = "end").localePickerAppearance.alignment)
+    }
+
+    @Test
     public fun testALabelWithNoAlignmentStaysCentred() {
         assertEquals(TextAlignment.CENTER, TextAppearance.fromJson(json(alignment = null)).alignment)
     }
