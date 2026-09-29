@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.GridColumnWidth
 import com.urbanairship.android.layout.property.GridSelectorConditions
+import com.urbanairship.android.layout.property.GridSpacing
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Orientation
 import com.urbanairship.android.layout.property.Platform
@@ -51,7 +52,7 @@ private fun GridSelectorConditions.matches(environment: GridEnvironment): Boolea
  */
 internal fun gridMinColumnWidth(config: GridLayoutConfig, textScale: Float): Float? {
     val columns = config.columns as? GridColumns.Fit ?: return null
-    return columns.minWidth.points(textScale).takeIf { it > 0 }
+    return columns.minWidth.scaled(textScale).takeIf { it > 0 }
 }
 
 /**
@@ -65,14 +66,31 @@ internal fun gridMinColumnWidth(config: GridLayoutConfig, textScale: Float): Flo
  */
 internal fun gridMaxColumnWidth(config: GridLayoutConfig, textScale: Float): Float? {
     val columns = config.columns as? GridColumns.Fit ?: return null
-    val maxWidth = columns.maxWidth?.points(textScale)?.takeIf { it > 0 } ?: return null
+    val maxWidth = columns.maxWidth?.scaled(textScale)?.takeIf { it > 0 } ?: return null
     return maxOf(maxWidth, gridMinColumnWidth(config, textScale) ?: 0f)
 }
 
-/** This bound in points, scaled with the text size when it asks to be. */
-private fun GridColumnWidth.points(textScale: Float): Float = when (type) {
-    GridColumnWidth.Type.FIXED -> points
-    GridColumnWidth.Type.TEXT_SCALED -> points * textScale
+/** This bound, scaled with the text size when it asks to be. */
+private fun GridColumnWidth.scaled(textScale: Float): Float = when (type) {
+    GridColumnWidth.Type.FIXED -> size
+    GridColumnWidth.Type.TEXT_SCALED -> size * textScale
+}
+
+/**
+ * Returns a [GridSpacing.Spread] gap: the room left over shared between the gaps, within its bounds.
+ *
+ * 84 left over by 4 columns makes 3 gaps of 28; with a `max_space` of 20 they stop at 20, and
+ * `content_position` places the 24 still over.
+ *
+ * @param spacing a grid's column or row spacing.
+ * @param leftover the room the columns or rows leave, before any gaps.
+ * @param count how many columns or rows share it.
+ * @return the gap, or null for fixed spacing or fewer than two to spread between.
+ */
+internal fun spreadSpace(spacing: GridSpacing, leftover: Float, count: Int): Float? {
+    if (spacing !is GridSpacing.Spread || count < 2) return null
+    val max = spacing.maxSpace?.coerceAtLeast(spacing.min) ?: Float.POSITIVE_INFINITY
+    return (leftover / (count - 1)).coerceIn(spacing.min, max)
 }
 
 /**
@@ -94,7 +112,7 @@ internal fun gridColumnCount(config: GridLayoutConfig, width: Float?, textScale:
     }.coerceAtLeast(1)
     val minWidth = gridMinColumnWidth(config, textScale)
     if (minWidth == null || width == null) return max
-    val spacing = config.columnSpacing
+    val spacing = config.columnSpacing.min
     val fits = floor((width + spacing + COLUMN_FIT_EPSILON) / (minWidth + spacing)).toInt()
     return fits.coerceIn(1, max)
 }

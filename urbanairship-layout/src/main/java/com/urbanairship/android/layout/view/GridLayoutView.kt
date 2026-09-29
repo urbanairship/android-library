@@ -42,6 +42,7 @@ import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.util.gridMinColumnWidth
 import com.urbanairship.android.layout.util.placeGridItems
 import com.urbanairship.android.layout.util.resolveGridConfig
+import com.urbanairship.android.layout.util.spreadSpace
 import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.BackgroundsPainter
 import com.urbanairship.android.layout.widget.Clippable
@@ -181,8 +182,8 @@ internal class GridLayoutView(
         val config = resolveGridConfig(model.viewInfo.config, environment)
         val textScale = resources.configuration.fontScale
         val columns = gridColumnCount(config, innerWidth?.let { it / density }, textScale)
-        val gap = config.columnSpacing * density
-        val rowGap = (config.rowSpacing * density).roundToInt()
+        val minGap = config.columnSpacing.min * density
+        val minRowGap = config.rowSpacing.min * density
         contentPosition = config.contentPosition
 
         val shown = cells.filter { it.holdsItem }
@@ -191,15 +192,28 @@ internal class GridLayoutView(
         allCells.forEach { if (!it.holdsItem) it.measure(exactly(0), exactly(0)) }
 
         // Against the same width as the grid's config, so a span and the count capping it agree.
-        val spans = shown.map { cell -> cell.spans?.let { resolveGridConfig(it, environment).columnSpan } ?: 1 }
-        val placements = placeGridItems(spans, columns, config.partialRowAlignment)
-        shown.forEachIndexed { index, cell -> cell.placement = placements[index] }
+        // Sorted stably, so items of one order keep list (or shuffled) order.
+        val ordered = shown
+            .map { cell -> cell to (cell.spans?.let { resolveGridConfig(it, environment) } ?: GridItemConfig()) }
+            .sortedBy { (_, itemConfig) -> itemConfig.order }
+        val placements = placeGridItems(ordered.map { it.second.columnSpan }, columns, config.partialRowPosition)
+        ordered.forEachIndexed { index, (cell, _) ->
+            cell.placement = placements[index]
+            cell.readingIndex = index
+        }
         edges.forEach { it.placement = GridPlacement(row = 0, halfColumn = 0, span = columns) }
 
-        val share = innerWidth?.let { (it - (columns - 1) * gap) / columns }
+        val share = innerWidth?.let { (it - (columns - 1) * minGap) / columns }
         val cap = gridMaxColumnWidth(config, textScale)?.let { it * density }
         // Past their cap the columns stop growing, and `content_position` places the block.
         val capped = share != null && cap != null && share > cap
+        // Under `spread` spacing, what capped columns leave goes into the gaps instead.
+        val gap = if (capped && innerWidth != null && cap != null) {
+            spreadSpace(config.columnSpacing, (innerWidth - columns * cap) / density, columns)
+                ?.let { it * density } ?: minGap
+        } else {
+            minGap
+        }
         val cellWidth = when {
             capped -> cap
             share != null -> share
@@ -224,13 +238,28 @@ internal class GridLayoutView(
         // Header and footer rows size to their own content, a percentage a share of it.
         val bands = listOfNotNull(header?.takeIf { it.holdsItem }?.let { listOf(it) to null }) +
             rows + listOfNotNull(footer?.takeIf { it.holdsItem }?.let { listOf(it) to null })
-        var top = 0
-        bands.forEachIndexed { index, (row, rowHeight) ->
-            if (index > 0) top += rowGap
-            row.forEach { it.rowTop = top }
-            top += measureRow(row, rowHeight, isEdge = row.first().spans == null)
+        val heights = bands.map { (row, rowHeight) -> measureRow(row, rowHeight, isEdge = row.first().spans == null) }
+
+        // Rows spread only into a height the grid has of its own, and only between two rows or
+        // more; the header and footer stay the minimum from the cells.
+        val ownHeight = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+            MeasureSpec.getSize(heightMeasureSpec) - verticalPadding
+        } else {
+            null
         }
-        contentHeight = top
+        val isEdge = bands.map { (row, _) -> row.first().spans == null }
+        val edgesHeight = heights.indices.filter { isEdge[it] }.sumOf { heights[it] + minRowGap.toDouble() }.toFloat()
+        val rowsHeight = heights.indices.filterNot { isEdge[it] }.sumOf { heights[it] }
+        val rowGap = ownHeight?.let { spreadSpace(config.rowSpacing, (it - edgesHeight - rowsHeight) / density, rows.size) }
+            ?.let { it * density } ?: minRowGap
+
+        var top = 0f
+        bands.forEachIndexed { index, (row, _) ->
+            if (index > 0) top += if (isEdge[index] || isEdge[index - 1]) minRowGap else rowGap
+            row.forEach { it.rowTop = top.roundToInt() }
+            top += heights[index]
+        }
+        contentHeight = top.roundToInt()
 
         val columnsWidth = (columns * cellWidth + (columns - 1) * gap).roundToInt()
         blockWidth = if (innerWidth != null && !capped) innerWidth else columnsWidth
@@ -366,7 +395,7 @@ internal class GridLayoutView(
                 override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
                     super.onInitializeAccessibilityNodeInfo(host, info)
                     if (!cell.holdsItem) return
-                    val index = cells.filter { it.holdsItem }.indexOf(cell)
+                    val index = cell.readingIndex
                     info.setCollectionItemInfo(CollectionItemInfoCompat.obtain(index, 1, 0, 1, false))
                     info.isScreenReaderFocusable = true
                 }
@@ -389,6 +418,8 @@ internal class GridLayoutView(
     ) : ViewGroup(context), AutoSizeProvider {
 
         lateinit var placement: GridPlacement
+        /** Where the item is read among the grid's shown items: its placement order. */
+        var readingIndex = 0
         /** Offset from the block's start edge. */
         var start = 0
         /** Offset from the top of the rows. */

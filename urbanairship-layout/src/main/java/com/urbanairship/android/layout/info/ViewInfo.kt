@@ -574,7 +574,11 @@ internal class LinearLayoutItemInfo(
 internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
     val config: GridConfigs<GridLayoutConfig> =
         GridConfigs.fromJson(json.requireField("config"), GridLayoutConfig::fromJson)
+
+    /** Shuffled once, when the scene is read, so a state change never reorders the options. */
+    private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val items = json.requireField<JsonList>("items").map { GridLayoutItemInfo(it.requireMap()) }
+        .let { if (randomizeChildren) it.shuffled() else it }
 
     /** A view above the cells, as wide as the block of columns. */
     val header: GridLayoutEdgeInfo? = json.optionalMap("header")?.let(::GridLayoutEdgeInfo)

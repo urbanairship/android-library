@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridColumnWidth
 import com.urbanairship.android.layout.property.GridSelectorConditions
+import com.urbanairship.android.layout.property.GridSpacing
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.LengthRange
 import com.urbanairship.android.layout.property.Orientation
@@ -22,8 +23,8 @@ import org.junit.Test
 
 public class GridColumnsTest {
 
-    private fun fixed(points: Float) = GridColumnWidth(GridColumnWidth.Type.FIXED, points)
-    private fun textScaled(points: Float) = GridColumnWidth(GridColumnWidth.Type.TEXT_SCALED, points)
+    private fun fixed(size: Float) = GridColumnWidth(GridColumnWidth.Type.FIXED, size)
+    private fun textScaled(size: Float) = GridColumnWidth(GridColumnWidth.Type.TEXT_SCALED, size)
 
     private val environment = GridEnvironment(
         platform = Platform.ANDROID,
@@ -34,7 +35,7 @@ public class GridColumnsTest {
 
     @Test
     public fun testFitsAsManyMinimumWidthColumnsAsTheWidthAllows() {
-        val config = GridLayoutConfig(columns = GridColumns.Fit(max = 11, minWidth = fixed(44f)), columnSpacing = 8f)
+        val config = GridLayoutConfig(columns = GridColumns.Fit(max = 11, minWidth = fixed(44f)), columnSpacing = GridSpacing.Fixed(8f))
         assertEquals(6, gridColumnCount(config, 320f))
     }
 
@@ -45,7 +46,7 @@ public class GridColumnsTest {
 
     @Test
     public fun testCountsAnExactFitAndAFitShortByLessThanTheEpsilon() {
-        val config = GridLayoutConfig(columns = GridColumns.Fit(max = 10, minWidth = fixed(50f)), columnSpacing = 10f)
+        val config = GridLayoutConfig(columns = GridColumns.Fit(max = 10, minWidth = fixed(50f)), columnSpacing = GridSpacing.Fixed(10f))
         assertEquals(3, gridColumnCount(config, 170f))
         assertEquals(3, gridColumnCount(config, 169.6f))
         assertEquals(2, gridColumnCount(config, 169f))
@@ -64,7 +65,7 @@ public class GridColumnsTest {
 
     @Test
     public fun testScalesTheMinimumByTheTextSizeOnlyWhenAskedTo() {
-        val plain = GridLayoutConfig(columns = GridColumns.Fit(max = 11, minWidth = fixed(44f)), columnSpacing = 8f)
+        val plain = GridLayoutConfig(columns = GridColumns.Fit(max = 11, minWidth = fixed(44f)), columnSpacing = GridSpacing.Fixed(8f))
         val scaled = plain.copy(columns = GridColumns.Fit(max = 11, minWidth = textScaled(44f)))
         assertEquals(6, gridColumnCount(plain, 320f, 2f))
         assertEquals(3, gridColumnCount(scaled, 320f, 2f))
@@ -204,6 +205,42 @@ public class GridColumnsTest {
     @Test
     public fun testMaxColumnWidthNeverFallsBelowTheMinimum() {
         assertEquals(44f, gridMaxColumnWidth(fit(44f, 30f), 1f))
+    }
+
+    @Test
+    public fun testSpacingMinimumIsTheFixedSpaceOrTheSpreadMinimum() {
+        assertEquals(8f, GridSpacing.Fixed(8f).min)
+        assertEquals(6f, GridSpacing.Spread(minSpace = 6f).min)
+        assertEquals(0f, GridSpacing.Fixed(-2f).min)
+    }
+
+    @Test
+    public fun testColumnsAreCountedWithTheMinimumSpace() {
+        // floor((340 + 6 + 0.5) / 50) = 6, capped at 4: spreading never adds or drops a column.
+        val config = GridLayoutConfig(
+            columns = GridColumns.Fit(max = 4, minWidth = fixed(44f)),
+            columnSpacing = GridSpacing.Spread(minSpace = 6f)
+        )
+        assertEquals(4, gridColumnCount(config, 340f))
+    }
+
+    @Test
+    public fun testSpreadSpaceSharesTheLeftoverWithinItsBounds() {
+        assertEquals(28f, spreadSpace(GridSpacing.Spread(6f), leftover = 84f, count = 4))
+        assertEquals("never under the minimum", 6f, spreadSpace(GridSpacing.Spread(6f), leftover = 14f, count = 4))
+        assertEquals(20f, spreadSpace(GridSpacing.Spread(6f, maxSpace = 20f), leftover = 84f, count = 4))
+        assertEquals(6f, spreadSpace(GridSpacing.Spread(6f, maxSpace = 20f), leftover = 6f, count = 4))
+    }
+
+    @Test
+    public fun testSpreadSpaceTreatsAMaxBelowTheMinAsTheMin() {
+        assertEquals(10f, spreadSpace(GridSpacing.Spread(10f, maxSpace = 4f), leftover = 84f, count = 4))
+    }
+
+    @Test
+    public fun testSpreadSpaceDoesNothingForFixedSpacingOrFewerThanTwo() {
+        assertNull(spreadSpace(GridSpacing.Fixed(6f), leftover = 84f, count = 4))
+        assertNull(spreadSpace(GridSpacing.Spread(6f), leftover = 84f, count = 1))
     }
 
     @Test

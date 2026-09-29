@@ -11,12 +11,12 @@ import com.urbanairship.json.requireMap
 /** How a grid divides its width into columns and places its rows. */
 internal data class GridLayoutConfig(
     val columns: GridColumns,
-    /** Points between columns. */
-    val columnSpacing: Float = 0f,
-    /** Points between rows. */
-    val rowSpacing: Float = 0f,
+    /** The space between columns. */
+    val columnSpacing: GridSpacing = GridSpacing.Fixed(0f),
+    /** The space between rows. */
+    val rowSpacing: GridSpacing = GridSpacing.Fixed(0f),
     /** Where a row that fills fewer columns than the grid has sits. Its cells keep their widths. */
-    val partialRowAlignment: HorizontalPosition = HorizontalPosition.START,
+    val partialRowPosition: HorizontalPosition = HorizontalPosition.START,
     /**
      * Where the block of cells sits when the grid is bigger than it: wider, once `max_width` stops
      * the columns growing, or taller than its rows.
@@ -32,9 +32,9 @@ internal data class GridLayoutConfig(
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): GridLayoutConfig = GridLayoutConfig(
             columns = GridColumns.fromJson(json.requireField("columns")),
-            columnSpacing = json.optionalField<Float>("column_spacing") ?: 0f,
-            rowSpacing = json.optionalField<Float>("row_spacing") ?: 0f,
-            partialRowAlignment = json["partial_row_alignment"]?.let(HorizontalPosition::from)
+            columnSpacing = json.optionalMap("column_spacing")?.let(GridSpacing::fromJson) ?: GridSpacing.Fixed(0f),
+            rowSpacing = json.optionalMap("row_spacing")?.let(GridSpacing::fromJson) ?: GridSpacing.Fixed(0f),
+            partialRowPosition = json["partial_row_position"]?.let(HorizontalPosition::from)
                 ?: HorizontalPosition.START,
             contentPosition = json["content_position"]?.let(Position::fromJson) ?: DEFAULT_CONTENT_POSITION,
             cellAspectRatio = json.optionalField<Double>("cell_aspect_ratio")?.takeIf { it > 0 }
@@ -89,23 +89,65 @@ internal sealed class GridColumns {
 /** How one grid item is placed among its grid's columns. */
 internal data class GridItemConfig(
     /** The columns the cell asks to cover. Placement caps it between 1 and the column count. */
-    val columnSpan: Int = 1
+    val columnSpan: Int = 1,
+    /**
+     * Where the item falls among its siblings: items place, and are read, in ascending order, in
+     * list order among equal ones. After a `randomize_children` shuffle, so the shuffle mixes only
+     * items of one order.
+     */
+    val order: Int = 0
 ) {
 
     companion object {
         fun fromJson(json: JsonMap): GridItemConfig = GridItemConfig(
-            columnSpan = (json.optionalField<Double>("column_span") ?: 1.0).toInt()
+            columnSpan = (json.optionalField<Double>("column_span") ?: 1.0).toInt(),
+            order = (json.optionalField<Double>("order") ?: 0.0).toInt()
         )
     }
 }
 
 /**
- * A bound on a `fit` grid's column width in points, for its `min_width` and `max_width`.
+ * The space between a grid's columns or rows: always a set space, or at least a minimum and wider
+ * to use room the columns or rows leave over, up to a maximum.
  *
- * A [Type.TEXT_SCALED] bound grows with the accessibility text size, as labels do: 44 points at
- * 200% text is 88.
+ * Room goes to the columns first, up to `max_width`, and only what they leave to [Spread] gaps, so
+ * full rows reach both edges. Rows keep their heights and spread into the height a grid has of its
+ * own. Where nothing is left over, [Spread] is its minimum, and past its maximum
+ * `content_position` places the cells. The column count always uses the minimum.
  */
-internal data class GridColumnWidth(val type: Type, val points: Float) {
+internal sealed class GridSpacing {
+
+    /** The least this spacing can be, never below 0. */
+    abstract val min: Float
+
+    /** A space that never changes. */
+    data class Fixed(val space: Float) : GridSpacing() {
+        override val min: Float get() = space.coerceAtLeast(0f)
+    }
+
+    /** At least [minSpace], widened to use leftover room up to [maxSpace]. */
+    data class Spread(val minSpace: Float, val maxSpace: Float? = null) : GridSpacing() {
+        override val min: Float get() = minSpace.coerceAtLeast(0f)
+    }
+
+    companion object {
+        @Throws(JsonException::class)
+        fun fromJson(json: JsonMap): GridSpacing =
+            when (val type = json.requireField<String>("type")) {
+                "fixed" -> Fixed(space = json.requireField("space"))
+                "spread" -> Spread(minSpace = json.requireField("min_space"), maxSpace = json.optionalField("max_space"))
+                else -> throw JsonException("Unknown GridSpacing type: $type")
+            }
+    }
+}
+
+/**
+ * A bound on a `fit` grid's column width, for its `min_width` and `max_width`.
+ *
+ * A [Type.TEXT_SCALED] bound grows with the accessibility text size, as labels do: 44 at 200% text
+ * is 88.
+ */
+internal data class GridColumnWidth(val type: Type, val size: Float) {
 
     enum class Type(val value: String) {
         FIXED("fixed"),
@@ -119,7 +161,7 @@ internal data class GridColumnWidth(val type: Type, val points: Float) {
             return GridColumnWidth(
                 type = Type.entries.firstOrNull { it.value == type }
                     ?: throw JsonException("Unknown GridColumnWidth type: $type"),
-                points = json.requireField("points")
+                size = json.requireField("size")
             )
         }
     }
