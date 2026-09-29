@@ -83,24 +83,24 @@ internal open class ThomasOutcomeProcessor(
             Outcome.PagerStepNavigation.Direction.NEXT -> {
                 when (outcome.boundaryBehavior) {
                     Outcome.PagerStepNavigation.BoundaryBehavior.DISMISS ->
-                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.DISMISS))
+                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.DISMISS, layoutState.pager))
                     Outcome.PagerStepNavigation.BoundaryBehavior.WRAP ->
-                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.FIRST))
+                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.FIRST, layoutState.pager))
                     Outcome.PagerStepNavigation.BoundaryBehavior.IGNORE ->
-                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.NONE))
+                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.NONE, layoutState.pager))
                 }
             }
             Outcome.PagerStepNavigation.Direction.PREVIOUS ->
-                broadcast(LayoutEvent.Pager.Previous)
+                broadcast(LayoutEvent.Pager.Previous(layoutState.pager))
         }
     }
 
     protected open suspend fun handlePagerJump(outcome: Outcome.PagerJumpNavigation) {
         when (outcome.page) {
             Outcome.PagerJumpNavigation.Page.START ->
-                broadcast(LayoutEvent.Pager.Start)
+                broadcast(LayoutEvent.Pager.Start(layoutState.pager))
             Outcome.PagerJumpNavigation.Page.END ->
-                broadcast(LayoutEvent.Pager.End)
+                broadcast(LayoutEvent.Pager.End(layoutState.pager))
         }
     }
 
@@ -108,11 +108,11 @@ internal open class ThomasOutcomeProcessor(
         environment.modelScope.launch {
             when (outcome.command) {
                 Outcome.PagerPlayback.Command.PAUSE ->
-                    broadcast(LayoutEvent.Pager.Pause)
+                    broadcast(LayoutEvent.Pager.Pause(layoutState.pager))
                 Outcome.PagerPlayback.Command.RESUME ->
-                    broadcast(LayoutEvent.Pager.Resume)
+                    broadcast(LayoutEvent.Pager.Resume(layoutState.pager))
                 Outcome.PagerPlayback.Command.TOGGLE ->
-                    broadcast(LayoutEvent.Pager.PauseToggle)
+                    broadcast(LayoutEvent.Pager.PauseToggle(layoutState.pager))
             }
         }
     }

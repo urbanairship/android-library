@@ -111,20 +111,52 @@ internal class LabelView(
         isFocusable = false
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    /** True while [onMeasure] runs, so a `maxLines` change it makes for itself stays inside it. */
+    private var isMeasuring = false
 
-        // When truncating to height, we need to measure once first so that we can know how many
-        // lines exist, then we can clamp and remeasure with the number of lines that can fit.
-        if (truncatesToHeight && clampMaxLinesTo(heightMeasureSpec)) {
+    /** The height, less padding, that the current `maxLines` clamp was made for. */
+    private var clampedFor = 0
+
+    override fun requestLayout() {
+        // A `maxLines` change made while measuring is used by that same measure; passed up, it
+        // would schedule another pass that makes the same change again.
+        if (!isMeasuring) super.requestLayout()
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (!truncatesToHeight) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            return
+        }
+
+        isMeasuring = true
+        try {
+            // A clamp holds for a box no taller than the one that made it. Unbounded, or taller,
+            // the lines are counted from the whole text again, or the label could never ask for,
+            // or grow back into, more room than that box. Resetting rebuilds the text layout.
+            val available = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) {
+                null
+            } else {
+                MeasureSpec.getSize(heightMeasureSpec) - compoundPaddingTop - compoundPaddingBottom
+            }
+            if (maxLines != Int.MAX_VALUE && (available == null || available > clampedFor)) {
+                maxLines = Int.MAX_VALUE
+            }
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+            if (clampMaxLinesTo(heightMeasureSpec)) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            }
+        } finally {
+            isMeasuring = false
         }
     }
 
     /**
-     * Limit the line count to what [heightMeasureSpec] has room for.
+     * Limits the line count to what [heightMeasureSpec] has room for, when the text doesn't fit.
      *
-     * @return a `Boolean` that indicates whether a remeasure is needed.
+     * @param heightMeasureSpec the height this measure was offered.
+     * @return whether the line count changed, so the label needs measuring again.
      */
     private fun clampMaxLinesTo(heightMeasureSpec: Int): Boolean {
         if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) {
@@ -142,20 +174,26 @@ internal class LabelView(
             fits++
         }
 
+        if (fits >= laidOut.lineCount) {
+            return false
+        }
+
         // Always clamp to at least one line, even if it can't fit the text we need to draw into it.
         val clamped = fits.coerceAtLeast(1)
 
-        // Return if we aren't changing anything. Setting maxLines triggers a layout,
-        // so we need to bail out here to avoid a measurement loop.
+        // Setting maxLines rebuilds the text layout, so leave an unchanged clamp alone.
         if (clamped == maxLines) {
             return false
         }
 
         maxLines = clamped
+        clampedFor = available
         return true
     }
 
     override fun setText(text: CharSequence?, type: BufferType?) {
+        // New text may set lines of another height, so its clamp is worked out afresh.
+        if (truncatesToHeight && maxLines != Int.MAX_VALUE) maxLines = Int.MAX_VALUE
         // Swap in a PrecomputedText to ensure we're using StaticLayout and not DynamicLayout.
         // We need to be a StaticLayout because maxLines and ellipsize won't work otherwise.
         super.setText(precomputedOrNull(text) ?: text, type)
@@ -287,6 +325,10 @@ internal class LabelView(
         }
 
         this.lastState = resolvedState
+
+        // `TextView` decides whether new text needs a layout from the old line count, which a
+        // clamp holds, so text that needs more lines than the last box allowed would never ask.
+        if (truncatesToHeight) requestLayout()
     }
 
     /**

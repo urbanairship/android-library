@@ -282,6 +282,9 @@ internal class PagerModel(
         // Handle pager events from ButtonModel and other sources.
         environment.layoutEvents
             .filterIsInstance<LayoutEvent.Pager>()
+            // No enclosing controller is outside the DSL, but such a button drove every pager
+            // before events were scoped, and a scene relying on that shouldn't stop working.
+            .filter { it.pager == null || it.pager === pagerState }
             .onEach { event ->
                 when (event) {
                     is LayoutEvent.Pager.Next -> handlePagerNext(event.fallback)

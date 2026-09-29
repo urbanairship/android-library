@@ -24,6 +24,8 @@ import com.urbanairship.android.layout.info.ContainerLayoutItemInfo
 import com.urbanairship.android.layout.info.CustomViewInfo
 import com.urbanairship.android.layout.info.EmptyInfo
 import com.urbanairship.android.layout.info.FormControllerInfo
+import com.urbanairship.android.layout.info.GridLayoutInfo
+import com.urbanairship.android.layout.info.GridLayoutItemInfo
 import com.urbanairship.android.layout.info.IconViewInfo
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.info.ItemInfo
@@ -66,6 +68,7 @@ import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.CustomViewModel
 import com.urbanairship.android.layout.model.EmptyModel
 import com.urbanairship.android.layout.model.FormController
+import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.HorizontalScrollLayoutModel
 import com.urbanairship.android.layout.model.IconModel
 import com.urbanairship.android.layout.model.ImageButtonModel
@@ -577,6 +580,16 @@ internal class ThomasModelFactory : ModelFactory {
                     (itemInfo as? LinearLayoutItemInfo)?.let {
                         LinearLayoutModel.Item(it, model)
                     } ?: throw ModelFactoryException("LinearLayoutItemInfo expected")
+                },
+                environment = environment,
+                properties = properties
+            )
+            is GridLayoutInfo -> GridLayoutModel(
+                viewInfo = info,
+                items = children.map { (model, itemInfo) ->
+                    (itemInfo as? GridLayoutItemInfo)?.let {
+                        GridLayoutModel.Item(it, model)
+                    } ?: throw ModelFactoryException("GridLayoutItemInfo expected")
                 },
                 environment = environment,
                 properties = properties

@@ -88,6 +88,21 @@ internal interface AutoSizeProvider {
 }
 
 /**
+ * A view whose `auto` width is all the width it is offered, rather than its content's.
+ *
+ * A row sharing its width out asks each child for its unbounded width, which for a label is its
+ * whole line. This view's unbounded width is only what it would draw with no room at all, so the
+ * row pays it last, out of what its other children leave: beside a label it takes the rest of the
+ * row, and the label keeps its whole line.
+ */
+internal interface FillsOfferedWidth
+
+/** Whether this view fills the width it's offered, looking through a [ListItemFrame] to its item. */
+internal val View.fillsOfferedWidth: Boolean
+    get() = this is FillsOfferedWidth ||
+        (this is ListItemFrame && childCount == 1 && getChildAt(0).fillsOfferedWidth)
+
+/**
  * A view that exists only to carry one item's declared size, holding that item at `MATCH_PARENT` on
  * both axes.
  *

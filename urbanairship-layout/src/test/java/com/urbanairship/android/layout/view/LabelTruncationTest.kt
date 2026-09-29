@@ -30,6 +30,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -296,6 +297,27 @@ public class LabelTruncationTest {
             "kept ${layout.lineCount} lines ending at $lastBottom, box holds $available",
             lastBottom <= available
         )
+    }
+
+    /**
+     * A clamp holds while the box stays the same, so measuring again doesn't rebuild the text: a
+     * grid or stack measures its children several times a pass.
+     */
+    @Test
+    @Config(sdk = [29])
+    public fun aClampedLabelKeepsItsLayoutAcrossMeasuresOfTheSameBox() {
+        val view = labelView(height = DECLARED_HEIGHT)
+        measureAndLayout(view)
+        val clamped = view.maxLines
+        val layout = view.layout
+        assertTrue("the fixture has to truncate: $clamped", clamped < Int.MAX_VALUE)
+
+        measureAndLayout(view)
+        assertEquals(clamped, view.maxLines)
+        assertSame("no rebuild", layout, view.layout)
+
+        measureAndLayout(view, height = 400)
+        assertTrue("a taller box lets more lines back in: ${view.maxLines}", view.maxLines > clamped)
     }
 
     /** Narrow and short enough that [LONG_TEXT] needs more lines than the box can hold. */

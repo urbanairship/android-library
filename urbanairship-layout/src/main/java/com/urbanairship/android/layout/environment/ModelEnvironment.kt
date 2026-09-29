@@ -115,14 +115,23 @@ internal sealed class LayoutEvent {
 
     data class Finish(val cancel: Boolean = false) : LayoutEvent()
 
+    /**
+     * A command for one pager: the one whose controller encloses the view that sent it.
+     *
+     * The bus is shared by the whole layout, so a pager nested in another's page acts only on
+     * events carrying its own [pager] state, and leaves the outer pager's navigation alone.
+     */
     sealed class Pager : LayoutEvent() {
-        data class Next(val fallback: PagerNextFallback) : Pager()
-        data object Previous : Pager()
-        data object Start : Pager()
-        data object End : Pager()
-        data object Pause : Pager()
-        data object Resume : Pager()
-        data object PauseToggle : Pager()
+        /** The state of the pager controller this event drives, or null when none encloses the sender. */
+        abstract val pager: SharedState<State.Pager>?
+
+        data class Next(val fallback: PagerNextFallback, override val pager: SharedState<State.Pager>?) : Pager()
+        data class Previous(override val pager: SharedState<State.Pager>?) : Pager()
+        data class Start(override val pager: SharedState<State.Pager>?) : Pager()
+        data class End(override val pager: SharedState<State.Pager>?) : Pager()
+        data class Pause(override val pager: SharedState<State.Pager>?) : Pager()
+        data class Resume(override val pager: SharedState<State.Pager>?) : Pager()
+        data class PauseToggle(override val pager: SharedState<State.Pager>?) : Pager()
     }
 }
 
