@@ -239,9 +239,9 @@ public class GridLayoutViewTest {
     }
 
     @Test
-    public fun testRowAlignmentPlacesTheRowsInATallerGrid() {
+    public fun testContentPositionPlacesTheRowsInATallerGrid() {
         val grid = grid(
-            config = """{"columns": {"type": "fixed", "count": 2}, "row_alignment": "center", "cell_aspect_ratio": 1}""",
+            config = """{"columns": {"type": "fixed", "count": 2}, "content_position": {"horizontal": "start", "vertical": "center"}, "cell_aspect_ratio": 1}""",
             items = List(2) { box() }
         )
         layout(grid, width = 200, height = 300)
@@ -316,6 +316,72 @@ public class GridLayoutViewTest {
         assertEquals("each half on its own row", listOf(0, 20, 40, 40, 40), cells(grid).map { it.top })
         assertEquals(250, cells(grid)[0].width)
     }
+
+    @Test
+    public fun testCappedColumnsStopGrowingAndTheBlockIsCentred() {
+        val grid = grid(
+            config = capped(max = 11, min = 44, maxWidth = 64, partial = "center", horizontal = "center"),
+            items = List(7) { box() }
+        )
+        layout(grid, width = 1000)
+
+        // 11 fit, but their share passes the 64 cap: a block of 11 x 64 + 10 x 8, centred, and
+        // the one short row of 7 centred within it.
+        val block = 11 * 64 + 10 * 8
+        assertEquals(64, cells(grid)[0].width)
+        assertEquals((1000 - block) / 2 + (11 - 7) * (64 + 8) / 2, cells(grid)[0].left)
+    }
+
+    @Test
+    public fun testAShortRowIsAlignedWithinTheColumnsNotTheGrid() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "end", horizontal = "start"),
+            items = List(7) { box() }
+        )
+        layout(grid, width = 1000)
+
+        val blockRight = 4 * 64 + 3 * 8
+        assertEquals("rows of 4 and 3", listOf(0, 0, 0, 0, 72, 72, 72), cells(grid).map { it.top })
+        assertEquals(blockRight, cells(grid)[3].right)
+        assertEquals("the short row ends with the block", blockRight, cells(grid)[6].right)
+    }
+
+    @Test
+    public fun testMatchingMinAndMaxKeepEveryColumnOneSize() {
+        val grid = grid(
+            config = capped(max = 11, min = 40, maxWidth = 40, partial = "center", horizontal = "end"),
+            items = List(7) { box() }
+        )
+        layout(grid, width = 300)
+
+        // floor((300 + 8) / 48) = 6 columns of exactly 40, the block at the end.
+        assertEquals(listOf(0, 0, 0, 0, 0, 0, 48), cells(grid).map { it.top })
+        assertTrue(cells(grid).all { it.width == 40 })
+        assertEquals(300, cells(grid)[5].right)
+    }
+
+    @Test
+    public fun testTheBlocksStartIsTheRightEdgeInRtl() {
+        ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags =
+            ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(4) { box() }
+        )
+        grid.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        layout(grid, width = 1000)
+
+        assertEquals("the first column at the right edge", 1000, cells(grid)[0].right)
+    }
+
+    private fun capped(max: Int, min: Int, maxWidth: Int, partial: String, horizontal: String) = """
+        {"columns": {"type": "fit", "max": $max,
+                     "min_width": {"type": "fixed", "points": $min},
+                     "max_width": {"type": "fixed", "points": $maxWidth}},
+         "column_spacing": 8, "row_spacing": 8, "cell_aspect_ratio": 1,
+         "partial_row_alignment": "$partial",
+         "content_position": {"horizontal": "$horizontal", "vertical": "top"}}
+    """.trimIndent()
 
     @Test
     public fun testASpanThatDoesNotFitStartsANewRow() {

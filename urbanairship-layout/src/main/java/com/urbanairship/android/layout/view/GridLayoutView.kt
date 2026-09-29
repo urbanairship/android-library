@@ -24,6 +24,8 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
+import com.urbanairship.android.layout.property.HorizontalPosition
+import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.everyConfigHasRatio
@@ -32,6 +34,7 @@ import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.gridColumnCount
+import com.urbanairship.android.layout.util.gridMaxColumnWidth
 import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.util.gridMinColumnWidth
 import com.urbanairship.android.layout.util.placeGridItems
@@ -86,7 +89,9 @@ internal class GridLayoutView(
     /** Where each row starts below the first, from the last measure. */
     private var rowTops = IntArray(0)
     private var contentHeight = 0
-    private var rowAlignment = VerticalPosition.TOP
+    /** How wide the block of columns is, which is less than the grid once `max_width` caps them. */
+    private var blockWidth = 0
+    private var contentPosition = Position(HorizontalPosition.START, VerticalPosition.TOP)
 
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
@@ -166,7 +171,7 @@ internal class GridLayoutView(
         val columns = gridColumnCount(config, innerWidth?.let { it / density }, textScale)
         val gap = config.columnSpacing * density
         val rowGap = (config.rowSpacing * density).roundToInt()
-        rowAlignment = config.rowAlignment
+        contentPosition = config.contentPosition
 
         val shown = cells.filter { it.holdsItem }
         cells.forEach { if (!it.holdsItem) it.measure(exactly(0), exactly(0)) }
@@ -176,8 +181,13 @@ internal class GridLayoutView(
         val placements = placeGridItems(spans, columns, config.partialRowAlignment)
         shown.forEachIndexed { index, cell -> cell.placement = placements[index] }
 
+        val share = innerWidth?.let { (it - (columns - 1) * gap) / columns }
+        val cap = gridMaxColumnWidth(config, textScale)?.let { it * density }
+        // Past their cap the columns stop growing, and `content_position` places the block.
+        val capped = share != null && cap != null && share > cap
         val cellWidth = when {
-            innerWidth != null -> (innerWidth - (columns - 1) * gap) / columns
+            capped -> cap
+            share != null -> share
             else -> gridMinColumnWidth(config, textScale)?.let { it * density }
                 ?: huggedColumnWidth(shown, gap)
         }.coerceAtLeast(0f)
@@ -204,8 +214,9 @@ internal class GridLayoutView(
         }
         contentHeight = top
 
-        val contentWidth = innerWidth
-            ?: (columns * cellWidth + (columns - 1) * gap).roundToInt()
+        val columnsWidth = (columns * cellWidth + (columns - 1) * gap).roundToInt()
+        blockWidth = if (innerWidth != null && !capped) innerWidth else columnsWidth
+        val contentWidth = innerWidth ?: columnsWidth
 
         setMeasuredDimension(
             if (innerWidth != null) MeasureSpec.getSize(widthMeasureSpec) else contentWidth + horizontalPadding,
@@ -258,12 +269,18 @@ internal class GridLayoutView(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        val innerHeight = height - paddingTop - paddingBottom
-        val spare = (innerHeight - contentHeight).coerceAtLeast(0)
-        val offset = when (rowAlignment) {
+        val spareHeight = (height - paddingTop - paddingBottom - contentHeight).coerceAtLeast(0)
+        val offset = when (contentPosition.vertical) {
             VerticalPosition.TOP -> 0
-            VerticalPosition.CENTER -> spare / 2
-            VerticalPosition.BOTTOM -> spare
+            VerticalPosition.CENTER -> spareHeight / 2
+            VerticalPosition.BOTTOM -> spareHeight
+        }
+        // From the start edge, like each cell's own offset, so RTL mirrors both.
+        val spareWidth = (width - paddingLeft - paddingRight - blockWidth).coerceAtLeast(0)
+        val startOffset = when (contentPosition.horizontal) {
+            HorizontalPosition.START -> 0
+            HorizontalPosition.CENTER -> spareWidth / 2
+            HorizontalPosition.END -> spareWidth
         }
         val rtl = isLayoutRtl
 
@@ -272,7 +289,8 @@ internal class GridLayoutView(
                 cell.layout(0, 0, 0, 0)
                 return@forEach
             }
-            val left = if (rtl) width - paddingRight - cell.start - cell.measuredWidth else paddingLeft + cell.start
+            val start = startOffset + cell.start
+            val left = if (rtl) width - paddingRight - start - cell.measuredWidth else paddingLeft + start
             val top = paddingTop + offset + rowTops[cell.placement.row]
             cell.layout(left, top, left + cell.measuredWidth, top + cell.measuredHeight)
         }

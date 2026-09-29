@@ -6,7 +6,7 @@ import com.urbanairship.android.layout.property.GridColumns
 import com.urbanairship.android.layout.property.GridConfigSelector
 import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridItemConfig
-import com.urbanairship.android.layout.property.GridMinColumnWidth
+import com.urbanairship.android.layout.property.GridColumnWidth
 import com.urbanairship.android.layout.property.GridSelectorConditions
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.LengthRange
@@ -22,8 +22,8 @@ import org.junit.Test
 
 public class GridColumnsTest {
 
-    private fun fixed(points: Float) = GridMinColumnWidth(GridMinColumnWidth.Type.FIXED, points)
-    private fun textScaled(points: Float) = GridMinColumnWidth(GridMinColumnWidth.Type.TEXT_SCALED, points)
+    private fun fixed(points: Float) = GridColumnWidth(GridColumnWidth.Type.FIXED, points)
+    private fun textScaled(points: Float) = GridColumnWidth(GridColumnWidth.Type.TEXT_SCALED, points)
 
     private val environment = GridEnvironment(
         platform = Platform.ANDROID,
@@ -180,6 +180,30 @@ public class GridColumnsTest {
     @Test
     public fun testPlacesNothingForNoItems() {
         assertEquals(emptyList<GridPlacement>(), placeGridItems(emptyList(), 3, HorizontalPosition.START))
+    }
+
+    private fun fit(min: Float, max: Float? = null) = GridLayoutConfig(
+        columns = GridColumns.Fit(max = 11, minWidth = fixed(min), maxWidth = max?.let(::fixed))
+    )
+
+    @Test
+    public fun testMaxColumnWidthIsNullWithoutACapAndForFixedColumns() {
+        assertNull(gridMaxColumnWidth(fit(44f), 1f))
+        assertNull(gridMaxColumnWidth(GridLayoutConfig(columns = GridColumns.Fixed(count = 4)), 1f))
+    }
+
+    @Test
+    public fun testMaxColumnWidthIsTheCapScaledWithTextWhenAsked() {
+        assertEquals(64f, gridMaxColumnWidth(fit(44f, 64f), 1f))
+        val scaled = GridLayoutConfig(
+            columns = GridColumns.Fit(max = 11, minWidth = fixed(44f), maxWidth = textScaled(64f))
+        )
+        assertEquals(96f, gridMaxColumnWidth(scaled, 1.5f))
+    }
+
+    @Test
+    public fun testMaxColumnWidthNeverFallsBelowTheMinimum() {
+        assertEquals(44f, gridMaxColumnWidth(fit(44f, 30f), 1f))
     }
 
     @Test

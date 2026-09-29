@@ -17,13 +17,18 @@ internal data class GridLayoutConfig(
     val rowSpacing: Float = 0f,
     /** Where a row that fills fewer columns than the grid has sits. Its cells keep their widths. */
     val partialRowAlignment: HorizontalPosition = HorizontalPosition.START,
-    /** Where the rows sit when the grid is taller than they are. */
-    val rowAlignment: VerticalPosition = VerticalPosition.TOP,
+    /**
+     * Where the block of cells sits when the grid is bigger than it: wider, once `max_width` stops
+     * the columns growing, or taller than its rows.
+     */
+    val contentPosition: Position = DEFAULT_CONTENT_POSITION,
     /** Width divided by height for every cell, or null for rows as tall as their tallest item. */
     val cellAspectRatio: Double? = null
 ) {
 
     companion object {
+        private val DEFAULT_CONTENT_POSITION = Position(HorizontalPosition.START, VerticalPosition.TOP)
+
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): GridLayoutConfig = GridLayoutConfig(
             columns = GridColumns.fromJson(json.requireField("columns")),
@@ -31,7 +36,7 @@ internal data class GridLayoutConfig(
             rowSpacing = json.optionalField<Float>("row_spacing") ?: 0f,
             partialRowAlignment = json["partial_row_alignment"]?.let(HorizontalPosition::from)
                 ?: HorizontalPosition.START,
-            rowAlignment = json["row_alignment"]?.let(VerticalPosition::from) ?: VerticalPosition.TOP,
+            contentPosition = json["content_position"]?.let(Position::fromJson) ?: DEFAULT_CONTENT_POSITION,
             cellAspectRatio = json.optionalField<Double>("cell_aspect_ratio")?.takeIf { it > 0 }
         )
     }
@@ -55,7 +60,16 @@ internal sealed class GridColumns {
      * Spans still count columns, not shares of the row, so a span tuned for the widest count takes
      * a bigger share as columns drop out.
      */
-    data class Fit(val max: Int, val minWidth: GridMinColumnWidth) : GridColumns()
+    data class Fit(
+        val max: Int,
+        val minWidth: GridColumnWidth,
+        /**
+         * The widest a column grows. Past it the columns stop at this width and the grid's
+         * `content_position` places them; equal to [minWidth], every column is that wide at any
+         * width. Below [minWidth] it counts as [minWidth].
+         */
+        val maxWidth: GridColumnWidth? = null
+    ) : GridColumns()
 
     companion object {
         @Throws(JsonException::class)
@@ -64,7 +78,8 @@ internal sealed class GridColumns {
                 "fixed" -> Fixed(count = json.requireField<Double>("count").toInt())
                 "fit" -> Fit(
                     max = json.requireField<Double>("max").toInt(),
-                    minWidth = GridMinColumnWidth.fromJson(json.requireField("min_width"))
+                    minWidth = GridColumnWidth.fromJson(json.requireField("min_width")),
+                    maxWidth = json.optionalMap("max_width")?.let(GridColumnWidth::fromJson)
                 )
                 else -> throw JsonException("Unknown GridColumns type: $type")
             }
@@ -85,12 +100,12 @@ internal data class GridItemConfig(
 }
 
 /**
- * The narrowest a grid column may be before the grid drops a column.
+ * A bound on a `fit` grid's column width in points, for its `min_width` and `max_width`.
  *
- * A [Type.TEXT_SCALED] minimum grows with the accessibility text size, as labels do: 44 points at
+ * A [Type.TEXT_SCALED] bound grows with the accessibility text size, as labels do: 44 points at
  * 200% text is 88.
  */
-internal data class GridMinColumnWidth(val type: Type, val points: Float) {
+internal data class GridColumnWidth(val type: Type, val points: Float) {
 
     enum class Type(val value: String) {
         FIXED("fixed"),
@@ -99,11 +114,11 @@ internal data class GridMinColumnWidth(val type: Type, val points: Float) {
 
     companion object {
         @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): GridMinColumnWidth {
+        fun fromJson(json: JsonMap): GridColumnWidth {
             val type = json.requireField<String>("type")
-            return GridMinColumnWidth(
+            return GridColumnWidth(
                 type = Type.entries.firstOrNull { it.value == type }
-                    ?: throw JsonException("Unknown GridMinColumnWidth type: $type"),
+                    ?: throw JsonException("Unknown GridColumnWidth type: $type"),
                 points = json.requireField("points")
             )
         }

@@ -4,7 +4,7 @@ package com.urbanairship.android.layout.util
 import com.urbanairship.android.layout.property.GridColumns
 import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridLayoutConfig
-import com.urbanairship.android.layout.property.GridMinColumnWidth
+import com.urbanairship.android.layout.property.GridColumnWidth
 import com.urbanairship.android.layout.property.GridSelectorConditions
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Orientation
@@ -51,11 +51,28 @@ private fun GridSelectorConditions.matches(environment: GridEnvironment): Boolea
  */
 internal fun gridMinColumnWidth(config: GridLayoutConfig, textScale: Float): Float? {
     val columns = config.columns as? GridColumns.Fit ?: return null
-    val minWidth = columns.minWidth.takeIf { it.points > 0 } ?: return null
-    return when (minWidth.type) {
-        GridMinColumnWidth.Type.FIXED -> minWidth.points
-        GridMinColumnWidth.Type.TEXT_SCALED -> minWidth.points * textScale
-    }
+    return columns.minWidth.points(textScale).takeIf { it > 0 }
+}
+
+/**
+ * Returns the widest a grid's columns grow, in points, after any text scaling it asks for.
+ *
+ * Never below the minimum, so a `max_width` under `min_width` counts as `min_width`.
+ *
+ * @param config the resolved config.
+ * @param textScale the accessibility text scale, 1 at the default size.
+ * @return the cap, or null where columns grow to fill the grid.
+ */
+internal fun gridMaxColumnWidth(config: GridLayoutConfig, textScale: Float): Float? {
+    val columns = config.columns as? GridColumns.Fit ?: return null
+    val maxWidth = columns.maxWidth?.points(textScale)?.takeIf { it > 0 } ?: return null
+    return maxOf(maxWidth, gridMinColumnWidth(config, textScale) ?: 0f)
+}
+
+/** This bound in points, scaled with the text size when it asks to be. */
+private fun GridColumnWidth.points(textScale: Float): Float = when (type) {
+    GridColumnWidth.Type.FIXED -> points
+    GridColumnWidth.Type.TEXT_SCALED -> points * textScale
 }
 
 /**
