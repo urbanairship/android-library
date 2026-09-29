@@ -429,6 +429,66 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testAPercentHeightAutoGridTakesItsShareOfTheRow() {
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """{"size": {"width": 60, "height": 120}, "view": ${label("tall")}}""",
+                """
+                {"size": {"width": "auto", "height": "100%"},
+                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8}""")}}
+                """
+            )
+        )
+        layout(stack, width = 300)
+
+        assertEquals("the grid fills the row's 120", 120, (stack as ViewGroup).getChildAt(1).height)
+        assertEquals("and the row is the label's height", 120, stack.height)
+    }
+
+    @Test
+    public fun testARowWithAnAutoGridDoesNotOverflowWhenPercentHeightsSettle() {
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """{"size": {"width": 60, "height": 40}, "view": {"type": "empty_view"}}""",
+                """{"size": {"width": "auto", "height": "100%"},
+                    "view": ${label("A label whose whole line is far wider than the share it is given here")}}""",
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                """
+            )
+        )
+        layout(stack, width = 300)
+
+        val last = (stack as ViewGroup).getChildAt(2)
+        assertTrue("nothing runs past the row: ${last.right}", last.right <= 300)
+    }
+
+    @Test
+    public fun testAnAutoGridInAListItemStillFillsItsRow() {
+        val stack = build(
+            """
+            {"type": "linear_layout", "direction": "horizontal", "accessibility_role": {"type": "list_view"},
+             "items": [
+               {"size": {"width": "auto", "height": "auto"}, "accessibility_role": {"type": "list_item"},
+                "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}},
+               {"size": {"width": "auto", "height": "auto"}, "view": ${label("beside")}}
+             ]}
+            """.trimIndent()
+        ).also { view ->
+            Robolectric.buildActivity(Activity::class.java).setup().get()
+                .setContentView(FrameLayout(view.context).apply { addView(view) })
+        }
+        layout(stack, width = 300)
+
+        val wrapper = (stack as ViewGroup).getChildAt(0)
+        val beside = stack.getChildAt(1)
+        assertEquals("the grid's list item takes the rest", 300 - beside.width, wrapper.width)
+    }
+
+    @Test
     public fun testAFullHeightItemsContentGrowsARowWithABasis() {
         val longText = "Now much longer text that needs several more lines in this same cell"
         val grid = grid(

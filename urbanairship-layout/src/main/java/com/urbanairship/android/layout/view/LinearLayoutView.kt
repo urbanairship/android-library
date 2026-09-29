@@ -39,6 +39,7 @@ import com.urbanairship.android.layout.widget.drawInsideStroke
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
+import com.urbanairship.android.layout.widget.ListItemFrame
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout
 
@@ -183,7 +184,7 @@ internal class LinearLayoutView(
 
             if (isListView && itemInfo.isListItem) {
                 val listIndex = listItems.indexOf(itemInfo)
-                val accessibilityWrapper = FrameLayout(context).apply {
+                val accessibilityWrapper = ListItemFrame(context).apply {
                     layoutParams = lp
                 }
 

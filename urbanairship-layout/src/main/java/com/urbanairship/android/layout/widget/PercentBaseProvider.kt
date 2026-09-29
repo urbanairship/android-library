@@ -97,6 +97,11 @@ internal interface AutoSizeProvider {
  */
 internal interface FillsOfferedWidth
 
+/** Whether this view fills the width it's offered, looking through a [ListItemFrame] to its item. */
+internal val View.fillsOfferedWidth: Boolean
+    get() = this is FillsOfferedWidth ||
+        (this is ListItemFrame && childCount == 1 && getChildAt(0).fillsOfferedWidth)
+
 /**
  * A view that exists only to carry one item's declared size, holding that item at `MATCH_PARENT` on
  * both axes.
