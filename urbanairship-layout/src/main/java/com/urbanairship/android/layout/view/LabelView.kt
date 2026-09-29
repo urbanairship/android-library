@@ -179,7 +179,14 @@ internal class LabelView(
         }
 
         // Always clamp to at least one line, even if it can't fit the text we need to draw into it.
-        maxLines = fits.coerceAtLeast(1)
+        val clamped = fits.coerceAtLeast(1)
+
+        // Setting maxLines rebuilds the text layout, so leave an unchanged clamp alone.
+        if (clamped == maxLines) {
+            return false
+        }
+
+        maxLines = clamped
         clampedFor = available
         return true
     }
