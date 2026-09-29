@@ -366,6 +366,69 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testAShrinkableAutoGridBesideAPercentSiblingTakesTheRest() {
+        val image = """
+            {"size": {"width": "100%", "height": 40},
+             "view": {"type": "media", "media_type": "image", "media_fit": "center_inside",
+                      "url": "https://test-layout.internal/tile.png"}}
+        """.trimIndent()
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": {"type": "grid_layout", "config": {"default": {"max_columns": 2, "column_spacing": 8}},
+                          "items": [$image, $image]}}
+                """,
+                """{"size": {"width": "30%", "height": "auto"}, "view": ${label("thirty")}}"""
+            )
+        )
+        layout(stack, width = 300)
+
+        val grid = (stack as ViewGroup).getChildAt(0)
+        val label = stack.getChildAt(1)
+        assertEquals("the label takes its 30%", 90, label.width)
+        assertEquals("the grid takes the rest", 210, grid.width)
+    }
+
+    @Test
+    public fun testAnAutoGridBesideAPercentSiblingTakesTheRest() {
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                """,
+                """{"size": {"width": "30%", "height": "auto"}, "view": ${label("thirty")}}"""
+            )
+        )
+        layout(stack, width = 300)
+
+        assertEquals("the label takes its 30%", 90, (stack as ViewGroup).getChildAt(1).width)
+        assertEquals("the grid takes the rest", 210, stack.getChildAt(0).width)
+    }
+
+    @Test
+    public fun testAnAutoGridBeforeAFixedSiblingLeavesItsRoom() {
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                """,
+                """{"size": {"width": 80, "height": "auto"}, "view": ${label("eighty")}}"""
+            )
+        )
+        layout(stack, width = 300)
+
+        val fixed = (stack as ViewGroup).getChildAt(1)
+        assertEquals(220, stack.getChildAt(0).width)
+        assertEquals("the fixed sibling stays inside the row", 300, fixed.right)
+    }
+
+    @Test
     public fun testAFullHeightItemsContentGrowsARowWithABasis() {
         val longText = "Now much longer text that needs several more lines in this same cell"
         val grid = grid(
