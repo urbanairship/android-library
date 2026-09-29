@@ -384,6 +384,25 @@ public class GridLayoutViewTest {
     """.trimIndent()
 
     @Test
+    public fun testAContainerFillsItsItemsAspectRatioBox() {
+        val box = """
+            {"size": {"width": "100%", "height": "auto", "aspect_ratio": 1},
+             "view": {"type": "container",
+                      "border": {"stroke_width": 5, "stroke_color": {"default": {"type": "hex", "hex": "#CCCCCC", "alpha": 1}}},
+                      "items": [{"position": {"horizontal": "center", "vertical": "center"},
+                                 "size": {"width": "auto", "height": "auto"},
+                                 "view": ${label("c")}}]}}
+        """.trimIndent()
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 3}}""", items = List(3) { box })
+        layout(grid, width = 300)
+
+        val cell = cells(grid)[0]
+        val container = items(grid)[0]
+        assertEquals("square", cell.width, container.height)
+        assertTrue("and inside its cell", container.bottom <= cell.height)
+    }
+
+    @Test
     public fun testASpanThatDoesNotFitStartsANewRow() {
         val grid = grid(
             config = """{"columns": {"type": "fixed", "count": 3}, "cell_aspect_ratio": 1}""",
