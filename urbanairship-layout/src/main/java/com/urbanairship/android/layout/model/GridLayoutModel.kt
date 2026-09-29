@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.info.GridLayoutInfo
 import com.urbanairship.android.layout.info.GridLayoutItemInfo
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.everyConfigFitsAMinimum
 import com.urbanairship.android.layout.property.everyConfigHasRatio
 import com.urbanairship.android.layout.view.GridLayoutView
 
@@ -38,6 +39,9 @@ internal class GridLayoutModel(
     /** Ratio cells take their height from the grid's width, but only every config setting one makes that certain. */
     override fun establishesLength(direction: Direction): Boolean {
         if (direction == Direction.VERTICAL && viewInfo.config.everyConfigHasRatio) {
+            return true
+        }
+        if (direction == Direction.HORIZONTAL && viewInfo.config.everyConfigFitsAMinimum) {
             return true
         }
         return items.any { it.establishesLength(direction) }

@@ -249,3 +249,10 @@ internal data class GridConfigs<T>(
 /** Whether the grid sets its row heights from a ratio whichever config it lays out with. */
 internal val GridConfigs<GridLayoutConfig>.everyConfigHasRatio: Boolean
     get() = all.all { it.cellAspectRatio != null }
+
+/**
+ * Whether every config has `fit` columns with a minimum, so a grid with no width to divide is
+ * `n × min + gaps` wide from its config alone, whichever config it lays out with.
+ */
+internal val GridConfigs<GridLayoutConfig>.everyConfigFitsAMinimum: Boolean
+    get() = all.all { (it.columns as? GridColumns.Fit)?.minWidth?.size?.let { size -> size > 0 } == true }

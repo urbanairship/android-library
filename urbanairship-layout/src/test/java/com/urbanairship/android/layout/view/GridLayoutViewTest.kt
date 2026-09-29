@@ -582,6 +582,32 @@ public class GridLayoutViewTest {
     """.trimIndent()
 
     @Test
+    public fun testAnUnboundedFitGridIsAWidthBasisForAPercentSibling() {
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": {"type": "grid_layout",
+                          "config": {"default": {"columns": {"type": "fit", "max": 3,
+                                                             "min_width": {"type": "fixed", "size": 40}},
+                                                 "column_spacing": {"type": "fixed", "space": 8}}},
+                          "items": [${List(3) { box(size = """{"width": "100%", "height": 40}""") }.joinToString()}]}}
+                """,
+                """{"size": {"width": "50%", "height": 40}, "view": {"type": "empty_view"}}"""
+            )
+        )
+        // A horizontal scroll's content is measured with no width, as in a version 1 scene.
+        stack.measure(unspecified(), unspecified())
+        stack.layout(0, 0, stack.measuredWidth, stack.measuredHeight)
+
+        val grid = (stack as ViewGroup).getChildAt(0)
+        assertEquals("3 x 40 + 2 x 8", 136, grid.width)
+        assertEquals("the stack solves 136 / (1 - 0.5)", 272, stack.width)
+        assertEquals(136, stack.getChildAt(1).width)
+    }
+
+    @Test
     public fun testASpanThatDoesNotFitStartsANewRow() {
         val grid = grid(
             config = """{"columns": {"type": "fixed", "count": 3}, "cell_aspect_ratio": 1}""",

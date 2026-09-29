@@ -154,13 +154,31 @@ internal class GridLayoutView(
     /** Ratio rows take their height from the grid's width, but only every config setting one makes that certain. */
     override fun establishesLength(horizontal: Boolean): Boolean {
         if (!horizontal && model.viewInfo.config.everyConfigHasRatio) return true
+        if (horizontal && setsItsOwnWidthUnbounded) return true
         return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.establishesLength(horizontal) } }
     }
 
     override fun statesLength(horizontal: Boolean): Boolean {
         if (!horizontal && model.viewInfo.config.everyConfigHasRatio) return true
+        if (horizontal && setsItsOwnWidthUnbounded) return true
         return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.statesLength(horizontal) } }
     }
+
+    /**
+     * Whether, with no width to divide, the grid's config alone sets its width: `fit` columns with
+     * a minimum draw exactly `n × min + gaps`, whatever the items hold.
+     */
+    private val setsItsOwnWidthUnbounded: Boolean
+        get() {
+            val config = resolveGridConfig(model.viewInfo.config, environment(gridWidth = null))
+            return gridMinColumnWidth(config, resources.configuration.fontScale) != null
+        }
+
+    private fun environment(gridWidth: Float?) = GridEnvironment(
+        windowSize = ResourceUtils.getWindowSize(context),
+        orientation = ResourceUtils.getOrientation(context),
+        gridWidth = gridWidth
+    )
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density
@@ -174,11 +192,7 @@ internal class GridLayoutView(
             (MeasureSpec.getSize(widthMeasureSpec) - horizontalPadding).coerceAtLeast(0)
         }
 
-        val environment = GridEnvironment(
-            windowSize = ResourceUtils.getWindowSize(context),
-            orientation = ResourceUtils.getOrientation(context),
-            gridWidth = innerWidth?.let { it / density }
-        )
+        val environment = environment(gridWidth = innerWidth?.let { it / density })
         val config = resolveGridConfig(model.viewInfo.config, environment)
         val textScale = resources.configuration.fontScale
         val columns = gridColumnCount(config, innerWidth?.let { it / density }, textScale)
