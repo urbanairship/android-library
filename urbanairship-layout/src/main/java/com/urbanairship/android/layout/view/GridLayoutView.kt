@@ -199,7 +199,7 @@ internal class GridLayoutView(
         rows.forEachIndexed { index, row ->
             if (index > 0) top += rowGap
             rowTops[index] = top
-            top += measureRow(row, ratioRowHeight, density)
+            top += measureRow(row, ratioRowHeight)
         }
         contentHeight = top
 
@@ -229,10 +229,10 @@ internal class GridLayoutView(
      * where something in it has a height of its own, and otherwise its content, unless it is the
      * whole row.
      */
-    private fun measureRow(row: List<GridCell>, ratioRowHeight: Int?, density: Float): Int {
+    private fun measureRow(row: List<GridCell>, ratioRowHeight: Int?): Int {
         if (ratioRowHeight != null) {
             row.forEach {
-                it.measureItem(ratioRowHeight, density)
+                it.measureItem(ratioRowHeight)
                 it.measure(exactly(it.cellWidth), exactly(ratioRowHeight))
             }
             return ratioRowHeight
@@ -248,10 +248,10 @@ internal class GridLayoutView(
         // wraps grows its row, as a percentage item's content does an auto grid track on web.
         var rowHeight = 0
         row.forEach { cell ->
-            cell.measureItem(rowHeight = null, density = density)
+            cell.measureItem(rowHeight = null)
             rowHeight = max(rowHeight, cell.item.measuredHeight + cell.verticalMargins)
         }
-        sharesOfRow.forEach { it.measureItem(rowHeight, density) }
+        sharesOfRow.forEach { it.measureItem(rowHeight) }
         row.forEach { it.measure(exactly(it.cellWidth), exactly(rowHeight)) }
         return rowHeight
     }
@@ -402,12 +402,11 @@ internal class GridLayoutView(
          * Measures the item against this cell's width and, where it is known, the row's height.
          *
          * @param rowHeight the row's height in pixels, or null while the row is sizing to its items.
-         * @param density pixels per point.
          */
-        fun measureItem(rowHeight: Int?, density: Float) {
+        fun measureItem(rowHeight: Int?) {
             val margin = resolveMargins()
             val innerWidth = (cellWidth - margin.left - margin.right).coerceAtLeast(0)
-            val widthSpec = specFor(info.size.width, innerWidth, density, capToBase = true)
+            val widthSpec = specFor(info.size.width, innerWidth, capToBase = true)
 
             val height = info.size.height
             val aspectRatio = info.size.aspectRatio
@@ -420,11 +419,11 @@ internal class GridLayoutView(
 
             val heightSpec = when {
                 rowHeight == null -> when {
-                    height.isAbsolute -> exactly(dpToPx(height.getFloat(), density))
+                    height.isAbsolute -> exactly(dpToPx(height.getInt()))
                     else -> unspecified()
                 }
                 else -> specFor(
-                    height, (rowHeight - margin.top - margin.bottom).coerceAtLeast(0), density,
+                    height, (rowHeight - margin.top - margin.bottom).coerceAtLeast(0),
                     capToBase = false
                 )
             }
@@ -437,26 +436,25 @@ internal class GridLayoutView(
          * A percentage is a share of [base]; with [capToBase] a fixed length never exceeds it, so an item
          * never overflows into the next cell.
          */
-        private fun specFor(dimension: Size.Dimension, base: Int, density: Float, capToBase: Boolean): Int =
+        private fun specFor(dimension: Size.Dimension, base: Int, capToBase: Boolean): Int =
             when (dimension.type) {
                 Size.DimensionType.PERCENT -> exactly((dimension.getFloat() * base).roundToInt())
-                Size.DimensionType.ABSOLUTE -> dpToPx(dimension.getFloat(), density).let {
+                Size.DimensionType.ABSOLUTE -> dpToPx(dimension.getInt()).let {
                     exactly(if (capToBase) min(it, base) else it)
                 }
                 Size.DimensionType.AUTO -> MeasureSpec.makeMeasureSpec(base, MeasureSpec.AT_MOST)
             }
 
         private fun resolveMargins(): Rect {
-            val density = resources.displayMetrics.density
             val margin = info.margin
-            val start = dpToPx((margin?.start ?: 0).toFloat(), density)
-            val end = dpToPx((margin?.end ?: 0).toFloat(), density)
+            val start = dpToPx(margin?.start ?: 0)
+            val end = dpToPx(margin?.end ?: 0)
             val rtl = isLayoutRtl
             margins.set(
                 if (rtl) end else start,
-                dpToPx((margin?.top ?: 0).toFloat(), density),
+                dpToPx(margin?.top ?: 0),
                 if (rtl) start else end,
-                dpToPx((margin?.bottom ?: 0).toFloat(), density)
+                dpToPx(margin?.bottom ?: 0)
             )
             return margins
         }
@@ -483,11 +481,13 @@ internal class GridLayoutView(
             if (horizontal) hugsWidth else !heightFromRatio
 
         override fun shouldDelayChildPressedState(): Boolean = false
+
+        /** Converts as every other layout does, so a size lands on the same pixel in a grid or out of it. */
+        private fun dpToPx(dp: Int): Int = ResourceUtils.dpToPx(context, dp).toInt()
     }
 
     private companion object {
         fun exactly(size: Int) = MeasureSpec.makeMeasureSpec(size.coerceAtLeast(0), MeasureSpec.EXACTLY)
         fun unspecified() = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        fun dpToPx(dp: Float, density: Float): Int = (dp * density).roundToInt()
     }
 }
