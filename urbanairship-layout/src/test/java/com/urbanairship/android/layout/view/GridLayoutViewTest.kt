@@ -342,6 +342,30 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testALongLabelBesideAnAutoGridKeepsItsWholeLine() {
+        val text = "A label wider than half the row"
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                """,
+                """{"size": {"width": "auto", "height": "auto"}, "view": ${label(text)}}"""
+            )
+        )
+        layout(stack, width = 300)
+
+        val whole = build(label(text)).apply { measure(unspecified(), unspecified()) }.measuredWidth
+        assertTrue("the fixture needs a label over half the row: $whole", whole in 151..299)
+
+        val grid = (stack as ViewGroup).getChildAt(0)
+        val beside = stack.getChildAt(1)
+        assertEquals("the label keeps its whole line", whole, beside.width)
+        assertEquals("the grid takes the rest", 300 - whole, grid.width)
+    }
+
+    @Test
     public fun testAFullHeightItemsContentGrowsARowWithABasis() {
         val longText = "Now much longer text that needs several more lines in this same cell"
         val grid = grid(

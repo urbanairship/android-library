@@ -92,8 +92,8 @@ internal interface AutoSizeProvider {
  *
  * A row sharing its width out asks each child for its unbounded width, which for a label is its
  * whole line. This view's unbounded width is only what it would draw with no room at all, so the
- * row treats its demand as the whole row and pays it last: beside a label it takes what the label
- * leaves.
+ * row pays it last, out of what its other children leave: beside a label it takes the rest of the
+ * row, and the label keeps its whole line.
  */
 internal interface FillsOfferedWidth
 

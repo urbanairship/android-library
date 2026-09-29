@@ -1740,6 +1740,9 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      * fits inside its share settles at its content and hands the surplus back, so only the ones that
      * can't fit divide what's left: a CTA keeps its whole line while the paragraph beside it wraps,
      * and an over-long CTA truncates inside its share instead of taking the row.
+     *
+     * A [FillsOfferedWidth] child is paid last, out of what the others leave, so they share the row
+     * as though it weren't there: a label beside an auto grid keeps its whole line.
      */
     private fun equalRowShares(widthMeasureSpec: Int, heightMeasureSpec: Int): IntArray {
         val count = childCount
@@ -1775,20 +1778,25 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             content[i] = child.measuredWidth
         }
 
-        val sharing = (0..<count).filter { content[it] >= 0 }
+        val (fillers, others) = (0..<count).filter { content[it] >= 0 }
+            .partition { stackChildAt(it) is FillsOfferedWidth }
         val shares = IntArray(count)
         var widthLeft =
             (MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd).coerceAtLeast(0)
-        var slotsLeft = sharing.size
 
-        for (i in sharing.sortedBy { content[it] }) {
-            val lp = getChildAt(i).layoutParams as LayoutParams
-            val margins = lp.marginStart + lp.marginEnd
-            val slot = (widthLeft / slotsLeft - margins).coerceAtLeast(0)
-            shares[i] = min(content[i], slot)
-            widthLeft -= (shares[i] + margins)
-            slotsLeft -= 1
+        fun share(children: List<Int>) {
+            var slotsLeft = children.size
+            for (i in children.sortedBy { content[it] }) {
+                val lp = getChildAt(i).layoutParams as LayoutParams
+                val margins = lp.marginStart + lp.marginEnd
+                val slot = (widthLeft / slotsLeft - margins).coerceAtLeast(0)
+                shares[i] = min(content[i], slot)
+                widthLeft -= (shares[i] + margins)
+                slotsLeft -= 1
+            }
         }
+        share(others)
+        share(fillers)
 
         return shares
     }
