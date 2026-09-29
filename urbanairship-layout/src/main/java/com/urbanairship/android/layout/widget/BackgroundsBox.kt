@@ -67,12 +67,39 @@ internal fun View.clipInsideStroke(canvas: Canvas) {
         canvas.clipRect(left, top, right, bottom)
         return
     }
-    // Outline radii run top-left, top-right, bottom-right, bottom-left, each as an x then a y.
-    val insets = floatArrayOf(
-        left, top, width - right, top, width - right, height - bottom, left, height - bottom
-    )
-    val inner = FloatArray(8) { (radii[it] - insets[it]).coerceAtLeast(0f) }
-    canvas.clipPath(Path().apply { addRoundRect(left, top, right, bottom, inner, Path.Direction.CW) })
+    val clip = getTag(R.id.ua_inside_stroke_clip) as? InsideStrokeClip
+        ?: InsideStrokeClip().also { setTag(R.id.ua_inside_stroke_clip, it) }
+    canvas.clipPath(clip.pathFor(left, top, right, bottom, width.toFloat(), height.toFloat(), radii))
+}
+
+/** The rounded box inside a view's stroke, rebuilt only when the box or the radii change. */
+private class InsideStrokeClip {
+    private val path = Path()
+    private val box = FloatArray(6) { Float.NaN }
+    private val outerRadii = FloatArray(8)
+    private val innerRadii = FloatArray(8)
+
+    fun pathFor(
+        left: Float, top: Float, right: Float, bottom: Float,
+        width: Float, height: Float, radii: FloatArray
+    ): Path {
+        if (box[0] == left && box[1] == top && box[2] == right && box[3] == bottom &&
+            box[4] == width && box[5] == height && outerRadii.contentEquals(radii)
+        ) {
+            return path
+        }
+        box[0] = left; box[1] = top; box[2] = right; box[3] = bottom; box[4] = width; box[5] = height
+        radii.copyInto(outerRadii)
+
+        // Outline radii run top-left, top-right, bottom-right, bottom-left, each as an x then a y.
+        val insets = floatArrayOf(
+            left, top, width - right, top, width - right, height - bottom, left, height - bottom
+        )
+        for (i in 0 until 8) innerRadii[i] = (radii[i] - insets[i]).coerceAtLeast(0f)
+        path.rewind()
+        path.addRoundRect(left, top, right, bottom, innerRadii, Path.Direction.CW)
+        return path
+    }
 }
 
 /**

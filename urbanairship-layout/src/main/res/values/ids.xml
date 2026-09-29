@@ -5,4 +5,6 @@
     <item name="ua_line_height_padding" type="id" />
     <!-- View tag used by ClippableViewDelegate to record a view's border corner radii -->
     <item name="ua_border_radii" type="id" />
+    <!-- View tag used by clipInsideStroke to keep the path it clips with between draws -->
+    <item name="ua_inside_stroke_clip" type="id" />
 </resources>
