@@ -16,9 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * A change to anything but a size — the window's, the safe window's or the frame's — publishes
  * at once. A size change publishes at the start and end of a resize burst: the first change goes
  * out immediately, and the rest wait until the size has held still for [quietPeriodMillis], then
- * the latest goes out.
- * A window dragged continuously re-evaluates the tree twice rather than on every step, and a
- * rotation, a single change, applies at once.
+ * the latest goes out. A window dragged continuously re-evaluates the tree twice rather than on
+ * every step. A change of orientation is not a size change and applies at once.
  *
  * @param quietPeriodMillis how long the size must hold still to end a burst.
  * @param handler where the end of a burst is scheduled; the main thread's.
@@ -52,6 +51,20 @@ internal class ThomasEnvironmentPublisher(
     @MainThread
     fun publish(context: Context, frame: EnvironmentFrame?) {
         publish(ThomasEnvironment.from(context, frame))
+    }
+
+    /**
+     * Publishes a reading from [context] with no frame, unless one has already been published.
+     *
+     * A root view calls this when it's created, so the first frame has an environment to match
+     * before the first layout reports the frame. A root view that replaces another, as after an
+     * activity is recreated, leaves the last reading in place until its own first layout.
+     *
+     * @param context a context of the activity the layout is shown in.
+     */
+    @MainThread
+    fun seed(context: Context) {
+        if (_environment.value == null) publish(context, frame = null)
     }
 
     /** @see publish */

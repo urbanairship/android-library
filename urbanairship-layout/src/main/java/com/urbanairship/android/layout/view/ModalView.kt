@@ -62,7 +62,7 @@ internal class ModalView(
     private val environmentFrame = EnvironmentFrameTracker { model.publishEnvironment(context, it) }
 
     init {
-        model.publishEnvironment(context, null)
+        model.seedEnvironment(context)
         clipToPadding = false
 
         val placement = presentation.getResolvedPlacement(context)
@@ -262,7 +262,8 @@ internal class ModalView(
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
-        model.publishEnvironment(context, environmentFrame.frame)
+        environmentFrame.onConfigurationChanged()
+        requestLayout()
     }
 
 }

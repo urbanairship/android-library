@@ -110,6 +110,28 @@ public class ThomasEnvironmentTest {
     }
 
     @Test
+    public fun testTheTrackerReportsAfterAConfigurationChangeEvenAtTheSameFrame() {
+        val reported = mutableListOf<EnvironmentFrame>()
+        val tracker = EnvironmentFrameTracker { reported.add(it) }
+        tracker.onMeasure(spec(300, MeasureSpec.EXACTLY), spec(200, MeasureSpec.EXACTLY))
+        tracker.onLayout(300, 200)
+
+        tracker.onConfigurationChanged()
+        tracker.onLayout(300, 200)
+        tracker.onLayout(300, 200)
+
+        assertEquals(listOf(EnvironmentFrame(300, 200), EnvironmentFrame(300, 200)), reported)
+    }
+
+    @Test
+    public fun testARotationIsNotASizeChange() {
+        val rotated = environment.copy(windowWidth = 640.0, windowHeight = 360.0)
+
+        assertFalse(rotated.differsOnlyInSize(environment))
+        assertTrue(environment.copy(windowWidth = 380.0).differsOnlyInSize(environment))
+    }
+
+    @Test
     @Config(qualifiers = "ar-rEG-ldrtl")
     public fun testReadsTheLayoutDirectionAndLocale() {
         val context: Context = ApplicationProvider.getApplicationContext()

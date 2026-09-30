@@ -112,6 +112,11 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         environment.publishEnvironment(context, frame)
     }
 
+    /** See [ModelEnvironment.seedEnvironment]; called on the root model by the root view. */
+    fun seedEnvironment(context: Context) {
+        environment.seedEnvironment(context)
+    }
+
     fun createView(
         context: Context,
         viewEnvironment: ViewEnvironment,

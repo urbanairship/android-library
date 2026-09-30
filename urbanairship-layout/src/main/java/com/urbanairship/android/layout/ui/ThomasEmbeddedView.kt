@@ -46,7 +46,7 @@ internal class ThomasEmbeddedView(
 
     init {
         id = model.viewId
-        model.publishEnvironment(context, null)
+        model.seedEnvironment(context)
         configure()
     }
 
@@ -62,7 +62,8 @@ internal class ThomasEmbeddedView(
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
-        model.publishEnvironment(context, environmentFrame.frame)
+        environmentFrame.onConfigurationChanged()
+        requestLayout()
     }
 
     private fun configure() {

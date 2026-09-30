@@ -79,8 +79,12 @@ internal data class ThomasEnvironment(
         )
     ).toJsonValue()
 
-    /** Whether this differs from [other] only in the window's, safe window's or frame's size. */
-    fun differsOnlyInSize(other: ThomasEnvironment): Boolean = copy(
+    /**
+     * Whether this differs from [other] only in the window's, safe window's or frame's size.
+     *
+     * A change of orientation isn't one, although it is sizes swapping: it applies at once.
+     */
+    fun differsOnlyInSize(other: ThomasEnvironment): Boolean = orientation == other.orientation && copy(
         windowWidth = other.windowWidth,
         windowHeight = other.windowHeight,
         safeWindowWidth = other.safeWindowWidth,
@@ -149,16 +153,21 @@ internal data class ThomasEnvironment(
 internal data class EnvironmentFrame(val width: Int?, val height: Int?)
 
 /**
- * Tracks the frame a root view is presented in and reports it each time it changes.
+ * Tracks the frame a root view is presented in and reports it after a layout that changed it.
  *
- * A root view hands its measure specs to [onMeasure] and its laid-out size to [onLayout].
+ * A root view hands its measure specs to [onMeasure] and its laid-out size to [onLayout], and
+ * calls [onConfigurationChanged] and then requests a layout when its configuration changes. That
+ * way the window and the frame are read together, after the layout that settles both, and a
+ * configuration change is one reading rather than a window followed by a frame.
  *
- * @param onChanged called with the new frame whenever it differs from the last one reported.
+ * @param onReport called with the frame after the first layout, after any layout that changed it,
+ * and after the first layout following a configuration change.
  */
-internal class EnvironmentFrameTracker(private val onChanged: (EnvironmentFrame) -> Unit) {
+internal class EnvironmentFrameTracker(private val onReport: (EnvironmentFrame) -> Unit) {
 
     private var fixesWidth = false
     private var fixesHeight = false
+    private var configurationChanged = false
 
     /** The frame last reported, or null before the first layout. */
     var frame: EnvironmentFrame? = null
@@ -174,8 +183,14 @@ internal class EnvironmentFrameTracker(private val onChanged: (EnvironmentFrame)
             width = width.takeIf { fixesWidth },
             height = height.takeIf { fixesHeight }
         )
-        if (laidOut == frame) return
+        if (laidOut == frame && !configurationChanged) return
         frame = laidOut
-        onChanged(laidOut)
+        configurationChanged = false
+        onReport(laidOut)
+    }
+
+    /** Reports on the next layout even if the frame hasn't changed, so the new configuration is read. */
+    fun onConfigurationChanged() {
+        configurationChanged = true
     }
 }

@@ -67,7 +67,7 @@ public class ThomasBannerView internal constructor(
 
     init {
         id = model.viewId
-        model.publishEnvironment(context, null)
+        model.seedEnvironment(context)
         configureBanner()
     }
 
@@ -244,7 +244,8 @@ public class ThomasBannerView internal constructor(
 
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration?) {
         super.onConfigurationChanged(newConfig)
-        model.publishEnvironment(context, environmentFrame.frame)
+        environmentFrame.onConfigurationChanged()
+        requestLayout()
         // Re-fit only when the window bounds actually changed, to avoid layout churn.
         val ignoreSafeArea = presentation.getResolvedPlacement(context).shouldIgnoreSafeArea()
         val windowWidth = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
