@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.graphics.Canvas
 import android.text.Editable
 import android.text.method.ScrollingMovementMethod
 import android.view.Gravity
@@ -17,6 +18,7 @@ import android.widget.Spinner
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.children
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.model.Background
@@ -28,6 +30,7 @@ import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.widget.TappableView
+import com.urbanairship.android.layout.widget.drawInsideStroke
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.flow.Flow
@@ -56,7 +59,6 @@ internal class TextInputView(
 
     init {
         background = null
-        clipToOutline = true
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
 
@@ -82,7 +84,12 @@ internal class TextInputView(
             }
 
             override fun setBackground(old: Background?, new: Background) {
-                LayoutUtils.updateBackground(this@TextInputView, old, new)
+                LayoutUtils.updateBackground(this@TextInputView, old, new, fillInsideStroke = true)
+                setTag(
+                    R.id.ua_border_radii,
+                    new.border?.radii { LayoutUtils.dpToPx(context, it).toFloat() }
+                )
+                invalidate()
             }
 
             override fun onStateUpdated(state: ThomasState) {
@@ -119,12 +126,18 @@ internal class TextInputView(
         }
     }
 
+    override fun dispatchDraw(canvas: Canvas) {
+        // The text and the end icon stop at the curve inside the stroke, as on iOS.
+        drawInsideStroke(canvas) { super.dispatchDraw(canvas) }
+    }
+
     internal fun textChanges() = input.textChanges()
     internal val text: Editable?
         get() = input.text
 
     private fun makeTextInput(model: TextInputModel): AppCompatEditText {
-        return AppCompatEditText(context).also {
+        val isSingleLine = model.viewInfo.inputType != FormInputType.TEXT_MULTILINE
+        return SingleLineFittingEditText(context, isSingleLine).also {
             it.movementMethod = ScrollingMovementMethod()
             it.background = null
             it.clipToOutline = true
@@ -169,4 +182,34 @@ internal class TextInputView(
     }
 
     override fun taps(): Flow<Unit> = clicksChannel.receiveAsFlow()
+}
+
+/**
+ * An edit text whose vertical padding gives way before a single line of text would be cut off.
+ *
+ * A field shorter than its line plus the padding otherwise draws the line from the top and
+ * clips its bottom, where iOS centres it.
+ *
+ * @param fitsSingleLine whether to shrink the padding; a multiline field scrolls instead.
+ */
+internal class SingleLineFittingEditText(
+    context: Context,
+    private val fitsSingleLine: Boolean
+) : AppCompatEditText(context) {
+
+    /** The vertical padding the field asks for, captured before any of it gives way. */
+    private var fullVerticalPadding = -1
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (!fitsSingleLine || MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) return
+
+        if (fullVerticalPadding < 0) fullVerticalPadding = paddingTop
+        val room = MeasureSpec.getSize(heightMeasureSpec) - lineHeight
+        val vertical = (room / 2).coerceIn(0, fullVerticalPadding)
+        if (vertical == paddingTop && vertical == paddingBottom) return
+
+        setPadding(paddingLeft, vertical, paddingRight, vertical)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
 }
