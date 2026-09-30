@@ -80,7 +80,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testAnExactFitCountsAsAColumn() {
         val grid = grid(
-            config = """{"max_columns": 10, "min_column_width": {"type": "fixed", "points": 50}, "column_spacing": 10}""",
+            config = """{"columns": {"type": "fit", "max": 10, "min_width": {"type": "fixed", "size": 50}}, "column_spacing": {"type": "fixed", "space": 10}}""",
             items = List(3) { box() }
         )
         layout(grid, width = 170)
@@ -94,7 +94,7 @@ public class GridLayoutViewTest {
 
     @Test
     public fun testAFullRowFillsTheWidth() {
-        val grid = grid(config = """{"max_columns": 3, "column_spacing": 6}""", items = List(3) { box() })
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 3}, "column_spacing": {"type": "fixed", "space": 6}}""", items = List(3) { box() })
         layout(grid, width = 301)
 
         val last = cells(grid).last()
@@ -104,7 +104,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testTheInnerWidthLeavesOutTheBorder() {
         val grid = grid(
-            config = """{"max_columns": 4, "min_column_width": {"type": "fixed", "points": 50}}""",
+            config = """{"columns": {"type": "fit", "max": 4, "min_width": {"type": "fixed", "size": 50}}}""",
             items = List(4) { box() },
             extra = """"border": {"stroke_width": 10, "stroke_color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}},"""
         )
@@ -117,7 +117,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testAShortRowIsCentredByHalfAColumn() {
         val grid = grid(
-            config = """{"max_columns": 3, "column_spacing": 6, "partial_row_alignment": "center"}""",
+            config = """{"columns": {"type": "fixed", "count": 3}, "column_spacing": {"type": "fixed", "space": 6}, "partial_row_position": "center"}""",
             items = List(5) { box() }
         )
         layout(grid, width = 300)
@@ -131,7 +131,7 @@ public class GridLayoutViewTest {
     public fun testStartIsTheRightEdgeInRtl() {
         ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags =
             ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
-        val grid = grid(config = """{"max_columns": 3}""", items = List(2) { box() })
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 3}}""", items = List(2) { box() })
         grid.layoutDirection = View.LAYOUT_DIRECTION_RTL
         layout(grid, width = 300)
 
@@ -141,7 +141,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testMarginsComeOutOfTheCellBeforePercentagesResolve() {
         val grid = grid(
-            config = """{"max_columns": 3, "column_spacing": 6, "cell_aspect_ratio": 1}""",
+            config = """{"columns": {"type": "fixed", "count": 3}, "column_spacing": {"type": "fixed", "space": 6}, "cell_aspect_ratio": 1}""",
             items = listOf(
                 box(size = """{"width": "100%", "height": "100%"}""", margin = """{"top": 10, "bottom": 10, "start": 10, "end": 10}"""),
                 box(size = """{"width": 200, "height": 30}"""),
@@ -159,7 +159,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testARatioSetsEveryRowFromOneColumn() {
         val grid = grid(
-            config = """{"max_columns": 3, "column_spacing": 6, "row_spacing": 4, "cell_aspect_ratio": 2}""",
+            config = """{"columns": {"type": "fixed", "count": 3}, "column_spacing": {"type": "fixed", "space": 6}, "row_spacing": {"type": "fixed", "space": 4}, "cell_aspect_ratio": 2}""",
             items = listOf(box(span = 2), box(), box())
         )
         layout(grid, width = 300)
@@ -173,7 +173,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testAPercentHeightIsAShareOfARowWithABasis() {
         val grid = grid(
-            config = """{"max_columns": 3}""",
+            config = """{"columns": {"type": "fixed", "count": 3}}""",
             items = listOf(
                 box(size = """{"width": "100%", "height": 60}"""),
                 box(size = """{"width": "100%", "height": "100%"}"""),
@@ -189,7 +189,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testARowOfFullHeightCardsComesOutOneHeight() {
         val grid = grid(
-            config = """{"max_columns": 2}""",
+            config = """{"columns": {"type": "fixed", "count": 2}}""",
             items = listOf(
                 label("Short", size = """{"width": "100%", "height": "100%"}"""),
                 label("A much longer card body that wraps across several lines in its cell",
@@ -206,7 +206,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testAShareUnderTheWholeHugsInARowWithNoBasis() {
         val grid = grid(
-            config = """{"max_columns": 2}""",
+            config = """{"columns": {"type": "fixed", "count": 2}}""",
             items = listOf(
                 label("fifty percent", size = """{"width": "100%", "height": "50%"}"""),
                 label("fifty percent", size = """{"width": "100%", "height": "50%"}""")
@@ -225,7 +225,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testRowsSizeIndependently() {
         val grid = grid(
-            config = """{"max_columns": 2}""",
+            config = """{"columns": {"type": "fixed", "count": 2}}""",
             items = listOf(
                 box(size = """{"width": "100%", "height": 60}"""),
                 box(size = """{"width": "100%", "height": 20}"""),
@@ -239,9 +239,9 @@ public class GridLayoutViewTest {
     }
 
     @Test
-    public fun testRowAlignmentPlacesTheRowsInATallerGrid() {
+    public fun testContentPositionPlacesTheRowsInATallerGrid() {
         val grid = grid(
-            config = """{"max_columns": 2, "row_alignment": "center", "cell_aspect_ratio": 1}""",
+            config = """{"columns": {"type": "fixed", "count": 2}, "content_position": {"horizontal": "start", "vertical": "center"}, "cell_aspect_ratio": 1}""",
             items = List(2) { box() }
         )
         layout(grid, width = 200, height = 300)
@@ -251,7 +251,7 @@ public class GridLayoutViewTest {
 
     @Test
     public fun testAHiddenItemClosesUpWithoutRecreatingLaterCells() {
-        val grid = grid(config = """{"max_columns": 3, "cell_aspect_ratio": 1}""", items = List(4) { box() })
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 3}, "cell_aspect_ratio": 1}""", items = List(4) { box() })
         layout(grid, width = 300)
         assertEquals(100, cells(grid)[3].top)
         val before = items(grid)
@@ -269,7 +269,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testAnUnboundedGridTakesItsMinimumColumns() {
         val grid = grid(
-            config = """{"max_columns": 4, "min_column_width": {"type": "fixed", "points": 50}, "column_spacing": 10}""",
+            config = """{"columns": {"type": "fit", "max": 4, "min_width": {"type": "fixed", "size": 50}}, "column_spacing": {"type": "fixed", "space": 10}}""",
             items = List(6) { box() }
         )
         grid.measure(unspecified(), unspecified())
@@ -280,8 +280,8 @@ public class GridLayoutViewTest {
     @Test
     public fun testTheConfigIsPickedByTheGridsWidth() {
         val grid = grid(
-            config = """{"max_columns": 2, "cell_aspect_ratio": 1}""",
-            selectors = """[{"grid_width": {"at_least": 480}, "config": {"max_columns": 6, "cell_aspect_ratio": 1}}]""",
+            config = """{"columns": {"type": "fixed", "count": 2}, "cell_aspect_ratio": 1}""",
+            selectors = """[{"grid_width": {"at_least": 480}, "config": {"columns": {"type": "fixed", "count": 6}, "cell_aspect_ratio": 1}}]""",
             items = List(6) { box() }
         )
         layout(grid, width = 479)
@@ -292,9 +292,325 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testEachItemResolvesItsSpanFromItsOwnSelectors() {
+        val half = """
+            {"size": {"width": "100%", "height": 20},
+             "config": {"default": {"column_span": 6},
+                        "selectors": [{"grid_width": {"at_most": 280}, "config": {"column_span": 12}}]},
+             "view": {"type": "empty_view"}}
+        """.trimIndent()
+        val third = """
+            {"size": {"width": "100%", "height": 20}, "config": {"default": {"column_span": 4}},
+             "view": {"type": "empty_view"}}
+        """.trimIndent()
+        val grid = grid(
+            config = """{"columns": {"type": "fixed", "count": 12}}""",
+            items = listOf(half, half, third, third, third)
+        )
+
+        layout(grid, width = 360)
+        assertEquals("two halves, then three thirds", listOf(0, 0, 20, 20, 20), cells(grid).map { it.top })
+        assertEquals(listOf(180, 180, 120, 120, 120), cells(grid).map { it.width })
+
+        layout(grid, width = 250)
+        assertEquals("each half on its own row", listOf(0, 20, 40, 40, 40), cells(grid).map { it.top })
+        assertEquals(250, cells(grid)[0].width)
+    }
+
+    @Test
+    public fun testCappedColumnsStopGrowingAndTheBlockIsCentred() {
+        val grid = grid(
+            config = capped(max = 11, min = 44, maxWidth = 64, partial = "center", horizontal = "center"),
+            items = List(7) { box() }
+        )
+        layout(grid, width = 1000)
+
+        // 11 fit, but their share passes the 64 cap: a block of 11 x 64 + 10 x 8, centred, and
+        // the one short row of 7 centred within it.
+        val block = 11 * 64 + 10 * 8
+        assertEquals(64, cells(grid)[0].width)
+        assertEquals((1000 - block) / 2 + (11 - 7) * (64 + 8) / 2, cells(grid)[0].left)
+    }
+
+    @Test
+    public fun testAShortRowIsAlignedWithinTheColumnsNotTheGrid() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "end", horizontal = "start"),
+            items = List(7) { box() }
+        )
+        layout(grid, width = 1000)
+
+        val blockRight = 4 * 64 + 3 * 8
+        assertEquals("rows of 4 and 3", listOf(0, 0, 0, 0, 72, 72, 72), cells(grid).map { it.top })
+        assertEquals(blockRight, cells(grid)[3].right)
+        assertEquals("the short row ends with the block", blockRight, cells(grid)[6].right)
+    }
+
+    @Test
+    public fun testMatchingMinAndMaxKeepEveryColumnOneSize() {
+        val grid = grid(
+            config = capped(max = 11, min = 40, maxWidth = 40, partial = "center", horizontal = "end"),
+            items = List(7) { box() }
+        )
+        layout(grid, width = 300)
+
+        // floor((300 + 8) / 48) = 6 columns of exactly 40, the block at the end.
+        assertEquals(listOf(0, 0, 0, 0, 0, 0, 48), cells(grid).map { it.top })
+        assertTrue(cells(grid).all { it.width == 40 })
+        assertEquals(300, cells(grid)[5].right)
+    }
+
+    @Test
+    public fun testTheBlocksStartIsTheRightEdgeInRtl() {
+        ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags =
+            ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(4) { box() }
+        )
+        grid.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        layout(grid, width = 1000)
+
+        assertEquals("the first column at the right edge", 1000, cells(grid)[0].right)
+    }
+
+    private fun capped(max: Int, min: Int, maxWidth: Int, partial: String, horizontal: String) = """
+        {"columns": {"type": "fit", "max": $max,
+                     "min_width": {"type": "fixed", "size": $min},
+                     "max_width": {"type": "fixed", "size": $maxWidth}},
+         "column_spacing": {"type": "fixed", "space": 8}, "row_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1,
+         "partial_row_position": "$partial",
+         "content_position": {"horizontal": "$horizontal", "vertical": "top"}}
+    """.trimIndent()
+
+    @Test
+    public fun testAContainerFillsItsItemsAspectRatioBox() {
+        val box = """
+            {"size": {"width": "100%", "height": "auto", "aspect_ratio": 1},
+             "view": {"type": "container",
+                      "border": {"stroke_width": 5, "stroke_color": {"default": {"type": "hex", "hex": "#CCCCCC", "alpha": 1}}},
+                      "items": [{"position": {"horizontal": "center", "vertical": "center"},
+                                 "size": {"width": "auto", "height": "auto"},
+                                 "view": ${label("c")}}]}}
+        """.trimIndent()
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 3}}""", items = List(3) { box })
+        layout(grid, width = 300)
+
+        val cell = cells(grid)[0]
+        val container = items(grid)[0]
+        assertEquals("square", cell.width, container.height)
+        assertTrue("and inside its cell", container.bottom <= cell.height)
+    }
+
+    @Test
+    public fun testAHeaderAndFooterLineUpWithACappedBlockAndStayOutOfTheList() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(7) { box() },
+            extra = """
+                "accessibility_role": {"type": "list_view"},
+                "header": {"size": {"width": "auto", "height": "auto"},
+                           "position": {"horizontal": "start", "vertical": "center"}, "view": ${label("low")}},
+                "footer": {"size": {"width": "auto", "height": "auto"},
+                           "position": {"horizontal": "end", "vertical": "center"}, "view": ${label("high")}},
+            """.trimIndent()
+        )
+        layout(grid, width = 400)
+
+        val all = cells(grid)
+        val (header, footer) = all.first() to all.last()
+        val itemCells = all.drop(1).dropLast(1)
+        val blockRight = 4 * 64 + 3 * 8
+        assertEquals("the header spans the block", blockRight, header.width)
+        assertEquals("the low label at the block's start", 0, header.left + (header as ViewGroup).getChildAt(0).left)
+        assertEquals("the high label at the block's end", blockRight, footer.left + (footer as ViewGroup).getChildAt(0).right)
+        assertTrue("the header above the cells", header.bottom + 8 <= itemCells.first().top)
+        assertTrue("the footer below them", footer.top >= itemCells.last().bottom + 8)
+
+        val info = android.view.accessibility.AccessibilityNodeInfo.obtain()
+        grid.onInitializeAccessibilityNodeInfo(info)
+        assertEquals("only the seven items are list items", 7, info.collectionInfo.rowCount)
+    }
+
+    @Test
+    public fun testAHeaderAndFooterKeepTheirOwnHeightBesideRatioRows() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(7) { box() },
+            extra = """"header": {"view": ${label("heading")}}, "footer": {"view": ${label("note")}},"""
+        )
+        layout(grid, width = 400)
+
+        val all = cells(grid)
+        assertEquals(64, all[1].height)
+        assertTrue("the header's own height: ${all.first().height}", all.first().height < 40)
+        assertTrue("the footer's own height: ${all.last().height}", all.last().height < 40)
+    }
+
+    @Test
+    public fun testAHiddenHeaderLeavesNoRow() {
+        val grid = grid(
+            config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),
+            items = List(7) { box() },
+            extra = """"header": {"view": ${label("hidden heading")}},"""
+        )
+        (cells(grid).first() as ViewGroup).getChildAt(0).visibility = View.GONE
+        layout(grid, width = 400)
+
+        assertEquals(0, cells(grid)[1].top)
+    }
+
+    @Test
+    public fun testSpreadGapsLetCappedColumnsReachBothEdges() {
+        val grid = grid(config = spreadColumns(maxSpace = null, horizontal = "start"), items = List(7) { box() })
+        layout(grid, width = 340)
+
+        // 4 x 64 of 340 leaves 84 for 3 gaps of 28.
+        val cells = cells(grid)
+        assertTrue(cells.all { it.width == 64 })
+        assertEquals(listOf(0, 92, 184, 276), cells.take(4).map { it.left })
+        assertEquals("one column short and centred: half a column plus half a gap in", 46, cells[4].left)
+    }
+
+    @Test
+    public fun testSpreadGapsStopAtMaxSpaceAndTheRestIsPlaced() {
+        val grid = grid(config = spreadColumns(maxSpace = 20, horizontal = "center"), items = List(4) { box() })
+        layout(grid, width = 340)
+
+        // Gaps would be 28; they stop at 20, and the 24 over centres the block.
+        assertEquals(listOf(12, 96, 180, 264), cells(grid).map { it.left })
+    }
+
+    @Test
+    public fun testSpreadGapsMirrorInRtl() {
+        ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags =
+            ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val grid = grid(config = spreadColumns(maxSpace = null, horizontal = "start"), items = List(7) { box() })
+        grid.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        layout(grid, width = 340)
+
+        val cells = cells(grid)
+        assertEquals(340, cells[0].right)
+        assertEquals(46, 340 - cells[4].right)
+    }
+
+    @Test
+    public fun testSpreadRowsFillAHeightTheGridHasOfItsOwn() {
+        val grid = grid(config = spreadRows(maxSpace = null), items = List(3) { box(size = """{"width": "100%", "height": 32}""") })
+        layout(grid, width = 200, height = 300)
+
+        // Three 32 rows in 300 leave 204 for 2 gaps of 102.
+        assertEquals(listOf(0, 134, 268), cells(grid).map { it.top })
+    }
+
+    @Test
+    public fun testSpreadRowsStopAtMaxSpaceAndTheRestIsPlaced() {
+        val grid = grid(config = spreadRows(maxSpace = 40), items = List(3) { box(size = """{"width": "100%", "height": 32}""") })
+        layout(grid, width = 200, height = 300)
+
+        // Gaps stop at 40: 96 + 80 of 300 leaves 124, centred 62 down.
+        assertEquals(listOf(62, 134, 206), cells(grid).map { it.top })
+    }
+
+    @Test
+    public fun testAnAutoHeightGridsRowsSitAtTheMinimumSpace() {
+        val grid = grid(config = spreadRows(maxSpace = null), items = List(3) { box(size = """{"width": "100%", "height": 32}""") })
+        layout(grid, width = 200)
+
+        assertEquals(listOf(0, 40, 80), cells(grid).map { it.top })
+    }
+
+    @Test
+    public fun testItemsPlaceInTheOrderTheirConfigResolvesTo() {
+        val first = """
+            {"size": {"width": "100%", "height": 20},
+             "config": {"default": {"order": 0}},
+             "view": {"type": "empty_view"}}
+        """.trimIndent()
+        val second = """
+            {"size": {"width": "100%", "height": 20},
+             "config": {"default": {"order": 0},
+                        "selectors": [{"grid_width": {"at_least": 400}, "config": {"order": -1}}]},
+             "view": {"type": "empty_view"}}
+        """.trimIndent()
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(first, second))
+
+        layout(grid, width = 300)
+        assertEquals("list order when narrow", listOf(0, 150), cells(grid).map { it.left })
+
+        layout(grid, width = 500)
+        assertEquals("the second first when wide", listOf(250, 0), cells(grid).map { it.left })
+    }
+
+    @Test
+    public fun testAShuffleMixesOnlyItemsOfOneOrderAndTheHeaderStaysFirst() {
+        val options = listOf("a", "b", "c", "d", "e").map {
+            """{"size": {"width": "100%", "height": 20}, "view": ${label(it)}}"""
+        }
+        val none = """
+            {"size": {"width": "100%", "height": 20}, "config": {"default": {"order": 1}},
+             "view": ${label("None")}}
+        """.trimIndent()
+        val grid = grid(
+            config = """{"columns": {"type": "fixed", "count": 1}}""",
+            items = options + none,
+            extra = """"randomize_children": true, "header": {"view": ${label("top")}},"""
+        )
+        layout(grid, width = 200)
+
+        val all = cells(grid)
+        val header = all.first()
+        val noneCell = all.first { ((it as ViewGroup).getChildAt(0) as android.widget.TextView).text.toString() == "None" }
+        assertEquals("the header stays first", 0, header.top)
+        assertEquals("None stays last", all.drop(1).maxOf { it.top }, noneCell.top)
+    }
+
+    private fun spreadColumns(maxSpace: Int?, horizontal: String) = """
+        {"columns": {"type": "fit", "max": 4,
+                     "min_width": {"type": "fixed", "size": 44},
+                     "max_width": {"type": "fixed", "size": 64}},
+         "column_spacing": {"type": "spread", "min_space": 6${maxSpace?.let { """, "max_space": $it""" } ?: ""}},
+         "cell_aspect_ratio": 1,
+         "partial_row_position": "center",
+         "content_position": {"horizontal": "$horizontal", "vertical": "top"}}
+    """.trimIndent()
+
+    private fun spreadRows(maxSpace: Int?) = """
+        {"columns": {"type": "fixed", "count": 1},
+         "row_spacing": {"type": "spread", "min_space": 8${maxSpace?.let { """, "max_space": $it""" } ?: ""}},
+         "content_position": {"horizontal": "start", "vertical": "center"}}
+    """.trimIndent()
+
+    @Test
+    public fun testAnUnboundedFitGridIsAWidthBasisForAPercentSibling() {
+        val stack = stack(
+            direction = "horizontal",
+            items = listOf(
+                """
+                {"size": {"width": "auto", "height": "auto"},
+                 "view": {"type": "grid_layout",
+                          "config": {"default": {"columns": {"type": "fit", "max": 3,
+                                                             "min_width": {"type": "fixed", "size": 40}},
+                                                 "column_spacing": {"type": "fixed", "space": 8}}},
+                          "items": [${List(3) { box(size = """{"width": "100%", "height": 40}""") }.joinToString()}]}}
+                """,
+                """{"size": {"width": "50%", "height": 40}, "view": {"type": "empty_view"}}"""
+            )
+        )
+        // A horizontal scroll's content is measured with no width, as in a version 1 scene.
+        stack.measure(unspecified(), unspecified())
+        stack.layout(0, 0, stack.measuredWidth, stack.measuredHeight)
+
+        val grid = (stack as ViewGroup).getChildAt(0)
+        assertEquals("3 x 40 + 2 x 8", 136, grid.width)
+        assertEquals("the stack solves 136 / (1 - 0.5)", 272, stack.width)
+        assertEquals(136, stack.getChildAt(1).width)
+    }
+
+    @Test
     public fun testASpanThatDoesNotFitStartsANewRow() {
         val grid = grid(
-            config = """{"max_columns": 3, "cell_aspect_ratio": 1}""",
+            config = """{"columns": {"type": "fixed", "count": 3}, "cell_aspect_ratio": 1}""",
             items = listOf(box(span = 2), box(span = 2), box())
         )
         layout(grid, width = 300)
@@ -310,7 +626,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"}, "margin": {"start": 16, "end": 16},
-                 "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                 "view": ${grid("""{"columns": {"type": "fixed", "count": 4}, "column_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1}""")}}
                 """
             )
         )
@@ -328,7 +644,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                 "view": ${grid("""{"columns": {"type": "fixed", "count": 4}, "column_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1}""")}}
                 """,
                 """{"size": {"width": "auto", "height": "auto"}, "view": ${label("beside")}}"""
             )
@@ -349,7 +665,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                 "view": ${grid("""{"columns": {"type": "fixed", "count": 4}, "column_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1}""")}}
                 """,
                 """{"size": {"width": "auto", "height": "auto"}, "view": ${label(text)}}"""
             )
@@ -377,7 +693,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": {"type": "grid_layout", "config": {"default": {"max_columns": 2, "column_spacing": 8}},
+                 "view": {"type": "grid_layout", "config": {"default": {"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}}},
                           "items": [$image, $image]}}
                 """,
                 """{"size": {"width": "30%", "height": "auto"}, "view": ${label("thirty")}}"""
@@ -398,7 +714,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                 "view": ${grid("""{"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1}""")}}
                 """,
                 """{"size": {"width": "30%", "height": "auto"}, "view": ${label("thirty")}}"""
             )
@@ -416,7 +732,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                 "view": ${grid("""{"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1}""")}}
                 """,
                 """{"size": {"width": 80, "height": "auto"}, "view": ${label("eighty")}}"""
             )
@@ -436,7 +752,7 @@ public class GridLayoutViewTest {
                 """{"size": {"width": 60, "height": 120}, "view": ${label("tall")}}""",
                 """
                 {"size": {"width": "auto", "height": "100%"},
-                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8}""")}}
+                 "view": ${grid("""{"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}}""")}}
                 """
             )
         )
@@ -456,7 +772,7 @@ public class GridLayoutViewTest {
                     "view": ${label("A label whose whole line is far wider than the share it is given here")}}""",
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": ${grid("""{"max_columns": 2, "column_spacing": 8, "cell_aspect_ratio": 1}""")}}
+                 "view": ${grid("""{"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1}""")}}
                 """
             )
         )
@@ -473,7 +789,7 @@ public class GridLayoutViewTest {
             {"type": "linear_layout", "direction": "horizontal", "accessibility_role": {"type": "list_view"},
              "items": [
                {"size": {"width": "auto", "height": "auto"}, "accessibility_role": {"type": "list_item"},
-                "view": ${grid("""{"max_columns": 4, "column_spacing": 8, "cell_aspect_ratio": 1}""")}},
+                "view": ${grid("""{"columns": {"type": "fixed", "count": 4}, "column_spacing": {"type": "fixed", "space": 8}, "cell_aspect_ratio": 1}""")}},
                {"size": {"width": "auto", "height": "auto"}, "view": ${label("beside")}}
              ]}
             """.trimIndent()
@@ -492,7 +808,7 @@ public class GridLayoutViewTest {
     public fun testAFullHeightItemsContentGrowsARowWithABasis() {
         val longText = "Now much longer text that needs several more lines in this same cell"
         val grid = grid(
-            config = """{"max_columns": 2}""",
+            config = """{"columns": {"type": "fixed", "count": 2}}""",
             items = listOf(
                 label("short", size = """{"width": "100%", "height": "auto"}"""),
                 label(longText, size = """{"width": "100%", "height": "100%"}""")
@@ -510,7 +826,7 @@ public class GridLayoutViewTest {
     @Test
     public fun testAFullHeightLabelGrowsItsRowWhenItsTextGrows() {
         val grid = grid(
-            config = """{"max_columns": 2}""",
+            config = """{"columns": {"type": "fixed", "count": 2}}""",
             items = listOf(
                 label("short", size = """{"width": "100%", "height": "auto"}"""),
                 label("Two short lines of text in this cell.", size = """{"width": "100%", "height": "100%"}""")
@@ -581,7 +897,7 @@ public class GridLayoutViewTest {
     ) = """
         {
           "size": $size,
-          "column_span": $span,
+          "config": {"default": {"column_span": $span}},
           ${margin?.let { """"margin": $it,""" } ?: ""}
           "view": {"type": "empty_view"}
         }

@@ -18,7 +18,9 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.FormInputType
-import com.urbanairship.android.layout.property.GridLayoutConfigs
+import com.urbanairship.android.layout.property.GridConfigs
+import com.urbanairship.android.layout.property.GridItemConfig
+import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
@@ -569,11 +571,22 @@ internal class LinearLayoutItemInfo(
  * The grid's own width sets the columns; its items never do. A width of `auto` fills the room the
  * parent offers rather than hugging the items.
  */
-internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<GridLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
-    val config: GridLayoutConfigs = GridLayoutConfigs.fromJson(json.requireField("config"))
-    val items = json.requireField<JsonList>("items").map { GridLayoutItemInfo(it.requireMap()) }
+internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
+    val config: GridConfigs<GridLayoutConfig> =
+        GridConfigs.fromJson(json.requireField("config"), GridLayoutConfig::fromJson)
 
-    override val children: List<GridLayoutItemInfo> = items
+    /** Shuffled once, when the scene is read, so a state change never reorders the options. */
+    private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
+    val items = json.requireField<JsonList>("items").map { GridLayoutItemInfo(it.requireMap()) }
+        .let { if (randomizeChildren) it.shuffled() else it }
+
+    /** A view above the cells, as wide as the block of columns. */
+    val header: GridLayoutEdgeInfo? = json.optionalMap("header")?.let(::GridLayoutEdgeInfo)
+
+    /** A view below the cells, as wide as the block of columns. */
+    val footer: GridLayoutEdgeInfo? = json.optionalMap("footer")?.let(::GridLayoutEdgeInfo)
+
+    override val children: List<ItemInfo> = listOfNotNull(header) + items + listOfNotNull(footer)
 
     /** Announced as a list of its visible items when set, as a linear layout's `list_view` is. */
     val isListView: Boolean = json.optionalMap("accessibility_role")?.let {
@@ -581,20 +594,46 @@ internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<GridLayoutItemInfo>
     } == LinearLayoutInfo.AccessibilityRole.Type.LIST_VIEW
 }
 
-/** One cell of a grid. [size] resolves against the cell, so `100%` wide is the cell's width. */
+/** How a grid lays out the view in one of its cells, or in its header or footer. */
+internal interface GridCellInfo {
+    /** Resolves against the cell, so `100%` wide is the cell's width. */
+    val size: Size
+    val margin: Margin?
+    /** Where the view sits in its cell when it is smaller than the cell. */
+    val position: Position
+}
+
+/** The size a grid cell's view takes when it states none. */
+private val DEFAULT_GRID_CELL_SIZE = Size(width = "100%", height = "auto")
+
+/** One cell of a grid. */
 internal class GridLayoutItemInfo(
     json: JsonMap
-) : ItemInfo(viewInfoFromJson(json.requireField("view"))) {
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))), GridCellInfo {
     val identifier: String? = json.optionalField("identifier")
-    val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_SIZE
-    /** The columns the cell asks to cover, at least 1; placement caps it at the column count. */
-    val columnSpan: Int = (json.optionalField<Double>("column_span") ?: 1.0).toInt().coerceAtLeast(1)
-    val margin: Margin? = json["margin"]?.let(Margin::fromJson)
-    val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
+    override val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_GRID_CELL_SIZE
+    /** Where the item sits among the grid's columns, resolved by the grid's own selector rules. */
+    val config: GridConfigs<GridItemConfig> = json.optionalMap("config")
+        ?.let { GridConfigs.fromJson(it, GridItemConfig::fromJson) }
+        ?: GridConfigs(GridItemConfig())
+    override val margin: Margin? = json["margin"]?.let(Margin::fromJson)
+    override val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
+}
 
-    private companion object {
-        val DEFAULT_SIZE = Size(width = "100%", height = "auto")
-    }
+/**
+ * A view above or below a grid's cells, exactly as wide as the block of columns.
+ *
+ * Placed with the block by `content_position`, so it lines up with the cells' edges at any column
+ * count, and separated from them by `row_spacing`. It takes no part in placement and isn't an item
+ * of the list `list_view` announces.
+ */
+internal class GridLayoutEdgeInfo(
+    json: JsonMap
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))), GridCellInfo {
+    val identifier: String? = json.optionalField("identifier")
+    override val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_GRID_CELL_SIZE
+    override val margin: Margin? = json["margin"]?.let(Margin::fromJson)
+    override val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
 }
 
 internal class ContainerLayoutInfo(
