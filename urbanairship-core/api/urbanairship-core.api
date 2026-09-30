@@ -2232,9 +2232,13 @@ public final class com/urbanairship/contacts/ContactChannel$Email$RegistrationIn
 public final class com/urbanairship/contacts/ContactChannel$Email$RegistrationInfo$Registered : com/urbanairship/contacts/ContactChannel$Email$RegistrationInfo {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getChannelId ()Ljava/lang/String;
+	public final fun getClickTrackingOptedIn ()Ljava/time/Instant;
+	public final fun getClickTrackingOptedOut ()Ljava/time/Instant;
 	public final fun getCommercialOptedIn ()Ljava/time/Instant;
 	public final fun getCommercialOptedOut ()Ljava/time/Instant;
 	public final fun getMaskedAddress ()Ljava/lang/String;
+	public final fun getOpenTrackingOptedIn ()Ljava/time/Instant;
+	public final fun getOpenTrackingOptedOut ()Ljava/time/Instant;
 	public final fun getTransactionalOptedIn ()Ljava/time/Instant;
 	public final fun getTransactionalOptedOut ()Ljava/time/Instant;
 	public fun hashCode ()I
@@ -2285,18 +2289,24 @@ public abstract interface class com/urbanairship/contacts/ContactConflictListene
 
 public final class com/urbanairship/contacts/EmailRegistrationOptions : com/urbanairship/json/JsonSerializable {
 	public static final field Companion Lcom/urbanairship/contacts/EmailRegistrationOptions$Companion;
-	public synthetic fun <init> (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZLcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun commercialOptions ()Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public static final fun commercialOptions (Ljava/time/Instant;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public static final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public static final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public static final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public static final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClickTracking ()Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;
 	public final fun getCommercialOptedIn ()Ljava/time/Instant;
+	public final fun getOpenTracking ()Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;
 	public final fun getProperties ()Lcom/urbanairship/json/JsonMap;
 	public final fun getTransactionalOptedIn ()Ljava/time/Instant;
 	public fun hashCode ()I
 	public final fun isDoubleOptIn ()Z
 	public static final fun options (Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Z)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public static final fun options (Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZLcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public static final fun options (Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZLcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public static final fun options (Ljava/time/Instant;Z)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public static final fun options (Z)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
@@ -2308,11 +2318,41 @@ public final class com/urbanairship/contacts/EmailRegistrationOptions$Companion 
 	public final fun commercialOptions (Ljava/time/Instant;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
-	public static synthetic fun commercialOptions$default (Lcom/urbanairship/contacts/EmailRegistrationOptions$Companion;Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ILjava/lang/Object;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public final fun commercialOptions (Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public static synthetic fun commercialOptions$default (Lcom/urbanairship/contacts/EmailRegistrationOptions$Companion;Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;ILjava/lang/Object;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public final fun options (Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Z)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public final fun options (Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZLcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public final fun options (Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZLcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public final fun options (Ljava/time/Instant;Z)Lcom/urbanairship/contacts/EmailRegistrationOptions;
 	public final fun options (Z)Lcom/urbanairship/contacts/EmailRegistrationOptions;
-	public static synthetic fun options$default (Lcom/urbanairship/contacts/EmailRegistrationOptions$Companion;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZILjava/lang/Object;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+	public static synthetic fun options$default (Lcom/urbanairship/contacts/EmailRegistrationOptions$Companion;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;ZLcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent;ILjava/lang/Object;)Lcom/urbanairship/contacts/EmailRegistrationOptions;
+}
+
+public abstract class com/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent {
+	public abstract fun getDate ()Ljava/time/Instant;
+}
+
+public final class com/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedIn : com/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent {
+	public fun <init> (Ljava/time/Instant;)V
+	public final fun component1 ()Ljava/time/Instant;
+	public final fun copy (Ljava/time/Instant;)Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedIn;
+	public static synthetic fun copy$default (Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedIn;Ljava/time/Instant;ILjava/lang/Object;)Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedIn;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDate ()Ljava/time/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedOut : com/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent {
+	public fun <init> (Ljava/time/Instant;)V
+	public final fun component1 ()Ljava/time/Instant;
+	public final fun copy (Ljava/time/Instant;)Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedOut;
+	public static synthetic fun copy$default (Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedOut;Ljava/time/Instant;ILjava/lang/Object;)Lcom/urbanairship/contacts/EmailRegistrationOptions$TrackingConsent$OptedOut;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDate ()Ljava/time/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/urbanairship/contacts/OpenChannelRegistrationOptions : com/urbanairship/json/JsonSerializable {

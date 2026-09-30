@@ -37,11 +37,14 @@ internal class NpsFormController(
         itemProperties: ItemProperties?
     ) = view.createView(context, viewEnvironment, itemProperties)
 
-    override fun buildFormData(state: State.Form) = ThomasFormField.Nps(
+    override fun buildFormData(
+        state: State.Form,
+        fieldType: ThomasFormField.FieldType<Set<ThomasFormField<*>>>
+    ) = ThomasFormField.Nps(
         viewInfo.identifier,
         viewInfo.npsIdentifier,
         viewInfo.responseType,
         state.filteredFields.values.toSet(),
-        fieldType = ThomasFormField.FieldType.just(emptySet())
+        fieldType = fieldType
     )
 }

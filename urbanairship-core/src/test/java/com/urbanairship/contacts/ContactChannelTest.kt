@@ -49,7 +49,11 @@ public class ContactChannelTest {
                 transactionalOptedIn = Instant.ofEpochMilli(1000),
                 transactionalOptedOut = Instant.ofEpochMilli(2000),
                 commercialOptedIn = Instant.ofEpochMilli(3000),
-                commercialOptedOut = Instant.ofEpochMilli(4000)
+                commercialOptedOut = Instant.ofEpochMilli(4000),
+                openTrackingOptedIn = Instant.ofEpochMilli(5000),
+                openTrackingOptedOut = Instant.ofEpochMilli(6000),
+                clickTrackingOptedIn = Instant.ofEpochMilli(7000),
+                clickTrackingOptedOut = Instant.ofEpochMilli(8000)
             )
         )
 

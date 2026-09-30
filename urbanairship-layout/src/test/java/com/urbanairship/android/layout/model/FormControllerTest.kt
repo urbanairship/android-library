@@ -25,6 +25,9 @@ import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.DelicateLayoutApi
+import com.urbanairship.android.layout.environment.makeThomasState
+import com.urbanairship.android.layout.info.ThomasFormRegistrationOverrides
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import app.cash.turbine.test
 import app.cash.turbine.testIn
@@ -32,9 +35,11 @@ import app.cash.turbine.turbineScope
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
@@ -106,6 +111,7 @@ public class FormControllerTest {
     ))
 
     private lateinit var formController: FormController
+    private lateinit var childFormController: FormController
 
     @Before
     public fun setUp() {
@@ -205,7 +211,7 @@ public class FormControllerTest {
             assertFalse(awaitItem().filteredFields.isEmpty())
 
             // Emit FORM_SUBMIT event
-            val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID))
+            val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID, formIdentifier = PARENT_FORM_ID))
             testEventHandler.broadcast(event)
 
             skipItems(2)
@@ -279,6 +285,135 @@ public class FormControllerTest {
         }
     }
 
+    @Test
+    public fun testSubmitTargetsOnlyEnclosingForm(): TestResult = runTest {
+        initParentFormController()
+        addParentTextInput()
+        testScope.runCurrent()
+
+        testEventHandler.broadcast(LayoutEvent.SubmitForm(BUTTON_ID, formIdentifier = CHILD_FORM_ID))
+        testScope.runCurrent()
+
+        assertFalse(parentFormState.changes.value.isSubmitted)
+        verify(exactly = 0) { mockChannelRegistrar.register(any()) }
+    }
+
+    @Test
+    public fun testChildFormSubmitRollsUpIntoParentWithOwnOverrides(): TestResult = runTest {
+        initParentFormController()
+        addParentTextInput()
+        initChildFormController(
+            registrationOverrides = ThomasFormRegistrationOverrides.fromJson(
+                JsonValue.parseString(CHILD_OVERRIDES)
+            ),
+            environment = childEnvironment()
+        )
+        childFormState.update {
+            it.copyWithFormInput(
+                ThomasFormField.Toggle(
+                    identifier = CONSENT_ID,
+                    originalValue = true,
+                    fieldType = ThomasFormField.FieldType.just(true)
+                )
+            ).copyWithFormInput(
+                ThomasFormField.TextInput(
+                    textInput = FormInputType.EMAIL,
+                    identifier = EMAIL_INPUT_ID,
+                    originalValue = EMAIL_ADDRESS,
+                    fieldType = ThomasFormField.FieldType.just(EMAIL_ADDRESS)
+                )
+            )
+        }
+        testScope.runCurrent()
+
+        val childSubmit = spyk(LayoutEvent.SubmitForm(BUTTON_ID, formIdentifier = CHILD_FORM_ID))
+        testEventHandler.broadcast(childSubmit)
+        testScope.runCurrent()
+
+        assertTrue(childFormState.changes.value.isSubmitted)
+        assertFalse(parentFormState.changes.value.isSubmitted)
+        coVerify { childSubmit.onSubmitted }
+        verify(exactly = 0) { mockChannelRegistrar.register(any()) }
+
+        testEventHandler.broadcast(LayoutEvent.SubmitForm(BUTTON_ID, formIdentifier = PARENT_FORM_ID))
+        testScope.runCurrent()
+
+        assertTrue(parentFormState.changes.value.isSubmitted)
+        verify {
+            mockChannelRegistrar.register(
+                eq(
+                    listOf(
+                        CHANNEL_REGISTRATION,
+                        ThomasChannelRegistration.Email(
+                            EMAIL_ADDRESS,
+                            ThomasEmailRegistrationOptions.DoubleOptIn(null, openTrackingOptedIn = true)
+                        )
+                    )
+                )
+            )
+        }
+
+        val result = slot<ReportingEvent.FormResult>()
+        verify { mockReporter.report(capture(result)) }
+        val child = result.captured.data.toJsonValue().optMap()
+            .opt("forms").optMap().opt(PARENT_FORM_ID).optMap()
+            .opt("children").optMap().opt(CHILD_FORM_ID).optMap()
+        assertEquals("form", child.opt("type").optString())
+        assertEquals(
+            setOf(CONSENT_ID, EMAIL_INPUT_ID),
+            child.opt("children").optMap().keySet()
+        )
+    }
+
+    private fun addParentTextInput() {
+        parentFormState.update {
+            it.copyWithFormInput(
+                ThomasFormField.TextInput(
+                    textInput = FormInputType.TEXT,
+                    identifier = TEXT_INPUT_ID,
+                    originalValue = TEXT_INPUT_VALUE,
+                    fieldType = ThomasFormField.FieldType.just(
+                        value = TEXT_INPUT_VALUE,
+                        channels = listOf(CHANNEL_REGISTRATION)
+                    )
+                )
+            )
+        }
+    }
+
+    /** An environment whose state has the child form as `$forms.current`. */
+    private fun childEnvironment(): ModelEnvironment {
+        val layoutState = LayoutState(
+            pager = null,
+            checkbox = null,
+            radio = null,
+            score = null,
+            asyncView = null,
+            layout = SharedState(State.Layout.DEFAULT),
+            video = null,
+            videoControl = null,
+            thomasState = makeThomasState(
+                formState = childFormState,
+                layoutState = SharedState(State.Layout.DEFAULT),
+                pagerState = null,
+                videoState = null,
+                asyncView = null
+            ),
+            thomasForm = ThomasForm(childFormState),
+            parentForm = ThomasForm(parentFormState),
+            pagerTracker = null
+        )
+        return mockk(relaxed = true) {
+            every { reporter } returns mockReporter
+            every { attributeHandler } returns mockAttributeHandler
+            every { this@mockk.layoutState } returns layoutState
+            every { eventHandler } returns testEventHandler
+            every { layoutEvents } returns testEventHandler.layoutEvents
+            every { modelScope } returns testScope
+            every { channelRegistrar } returns mockChannelRegistrar
+        }
+    }
+
     private fun initParentFormController(
         pagerState: SharedState<State.Pager>? = null,
         properties: ModelProperties = DEFAULT_PROPERTIES
@@ -289,6 +424,7 @@ public class FormControllerTest {
                 every { this@mockk.identifier } returns PARENT_FORM_ID
                 every { this@mockk.responseType } returns "form"
                 every { this@mockk.submitBehavior } returns FormBehaviorType.SUBMIT_EVENT
+                every { this@mockk.registrationOverrides } returns null
             },
             view = mockView,
             formState = ThomasForm(parentFormState),
@@ -302,20 +438,23 @@ public class FormControllerTest {
 
     private fun initChildFormController(
         pagerState: SharedState<State.Pager>? = null,
-        properties: ModelProperties = DEFAULT_PROPERTIES
+        properties: ModelProperties = DEFAULT_PROPERTIES,
+        registrationOverrides: ThomasFormRegistrationOverrides? = null,
+        environment: ModelEnvironment = mockEnv
     ) {
-        formController = FormController(
+        childFormController = FormController(
             viewInfo = mockk<FormControllerInfo>(relaxed = true) {
                 every { this@mockk.type } returns ViewType.FORM_CONTROLLER
                 every { this@mockk.identifier } returns CHILD_FORM_ID
                 every { this@mockk.responseType } returns "form"
                 every { this@mockk.submitBehavior } returns null
+                every { this@mockk.registrationOverrides } returns registrationOverrides
             },
             view = mockView,
             formState = ThomasForm(childFormState),
             parentState = ThomasForm(parentFormState),
             pagerState = pagerState,
-            environment = mockEnv,
+            environment = environment,
             properties = properties
         )
         testScope.runCurrent()
@@ -341,5 +480,26 @@ public class FormControllerTest {
 
 
         private val DEFAULT_PROPERTIES = ModelProperties(pagerPageId = null)
+
+        private const val CONSENT_ID = "consent"
+        private const val EMAIL_INPUT_ID = "email"
+        private const val EMAIL_ADDRESS = "someone@example.com"
+        private val CHILD_OVERRIDES = """
+            {
+              "email": [
+                {
+                  "when_state_matches": {
+                    "scope": ["${'$'}forms", "current", "data", "children", "consent"],
+                    "key": "value",
+                    "value": { "equals": true }
+                  },
+                  "registration": {
+                    "type": "double_opt_in",
+                    "open_tracking_opted_in": { "type": "value", "value": true }
+                  }
+                }
+              ]
+            }
+        """
     }
 }

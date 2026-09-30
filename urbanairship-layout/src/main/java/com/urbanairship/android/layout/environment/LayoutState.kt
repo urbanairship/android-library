@@ -7,8 +7,10 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.StateControllerInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.info.ThomasFormRegistrationOverrides
 import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -546,15 +548,43 @@ internal sealed class State(val type: Type): JsonSerializable {
             return map.toMap()
         }
 
-        internal fun channels(): List<ThomasChannelRegistration> {
-            return filteredFields.values
-                .mapNotNull { value ->
-                    when(val method = value.fieldType) {
-                        is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
-                        is ThomasFormField.FieldType.Instant -> method.result
-                    }?.channels
+        /**
+         * Returns the channels this form's inputs register, with [registrationOverrides] applied
+         * to its email inputs.
+         *
+         * @param registrationOverrides The form's overrides.
+         * @param state The form's state, the root override predicates and values read from.
+         * @return The channels to register.
+         */
+        internal fun channels(
+            registrationOverrides: ThomasFormRegistrationOverrides? = null,
+            state: JsonValue = JsonValue.NULL
+        ): List<ThomasChannelRegistration> {
+            return filteredFields.values.flatMap { field ->
+                val result = when (val method = field.fieldType) {
+                    is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
+                    is ThomasFormField.FieldType.Instant -> method.result
+                } ?: return@flatMap emptyList()
+
+                val channels = result.channels.orEmpty()
+                val isEmailInput = (field as? ThomasFormField.TextInput)?.textInput == FormInputType.EMAIL
+                if (registrationOverrides?.email.isNullOrEmpty() || !isEmailInput) {
+                    return@flatMap channels
                 }
-                .flatten()
+
+                // The input's own options may be absent, so the address comes from the result.
+                val address = result.value as? String
+                if (address.isNullOrEmpty()) {
+                    return@flatMap channels
+                }
+
+                val options = channels.filterIsInstance<ThomasChannelRegistration.Email>()
+                    .firstOrNull()?.options
+                val resolved = registrationOverrides?.resolveEmail(field.identifier, options, state)
+                    ?.let { ThomasChannelRegistration.Email(address, it) }
+
+                channels.filterNot { it is ThomasChannelRegistration.Email } + listOfNotNull(resolved)
+            }
         }
 
         internal data class Child(

@@ -5,11 +5,18 @@ package com.urbanairship.android.layout.model
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.LayoutEventHandler
+import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
+import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.makeThomasState
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.LabelButtonInfo
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.OutcomeResolver
@@ -219,6 +226,91 @@ public class ButtonModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { layoutEventHandler.broadcast(match { it is LayoutEvent.Finish }) }
+    }
+
+    @Test
+    public fun formOutcomesOutsideAnyFormOnlyRunOtherOutcomes(): TestResult = runTest {
+        every { mockEnv.layoutState } returns LayoutState.EMPTY
+        buttonModel = makeButton(
+            clickBehaviors = listOf(
+                ButtonClickBehaviorType.FORM_VALIDATE,
+                ButtonClickBehaviorType.FORM_SUBMIT,
+                ButtonClickBehaviorType.DISMISS
+            )
+        )
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) {
+            layoutEventHandler.broadcast(match { it is LayoutEvent.SubmitForm || it is LayoutEvent.ValidateForm })
+        }
+        coVerify(exactly = 1) { layoutEventHandler.broadcast(match { it is LayoutEvent.Finish }) }
+    }
+
+    @Test
+    public fun submitTargetsEnclosingForm(): TestResult = runTest {
+        every { mockEnv.layoutState } returns layoutStateInForm("enclosing-form")
+        buttonModel = makeButton(clickBehaviors = listOf(ButtonClickBehaviorType.FORM_SUBMIT))
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            layoutEventHandler.broadcast(
+                match { it is LayoutEvent.SubmitForm && it.formIdentifier == "enclosing-form" }
+            )
+        }
+    }
+
+    @Test
+    public fun validateTargetsEnclosingForm(): TestResult = runTest {
+        every { mockEnv.layoutState } returns layoutStateInForm("enclosing-form")
+        buttonModel = makeButton(clickBehaviors = listOf(ButtonClickBehaviorType.FORM_VALIDATE))
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            layoutEventHandler.broadcast(
+                match { it is LayoutEvent.ValidateForm && it.formIdentifier == "enclosing-form" }
+            )
+        }
+    }
+
+    private fun layoutStateInForm(identifier: String): LayoutState {
+        val form = SharedState(
+            State.Form(
+                identifier = identifier,
+                formType = FormType.Form,
+                formResponseType = null,
+                validationMode = FormValidationMode.IMMEDIATE,
+                initialChildrenValues = emptyMap()
+            )
+        )
+        return LayoutState(
+            pager = null,
+            checkbox = null,
+            radio = null,
+            layout = SharedState(State.Layout.DEFAULT),
+            video = null,
+            videoControl = null,
+            thomasState = makeThomasState(form, null, null, null, null),
+            thomasForm = ThomasForm(form),
+            parentForm = null,
+            pagerTracker = null,
+            score = null,
+            asyncView = null
+        )
     }
 
     private fun makeButton(

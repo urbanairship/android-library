@@ -60,6 +60,10 @@ public sealed class ContactChannel: JsonSerializable {
         private const val COMMERCIAL_OPTED_OUT_KEY = "commercial_opted_out"
         private const val TRANSACTIONAL_OPTED_IN_KEY = "transactional_opted_in"
         private const val TRANSACTIONAL_OPTED_OUT_KEY = "transactional_opted_out"
+        private const val OPEN_TRACKING_OPTED_IN_KEY = "open_tracking_opted_in"
+        private const val OPEN_TRACKING_OPTED_OUT_KEY = "open_tracking_opted_out"
+        private const val CLICK_TRACKING_OPTED_IN_KEY = "click_tracking_opted_in"
+        private const val CLICK_TRACKING_OPTED_OUT_KEY = "click_tracking_opted_out"
 
         // SMS
         private const val OPT_IN_KEY = "opt_in"
@@ -367,7 +371,19 @@ public sealed class ContactChannel: JsonSerializable {
                 public val commercialOptedIn: Instant? = null,
 
                 /** Date the user opted out of commercial emails. */
-                public val commercialOptedOut: Instant? = null
+                public val commercialOptedOut: Instant? = null,
+
+                /** Date the user opted in to email open tracking. */
+                public val openTrackingOptedIn: Instant? = null,
+
+                /** Date the user opted out of email open tracking. */
+                public val openTrackingOptedOut: Instant? = null,
+
+                /** Date the user opted in to email click tracking. */
+                public val clickTrackingOptedIn: Instant? = null,
+
+                /** Date the user opted out of email click tracking. */
+                public val clickTrackingOptedOut: Instant? = null
             ) : RegistrationInfo() {
 
                 override fun equals(other: Any?): Boolean {
@@ -382,17 +398,22 @@ public sealed class ContactChannel: JsonSerializable {
                     if (transactionalOptedOut != other.transactionalOptedOut) return false
                     if (commercialOptedIn != other.commercialOptedIn) return false
                     if (commercialOptedOut != other.commercialOptedOut) return false
+                    if (openTrackingOptedIn != other.openTrackingOptedIn) return false
+                    if (openTrackingOptedOut != other.openTrackingOptedOut) return false
+                    if (clickTrackingOptedIn != other.clickTrackingOptedIn) return false
+                    if (clickTrackingOptedOut != other.clickTrackingOptedOut) return false
 
                     return true
                 }
 
                 override fun hashCode(): Int = ObjectsCompat.hash(
                     channelId, maskedAddress, transactionalOptedIn, transactionalOptedOut,
-                    commercialOptedIn, commercialOptedOut
+                    commercialOptedIn, commercialOptedOut, openTrackingOptedIn, openTrackingOptedOut,
+                    clickTrackingOptedIn, clickTrackingOptedOut
                 )
 
                 override fun toString(): String {
-                    return "Registered(channelId='$channelId', maskedAddress='$maskedAddress', transactionalOptedIn=$transactionalOptedIn, transactionalOptedOut=$transactionalOptedOut, commercialOptedIn=$commercialOptedIn, commercialOptedOut=$commercialOptedOut)"
+                    return "Registered(channelId='$channelId', maskedAddress='$maskedAddress', transactionalOptedIn=$transactionalOptedIn, transactionalOptedOut=$transactionalOptedOut, commercialOptedIn=$commercialOptedIn, commercialOptedOut=$commercialOptedOut, openTrackingOptedIn=$openTrackingOptedIn, openTrackingOptedOut=$openTrackingOptedOut, clickTrackingOptedIn=$clickTrackingOptedIn, clickTrackingOptedOut=$clickTrackingOptedOut)"
                 }
             }
 
@@ -453,6 +474,18 @@ public sealed class ContactChannel: JsonSerializable {
                     },
                     TRANSACTIONAL_OPTED_OUT_KEY to this.transactionalOptedOut?.let {
                         DateUtils.createIso8601TimeStamp(it)
+                    },
+                    OPEN_TRACKING_OPTED_IN_KEY to this.openTrackingOptedIn?.let {
+                        DateUtils.createIso8601TimeStamp(it)
+                    },
+                    OPEN_TRACKING_OPTED_OUT_KEY to this.openTrackingOptedOut?.let {
+                        DateUtils.createIso8601TimeStamp(it)
+                    },
+                    CLICK_TRACKING_OPTED_IN_KEY to this.clickTrackingOptedIn?.let {
+                        DateUtils.createIso8601TimeStamp(it)
+                    },
+                    CLICK_TRACKING_OPTED_OUT_KEY to this.clickTrackingOptedOut?.let {
+                        DateUtils.createIso8601TimeStamp(it)
                     })
             }.toJsonValue()
 
@@ -485,7 +518,11 @@ public sealed class ContactChannel: JsonSerializable {
                             ),
                             transactionalOptedOut = map.isoDateAsInstant(
                                 TRANSACTIONAL_OPTED_OUT_KEY
-                            )
+                            ),
+                            openTrackingOptedIn = map.isoDateAsInstant(OPEN_TRACKING_OPTED_IN_KEY),
+                            openTrackingOptedOut = map.isoDateAsInstant(OPEN_TRACKING_OPTED_OUT_KEY),
+                            clickTrackingOptedIn = map.isoDateAsInstant(CLICK_TRACKING_OPTED_IN_KEY),
+                            clickTrackingOptedOut = map.isoDateAsInstant(CLICK_TRACKING_OPTED_OUT_KEY)
                         )
 
                         else -> throw JsonException("Unexpected type $type")
