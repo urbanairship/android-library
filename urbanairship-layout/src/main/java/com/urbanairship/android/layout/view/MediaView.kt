@@ -50,6 +50,7 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -294,6 +295,13 @@ internal class MediaView(
                 // has nothing to take, and follows the ratio.
                 width = ceilingWidth?.toFloat() ?: (ceilingHeight!! * ratio)
                 height = ceilingHeight?.toFloat() ?: (width / ratio)
+
+                // A fit that never crops has nothing to fill the box with, so each axis stops at
+                // what the image needs across the other, as iOS's `fittedLength` does.
+                if (mediaFit == MediaFit.CENTER_INSIDE) {
+                    width = min(width, height * ratio)
+                    height = min(height, width / ratio)
+                }
             } else {
                 // No box, so the image's own shape at the width it was offered. Scaling up to that
                 // width is the point: `center_inside` promises never to crop, not never to grow.
