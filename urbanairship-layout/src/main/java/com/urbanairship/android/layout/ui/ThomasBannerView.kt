@@ -12,6 +12,7 @@ import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONS
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import com.urbanairship.android.layout.environment.EnvironmentFrameTracker
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
@@ -61,8 +62,12 @@ public class ThomasBannerView internal constructor(
      */
     public var frameBoundsChangedListener: ((Rect) -> Unit)? = null
 
+    /** Reports this view's bounds as `$environment.frame`: the space the host gives the scene. */
+    private val environmentFrame = EnvironmentFrameTracker { model.publishEnvironment(context, it) }
+
     init {
         id = model.viewId
+        model.publishEnvironment(context, null)
         configureBanner()
     }
 
@@ -227,8 +232,19 @@ public class ThomasBannerView internal constructor(
             .applyTo(this)
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        environmentFrame.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        environmentFrame.onLayout(right - left, bottom - top)
+    }
+
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration?) {
         super.onConfigurationChanged(newConfig)
+        model.publishEnvironment(context, environmentFrame.frame)
         // Re-fit only when the window bounds actually changed, to avoid layout churn.
         val ignoreSafeArea = presentation.getResolvedPlacement(context).shouldIgnoreSafeArea()
         val windowWidth = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)

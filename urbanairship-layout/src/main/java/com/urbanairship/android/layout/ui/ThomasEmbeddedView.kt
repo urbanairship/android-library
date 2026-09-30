@@ -1,12 +1,14 @@
 package com.urbanairship.android.layout.ui
 
 import android.content.Context
+import android.content.res.Configuration
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+import com.urbanairship.android.layout.environment.EnvironmentFrameTracker
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
@@ -39,9 +41,28 @@ internal class ThomasEmbeddedView(
         fun onDismissed()
     }
 
+    /** Reports this view's bounds as `$environment.frame`: the space the host gives the scene. */
+    private val environmentFrame = EnvironmentFrameTracker { model.publishEnvironment(context, it) }
+
     init {
         id = model.viewId
+        model.publishEnvironment(context, null)
         configure()
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        environmentFrame.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        environmentFrame.onLayout(right - left, bottom - top)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        model.publishEnvironment(context, environmentFrame.frame)
     }
 
     private fun configure() {

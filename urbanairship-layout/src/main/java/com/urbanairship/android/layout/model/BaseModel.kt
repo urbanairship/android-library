@@ -9,6 +9,7 @@ import com.urbanairship.Airship
 import com.urbanairship.Platform
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
+import com.urbanairship.android.layout.environment.EnvironmentFrame
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
@@ -105,6 +106,11 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
      * before, so uncertainty belongs on the side of drawing something.
      */
     internal open fun establishesLength(direction: Direction): Boolean = true
+
+    /** See [ModelEnvironment.publishEnvironment]; called on the root model by the root view. */
+    fun publishEnvironment(context: Context, frame: EnvironmentFrame?) {
+        environment.publishEnvironment(context, frame)
+    }
 
     fun createView(
         context: Context,

@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Build
 import android.view.MotionEvent
@@ -18,6 +19,7 @@ import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_PARE
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener
 import androidx.core.view.WindowInsetsCompat
+import com.urbanairship.android.layout.environment.EnvironmentFrameTracker
 import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
@@ -29,7 +31,7 @@ import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 
 internal class ModalView(
     context: Context,
-    model: AnyModel,
+    private val model: AnyModel,
     presentation: ModalPresentation,
     viewEnvironment: ViewEnvironment
 ) : ConstraintLayout(context) {
@@ -56,7 +58,11 @@ internal class ModalView(
 
     private var clickOutsideListener: OnClickListener? = null
 
+    /** Reports this view's bounds as `$environment.frame`: the space the host gives the scene. */
+    private val environmentFrame = EnvironmentFrameTracker { model.publishEnvironment(context, it) }
+
     init {
+        model.publishEnvironment(context, null)
         clipToPadding = false
 
         val placement = presentation.getResolvedPlacement(context)
@@ -159,6 +165,12 @@ internal class ModalView(
         // Lay the shade out over the full view, ignoring the system-bar padding, so it dims
         // edge-to-edge. ConstraintLayout still insets the modal frame within the padding.
         shadeView.layout(0, 0, right - left, bottom - top)
+        environmentFrame.onLayout(right - left, bottom - top)
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        environmentFrame.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     override fun isOpaque(): Boolean = false
@@ -247,4 +259,10 @@ internal class ModalView(
         r.inset(-windowTouchSlop, -windowTouchSlop)
         return !r.contains(event.x.toInt(), event.y.toInt())
     }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        model.publishEnvironment(context, environmentFrame.frame)
+    }
+
 }
