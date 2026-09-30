@@ -55,6 +55,29 @@ public class ScoreViewTest {
     }
 
     @Test
+    public fun testAFewItemsAreAsBigAsTheirText() {
+        val items = scoreRow(start = 1, end = 3, rowHeight = null).children()
+
+        items.forEach { assertEquals(44, it.width) }
+        items.forEach { assertEquals(44, it.height) }
+    }
+
+    @Test
+    public fun testLargeTextStopsAtTheMaximumSide() {
+        val items = scoreRow(start = 1, end = 3, rowHeight = null, fontSize = 40).children()
+
+        items.forEach { assertEquals(66, it.width) }
+    }
+
+    @Test
+    public fun testManyItemsShrinkToTheirShare() {
+        val items = scoreRow(start = 0, end = 10, rowHeight = null).children()
+
+        // 300 wide, less ten gaps of 8, over eleven.
+        items.forEach { assertEquals(20, it.width) }
+    }
+
+    @Test
     public fun testWrappedItemsGrowWithTheirText() {
         val small = wrappedScore(selectedFontSize = 14).children().first()
         val large = wrappedScore(selectedFontSize = 40).children().first()
@@ -125,14 +148,19 @@ public class ScoreViewTest {
     private fun WrappingViewGroup.children(): List<View> =
         (0 until childCount).map { getChildAt(it) }
 
-    private fun scoreRow(start: Int, end: Int): ScoreView {
+    private fun scoreRow(
+        start: Int,
+        end: Int,
+        rowHeight: Int? = this.rowHeight,
+        fontSize: Int = 14
+    ): ScoreView {
         val style = ScoreStyle.NumberRange.fromJson(
             jsonMapOf(
                 "type" to "number_range",
                 "start" to start,
                 "end" to end,
                 "spacing" to spacing,
-                "bindings" to bindings()
+                "bindings" to bindings(fontSize)
             )
         )
 
@@ -144,7 +172,8 @@ public class ScoreViewTest {
         shadowOf(Looper.getMainLooper()).idle()
         view.measure(
             View.MeasureSpec.makeMeasureSpec(rowWidth, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(rowHeight, View.MeasureSpec.EXACTLY)
+            rowHeight?.let { View.MeasureSpec.makeMeasureSpec(it, View.MeasureSpec.EXACTLY) }
+                ?: View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )
         view.layout(0, 0, view.measuredWidth, view.measuredHeight)
         return view

@@ -33,6 +33,13 @@ internal class ScoreItemView(
     androidx.appcompat.R.style.Widget_AppCompat_Button_Borderless
 ), Checkable {
 
+    /** Called with the side the item's text needs, in pixels: once when set, then whenever it changes. */
+    var onTextSideChanged: ((Int) -> Unit)? = null
+        set(value) {
+            field = value
+            value?.invoke(minimumWidth)
+        }
+
     init {
         id = generateViewId()
 
@@ -103,6 +110,7 @@ internal class ScoreItemView(
         minimumHeight = side
         minimumWidth = side
         requestLayout()
+        onTextSideChanged?.invoke(side)
     }
 
     private fun sideFor(appearance: TextAppearance): Float {

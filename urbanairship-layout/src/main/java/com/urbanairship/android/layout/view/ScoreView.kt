@@ -114,6 +114,31 @@ internal class ScoreView(
         constraints
             .build()
             .applyTo(this)
+
+        // After applyTo, which would otherwise reset the caps.
+        viewIds.forEach { id ->
+            val item = findViewById<ScoreItemView>(id)
+            item.onTextSideChanged = { side -> capItemSide(item, side) }
+        }
+    }
+
+    /**
+     * Caps an item in a single row at the side its text needs, and never above [MAX_ITEM_SIDE_DP].
+     *
+     * The item still shrinks to its share of the row when the row can't hold every item at that
+     * size, as iOS and web draw it: three items at 16sp are 44 each, and eleven in a phone-width
+     * row are their share.
+     *
+     * @param item an item in this row's chain.
+     * @param textSide the side the item's text needs, in pixels.
+     */
+    private fun capItemSide(item: View, textSide: Int) {
+        val params = item.layoutParams as? LayoutParams ?: return
+        val side = minOf(textSide, LayoutUtils.dpToPx(context, MAX_ITEM_SIDE_DP))
+        if (params.matchConstraintMaxWidth == side && params.matchConstraintMaxHeight == side) return
+        params.matchConstraintMaxWidth = side
+        params.matchConstraintMaxHeight = side
+        item.requestLayout()
     }
 
     private fun configureWrappingNumberRange(style: WrappingNumberRange) {
@@ -207,4 +232,9 @@ internal class ScoreView(
     }
 
     override fun taps(): Flow<Unit> = clicksChannel.receiveAsFlow()
+
+    private companion object {
+        /** The largest an item in a single row is drawn, whatever its text or share, as on iOS. */
+        const val MAX_ITEM_SIDE_DP = 66
+    }
 }
