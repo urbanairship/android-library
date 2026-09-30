@@ -87,7 +87,8 @@ internal class SceneAction(
             productId = PRODUCT_ID,
             queue = QUEUE,
             created = clock.now(),
-            sendMetadata = pushMessage?.metadata
+            sendMetadata = pushMessage?.metadata,
+            reportingContext = args.reportingContext
         )
 
         scheduler(schedule)
@@ -96,14 +97,18 @@ internal class SceneAction(
     }
 
     private data class Arguments(
-        val scene: AirshipLayout
+        val scene: AirshipLayout,
+        val reportingContext: JsonValue?
     ) {
         companion object {
             private const val KEY_DSL = "dsl"
+            private const val KEY_REPORTING_CONTEXT = "reporting_context"
 
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): Arguments {
-                val sceneJson = value.requireMap()
+                val map = value.requireMap()
+
+                val sceneJson = map
                     .requireField<String>(KEY_DSL)
                     .base64Decoded()
                     ?.rawDeflateInflate()
@@ -111,7 +116,7 @@ internal class SceneAction(
                     ?: throw JsonException("Invalid scene payload")
 
                 val scene = AirshipLayout(JsonValue.parseString(sceneJson))
-                return Arguments(scene)
+                return Arguments(scene, map[KEY_REPORTING_CONTEXT])
             }
         }
     }
