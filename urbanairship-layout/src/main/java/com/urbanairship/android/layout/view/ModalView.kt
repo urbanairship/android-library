@@ -23,6 +23,7 @@ import com.urbanairship.android.layout.environment.EnvironmentFrameTracker
 import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -51,8 +52,10 @@ internal class ModalView(
      */
     internal val shadeView: View
 
+    private val placement: ModalPlacement = presentation.getResolvedPlacement(context)
+
     /** The modal frame's min height as declared by the layout (e.g. `min_height: 100%`). */
-    private val initialModalFrameMinHeight: Int
+    private var initialModalFrameMinHeight: Int = 0
 
     private var lastAppliedImeBottom: Int = 0
 
@@ -65,9 +68,7 @@ internal class ModalView(
         model.seedEnvironment(context)
         clipToPadding = false
 
-        val placement = presentation.getResolvedPlacement(context)
         val size = placement.size
-        val position = placement.position
         val margin = placement.margin
         @ColorInt val shadeColor = placement.shadeColor?.resolve(context)
 
@@ -117,6 +118,19 @@ internal class ModalView(
 
         addView(shadeView, 0)
 
+        applyConstraints()
+
+        if (viewEnvironment.isIgnoringSafeAreas) {
+            setOnApplyWindowInsetsListener(modalFrame) { _: View, insets: WindowInsetsCompat ->
+                ViewCompat.dispatchApplyWindowInsets(containerView, insets)
+            }
+        }
+    }
+
+    /** Sizes and positions the modal frame against the current window. */
+    private fun applyConstraints() {
+        val size = placement.size
+        val margin = placement.margin
         val viewId = modalFrame.id
         val ignoreSafeArea = placement.shouldIgnoreSafeArea()
 
@@ -146,18 +160,12 @@ internal class ModalView(
                 availableHeightPx = availableHeightPx,
                 ignoreSafeArea = ignoreSafeArea
             )
-            .position(position, viewId)
+            .position(placement.position, viewId)
             .build()
 
         constraints.applyTo(this)
         initialModalFrameMinHeight =
             constraints.getConstraint(modalFrame.id).layout.heightMin.coerceAtLeast(0)
-
-        if (viewEnvironment.isIgnoringSafeAreas) {
-            setOnApplyWindowInsetsListener(modalFrame) { _: View, insets: WindowInsetsCompat ->
-                ViewCompat.dispatchApplyWindowInsets(containerView, insets)
-            }
-        }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -262,6 +270,8 @@ internal class ModalView(
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
+        applyConstraints()
+        clampModalFrameMinHeight()
         environmentFrame.onConfigurationChanged()
         requestLayout()
     }
