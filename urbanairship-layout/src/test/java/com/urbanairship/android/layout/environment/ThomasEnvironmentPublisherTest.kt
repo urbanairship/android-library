@@ -16,7 +16,7 @@ import java.time.Duration
 @RunWith(RobolectricTestRunner::class)
 public class ThomasEnvironmentPublisherTest {
 
-    private val publisher = ThomasEnvironmentPublisher(quietPeriodMillis = QUIET)
+    private val publisher = ThomasEnvironmentPublisher(intervalMillis = INTERVAL)
 
     private val initial = ThomasEnvironment(
         darkMode = false,
@@ -34,7 +34,7 @@ public class ThomasEnvironmentPublisherTest {
     }
 
     @Test
-    public fun testAResizeBurstPublishesItsFirstAndLastSizes() {
+    public fun testResizesWithinAnIntervalPublishTheFirstAtOnceAndTheLatestAtItsEnd() {
         publisher.publish(initial)
 
         publisher.publish(sized(410.0))
@@ -44,23 +44,35 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(sized(430.0))
         assertEquals(sized(410.0), publisher.environment.value)
 
-        idle(QUIET)
+        idle(INTERVAL)
         assertEquals(sized(430.0), publisher.environment.value)
     }
 
     @Test
-    public fun testAResizeKeepsTheBurstOpenUntilTheSizeHoldsStill() {
+    public fun testAContinuousResizePublishesOncePerInterval() {
         publisher.publish(initial)
         publisher.publish(sized(410.0))
 
         publisher.publish(sized(420.0))
-        idle(QUIET - 10)
+        idle(INTERVAL)
+        assertEquals(sized(420.0), publisher.environment.value)
+
         publisher.publish(sized(430.0))
-        idle(QUIET - 10)
-        assertEquals(sized(410.0), publisher.environment.value)
+        idle(INTERVAL - 10)
+        assertEquals(sized(420.0), publisher.environment.value)
 
         idle(10)
         assertEquals(sized(430.0), publisher.environment.value)
+    }
+
+    @Test
+    public fun testAResizeAfterAQuietIntervalPublishesAtOnce() {
+        publisher.publish(initial)
+        publisher.publish(sized(410.0))
+        idle(INTERVAL)
+
+        publisher.publish(sized(420.0))
+        assertEquals(sized(420.0), publisher.environment.value)
     }
 
     @Test
@@ -73,7 +85,7 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(dark)
         assertEquals(dark, publisher.environment.value)
 
-        idle(QUIET)
+        idle(INTERVAL)
         assertEquals(dark, publisher.environment.value)
     }
 
@@ -89,7 +101,7 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(laidOut.copy(frameHeight = 220.0))
         assertEquals(laidOut, publisher.environment.value)
 
-        idle(QUIET)
+        idle(INTERVAL)
         assertEquals(laidOut.copy(frameHeight = 220.0), publisher.environment.value)
     }
 
@@ -113,7 +125,7 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(rotated)
 
         assertEquals(rotated, publisher.environment.value)
-        idle(QUIET)
+        idle(INTERVAL)
         assertEquals(rotated, publisher.environment.value)
     }
 
@@ -154,6 +166,6 @@ public class ThomasEnvironmentPublisherTest {
     private fun idle(millis: Long) = shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(millis))
 
     private companion object {
-        const val QUIET = 150L
+        const val INTERVAL = 100L
     }
 }

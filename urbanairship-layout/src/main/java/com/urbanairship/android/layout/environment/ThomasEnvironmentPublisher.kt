@@ -14,16 +14,17 @@ import kotlinx.coroutines.flow.asStateFlow
  * Holds a layout's `$environment` and decides when a new reading of it is published.
  *
  * A change to anything but a size — the window's, the safe window's or the frame's — publishes
- * at once. A size change publishes at the start and end of a resize burst: the first change goes
- * out immediately, and the rest wait until the size has held still for [quietPeriodMillis], then
- * the latest goes out. A window dragged continuously re-evaluates the tree twice rather than on
- * every step. A change of orientation is not a size change and applies at once.
+ * at once. Size changes publish at most once per [intervalMillis]: a size change with no publish
+ * in the last interval goes out immediately, and later ones wait for the interval to end, when
+ * only the latest goes out. A window dragged continuously for 1s re-evaluates the tree about 10
+ * times at the default interval, and the final size always goes out. A change of orientation is
+ * not a size change and applies at once.
  *
- * @param quietPeriodMillis how long the size must hold still to end a burst.
- * @param handler where the end of a burst is scheduled; the main thread's.
+ * @param intervalMillis the shortest time between two published size changes.
+ * @param handler where the end of an interval is scheduled; the main thread's.
  */
 internal class ThomasEnvironmentPublisher(
-    private val quietPeriodMillis: Long = DEFAULT_QUIET_PERIOD_MILLIS,
+    private val intervalMillis: Long = DEFAULT_INTERVAL_MILLIS,
     private val handler: Handler = Handler(Looper.getMainLooper())
 ) {
 
@@ -32,18 +33,23 @@ internal class ThomasEnvironmentPublisher(
     /** The environment last published, or null before the first. */
     val environment: StateFlow<ThomasEnvironment?> = _environment.asStateFlow()
 
-    /** The latest size change waiting for its burst to end, if one arrived after the first. */
+    /** The latest size change waiting for the current interval to end. */
     private var pending: ThomasEnvironment? = null
-    private var inBurst = false
-    private val endBurst = Runnable {
-        inBurst = false
-        pending?.let { _environment.value = it }
+    private var inInterval = false
+    private val endInterval = Runnable {
+        val next = pending
         pending = null
+        if (next == null) {
+            inInterval = false
+        } else {
+            _environment.value = next
+            scheduleIntervalEnd()
+        }
     }
 
     /**
-     * Reads the environment from [context] and [frame] and publishes it, now or at the end of a
-     * resize burst.
+     * Reads the environment from [context] and [frame] and publishes it, now or at the end of the
+     * current interval.
      *
      * @param context a context of the activity the layout is shown in.
      * @param frame the frame the root view last reported, or null before it has been laid out.
@@ -78,20 +84,27 @@ internal class ThomasEnvironmentPublisher(
         if (reading == latest) return
 
         if (!reading.differsOnlyInSize(latest)) {
-            handler.removeCallbacks(endBurst)
-            inBurst = false
+            handler.removeCallbacks(endInterval)
+            inInterval = false
             pending = null
             _environment.value = reading
             return
         }
 
-        if (inBurst) pending = reading else _environment.value = reading
-        inBurst = true
-        handler.removeCallbacks(endBurst)
-        handler.postDelayed(endBurst, quietPeriodMillis)
+        if (inInterval) {
+            pending = reading
+        } else {
+            _environment.value = reading
+            scheduleIntervalEnd()
+        }
+    }
+
+    private fun scheduleIntervalEnd() {
+        inInterval = true
+        handler.postDelayed(endInterval, intervalMillis)
     }
 
     private companion object {
-        const val DEFAULT_QUIET_PERIOD_MILLIS = 150L
+        const val DEFAULT_INTERVAL_MILLIS = 100L
     }
 }
