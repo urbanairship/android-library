@@ -102,21 +102,26 @@ internal abstract class ButtonModel<T, I: Button>(
             it is Outcome.Form && it.command == Outcome.Form.Command.SUBMIT
         }
 
-        if (hasFormValidate) {
-            handleFormValidation(context, resolved, hasFormSubmit)
-        } else if (hasFormSubmit) {
-            handleSubmit(context, resolved)
-        } else {
+        if (!hasFormValidate && !hasFormSubmit) {
             outcomeProcessor.process(resolved, handlerOutcome = delegation)
+            return
+        }
+
+        // Outside any form, form outcomes do nothing and the rest still run, as on iOS.
+        val formIdentifier = layoutState.thomasForm?.formUpdates?.value?.identifier
+        if (formIdentifier == null) {
+            outcomeProcessor.process(resolved.filter { it !is Outcome.Form }, handlerOutcome = delegation)
+        } else if (hasFormValidate) {
+            handleFormValidation(context, resolved, hasFormSubmit, formIdentifier)
+        } else {
+            handleSubmit(context, resolved, formIdentifier)
         }
     }
 
-    private val enclosingFormIdentifier: String?
-        get() = layoutState.thomasForm?.formUpdates?.value?.identifier
-
     private suspend fun handleSubmit(
         context: Context,
-        resolved: List<Outcome>
+        resolved: List<Outcome>,
+        formIdentifier: String
     ) {
         listener?.dismissSoftKeyboard()
 
@@ -124,7 +129,7 @@ internal abstract class ButtonModel<T, I: Button>(
         val delegation = buttonOutcomeHandler(context)
         val submitEvent = LayoutEvent.SubmitForm(
             buttonIdentifier = viewInfo.identifier,
-            formIdentifier = enclosingFormIdentifier
+            formIdentifier = formIdentifier
         ) {
             outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)
         }
@@ -135,17 +140,18 @@ internal abstract class ButtonModel<T, I: Button>(
     private suspend fun handleFormValidation(
         context: Context,
         resolved: List<Outcome>,
-        hasFormSubmit: Boolean
+        hasFormSubmit: Boolean,
+        formIdentifier: String
     ) {
         listener?.dismissSoftKeyboard()
 
         val delegation = buttonOutcomeHandler(context)
         val validateEvent = LayoutEvent.ValidateForm(
             buttonIdentifier = viewInfo.identifier,
-            formIdentifier = enclosingFormIdentifier
+            formIdentifier = formIdentifier
         ) {
             if (hasFormSubmit) {
-                handleSubmit(context, resolved)
+                handleSubmit(context, resolved, formIdentifier)
             } else {
                 val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
                 outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)

@@ -35,9 +35,11 @@ import app.cash.turbine.turbineScope
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
@@ -209,7 +211,7 @@ public class FormControllerTest {
             assertFalse(awaitItem().filteredFields.isEmpty())
 
             // Emit FORM_SUBMIT event
-            val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID))
+            val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID, formIdentifier = PARENT_FORM_ID))
             testEventHandler.broadcast(event)
 
             skipItems(2)
@@ -350,6 +352,17 @@ public class FormControllerTest {
                 )
             )
         }
+
+        val result = slot<ReportingEvent.FormResult>()
+        verify { mockReporter.report(capture(result)) }
+        val child = result.captured.data.toJsonValue().optMap()
+            .opt("forms").optMap().opt(PARENT_FORM_ID).optMap()
+            .opt("children").optMap().opt(CHILD_FORM_ID).optMap()
+        assertEquals("form", child.opt("type").optString())
+        assertEquals(
+            setOf(CONSENT_ID, EMAIL_INPUT_ID),
+            child.opt("children").optMap().keySet()
+        )
     }
 
     private fun addParentTextInput() {
