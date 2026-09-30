@@ -2,21 +2,21 @@
 package com.urbanairship.android.layout.environment
 
 import android.content.Context
-import android.os.Looper
+import android.view.Choreographer
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.android.layout.property.WindowSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
-import java.time.Duration
 
 @RunWith(RobolectricTestRunner::class)
 public class ThomasEnvironmentPublisherTest {
 
-    private val publisher = ThomasEnvironmentPublisher(intervalMillis = INTERVAL)
+    private val frames = FakeNextFrame()
+    private val publisher = ThomasEnvironmentPublisher(nextFrame = frames)
 
     private val initial = ThomasEnvironment(
         darkMode = false,
@@ -34,7 +34,7 @@ public class ThomasEnvironmentPublisherTest {
     }
 
     @Test
-    public fun testResizesWithinAnIntervalPublishTheFirstAtOnceAndTheLatestAtItsEnd() {
+    public fun testResizesWithinAFramePublishTheFirstAtOnceAndTheLatestAtTheNextFrame() {
         publisher.publish(initial)
 
         publisher.publish(sized(410.0))
@@ -44,32 +44,32 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(sized(430.0))
         assertEquals(sized(410.0), publisher.environment.value)
 
-        idle(INTERVAL)
+        frames.advance()
         assertEquals(sized(430.0), publisher.environment.value)
     }
 
     @Test
-    public fun testAContinuousResizePublishesOncePerInterval() {
+    public fun testAContinuousResizePublishesOncePerFrame() {
         publisher.publish(initial)
         publisher.publish(sized(410.0))
 
         publisher.publish(sized(420.0))
-        idle(INTERVAL)
+        frames.advance()
         assertEquals(sized(420.0), publisher.environment.value)
 
         publisher.publish(sized(430.0))
-        idle(INTERVAL - 10)
         assertEquals(sized(420.0), publisher.environment.value)
 
-        idle(10)
+        frames.advance()
         assertEquals(sized(430.0), publisher.environment.value)
     }
 
     @Test
-    public fun testAResizeAfterAQuietIntervalPublishesAtOnce() {
+    public fun testAResizeAfterAQuietFramePublishesAtOnce() {
         publisher.publish(initial)
         publisher.publish(sized(410.0))
-        idle(INTERVAL)
+        frames.advance()
+        assertTrue(frames.isEmpty)
 
         publisher.publish(sized(420.0))
         assertEquals(sized(420.0), publisher.environment.value)
@@ -84,9 +84,7 @@ public class ThomasEnvironmentPublisherTest {
         val dark = sized(420.0).copy(darkMode = true)
         publisher.publish(dark)
         assertEquals(dark, publisher.environment.value)
-
-        idle(INTERVAL)
-        assertEquals(dark, publisher.environment.value)
+        assertTrue(frames.isEmpty)
     }
 
     @Test
@@ -101,7 +99,7 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(laidOut.copy(frameHeight = 220.0))
         assertEquals(laidOut, publisher.environment.value)
 
-        idle(INTERVAL)
+        frames.advance()
         assertEquals(laidOut.copy(frameHeight = 220.0), publisher.environment.value)
     }
 
@@ -125,8 +123,7 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(rotated)
 
         assertEquals(rotated, publisher.environment.value)
-        idle(INTERVAL)
-        assertEquals(rotated, publisher.environment.value)
+        assertTrue(frames.isEmpty)
     }
 
     @Test
@@ -163,9 +160,24 @@ public class ThomasEnvironmentPublisherTest {
 
     private fun sized(width: Double) = initial.copy(windowWidth = width)
 
-    private fun idle(millis: Long) = shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(millis))
+    private class FakeNextFrame : ThomasEnvironmentPublisher.NextFrame {
+        private val callbacks = mutableListOf<Choreographer.FrameCallback>()
 
-    private companion object {
-        const val INTERVAL = 100L
+        val isEmpty: Boolean get() = callbacks.isEmpty()
+
+        override fun post(callback: Choreographer.FrameCallback) {
+            callbacks.add(callback)
+        }
+
+        override fun remove(callback: Choreographer.FrameCallback) {
+            callbacks.remove(callback)
+        }
+
+        /** Runs the callbacks posted before this frame; ones they post wait for the next. */
+        fun advance() {
+            val due = callbacks.toList()
+            callbacks.clear()
+            due.forEach { it.doFrame(0) }
+        }
     }
 }
