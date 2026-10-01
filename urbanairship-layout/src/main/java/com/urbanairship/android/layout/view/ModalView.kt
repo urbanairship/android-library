@@ -175,6 +175,8 @@ internal class ModalView(
                 ignoreSafeArea = ignoreSafeArea
             )
             .position(placement.position, viewId)
+            // applyTo overwrites the frame's layout-param margins with the set's, so they go in the set too.
+            .margin(margin, viewId)
             .build()
 
         constraints.applyTo(this)
