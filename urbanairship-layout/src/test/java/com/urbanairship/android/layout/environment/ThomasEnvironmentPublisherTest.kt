@@ -31,98 +31,111 @@ public class ThomasEnvironmentPublisherTest {
         publisher.publish(initial)
 
         assertEquals(initial, publisher.environment.value)
+        assertTrue(frames.isEmpty)
     }
 
     @Test
-    public fun testResizesWithinAFramePublishTheFirstAtOnceAndTheLatestAtTheNextFrame() {
+    public fun testAChangeIsPublishedAtTheNextFrame() {
         publisher.publish(initial)
 
         publisher.publish(sized(410.0))
-        assertEquals(sized(410.0), publisher.environment.value)
+        assertEquals(initial, publisher.environment.value)
 
+        frames.advance()
+        assertEquals(sized(410.0), publisher.environment.value)
+    }
+
+    @Test
+    public fun testChangesWithinAFramePublishOnlyTheLatest() {
+        publisher.publish(initial)
+
+        publisher.publish(sized(410.0))
         publisher.publish(sized(420.0))
         publisher.publish(sized(430.0))
-        assertEquals(sized(410.0), publisher.environment.value)
+        assertEquals(initial, publisher.environment.value)
 
         frames.advance()
         assertEquals(sized(430.0), publisher.environment.value)
+        assertTrue(frames.isEmpty)
     }
 
     @Test
     public fun testAContinuousResizePublishesOncePerFrame() {
         publisher.publish(initial)
+
         publisher.publish(sized(410.0))
+        frames.advance()
+        assertEquals(sized(410.0), publisher.environment.value)
 
         publisher.publish(sized(420.0))
+        assertEquals(sized(410.0), publisher.environment.value)
         frames.advance()
         assertEquals(sized(420.0), publisher.environment.value)
-
-        publisher.publish(sized(430.0))
-        assertEquals(sized(420.0), publisher.environment.value)
-
-        frames.advance()
-        assertEquals(sized(430.0), publisher.environment.value)
     }
 
     @Test
-    public fun testAResizeAfterAQuietFramePublishesAtOnce() {
+    public fun testAFrameWithNothingPendingSchedulesNoMore() {
         publisher.publish(initial)
         publisher.publish(sized(410.0))
         frames.advance()
+
         assertTrue(frames.isEmpty)
-
-        publisher.publish(sized(420.0))
-        assertEquals(sized(420.0), publisher.environment.value)
     }
 
     @Test
-    public fun testAnythingButTheSizeIsPublishedAtOnceEvenMidBurst() {
+    public fun testAReadingEqualToTheLatestSchedulesNothing() {
         publisher.publish(initial)
-        publisher.publish(sized(410.0))
-        publisher.publish(sized(420.0))
+        publisher.publish(initial)
 
-        val dark = sized(420.0).copy(darkMode = true)
+        assertTrue(frames.isEmpty)
+    }
+
+    @Test
+    public fun testANonSizeChangeAlsoWaitsForTheNextFrame() {
+        publisher.publish(initial)
+
+        val dark = initial.copy(darkMode = true)
         publisher.publish(dark)
+        assertEquals(initial, publisher.environment.value)
+
+        frames.advance()
         assertEquals(dark, publisher.environment.value)
-        assertTrue(frames.isEmpty)
     }
 
     @Test
-    public fun testAFrameResizeIsThrottledAsAWindowResizeIs() {
+    public fun testARotationReplacesAPendingResize() {
+        publisher.publish(initial)
+        publisher.publish(sized(410.0))
+
+        val rotated = initial.copy(windowWidth = 800.0, windowHeight = 400.0)
+        publisher.publish(rotated)
+        frames.advance()
+
+        assertEquals(rotated, publisher.environment.value)
+    }
+
+    @Test
+    public fun testAFrameResizeWaitsForTheNextFrameAsAWindowResizeDoes() {
         publisher.publish(initial)
 
         val laidOut = initial.copy(frameWidth = 300.0, frameHeight = 200.0)
         publisher.publish(laidOut)
-        assertEquals(laidOut, publisher.environment.value)
-
-        publisher.publish(laidOut.copy(frameHeight = 210.0))
         publisher.publish(laidOut.copy(frameHeight = 220.0))
-        assertEquals(laidOut, publisher.environment.value)
+        assertEquals(initial, publisher.environment.value)
 
         frames.advance()
         assertEquals(laidOut.copy(frameHeight = 220.0), publisher.environment.value)
     }
 
     @Test
-    public fun testARotationAppliesAtOnce() {
-        publisher.publish(initial)
-
-        val rotated = initial.copy(windowWidth = 800.0, windowHeight = 400.0)
-        publisher.publish(rotated)
-
-        assertEquals(rotated, publisher.environment.value)
-    }
-
-    @Test
-    public fun testARotationAppliesAtOnceEvenMidBurst() {
+    public fun testAnImmediateReadingPublishesAtOnceAndDropsThePendingOne() {
         publisher.publish(initial)
         publisher.publish(sized(410.0))
-        publisher.publish(sized(420.0))
 
-        val rotated = initial.copy(windowWidth = 800.0, windowHeight = 400.0)
-        publisher.publish(rotated)
+        val laidOut = initial.copy(frameWidth = 400.0, frameHeight = 800.0)
+        publisher.publish(laidOut, immediate = true)
 
-        assertEquals(rotated, publisher.environment.value)
+        assertEquals(laidOut, publisher.environment.value)
         assertTrue(frames.isEmpty)
     }
 
@@ -135,7 +148,7 @@ public class ThomasEnvironmentPublisherTest {
         assertNull(seeded.frameWidth)
 
         val laidOut = seeded.copy(frameWidth = 300.0, frameHeight = 200.0)
-        publisher.publish(laidOut)
+        publisher.publish(laidOut, immediate = true)
         publisher.seed(context)
 
         assertEquals(laidOut, publisher.environment.value)
@@ -154,7 +167,7 @@ public class ThomasEnvironmentPublisherTest {
         val rotated = framed.copy(
             windowWidth = 800.0, windowHeight = 400.0, frameWidth = 800.0, frameHeight = 400.0
         )
-        publisher.publish(rotated)
+        publisher.publish(rotated, immediate = true)
         assertEquals(rotated, publisher.environment.value)
     }
 

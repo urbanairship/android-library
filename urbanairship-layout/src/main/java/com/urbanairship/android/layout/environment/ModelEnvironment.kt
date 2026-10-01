@@ -93,17 +93,18 @@ internal class ModelEnvironment(
 
     /**
      * Publishes the platform, window and frame as `$environment`, re-evaluating every predicate
-     * that reads it; see [ThomasEnvironmentPublisher] for when a resize goes out.
+     * that reads it; see [ThomasEnvironmentPublisher] for when a reading goes out.
      *
      * The root view calls this after a layout that changed its frame or followed a configuration
      * change; see [EnvironmentFrameTracker].
      *
      * @param context a context of the activity the layout is shown in.
      * @param frame the frame the root view last reported, or null before it has been laid out.
+     * @param immediate publishes now rather than at the next frame; for a root view's first layout.
      */
     @MainThread
-    fun publishEnvironment(context: Context, frame: EnvironmentFrame?) {
-        environmentPublisher.publish(context, frame)
+    fun publishEnvironment(context: Context, frame: EnvironmentFrame?, immediate: Boolean = false) {
+        environmentPublisher.publish(context, frame, immediate)
     }
 
     /** See [ThomasEnvironmentPublisher.seed]; the root view calls this when it's created. */

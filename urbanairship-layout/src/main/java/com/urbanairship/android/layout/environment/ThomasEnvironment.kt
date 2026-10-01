@@ -79,20 +79,6 @@ internal data class ThomasEnvironment(
         )
     ).toJsonValue()
 
-    /**
-     * Whether this differs from [other] only in the window's, safe window's or frame's size.
-     *
-     * A change of orientation isn't one, although it is sizes swapping: it applies at once.
-     */
-    fun differsOnlyInSize(other: ThomasEnvironment): Boolean = orientation == other.orientation && copy(
-        windowWidth = other.windowWidth,
-        windowHeight = other.windowHeight,
-        safeWindowWidth = other.safeWindowWidth,
-        safeWindowHeight = other.safeWindowHeight,
-        frameWidth = other.frameWidth,
-        frameHeight = other.frameHeight
-    ) == other
-
     companion object {
         private const val PLATFORM = "platform"
         private const val PLATFORM_ANDROID = "android"
@@ -161,9 +147,11 @@ internal data class EnvironmentFrame(val width: Int?, val height: Int?)
  * configuration change is one reading rather than a window followed by a frame.
  *
  * @param onReport called with the frame after the first layout, after any layout that changed it,
- * and after the first layout following a configuration change.
+ * and after the first layout following a configuration change, and with whether it's the first.
  */
-internal class EnvironmentFrameTracker(private val onReport: (EnvironmentFrame) -> Unit) {
+internal class EnvironmentFrameTracker(
+    private val onReport: (frame: EnvironmentFrame, isFirst: Boolean) -> Unit
+) {
 
     private var fixesWidth = false
     private var fixesHeight = false
@@ -184,9 +172,10 @@ internal class EnvironmentFrameTracker(private val onReport: (EnvironmentFrame) 
             height = height.takeIf { fixesHeight }
         )
         if (laidOut == frame && !configurationChanged) return
+        val isFirst = frame == null
         frame = laidOut
         configurationChanged = false
-        onReport(laidOut)
+        onReport(laidOut, isFirst)
     }
 
     /** Reports on the next layout even if the frame hasn't changed, so the new configuration is read. */

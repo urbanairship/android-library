@@ -62,7 +62,9 @@ internal class ModalView(
     private var clickOutsideListener: OnClickListener? = null
 
     /** Reports this view's bounds as `$environment.frame`: the space the host gives the scene. */
-    private val environmentFrame = EnvironmentFrameTracker { model.publishEnvironment(context, it) }
+    private val environmentFrame = EnvironmentFrameTracker { frame, isFirst ->
+        model.publishEnvironment(context, frame, immediate = isFirst)
+    }
 
     init {
         model.seedEnvironment(context)

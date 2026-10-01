@@ -108,8 +108,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     internal open fun establishesLength(direction: Direction): Boolean = true
 
     /** See [ModelEnvironment.publishEnvironment]; called on the root model by the root view. */
-    fun publishEnvironment(context: Context, frame: EnvironmentFrame?) {
-        environment.publishEnvironment(context, frame)
+    fun publishEnvironment(context: Context, frame: EnvironmentFrame?, immediate: Boolean = false) {
+        environment.publishEnvironment(context, frame, immediate)
     }
 
     /** See [ModelEnvironment.seedEnvironment]; called on the root model by the root view. */

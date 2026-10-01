@@ -93,7 +93,7 @@ public class ThomasEnvironmentTest {
     @Test
     public fun testTheTrackerReportsOnlyTheAxesTheHostFixed() {
         val reported = mutableListOf<EnvironmentFrame>()
-        val tracker = EnvironmentFrameTracker { reported.add(it) }
+        val tracker = EnvironmentFrameTracker { frame, _ -> reported.add(frame) }
 
         tracker.onMeasure(spec(300, MeasureSpec.EXACTLY), spec(1000, MeasureSpec.AT_MOST))
         tracker.onLayout(300, 120)
@@ -112,7 +112,7 @@ public class ThomasEnvironmentTest {
     @Test
     public fun testTheTrackerReportsAfterAConfigurationChangeEvenAtTheSameFrame() {
         val reported = mutableListOf<EnvironmentFrame>()
-        val tracker = EnvironmentFrameTracker { reported.add(it) }
+        val tracker = EnvironmentFrameTracker { frame, _ -> reported.add(frame) }
         tracker.onMeasure(spec(300, MeasureSpec.EXACTLY), spec(200, MeasureSpec.EXACTLY))
         tracker.onLayout(300, 200)
 
@@ -124,11 +124,17 @@ public class ThomasEnvironmentTest {
     }
 
     @Test
-    public fun testARotationIsNotASizeChange() {
-        val rotated = environment.copy(windowWidth = 640.0, windowHeight = 360.0)
+    public fun testTheTrackerMarksOnlyItsFirstReport() {
+        val firsts = mutableListOf<Boolean>()
+        val tracker = EnvironmentFrameTracker { _, isFirst -> firsts.add(isFirst) }
+        tracker.onMeasure(spec(300, MeasureSpec.EXACTLY), spec(200, MeasureSpec.EXACTLY))
 
-        assertFalse(rotated.differsOnlyInSize(environment))
-        assertTrue(environment.copy(windowWidth = 380.0).differsOnlyInSize(environment))
+        tracker.onLayout(300, 200)
+        tracker.onLayout(320, 200)
+        tracker.onConfigurationChanged()
+        tracker.onLayout(320, 200)
+
+        assertEquals(listOf(true, false, false), firsts)
     }
 
     @Test
