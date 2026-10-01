@@ -166,18 +166,9 @@ internal class LedgerStore(
     /**
      * Deletes every event recorded under any of [scopes].
      *
-     * No production caller: retention goes through [retainEvents], and this
-     * exists to mirror the iOS store's surface. Kept rather than deleted for
-     * that parity, but worth knowing two things before wiring it up.
-     *
-     * First, it deletes whole events, not the named scope's share of them —
-     * an event recorded under `[a, b]` is removed entirely when only `b` is
-     * passed, taking `a`'s tally and the recording schedule's own history with
-     * it. Under the single-ID model that could not happen, so this is a
-     * semantic the multi-group change introduced.
-     *
-     * Second, [LedgerScope.Shared] still names one group at a time, which is
-     * the shape of a delete request rather than a leftover from that model.
+     * Deletes whole events, not the named scope's share of them: an event
+     * recorded under `[a, b]` is removed entirely when only `b` is passed,
+     * taking `a`'s tally and the recording schedule's own history with it.
      */
     override suspend fun deleteEvents(scopes: List<LedgerScope>) {
         if (scopes.isEmpty()) {
@@ -269,17 +260,6 @@ internal class LedgerStore(
             )
         }
     }
-
-    /**
-     * How many shared-ID rows the store holds. Test-only.
-     *
-     * Exposed because shared-ID rows are otherwise invisible from outside: a
-     * leak here (a delete that drops events but strands their rows) would grow
-     * the store without ever changing a query result, so nothing else could
-     * catch it.
-     */
-    @VisibleForTesting
-    internal suspend fun sharedIdRowCount(): Int = queue.run { dao.sharedIdRowCount() }
 
     /**
      * Decodes a stored row, or null when its body cannot be parsed (e.g. a

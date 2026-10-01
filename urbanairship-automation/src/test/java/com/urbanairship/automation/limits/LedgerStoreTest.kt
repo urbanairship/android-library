@@ -33,6 +33,19 @@ public class LedgerStoreTest {
         db.close()
     }
 
+    /**
+     * Rows in the shared-group table, read straight from the database.
+     *
+     * Those rows are invisible through the store's own API: a delete that
+     * drops events but strands their rows would grow the table without ever
+     * changing a query result.
+     */
+    private fun sharedIdRowCount(): Int =
+        db.openHelper.readableDatabase.query("SELECT COUNT(*) FROM ledger_shared_ids").use {
+            it.moveToFirst()
+            it.getInt(0)
+        }
+
     private fun triggered(
         scheduleId: String,
         sharedIds: List<String> = emptyList(),
@@ -424,7 +437,7 @@ public class LedgerStoreTest {
     public fun testRecordEventsCanonicalizesDuplicateSharedIds(): TestResult = runTest {
         store.recordEvents(listOf(execution(scheduleId = "s", sharedIds = listOf("g1", "g1", "g1"))))
 
-        assertEquals(1, store.sharedIdRowCount())
+        assertEquals(1, sharedIdRowCount())
         val result = store.events(scheduleId = "s", sharedIds = emptyList())
         assertEquals(listOf("g1"), (result.single() as LedgerEvent.Execution).sharedIds)
     }
@@ -445,7 +458,7 @@ public class LedgerStoreTest {
                 execution(scheduleId = "s", sharedIds = listOf("g1", "g2"), timestamp = old)
             )
         )
-        assertEquals(4, store.sharedIdRowCount())
+        assertEquals(4, sharedIdRowCount())
 
         store.compact(now = date(2020, 1, 1))
 
@@ -454,7 +467,7 @@ public class LedgerStoreTest {
         assertEquals(2, result.first().effectiveCount)
         assertEquals(listOf("g1", "g2"), (result.first() as LedgerEvent.Execution).sharedIds)
         // One event left, so two rows — not four, and not zero.
-        assertEquals(2, store.sharedIdRowCount())
+        assertEquals(2, sharedIdRowCount())
     }
 
     /**
@@ -471,12 +484,12 @@ public class LedgerStoreTest {
                 execution(scheduleId = "schedule-2", sharedIds = listOf("g1"))
             )
         )
-        assertEquals(3, store.sharedIdRowCount())
+        assertEquals(3, sharedIdRowCount())
 
         store.deleteEvents(listOf(LedgerScope.Shared("g1")))
 
         assertTrue(store.events(scheduleId = "schedule-1", sharedIds = listOf("g2")).isEmpty())
-        assertEquals(0, store.sharedIdRowCount())
+        assertEquals(0, sharedIdRowCount())
     }
 
     @Test
@@ -487,13 +500,13 @@ public class LedgerStoreTest {
                 execution(scheduleId = "dead", sharedIds = listOf("dead-group", "other-dead"))
             )
         )
-        assertEquals(3, store.sharedIdRowCount())
+        assertEquals(3, sharedIdRowCount())
 
         store.retainEvents(liveScheduleIds = setOf("live"), liveSharedIds = setOf("live-group"))
 
         assertTrue(store.events(scheduleId = "dead", sharedIds = listOf("dead-group")).isEmpty())
         // Only the surviving event's single row is left.
-        assertEquals(1, store.sharedIdRowCount())
+        assertEquals(1, sharedIdRowCount())
     }
 
     /**
@@ -881,7 +894,7 @@ public class LedgerStoreTest {
         )
         assertEquals(1, db.dao.count())
         // The survivor keeps both of its group rows, not just the live one.
-        assertEquals(2, store.sharedIdRowCount())
+        assertEquals(2, sharedIdRowCount())
     }
 
     /** UTC, matching the zone the compactor buckets in. */

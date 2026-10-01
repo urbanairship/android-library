@@ -172,15 +172,6 @@ internal interface LedgerDao {
     suspend fun count(): Int
 
     /**
-     * The number of shared-group rows the store holds. Test-only: a leak here
-     * (a delete that drops events but strands their rows) would grow the
-     * store without ever changing a query result, so nothing else could catch
-     * it.
-     */
-    @Query("SELECT COUNT(*) FROM ledger_shared_ids")
-    suspend fun sharedIdRowCount(): Int
-
-    /**
      * The smallest stored timestamp, or null when the ledger is empty. Answered
      * from the indexed column, so no body is loaded.
      */

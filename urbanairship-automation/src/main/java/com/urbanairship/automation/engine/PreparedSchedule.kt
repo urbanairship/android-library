@@ -101,20 +101,15 @@ public data class PreparedScheduleInfo(
                 additionalAudienceCheckResult = content.optionalField(ADDITIONAL_AUDIENCE_CHECK_RESULT) ?: true,
                 priority = content.optionalField(PRIORITY) ?: 0,
                 sendMetadata = content.optionalField(SEND_METADATA),
-                // Falls back to the single-ID key this field replaced. A
-                // prepared schedule is persisted as encoded JSON and outlives
-                // an app upgrade, so one prepared by the previous build and
-                // executed by this one would otherwise record its outcome
-                // under no shared group at all — silently missing from the
-                // pooled tally it was meant to count against.
-                //
-                // Canonicalized like LedgerConfig.fromJson, for the same
-                // reason: two otherwise-identical prepared-schedule payloads
-                // naming the same groups in a different order should compare
-                // equal.
+                // A prepared schedule is persisted JSON and outlives an app
+                // upgrade, so one prepared by the previous build still has to
+                // record its outcome under the right groups. Canonicalized
+                // like LedgerConfig, so reordering alone does not make two
+                // otherwise-identical prepared schedules compare unequal.
                 ledgerSharedIds = LedgerSharedIds.canonical(
-                    content.get(LEDGER_SHARED_IDS)?.requireList()?.map { it.requireString() }
-                        ?: content.optionalField<String>(LEGACY_LEDGER_SHARED_ID)?.let { listOf(it) }
+                    LedgerSharedIds.decodeWithLegacyFallback(
+                        content, LEDGER_SHARED_IDS, LEGACY_LEDGER_SHARED_ID
+                    )
                 ),
                 triggerId = content.optionalField(TRIGGER_ID),
                 aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)

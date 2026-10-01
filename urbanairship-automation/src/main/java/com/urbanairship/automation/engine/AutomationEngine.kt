@@ -788,10 +788,11 @@ internal class AutomationEngine(
         // a sibling that is mid-display, because its event is not written until
         // the display ends — the reservation covers exactly that window. A
         // schedule in several groups has to hold all of them, since a sibling
-        // in any one of them would otherwise slip through. Suspending here
-        // holds nothing else up: the pending-execution drain dispatches
-        // attempts without awaiting them, so only these groups queue behind
-        // the holder.
+        // in any one of them would otherwise slip through. The drain
+        // dispatches attempts without awaiting them, so suspending here blocks
+        // no unrelated schedule directly, though a waiter holding part of its
+        // own set can extend the wait to groups outside this one — see
+        // LedgerGroupReservations.withGroup.
         val attempt = groupReservations.withGroup(sharedIds) {
             revalidateAfterWaiting(data, preparedSchedule, sharedIds)
                 ?: runAttempt(data, preparedSchedule)

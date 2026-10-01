@@ -23,16 +23,10 @@ import com.urbanairship.json.JsonValue
     indices = [Index("scheduleId"), Index("timestamp")]
 )
 internal data class LedgerEventEntity(
-    // Long, matching SQLite's own 64-bit ROWID: an autoincrement PK issues a
-    // fresh value for every insert rather than filling the gaps compaction and
-    // retention leave behind, so a device old enough to accumulate more than
-    // Int.MAX_VALUE inserts over its lifetime must not have this (or
-    // LedgerSharedIdEntity.eventId, which references it) silently wrap.
-    //
-    // Monotonic within a table's life, not across the v1 -> v2 rebuild: that
-    // drops the table and so resets the counter to the largest surviving id.
-    // Harmless, because an id is never read outside this table — see
-    // LedgerDatabase.MIGRATION_1_2.
+    // Long, matching SQLite's ROWID: an autoincrement PK issues a fresh value
+    // per insert rather than reusing the gaps compaction leaves, so a
+    // long-lived device must not wrap this (or LedgerSharedIdEntity.eventId,
+    // which references it) at Int.MAX_VALUE.
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
@@ -54,13 +48,10 @@ internal data class LedgerEventEntity(
  * [LedgerEventEntity.body] into its own indexed table so a limit check can
  * find events by group without decoding every row.
  *
- * A foreign key with cascading delete ties a row's lifetime to its event: an
- * event row is only ever removed via a delete on `ledger_events`, and this
- * table must never accumulate rows no query can reach. Room enables SQLite
- * foreign-key enforcement automatically once an entity declares one, so this
- * cascade is enforced by the database itself, not by application code — a
- * `NSBatchDeleteRequest`-style bulk delete that bypasses the object graph
- * still cascades correctly.
+ * A foreign key with cascading delete ties a row's lifetime to its event, so
+ * this table cannot accumulate rows no query can reach. Room turns on SQLite
+ * foreign-key enforcement once an entity declares one, so the cascade holds
+ * for any delete on `ledger_events`, including one issued as raw SQL.
  */
 @Entity(
     tableName = "ledger_shared_ids",

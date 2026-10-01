@@ -182,6 +182,124 @@ public class LedgerDatabaseMigrationTest {
         assertTrue(columns.containsAll(listOf("id", "scheduleId", "timestamp", "body")))
     }
 
+    /**
+     * An empty `sharedId` is dropped rather than promoted. `LedgerSharedIds`
+     * filters empty strings out when canonicalizing, so a promoted `''` row
+     * could never match the schedule config it came from — it would sit in the
+     * table matching nothing.
+     */
+    @Test
+    public fun testMigrationDropsEmptyStringSharedId() {
+        var db = helper.createDatabase(TEST_DB, 1)
+        insertV1Event(db, id = 1, scheduleId = "schedule-1", sharedId = "", timestamp = 1_000)
+        insertV1Event(db, id = 2, scheduleId = "schedule-2", sharedId = "group-1", timestamp = 2_000)
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 2, true, LedgerDatabase.MIGRATION_1_2)
+
+        // Both events survive; only the real group is promoted.
+        val events = db.query("SELECT COUNT(*) FROM ledger_events")
+        events.moveToFirst()
+        assertEquals(2, events.getInt(0))
+        events.close()
+
+        val sharedIds = db.query("SELECT eventId, value FROM ledger_shared_ids")
+        assertEquals(1, sharedIds.count)
+        sharedIds.moveToFirst()
+        assertEquals(2L, sharedIds.getLong(sharedIds.getColumnIndexOrThrow("eventId")))
+        assertEquals("group-1", sharedIds.getString(sharedIds.getColumnIndexOrThrow("value")))
+        sharedIds.close()
+    }
+
+    /**
+     * A migration that throws leaves a usable, empty v2 database rather than
+     * crashing on open. Simulated with a leftover `ledger_events_new` from an
+     * interrupted earlier attempt, which makes the rebuild's `CREATE TABLE`
+     * fail.
+     *
+     * The device loses its ledger — every pooled limit restarts from zero —
+     * which is the deliberate trade for not crashing the host app.
+     */
+    @Test
+    public fun testFailedMigrationRecoversToEmptyV2Schema() {
+        var db = helper.createDatabase(TEST_DB, 1)
+        insertV1Event(db, id = 1, scheduleId = "schedule-1", sharedId = "group-1", timestamp = 1_000)
+        db.execSQL("CREATE TABLE ledger_events_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 2, true, LedgerDatabase.MIGRATION_1_2)
+
+        // Both v2 tables exist and are empty, and the schema still validates
+        // against 2.json (runMigrationsAndValidate above would have thrown).
+        val events = db.query("SELECT COUNT(*) FROM ledger_events")
+        events.moveToFirst()
+        assertEquals(0, events.getInt(0))
+        events.close()
+
+        val sharedIds = db.query("SELECT COUNT(*) FROM ledger_shared_ids")
+        sharedIds.moveToFirst()
+        assertEquals(0, sharedIds.getInt(0))
+        sharedIds.close()
+
+        // Usable afterwards: the cascade is wired up on the recovered schema.
+        db.execSQL("PRAGMA foreign_keys=ON")
+        db.execSQL(
+            "INSERT INTO ledger_events (scheduleId, timestamp, body) " +
+                "VALUES ('s', 1, '{}')"
+        )
+        db.execSQL("INSERT INTO ledger_shared_ids (eventId, value) VALUES (1, 'g')")
+        db.execSQL("DELETE FROM ledger_events WHERE id = 1")
+        val remaining = db.query("SELECT COUNT(*) FROM ledger_shared_ids")
+        remaining.moveToFirst()
+        assertEquals(0, remaining.getInt(0))
+        remaining.close()
+    }
+
+    /**
+     * `tryRecover` clears whatever a failed attempt left behind, wherever it
+     * stopped. Driven directly because the failure points it has to survive —
+     * a throw after `ledger_shared_ids` exists, or with the temp table still
+     * staged — are not all reachable by making the real migration fail.
+     */
+    @Test
+    public fun testRecoverClearsAPartiallyBuiltSchema() {
+        val db = helper.createDatabase(TEST_DB, 1)
+        // Every table a failed attempt could have left, populated.
+        db.execSQL(
+            "CREATE TEMP TABLE ledger_events_legacy_shared_ids AS " +
+                "SELECT 1 AS eventId, 'stale' AS value"
+        )
+        db.execSQL("CREATE TABLE ledger_events_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+        db.execSQL(
+            "CREATE TABLE ledger_shared_ids (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "eventId INTEGER NOT NULL, value TEXT NOT NULL)"
+        )
+        db.execSQL("INSERT INTO ledger_shared_ids (eventId, value) VALUES (99, 'stale')")
+
+        LedgerDatabase.MIGRATION_1_2.tryRecover(db, IllegalStateException("boom"))
+
+        // The staging and scratch tables are gone...
+        assertEquals(0, tableCount(db, "ledger_events_legacy_shared_ids"))
+        assertEquals(0, tableCount(db, "ledger_events_new"))
+        // ...and both v2 tables are present and empty, including the stale row.
+        assertEquals(0, rowCount(db, "ledger_events"))
+        assertEquals(0, rowCount(db, "ledger_shared_ids"))
+        db.close()
+    }
+
+    /** 1 if a table or temp table of this name exists, else 0. */
+    private fun tableCount(db: androidx.sqlite.db.SupportSQLiteDatabase, name: String): Int =
+        db.query(
+            "SELECT COUNT(*) FROM (" +
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='$name' " +
+                "UNION ALL " +
+                "SELECT name FROM sqlite_temp_master WHERE type='table' AND name='$name')"
+        ).use { it.moveToFirst(); it.getInt(0) }
+
+    private fun rowCount(db: androidx.sqlite.db.SupportSQLiteDatabase, name: String): Int =
+        db.query("SELECT COUNT(*) FROM $name").use { it.moveToFirst(); it.getInt(0) }
+
     private fun insertV1Event(
         db: androidx.sqlite.db.SupportSQLiteDatabase,
         id: Int,

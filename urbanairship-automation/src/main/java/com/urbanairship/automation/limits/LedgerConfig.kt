@@ -22,28 +22,15 @@ import com.urbanairship.json.optionalField
  * whether it reads those groups' history back itself. Whether it does is
  * decided by [LimitConfig] (`type: 'shared'` vs `'self'`), not by this field.
  *
- * [sharedIds] is always in canonical form (non-empty, sorted, de-duplicated,
- * or null) regardless of how a [LedgerConfig] is built — so two configs
- * naming the same set of groups compare equal regardless of the order the
- * backend happened to list them in, which is what lets
- * [com.urbanairship.automation.AutomationSchedule] equality treat an
- * unchanged schedule as unchanged across a re-fetch that merely reorders this
- * array. The primary constructor is private so this holds for every
- * construction path, not only [fromJson] — the public entry point is the
- * companion's `invoke`, which canonicalizes before delegating to it.
+ * [sharedIds] is always canonical (non-empty, sorted, de-duplicated, or
+ * null), whichever entry point built the config, so two configs naming the
+ * same groups compare equal however the backend ordered them. That keeps a
+ * re-fetch which only reorders the array from reading as a changed schedule
+ * and invalidating a prepared execution. The primary constructor is private
+ * so this holds for every path; construct through the companion's `invoke`.
  *
- * That canonical-at-the-boundary rule is a deliberate divergence from iOS,
- * which holds the decoded array verbatim here and canonicalizes only in the
- * derived `AutomationSchedule.ledgerSharedIDs`. Three behaviours differ as a
- * result: re-encoding a payload normalizes the array instead of preserving it,
- * an explicit `[]` is dropped rather than round-tripped, and a re-fetch that
- * only reorders `shared_ids` compares equal here where iOS treats it as a
- * changed schedule and invalidates a prepared execution. The last of those is
- * the reason for the divergence — spurious invalidation cancels a prepared
- * message over a difference that means nothing — and the same normalization is
- * applied to [com.urbanairship.automation.engine.PreparedScheduleInfo] for
- * consistency. Worth reconciling with iOS rather than leaving the two
- * platforms to behave differently on the same payload.
+ * iOS canonicalizes later, in its derived accessor, so the same payload can
+ * invalidate there and not here.
  */
 internal data class LedgerConfig private constructor(
     val sharedIds: List<String>? = null
@@ -58,30 +45,20 @@ internal data class LedgerConfig private constructor(
             LedgerConfig(sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds))
 
         /**
-         * Accepts the single-ID `shared_id` this field replaced, so a payload
-         * written against the older shape still pools. `shared_ids` wins when
-         * both are present.
-         *
-         * Worth the branch because the failure it prevents is silent and
-         * wrong in the expensive direction: an unrecognized key parses to no
-         * shared group at all, which is indistinguishable from "pooling was
-         * never configured," and every variant of an experiment would then
-         * spend its own full budget instead of the one they were meant to
-         * share.
+         * Accepts the single-ID `shared_id` this field replaced; `shared_ids`
+         * wins when both are present. See
+         * [LedgerSharedIds.decodeWithLegacyFallback].
          */
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): LedgerConfig {
             val content = value.requireMap()
-            val current = content.get(SHARED_IDS)?.requireList()?.map { it.requireString() }
-            val sharedIds = current
-                ?: content.optionalField<String>(LEGACY_SHARED_ID)?.let { listOf(it) }
-            // Binds to the private primary constructor rather than the
-            // `invoke` factory above: a visible constructor always wins over a
-            // companion `invoke`, and inside the companion the constructor is
-            // visible. Hence the repeated `canonicalOrNull` — the constructor
-            // does not canonicalize, its callers do, and here that is the
-            // point, since this is the one call site that also has to fold in
-            // the legacy key first.
+            val sharedIds = LedgerSharedIds.decodeWithLegacyFallback(
+                content, SHARED_IDS, LEGACY_SHARED_ID
+            )
+            // Binds to the private primary constructor, not `invoke`: a
+            // visible constructor wins, and it is visible inside the
+            // companion. Hence canonicalizing here rather than relying on the
+            // factory to do it.
             return LedgerConfig(sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds))
         }
     }

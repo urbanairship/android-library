@@ -3,6 +3,7 @@
 package com.urbanairship.automation.limits
 
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -146,6 +147,33 @@ internal sealed class LedgerScope {
  * [LedgerGroupReservations] the same lock ordering.
  */
 internal object LedgerSharedIds {
+
+    /**
+     * The shared IDs in [content], reading [currentKey] and falling back to
+     * the single-ID [legacyKey] it replaced. Null when neither is present.
+     *
+     * Not canonicalized: where that happens differs by call site, since an
+     * event defers it to the storage-write boundary while a config does it on
+     * parse. An explicitly empty array means "no pooling" and does not fall
+     * through to the legacy key.
+     *
+     * The fallback itself is what matters. A payload or persisted row written
+     * by an older build decodes to no shared group at all without it, which is
+     * indistinguishable from pooling never having been configured — every
+     * variant of an experiment then spends its own full budget.
+     *
+     * @param content The decoded object to read.
+     * @param currentKey The array key.
+     * @param legacyKey The single-string key it replaced.
+     * @return The IDs as written, or null if neither key is present.
+     */
+    @Throws(JsonException::class)
+    fun decodeWithLegacyFallback(
+        content: JsonMap,
+        currentKey: String,
+        legacyKey: String
+    ): List<String>? = content.get(currentKey)?.requireList()?.map { it.requireString() }
+        ?: content.optionalField<String>(legacyKey)?.let { listOf(it) }
 
     /**
      * The canonical form of [ids]: non-empty, de-duplicated, sorted. Empty
@@ -321,8 +349,9 @@ internal sealed class LedgerEvent : JsonSerializable {
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): LedgerEvent {
             val content = value.requireMap()
-            val sharedIds = content.get(SHARED_IDS)?.requireList()?.map { it.requireString() }
-                ?: content.optionalField<String>(LEGACY_SHARED_ID)?.let { listOf(it) }
+            val sharedIds = LedgerSharedIds.decodeWithLegacyFallback(
+                content, SHARED_IDS, LEGACY_SHARED_ID
+            )
             return when (LedgerEventType.fromJson(content.require(TYPE))) {
                 LedgerEventType.TRIGGERED -> Triggered(
                     scheduleId = content.requireField(SCHEDULE_ID),

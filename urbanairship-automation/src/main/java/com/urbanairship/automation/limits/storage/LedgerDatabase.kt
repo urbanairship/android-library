@@ -10,9 +10,9 @@ import androidx.room.Room
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.db.RecoverableMigration
 import com.urbanairship.json.JsonTypeConverters
 import java.io.File
 
@@ -29,29 +29,31 @@ internal abstract class LedgerDatabase : RoomDatabase() {
         /**
          * Moves the single scalar `sharedId` column onto its own one-to-many
          * table, so an event can belong to several shared groups at once.
-         *
-         * Unlike a Core Data lightweight migration, a plain SQL rebuild has no
-         * mapping limitation that would force a device's pooled-group
-         * association to reset: every non-null `sharedId` carries forward as
-         * that event's one row in [LedgerSharedIdEntity], alongside its
-         * unchanged per-schedule history.
+         * Every non-null, non-empty `sharedId` carries forward as that event's
+         * one row in [LedgerSharedIdEntity].
          *
          * `ledger_events` is rebuilt (copy, drop, rename) rather than altered
-         * in place, since dropping a column is gated on the SQLite version
-         * bundled with the device's OS. The old column's values are staged in
-         * a temp table first, and `ledger_shared_ids` (with its foreign key to
-         * `ledger_events`) is only created once the rebuilt table has taken
-         * its final name — SQLite only reliably rewrites a foreign key's
-         * table reference on rename from 3.25.3 onward, and Android's bundled
-         * SQLite version varies by OS level, so this ordering avoids the
-         * question entirely rather than relying on that fix being present.
+         * in place: dropping a column is gated on the device's bundled SQLite
+         * version. Row ids are copied explicitly, because the staged
+         * shared-group rows reference them.
+         *
+         * Order matters. `ledger_shared_ids` is created only after the rebuilt
+         * table has taken its final name, since SQLite only reliably rewrites a
+         * foreign key's table reference on rename from 3.25.3 onward.
+         *
+         * Recovers by dropping to an empty v2 schema. Losing the ledger costs a
+         * device its display history — every pooled limit restarts from zero —
+         * but a throw here is an unhandled crash on database open.
          */
-        internal val MIGRATION_1_2: Migration = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
+        internal val MIGRATION_1_2: RecoverableMigration = object : RecoverableMigration(1, 2) {
+            override fun tryMigrate(db: SupportSQLiteDatabase) {
+                // Empty strings are excluded alongside NULL: `LedgerSharedIds`
+                // drops them when canonicalizing, so a promoted `''` row would
+                // never match the schedule config it came from.
                 db.execSQL(
                     "CREATE TEMP TABLE ledger_events_legacy_shared_ids AS " +
                         "SELECT id AS eventId, sharedId AS value FROM ledger_events " +
-                        "WHERE sharedId IS NOT NULL"
+                        "WHERE sharedId IS NOT NULL AND sharedId != ''"
                 )
 
                 db.execSQL(
@@ -65,19 +67,34 @@ internal abstract class LedgerDatabase : RoomDatabase() {
                     "INSERT INTO ledger_events_new (id, scheduleId, timestamp, body) " +
                         "SELECT id, scheduleId, timestamp, body FROM ledger_events"
                 )
-                // The rebuild copies ids explicitly, so every event keeps the id
-                // the staged `ledger_shared_ids` rows reference. It does not
-                // carry the AUTOINCREMENT high-water mark across, though:
-                // `DROP TABLE` takes the old table's `sqlite_sequence` row with
-                // it, leaving the counter at the largest surviving id rather
-                // than the largest ever issued. Deliberately not repaired —
-                // nothing reads an event id outside this table, so no row can
-                // collide, and writing to `sqlite_sequence` by hand inside a
-                // migration is a real risk taken for no behavioural gain. See
-                // `LedgerEventEntity`, which says what this does and does not
-                // guarantee.
                 db.execSQL("DROP TABLE ledger_events")
                 db.execSQL("ALTER TABLE ledger_events_new RENAME TO ledger_events")
+                createV2Schema(db)
+
+                db.execSQL(
+                    "INSERT INTO ledger_shared_ids (eventId, value) " +
+                        "SELECT eventId, value FROM ledger_events_legacy_shared_ids"
+                )
+                db.execSQL("DROP TABLE ledger_events_legacy_shared_ids")
+            }
+
+            override fun tryRecover(db: SupportSQLiteDatabase, err: Exception) {
+                db.execSQL("DROP TABLE IF EXISTS ledger_events_legacy_shared_ids")
+                db.execSQL("DROP TABLE IF EXISTS ledger_shared_ids")
+                db.execSQL("DROP TABLE IF EXISTS ledger_events_new")
+                db.execSQL("DROP TABLE IF EXISTS ledger_events")
+                db.execSQL(
+                    "CREATE TABLE ledger_events (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`scheduleId` TEXT NOT NULL, " +
+                        "`timestamp` INTEGER NOT NULL, " +
+                        "`body` TEXT NOT NULL)"
+                )
+                createV2Schema(db)
+            }
+
+            /** The v2 indices and the shared-group table, on an existing `ledger_events`. */
+            private fun createV2Schema(db: SupportSQLiteDatabase) {
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_ledger_events_scheduleId` " +
                         "ON `ledger_events` (`scheduleId`)"
@@ -86,9 +103,8 @@ internal abstract class LedgerDatabase : RoomDatabase() {
                     "CREATE INDEX IF NOT EXISTS `index_ledger_events_timestamp` " +
                         "ON `ledger_events` (`timestamp`)"
                 )
-
                 db.execSQL(
-                    "CREATE TABLE `ledger_shared_ids` (" +
+                    "CREATE TABLE IF NOT EXISTS `ledger_shared_ids` (" +
                         "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                         "`eventId` INTEGER NOT NULL, " +
                         "`value` TEXT NOT NULL, " +
@@ -103,12 +119,6 @@ internal abstract class LedgerDatabase : RoomDatabase() {
                     "CREATE INDEX IF NOT EXISTS `index_ledger_shared_ids_eventId` " +
                         "ON `ledger_shared_ids` (`eventId`)"
                 )
-
-                db.execSQL(
-                    "INSERT INTO ledger_shared_ids (eventId, value) " +
-                        "SELECT eventId, value FROM ledger_events_legacy_shared_ids"
-                )
-                db.execSQL("DROP TABLE ledger_events_legacy_shared_ids")
             }
         }
 
