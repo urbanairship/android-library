@@ -1,6 +1,6 @@
 package com.urbanairship.android.layout.environment
 
-import android.content.Context
+import android.view.View
 import androidx.annotation.MainThread
 import com.urbanairship.UALog
 import com.urbanairship.Airship
@@ -98,19 +98,19 @@ internal class ModelEnvironment(
      * The root view calls this after a layout that changed its frame or followed a configuration
      * change; see [EnvironmentFrameTracker].
      *
-     * @param context a context of the activity the layout is shown in.
+     * @param rootView the layout's root view, whose window is read.
      * @param frame the frame the root view last reported, or null before it has been laid out.
      * @param immediate publishes now rather than at the next frame; for a root view's first layout.
      */
     @MainThread
-    fun publishEnvironment(context: Context, frame: EnvironmentFrame?, immediate: Boolean = false) {
-        environmentPublisher.publish(context, frame, immediate)
+    fun publishEnvironment(rootView: View, frame: EnvironmentFrame?, immediate: Boolean = false) {
+        environmentPublisher.publish(rootView, frame, immediate)
     }
 
     /** See [ThomasEnvironmentPublisher.seed]; the root view calls this when it's created. */
     @MainThread
-    fun seedEnvironment(context: Context) {
-        environmentPublisher.seed(context)
+    fun seedEnvironment(rootView: View) {
+        environmentPublisher.seed(rootView)
     }
 }
 

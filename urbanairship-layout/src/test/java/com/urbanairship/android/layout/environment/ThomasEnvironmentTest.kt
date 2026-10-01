@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.environment
 
 import android.content.Context
+import android.view.View
 import android.view.View.MeasureSpec
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.android.layout.property.WindowSize
@@ -84,7 +85,7 @@ public class ThomasEnvironmentTest {
         val context: Context = ApplicationProvider.getApplicationContext()
         val density = context.resources.displayMetrics.density.toDouble()
 
-        val read = ThomasEnvironment.from(context, EnvironmentFrame(width = 300, height = null))
+        val read = ThomasEnvironment.from(View(context), EnvironmentFrame(width = 300, height = null))
 
         assertEquals(300 / density, read.frameWidth!!, 0.0)
         assertNull(read.frameHeight)
@@ -141,7 +142,7 @@ public class ThomasEnvironmentTest {
     @Config(qualifiers = "ar-rEG-ldrtl")
     public fun testReadsTheLayoutDirectionAndLocale() {
         val context: Context = ApplicationProvider.getApplicationContext()
-        val json = ThomasEnvironment.from(context, null).toJsonValue().optMap()
+        val json = ThomasEnvironment.from(View(context), null).toJsonValue().optMap()
 
         assertEquals("rtl", json.opt("layout_direction").string)
         assertEquals(
@@ -170,7 +171,7 @@ public class ThomasEnvironmentTest {
     @Config(qualifiers = "w360dp-h640dp-night", fontScale = 1.3f)
     public fun testReadsTheWindowAndConfiguration() {
         val context: Context = ApplicationProvider.getApplicationContext()
-        val read = ThomasEnvironment.from(context, null)
+        val read = ThomasEnvironment.from(View(context), null)
 
         assertTrue(read.darkMode)
         assertEquals(1.3, read.textScale, 0.0)

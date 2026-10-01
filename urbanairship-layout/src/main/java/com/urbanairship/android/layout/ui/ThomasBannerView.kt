@@ -64,12 +64,12 @@ public class ThomasBannerView internal constructor(
 
     /** Reports this view's bounds as `$environment.frame`: the space the host gives the scene. */
     private val environmentFrame = EnvironmentFrameTracker { frame, isFirst ->
-        model.publishEnvironment(context, frame, immediate = isFirst)
+        model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
     init {
         id = model.viewId
-        model.seedEnvironment(context)
+        model.seedEnvironment(this)
         configureBanner()
     }
 
@@ -201,8 +201,9 @@ public class ThomasBannerView internal constructor(
         // Percent base for the overflow/fitting math: the full window. Note that
         // ConstraintLayout's constrainPercent* sizing is parent-relative, so this base only
         // matches the frame's actual percent sizing when the banner host fills the window.
-        val windowWidthPx = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
-        val windowHeightPx = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
+        val window = ResourceUtils.getWindowPixels(context, this)
+        val windowWidthPx = window.width(ignoreSafeArea)
+        val windowHeightPx = window.height(ignoreSafeArea)
 
         // Overflow bound / fitted-size target: window minus the frame's outer margins.
         val horizontalMargin = (margin?.start ?: 0) + (margin?.end ?: 0)
@@ -216,7 +217,7 @@ public class ThomasBannerView internal constructor(
         lastWindowWidth = windowWidthPx
         lastWindowHeight = windowHeightPx
 
-        ConstraintSetBuilder.newBuilder(context)
+        ConstraintSetBuilder.newBuilder(context, this)
             .position(placement.position.asPosition(), viewId)
             .width(size, ignoreSafeArea, viewId, margin = margin)
             .height(size, ignoreSafeArea, viewId, margin = margin)
@@ -250,9 +251,8 @@ public class ThomasBannerView internal constructor(
         requestLayout()
         // Re-fit only when the window bounds actually changed, to avoid layout churn.
         val ignoreSafeArea = presentation.getResolvedPlacement(context).shouldIgnoreSafeArea()
-        val windowWidth = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
-        val windowHeight = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
-        if (windowWidth != lastWindowWidth || windowHeight != lastWindowHeight) {
+        val window = ResourceUtils.getWindowPixels(context, this)
+        if (window.width(ignoreSafeArea) != lastWindowWidth || window.height(ignoreSafeArea) != lastWindowHeight) {
             applySizeConstraints()
         }
     }

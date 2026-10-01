@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.environment
 
-import android.content.Context
 import android.view.View
 import androidx.core.os.ConfigurationCompat
 import com.urbanairship.android.layout.property.Orientation
@@ -100,24 +99,26 @@ internal data class ThomasEnvironment(
         private const val REGION = "region"
 
         /**
-         * Reads the environment from [context]'s window and configuration, and [frame]'s size.
+         * Reads the environment from [rootView]'s window and configuration, and [frame]'s size.
          *
-         * @param context a context of the activity the layout is shown in, so the window is its own.
+         * @param rootView the layout's root view, so the window is the one it's shown in.
          * @param frame the frame the root view last reported, or null before it has been laid out.
          * @return the environment as it stands now.
          */
-        fun from(context: Context, frame: EnvironmentFrame?): ThomasEnvironment {
+        fun from(rootView: View, frame: EnvironmentFrame?): ThomasEnvironment {
+            val context = rootView.context
             val density = context.resources.displayMetrics.density.toDouble()
             val configuration = context.resources.configuration
+            val window = ResourceUtils.getWindowPixels(context, rootView)
             return ThomasEnvironment(
                 darkMode = ResourceUtils.isUiModeNight(context),
                 // Through its decimal string, so a scale of 1.3f is 1.3 rather than 1.2999999523.
                 textScale = configuration.fontScale.toString().toDouble(),
-                windowWidth = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea = true) / density,
-                windowHeight = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea = true) / density,
+                windowWidth = window.width / density,
+                windowHeight = window.height / density,
                 windowSize = ResourceUtils.getWindowSize(context),
-                safeWindowWidth = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea = false) / density,
-                safeWindowHeight = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea = false) / density,
+                safeWindowWidth = window.safeWidth / density,
+                safeWindowHeight = window.safeHeight / density,
                 frameWidth = frame?.width?.let { it / density },
                 frameHeight = frame?.height?.let { it / density },
                 isRtl = configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL,

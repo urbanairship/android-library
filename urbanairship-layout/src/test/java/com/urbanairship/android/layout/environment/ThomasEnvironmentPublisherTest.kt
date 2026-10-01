@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.environment
 
 import android.content.Context
 import android.view.Choreographer
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.android.layout.property.WindowSize
 import org.junit.Assert.assertEquals
@@ -141,15 +142,15 @@ public class ThomasEnvironmentPublisherTest {
 
     @Test
     public fun testSeedingPublishesOnlyTheFirstReading() {
-        val context: Context = ApplicationProvider.getApplicationContext()
+        val rootView = View(ApplicationProvider.getApplicationContext<Context>())
 
-        publisher.seed(context)
+        publisher.seed(rootView)
         val seeded = requireNotNull(publisher.environment.value)
         assertNull(seeded.frameWidth)
 
         val laidOut = seeded.copy(frameWidth = 300.0, frameHeight = 200.0)
         publisher.publish(laidOut, immediate = true)
-        publisher.seed(context)
+        publisher.seed(rootView)
 
         assertEquals(laidOut, publisher.environment.value)
     }
@@ -157,11 +158,11 @@ public class ThomasEnvironmentPublisherTest {
     /** A recreated root view leaves the last frame in place, and its first layout lands at once. */
     @Test
     public fun testARecreatedRootViewsFirstLayoutAppliesAtOnce() {
-        val context: Context = ApplicationProvider.getApplicationContext()
+        val rootView = View(ApplicationProvider.getApplicationContext<Context>())
         val framed = initial.copy(frameWidth = 400.0, frameHeight = 800.0)
         publisher.publish(framed)
 
-        publisher.seed(context)
+        publisher.seed(rootView)
         assertEquals(framed, publisher.environment.value)
 
         val rotated = framed.copy(

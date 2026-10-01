@@ -27,13 +27,14 @@ import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.WindowPixels
 import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 
 internal class ModalView(
     context: Context,
     private val model: AnyModel,
-    presentation: ModalPresentation,
+    private val presentation: ModalPresentation,
     viewEnvironment: ViewEnvironment
 ) : ConstraintLayout(context) {
 
@@ -54,6 +55,15 @@ internal class ModalView(
 
     private val placement: ModalPlacement = presentation.getResolvedPlacement(context)
 
+    /**
+     * Set once a configuration change resolves a different placement. `ModalActivity` recreates
+     * for that, but asynchronously, so until then this view stops applying and reporting the old one.
+     */
+    private var isPlacementSuperseded = false
+
+    /** The window [applyConstraints] last sized the frame against. */
+    private var constrainedWindow: WindowPixels? = null
+
     /** The modal frame's min height as declared by the layout (e.g. `min_height: 100%`). */
     private var initialModalFrameMinHeight: Int = 0
 
@@ -63,11 +73,11 @@ internal class ModalView(
 
     /** Reports this view's bounds as `$environment.frame`: the space the host gives the scene. */
     private val environmentFrame = EnvironmentFrameTracker { frame, isFirst ->
-        model.publishEnvironment(context, frame, immediate = isFirst)
+        model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
     init {
-        model.seedEnvironment(context)
+        model.seedEnvironment(this)
         clipToPadding = false
 
         val size = placement.size
@@ -137,8 +147,10 @@ internal class ModalView(
         val ignoreSafeArea = placement.shouldIgnoreSafeArea()
 
         // Percent base: the full window (matches ConstraintLayout's constrainPercent*).
-        val windowWidthPx = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
-        val windowHeightPx = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
+        val window = ResourceUtils.getWindowPixels(context, this)
+        constrainedWindow = window
+        val windowWidthPx = window.width(ignoreSafeArea)
+        val windowHeightPx = window.height(ignoreSafeArea)
 
         // Overflow bound / fitted-size target: window minus the frame's outer margins.
         val horizontalMargin = (margin?.start ?: 0) + (margin?.end ?: 0)
@@ -149,7 +161,7 @@ internal class ModalView(
         val availableWidthPx = (windowWidthPx - horizontalMarginPx).coerceAtLeast(0)
         val availableHeightPx = (windowHeightPx - verticalMarginPx).coerceAtLeast(0)
 
-        val constraints = ConstraintSetBuilder.newBuilder(context)
+        val constraints = ConstraintSetBuilder.newBuilder(context, this)
             .constrainWithinParent(viewId)
             .width(size, ignoreSafeArea, viewId, margin = margin)
             .height(size, ignoreSafeArea, viewId, margin = margin)
@@ -175,7 +187,7 @@ internal class ModalView(
         // Lay the shade out over the full view, ignoring the system-bar padding, so it dims
         // edge-to-edge. ConstraintLayout still insets the modal frame within the padding.
         shadeView.layout(0, 0, right - left, bottom - top)
-        environmentFrame.onLayout(right - left, bottom - top)
+        if (!isPlacementSuperseded) environmentFrame.onLayout(right - left, bottom - top)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -227,6 +239,9 @@ internal class ModalView(
         // shows, but onApplyWindowInsets is not re-dispatched. Re-clamp here so the modal
         // frame's min height tracks the resized window.
         post {
+            if (isPlacementSuperseded) return@post
+            // Below API 30 the window is only readable once laid out, after init's constraints.
+            if (ResourceUtils.getWindowPixels(context, this) != constrainedWindow) applyConstraints()
             clampModalFrameMinHeight()
         }
     }
@@ -272,6 +287,11 @@ internal class ModalView(
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
+        if (isPlacementSuperseded) return
+        if (presentation.getResolvedPlacement(context) !== placement) {
+            isPlacementSuperseded = true
+            return
+        }
         applyConstraints()
         clampModalFrameMinHeight()
         environmentFrame.onConfigurationChanged()

@@ -2,8 +2,8 @@
 
 package com.urbanairship.android.layout.environment
 
-import android.content.Context
 import android.view.Choreographer
+import android.view.View
 import androidx.annotation.MainThread
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,29 +53,29 @@ internal class ThomasEnvironmentPublisher(
     }
 
     /**
-     * Reads the environment from [context] and [frame] and publishes it at the next frame.
+     * Reads the environment from [rootView] and [frame] and publishes it at the next frame.
      *
-     * @param context a context of the activity the layout is shown in.
+     * @param rootView the layout's root view; see [ThomasEnvironment.from].
      * @param frame the frame the root view last reported, or null before it has been laid out.
      * @param immediate publishes now instead, replacing any reading waiting for the next frame.
      */
     @MainThread
-    fun publish(context: Context, frame: EnvironmentFrame?, immediate: Boolean = false) {
-        publish(ThomasEnvironment.from(context, frame), immediate)
+    fun publish(rootView: View, frame: EnvironmentFrame?, immediate: Boolean = false) {
+        publish(ThomasEnvironment.from(rootView, frame), immediate)
     }
 
     /**
-     * Publishes a reading from [context] with no frame, unless one has already been published.
+     * Publishes a reading from [rootView] with no frame, unless one has already been published.
      *
      * A root view calls this when it's created, so the first frame has an environment to match
      * before the first layout reports the frame. A root view that replaces another, as after an
      * activity is recreated, leaves the last reading in place until its own first layout.
      *
-     * @param context a context of the activity the layout is shown in.
+     * @param rootView the layout's root view; see [ThomasEnvironment.from].
      */
     @MainThread
-    fun seed(context: Context) {
-        if (_environment.value == null) publish(context, frame = null)
+    fun seed(rootView: View) {
+        if (_environment.value == null) publish(rootView, frame = null)
     }
 
     /** @see publish */
