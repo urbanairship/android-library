@@ -6,8 +6,9 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.PagersViewTracker
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
-import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasState
+import com.urbanairship.android.layout.environment.ThomasStateScopes
 import com.urbanairship.android.layout.environment.VideoCommandChannel
 import com.urbanairship.android.layout.environment.VideoControlState
 import com.urbanairship.android.layout.environment.VideoGroupBroadcastChannel
@@ -102,11 +103,23 @@ import kotlinx.coroutines.flow.StateFlow
 internal class ModelFactoryException(message: String) : Exception(message)
 
 internal interface ModelFactory {
+    /**
+     * Builds the model tree for [info].
+     *
+     * @param info The view to build.
+     * @param environment The environment the models are built in.
+     * @param parentLayoutState The enclosing layout state, when building async view content.
+     * @param scopeOwner This build of async view content, which uses the controller scopes its
+     * nodes are in until it's released; see [ThomasStateScopes.Owner]. `null` for the static
+     * tree, whose scopes report until the layout ends.
+     * @return The root model.
+     */
     @Throws(ModelFactoryException::class)
     fun create(
         info: ViewInfo,
         environment: ModelEnvironment,
-        parentLayoutState: LayoutState? = null
+        parentLayoutState: LayoutState? = null,
+        scopeOwner: ThomasStateScopes.Owner? = null
     ): AnyModel
 }
 
@@ -124,17 +137,26 @@ internal class ThomasModelFactory : ModelFactory {
     /** Parent layout state for async content */
     private var parentLayoutState: LayoutState? = null
 
+    /** Each controller scope's `thomasState`, shared by every node built in that scope. */
+    private val thomasStates = mutableMapOf<ThomasStateKey, StateFlow<ThomasState>>()
+
+    /** The current build's owner, added as a user of each scope its nodes are in; see [ModelFactory.create]. */
+    private var scopeOwner: ThomasStateScopes.Owner? = null
+
     private lateinit var rootTag: Tag
 
     @Throws(ModelFactoryException::class)
     override fun create(
         info: ViewInfo,
         environment: ModelEnvironment,
-        parentLayoutState: LayoutState?
+        parentLayoutState: LayoutState?,
+        scopeOwner: ThomasStateScopes.Owner?
     ): AnyModel {
         rootTag = generateTag(info, parentLayoutState)
         process(info, parentLayoutState)
         this.parentLayoutState = parentLayoutState
+        this.scopeOwner = scopeOwner
+        thomasStates.values.removeAll { it !in environment.stateScopes }
         return build(environment)
     }
 
@@ -298,7 +320,7 @@ internal class ThomasModelFactory : ModelFactory {
                         videoCommandChannels = videoCommandChannels,
                         videoBroadcastChannels = videoBroadcastChannels,
                         videoControlGroups = videoControlGroups,
-                        capabilities = environment.capabilities,
+                        thomasState = { key -> thomasState(key, environment) },
                         parentLayoutState = parentLayoutState
                     )
                 )
@@ -316,6 +338,16 @@ internal class ThomasModelFactory : ModelFactory {
             ?: throw ModelFactoryException("Failed to build models. Root model not found!")
         // Return the model from the pair, ignoring the item info
         return root.first
+    }
+
+    private fun thomasState(key: ThomasStateKey, environment: ModelEnvironment): StateFlow<ThomasState> {
+        val scope = thomasStates.getOrPut(key) {
+            makeThomasState(
+                key.form, key.layout, key.pager, key.video, key.asyncView, environment.capabilities
+            )
+        }
+        environment.stateScopes.add(scope, scopeOwner)
+        return scope
     }
 
     private fun createMutableSharedState(info: ViewInfo, stateStorage: LayoutStateStorage?): SharedState<State>? {
@@ -386,6 +418,20 @@ internal class ThomasModelFactory : ModelFactory {
         }
     }
 
+    /**
+     * The controller states a node's [ThomasState] combines; nodes with equal keys are in one scope.
+     *
+     * [SharedState] doesn't override `equals`, so two keys are equal only when they hold the same
+     * state instances. Capabilities are layout-wide, so they aren't part of the key.
+     */
+    data class ThomasStateKey(
+        val form: SharedState<State.Form>?,
+        val layout: SharedState<State.Layout>,
+        val pager: SharedState<State.Pager>?,
+        val video: SharedState<State.Video>?,
+        val asyncView: SharedState<State.AsyncView>?
+    )
+
     data class LayoutNode(
         val tag: String,
         val info: ItemInfo,
@@ -429,7 +475,7 @@ internal class ThomasModelFactory : ModelFactory {
             videoCommandChannels: Map<Tag, VideoCommandChannel>,
             videoBroadcastChannels: Map<Tag, VideoGroupBroadcastChannel>,
             videoControlGroups: Map<Tag, Pair<String, String>>,
-            capabilities: StateFlow<ThomasCapabilities>,
+            thomasState: (ThomasStateKey) -> StateFlow<ThomasState>,
             parentLayoutState: LayoutState? = null
         ): LayoutState {
             val childForm = form.firstOrNull()
@@ -506,8 +552,8 @@ internal class ThomasModelFactory : ModelFactory {
                 radio = radioFlow,
                 score = scoreFlow,
                 layout = layoutFlow,
-                thomasState = makeThomasState(
-                    formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow, capabilities
+                thomasState = thomasState(
+                    ThomasStateKey(formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow)
                 ),
                 pagerTracker = pagerTracker,
                 video = videoFlow,
@@ -773,7 +819,8 @@ internal class ThomasModelFactory : ModelFactory {
                 ?: throw ModelFactoryException("Required async state was null for AsyncViewController!"),
             environment = environment,
             properties = properties,
-            factory = this
+            factory = this,
+            enclosingScopeOwner = scopeOwner
         )
 
         is EmptyInfo -> EmptyModel(

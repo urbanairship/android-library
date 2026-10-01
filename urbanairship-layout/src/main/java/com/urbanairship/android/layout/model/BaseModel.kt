@@ -203,7 +203,6 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                 updateBackground(it)
                 updateVisibility(it)
                 listener?.onStateUpdated(it)
-                broadcast(LayoutEvent.StateUpdate(it))
             }
         }
     }

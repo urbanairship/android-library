@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -206,7 +205,7 @@ public class EmbeddedLayout(
             layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)
 
             stateUpdateReportJob?.cancel()
-            stateUpdateReportJob = reportStateChange(modelEnvironment.layoutEvents)
+            stateUpdateReportJob = modelEnvironment.stateScopes.reportTo(externalListener, layoutScope)
 
             embeddedView.listener = object : ThomasEmbeddedView.Listener {
                 override fun onDismissed() {
@@ -246,15 +245,6 @@ public class EmbeddedLayout(
                 } else {
                     dismiss()
                 }
-            }
-    }
-
-    private fun reportStateChange(events: Flow<LayoutEvent>) = layoutScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.StateUpdate>()
-            .distinctUntilChanged()
-            .collect {
-                externalListener.onStateChanged(it.state)
             }
     }
 

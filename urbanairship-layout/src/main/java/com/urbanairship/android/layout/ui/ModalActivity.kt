@@ -39,7 +39,6 @@ import com.urbanairship.android.layout.view.ModalView
 import com.urbanairship.util.parcelableExtra
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -118,7 +117,7 @@ public class ModalActivity : AppCompatActivity() {
             val model = viewModel.getOrCreateModel(args.payload.view, modelEnvironment)
 
             observeLayoutEvents(modelEnvironment.layoutEvents)
-            reportStateChange(modelEnvironment.layoutEvents)
+            modelEnvironment.stateScopes.reportTo(externalListener, lifecycleScope)
 
             val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
                 this,
@@ -248,15 +247,6 @@ public class ModalActivity : AppCompatActivity() {
         events
             .filterIsInstance<LayoutEvent.Finish>()
             .collect { finishAfterTransition() }
-    }
-
-    private fun reportStateChange(events: Flow<LayoutEvent>) = lifecycleScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.StateUpdate>()
-            .distinctUntilChanged()
-            .collect {
-                externalListener.onStateChanged(it.state)
-            }
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.EMPTY) {

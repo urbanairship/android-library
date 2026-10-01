@@ -53,7 +53,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -236,7 +235,7 @@ public class BannerLayout(
             layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)
 
             stateUpdateReportJob?.cancel()
-            stateUpdateReportJob = reportStateChange(modelEnvironment.layoutEvents)
+            stateUpdateReportJob = modelEnvironment.stateScopes.reportTo(externalListener, layoutScope)
 
             currentView = WeakReference(bannerView)
             return bannerView
@@ -313,15 +312,6 @@ public class BannerLayout(
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = layoutScope.launch {
         events.filterIsInstance<LayoutEvent.Finish>()
             .collect { dismiss() }
-    }
-
-    private fun reportStateChange(events: Flow<LayoutEvent>) = layoutScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.StateUpdate>()
-            .distinctUntilChanged()
-            .collect {
-                externalListener.onStateChanged(it.state)
-            }
     }
 
     private fun reportDismissFromOutside(data: ReportingEvent.DismissData) {

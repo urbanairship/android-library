@@ -27,10 +27,17 @@ public interface ThomasListenerInterface {
      */
     public fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean)
 
+    /** Whether [onStateChanged] is called; when `false`, layout state isn't collected for it at all. */
+    public val wantsStateChanges: Boolean
+        get() = false
+
     /**
-     * Called whenever the layout state changes
+     * Called when a controller scope's layout state changes, if [wantsStateChanges] is `true`.
      *
-     * @param state The layout state.
+     * Each form, pager, state, video, or async view controller scope reports separately, once
+     * when it's created if its state isn't empty, then each time its serialized state changes.
+     *
+     * @param state The scope's layout state.
      */
     public fun onStateChanged(state: JsonSerializable)
 

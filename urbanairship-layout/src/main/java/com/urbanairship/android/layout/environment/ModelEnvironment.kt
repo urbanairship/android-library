@@ -8,7 +8,6 @@ import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.ai.DefaultThomasAIInference
 import com.urbanairship.android.layout.ai.ThomasAIInference
 import com.urbanairship.android.layout.ai.ThomasAIStatus
-import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -26,12 +25,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 internal class ModelEnvironment(
     val layoutState: LayoutState,
@@ -43,6 +39,7 @@ internal class ModelEnvironment(
     val channelRegistrar: ThomasChannelRegistrar = ThomasChannelRegistrar(),
     val eventHandler: LayoutEventHandler = LayoutEventHandler(modelScope),
     val pagerTracker: PagersViewTracker = PagersViewTracker(),
+    val stateScopes: ThomasStateScopes = ThomasStateScopes(),
     val viewIdResolver: ThomasViewIdResolver = ThomasViewIdResolver(),
     val stateStorage: LayoutStateStorage? = null,
     val aiInference: ThomasAIInference? = null,
@@ -65,15 +62,6 @@ internal class ModelEnvironment(
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
 
-    init {
-        modelScope.launch {
-            layoutEvents
-                .filterIsInstance<LayoutEvent.Report>()
-                .distinctUntilChanged()
-                .collect { reporter.report(it.event) }
-        }
-    }
-
     fun withState(state: LayoutState) =
         ModelEnvironment(
             layoutState = state,
@@ -84,6 +72,7 @@ internal class ModelEnvironment(
             attributeHandler = attributeHandler,
             eventHandler = this.eventHandler,
             pagerTracker = this.pagerTracker,
+            stateScopes = this.stateScopes,
             channelRegistrar = this.channelRegistrar,
             viewIdResolver = this.viewIdResolver,
             aiInference = this.aiInference,
@@ -141,14 +130,6 @@ internal sealed class LayoutEvent {
     ) : LayoutEvent() {
         fun targets(identifier: String): Boolean = formIdentifier == identifier
     }
-
-    data class Report(
-        val event: ReportingEvent
-    ) : LayoutEvent()
-
-    data class StateUpdate(
-        val state: ThomasState
-    ): LayoutEvent()
 
     data class AsyncViewReload(val identifier: String) : LayoutEvent()
 
