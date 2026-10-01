@@ -17,6 +17,8 @@ import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.WindowPixels
 import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 
@@ -53,6 +55,9 @@ internal class ThomasEmbeddedView(
     /** The scene, created once and moved into a new frame when the placement changes. */
     private val contentView: View
 
+    /** The window [applyConstraints] last sized the frame against. */
+    private var constrainedWindow: WindowPixels? = null
+
     init {
         id = model.viewId
         model.seedEnvironment(this)
@@ -70,6 +75,12 @@ internal class ThomasEmbeddedView(
         environmentFrame.onLayout(right - left, bottom - top)
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        // Below API 30 the window is only readable once laid out, after init's constraints.
+        post { reapplyConstraintsIfWindowChanged() }
+    }
+
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         // A host that handles its own config changes keeps this view, so selectors re-resolve here.
@@ -79,14 +90,19 @@ internal class ThomasEmbeddedView(
             frame?.let(::removeView)
             (contentView.parent as? ViewGroup)?.removeView(contentView)
             configure(resolved)
+        } else {
+            reapplyConstraintsIfWindowChanged()
         }
         environmentFrame.onConfigurationChanged()
         requestLayout()
     }
 
+    private fun reapplyConstraintsIfWindowChanged() {
+        if (ResourceUtils.getWindowPixels(context, this) != constrainedWindow) applyConstraints()
+    }
+
     private fun configure(placement: EmbeddedPlacement) {
         val size = placement.size
-        val margin = placement.margin
 
         val widthSpec = when (size.width.type) {
             Size.DimensionType.AUTO -> FrameLayout.LayoutParams.WRAP_CONTENT
@@ -106,7 +122,7 @@ internal class ThomasEmbeddedView(
         }
 
         // Make a frame to display the layout in
-        val viewId = ConstrainedFrameLayout(context, size).apply {
+        ConstrainedFrameLayout(context, size).apply {
             id = generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
         }.let { frame ->
@@ -118,11 +134,18 @@ internal class ThomasEmbeddedView(
             frame.addView(container)
 
             addView(frame)
-
-            frame.id
         }
 
-        // Apply constraints
+        applyConstraints()
+    }
+
+    /** Sizes and positions the frame for [placement] against the current window. */
+    private fun applyConstraints() {
+        val viewId = frame?.id ?: return
+        val size = placement.size
+        val margin = placement.margin
+        constrainedWindow = ResourceUtils.getWindowPixels(context, this)
+
         ConstraintSetBuilder.newBuilder(context, this)
             .constrainWithinParent(viewId, margin)
             .apply {

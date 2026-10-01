@@ -185,7 +185,7 @@ public class ThomasBannerView internal constructor(
      * `aspect_ratio` within the window (see [ConstraintSetBuilder.aspectRatioWithinBounds]).
      *
      * Re-resolves the placement because orientation may select a different one. Called from
-     * [configureBanner] and [onConfigurationChanged] — the latter matters when the host activity
+     * [configureBanner] and [refitIfWindowChanged] — the latter matters when the host activity
      * handles its own `configChanges` (no recreate), so the banner view persists and `init` never
      * re-runs; without re-applying here a portrait-fitted px box would stay stale in landscape.
      */
@@ -245,11 +245,21 @@ public class ThomasBannerView internal constructor(
         environmentFrame.onLayout(right - left, bottom - top)
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        // Below API 30 the window is only readable once laid out, after init's constraints.
+        post { refitIfWindowChanged() }
+    }
+
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration?) {
         super.onConfigurationChanged(newConfig)
         environmentFrame.onConfigurationChanged()
         requestLayout()
-        // Re-fit only when the window bounds actually changed, to avoid layout churn.
+        refitIfWindowChanged()
+    }
+
+    /** Re-applies the size constraints if the window differs from the one they were built for. */
+    private fun refitIfWindowChanged() {
         val ignoreSafeArea = presentation.getResolvedPlacement(context).shouldIgnoreSafeArea()
         val window = ResourceUtils.getWindowPixels(context, this)
         if (window.width(ignoreSafeArea) != lastWindowWidth || window.height(ignoreSafeArea) != lastWindowHeight) {
