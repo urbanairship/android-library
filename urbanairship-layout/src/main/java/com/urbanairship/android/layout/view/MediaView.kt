@@ -29,7 +29,6 @@ import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
-import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
@@ -50,6 +49,7 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -112,7 +112,6 @@ internal class MediaView(
     private var imageContentLoader: ((String) -> Unit)? = null
 
     private val mediaFit: MediaFit = model.viewInfo.mediaFit
-    private var wholeImageAnchor: Position? = null
 
     val isNonInteractiveVideo: Boolean =
         model.viewInfo.mediaType == MediaType.VIDEO &&
@@ -284,7 +283,6 @@ internal class MediaView(
 
         var width: Float
         var height: Float
-        var cutToCeiling = false
         if (statedWidth == null && statedHeight == null) {
             val ceilingWidth = ceiling(widthMeasureSpec, horizontal = true)
             val ceilingHeight = ceiling(heightMeasureSpec, horizontal = false)
@@ -294,6 +292,13 @@ internal class MediaView(
                 // has nothing to take, and follows the ratio.
                 width = ceilingWidth?.toFloat() ?: (ceilingHeight!! * ratio)
                 height = ceilingHeight?.toFloat() ?: (width / ratio)
+
+                // A fit that never crops has nothing to fill the box with, so each axis stops at
+                // what the image needs across the other, as iOS's `fittedLength` does.
+                if (mediaFit == MediaFit.CENTER_INSIDE) {
+                    width = min(width, height * ratio)
+                    height = min(height, width / ratio)
+                }
             } else {
                 // No box, so the image's own shape at the width it was offered. Scaling up to that
                 // width is the point: `center_inside` promises never to crop, not never to grow.
@@ -331,35 +336,12 @@ internal class MediaView(
 
             width = statedWidth?.toFloat() ?: autoLength
             height = statedHeight?.toFloat() ?: autoLength
-
-            // Stated on both axes, there is no `auto` axis left for a ceiling to have cut.
-            cutToCeiling = (statedWidth == null || statedHeight == null) && autoLength < fromRatio
         }
-
-        anchorWholeImage(cutToCeiling)
 
         super.onMeasure(
             MeasureSpec.makeMeasureSpec(width.roundToInt().coerceAtLeast(0), MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(height.roundToInt().coerceAtLeast(0), MeasureSpec.EXACTLY)
         )
-    }
-
-    /**
-     * Anchors the image at the position the item asked for, where the box it is painted into came
-     * from a ceiling rather than from the image's own shape.
-     *
-     * Cut to the ceiling, the box is the whole of the room there was, so the item's own alignment
-     * has nothing left to place — the slack is all inside the box, and a fit that never crops
-     * would otherwise split it evenly whatever the item asked for. A fit that crops leaves none.
-     */
-    private fun anchorWholeImage(cutToCeiling: Boolean) {
-        if (mediaFit != MediaFit.CENTER_INSIDE) return
-
-        val anchor = if (cutToCeiling) itemProperties?.position else null
-        if (anchor === wholeImageAnchor) return
-
-        wholeImageAnchor = anchor
-        imageView?.setWholeImagePosition(anchor)
     }
 
     /**
@@ -422,7 +404,6 @@ internal class MediaView(
                 } else {
                     // Use ImageView scaleType to fit the image.
                     scaleType = model.viewInfo.mediaFit.scaleType
-                    wholeImageAnchor?.let { setWholeImagePosition(it) }
                 }
 
                 importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
