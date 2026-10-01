@@ -743,25 +743,15 @@ internal class AutomationEngine(
         // tally, and the mark means this execution is visible to a reserving
         // sibling that starts while it is still going.
         if (!preparedSchedule.reservesLedgerGroup) {
-            // The `finally` is established before the mark can be taken, not
-            // after `withGroup` hands the groups back, because the mark has to
-            // outlive the reservation and so cannot be released by it. Pairing
-            // it with a flag rather than with `withGroup` returning normally
-            // keeps the clear owed from the instant it is owed — anything that
-            // could go wrong on the way out of `withGroup` would otherwise
-            // leave these groups marked for the life of the process, which is
-            // precisely the wedge the mark exists to avoid.
+            // The `finally` is armed before the mark can be taken, not after
+            // `withGroup` returns: anything going wrong on the way out would
+            // otherwise leave these groups marked for the life of the process.
             //
-            // It covers the attempt and stops there, for the reason
-            // [AttemptOutcome] gives: settling an unready verdict can park on
-            // the conditions notifier with no timeout, and a mark held across
-            // that would stall every sibling in every one of these groups for
-            // as long as the host takes to become ready — which for an
-            // embedded message may be never. The attempt is where the budget
-            // is spent and the event written, so the mark has done its job by
-            // the time it returns. Same shape as the reserving branch below,
-            // which keeps `settle` outside the reservation for the same
-            // reason.
+            // It covers the attempt and stops there. Settling an unready
+            // verdict can park on the conditions notifier with no timeout, and
+            // a mark held across that stalls every sibling in these groups for
+            // as long as the host takes — for an embedded message, possibly
+            // never.
             var marked = false
             val attempt = try {
                 groupReservations.withGroup(sharedIds) {
