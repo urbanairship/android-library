@@ -25,12 +25,20 @@ internal data class ThomasState(
     val capabilities: ThomasCapabilities
 ): JsonSerializable {
 
-    override fun toJsonValue(): JsonValue {
+    private val json: JsonValue by lazy { buildJson() }
+
+    override fun toJsonValue(): JsonValue = json
+
+    private fun buildJson(): JsonValue {
         val layout = layout ?: return JsonValue.NULL
 
         return layout.state
             .toMutableMap()
             .apply {
+                // Read-only: a value a set_state action wrote there, or one restored, never shows.
+                remove(ENVIRONMENT)
+                capabilities.environment?.let { put(ENVIRONMENT, it.toJsonValue()) }
+
                 form?.let { form ->
                     val formState = when (form.formType) {
                         FormType.Form -> ThomasFormField.Form(
@@ -91,10 +99,10 @@ internal data class ThomasState(
         overrides: List<ViewPropertyOverride<T>>?,
         default: T? = null
     ): T? {
-        val json = toJsonValue()
+        if (overrides.isNullOrEmpty()) return default
 
         return overrides
-            ?.firstOrNull { it.whenStateMatcher?.apply(json) ?: true }
+            .firstOrNull { it.whenStateMatcher?.apply(json) ?: true }
             ?.value
             ?: default
     }
@@ -117,6 +125,7 @@ internal data class ThomasState(
         const val VIDEO = "\$video"
         const val ASYNC_VIEW = "\$asyncView"
         const val AI = "\$ai"
+        const val ENVIRONMENT = "\$environment"
     }
 }
 
@@ -132,9 +141,11 @@ internal data class ThomasState(
  * New controller state belongs in [State]. New runtime capabilities belong here.
  *
  * @param ai Which AI models the layout can reach, or `null` until one reports.
+ * @param environment The platform, window and frame, or `null` until the root view reads them.
  */
 internal data class ThomasCapabilities(
-    val ai: ThomasAIStatus? = null
+    val ai: ThomasAIStatus? = null,
+    val environment: ThomasEnvironment? = null
 ) {
     companion object {
         val NONE = ThomasCapabilities()

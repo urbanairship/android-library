@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ui
 
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -31,6 +32,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.view.ModalView
@@ -59,6 +61,8 @@ public class ModalActivity : AppCompatActivity() {
     private lateinit var reporter: Reporter
     private lateinit var displayTimer: DisplayTimer
     private lateinit var modelEnvironment: ModelEnvironment
+    private lateinit var presentation: ModalPresentation
+    private lateinit var placement: ModalPlacement
 
     private var disableBackButton = false
     private var dismissReported = false
@@ -85,7 +89,7 @@ public class ModalActivity : AppCompatActivity() {
             externalListener = args.listener
             reporter = ExternalReporter(externalListener)
 
-            val presentation = (args.payload.presentation as? ModalPresentation) ?: run {
+            presentation = (args.payload.presentation as? ModalPresentation) ?: run {
                 UALog.e("Not a modal presentation")
                 finish()
                 return@onCreate
@@ -100,7 +104,7 @@ public class ModalActivity : AppCompatActivity() {
                 }
             }
 
-            val placement = presentation.getResolvedPlacement(this)
+            placement = presentation.getResolvedPlacement(this)
 
             handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
 
@@ -214,6 +218,18 @@ public class ModalActivity : AppCompatActivity() {
         }
         // Otherwise, let the event through.
         return super.onKeyDown(keyCode, event)
+    }
+
+    /**
+     * Keeps the activity through a resize or rotation, unless the new configuration selects a
+     * different placement; the placement is built into the window and views, so that recreates.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!::placement.isInitialized) return
+        if (presentation.getResolvedPlacement(this) !== placement) {
+            recreate()
+        }
     }
 
     override fun onDestroy() {

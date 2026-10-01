@@ -1,15 +1,19 @@
 package com.urbanairship.android.layout.ui
 
 import android.content.Context
+import android.content.res.Configuration
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+import com.urbanairship.android.layout.environment.EnvironmentFrameTracker
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -39,14 +43,48 @@ internal class ThomasEmbeddedView(
         fun onDismissed()
     }
 
-    init {
-        id = model.viewId
-        configure()
+    /** Reports this view's bounds as `$environment.frame`: the space the host gives the scene. */
+    private val environmentFrame = EnvironmentFrameTracker { frame, isFirst ->
+        model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
-    private fun configure() {
-        // Determine embedded view placement
-        val placement = presentation.getResolvedPlacement(context)
+    private var placement: EmbeddedPlacement = presentation.getResolvedPlacement(context)
+
+    /** The scene, created once and moved into a new frame when the placement changes. */
+    private val contentView: View
+
+    init {
+        id = model.viewId
+        model.seedEnvironment(this)
+        contentView = model.createView(context, environment, null)
+        configure(placement)
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        environmentFrame.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        environmentFrame.onLayout(right - left, bottom - top)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        // A host that handles its own config changes keeps this view, so selectors re-resolve here.
+        val resolved = presentation.getResolvedPlacement(context)
+        if (resolved !== placement) {
+            placement = resolved
+            frame?.let(::removeView)
+            (contentView.parent as? ViewGroup)?.removeView(contentView)
+            configure(resolved)
+        }
+        environmentFrame.onConfigurationChanged()
+        requestLayout()
+    }
+
+    private fun configure(placement: EmbeddedPlacement) {
         val size = placement.size
         val margin = placement.margin
 
@@ -76,7 +114,7 @@ internal class ThomasEmbeddedView(
 
             LayoutUtils.applyBorderAndBackground(container, null, placement.border, placement.backgroundColor)
 
-            container.addView(model.createView(context, environment, null))
+            container.addView(contentView)
             frame.addView(container)
 
             addView(frame)
@@ -85,7 +123,7 @@ internal class ThomasEmbeddedView(
         }
 
         // Apply constraints
-        ConstraintSetBuilder.newBuilder(context)
+        ConstraintSetBuilder.newBuilder(context, this)
             .constrainWithinParent(viewId, margin)
             .apply {
                 if (fillHeight && fillWidth) {
