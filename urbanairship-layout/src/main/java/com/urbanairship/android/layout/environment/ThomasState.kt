@@ -25,7 +25,11 @@ internal data class ThomasState(
     val capabilities: ThomasCapabilities
 ): JsonSerializable {
 
-    override fun toJsonValue(): JsonValue {
+    private val json: JsonValue by lazy { buildJson() }
+
+    override fun toJsonValue(): JsonValue = json
+
+    private fun buildJson(): JsonValue {
         val layout = layout ?: return JsonValue.NULL
 
         return layout.state
@@ -95,10 +99,10 @@ internal data class ThomasState(
         overrides: List<ViewPropertyOverride<T>>?,
         default: T? = null
     ): T? {
-        val json = toJsonValue()
+        if (overrides.isNullOrEmpty()) return default
 
         return overrides
-            ?.firstOrNull { it.whenStateMatcher?.apply(json) ?: true }
+            .firstOrNull { it.whenStateMatcher?.apply(json) ?: true }
             ?.value
             ?: default
     }
