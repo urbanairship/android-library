@@ -123,14 +123,11 @@ internal class LedgerGroupReservations {
      * waiting for `a`. Sorting here rather than trusting callers keeps that
      * guarantee local.
      *
-     * Locks already taken are held while waiting for the next, which is a
-     * deliberate trade. It means a long hold in one group can stall schedules
-     * in another: a waiter on `[a, b]` holds `a` while queueing for `b`, so a
-     * schedule in `a` alone waits on a display in `b`. The alternative —
-     * releasing everything and retrying on a miss — removes that coupling but
-     * gives up [Mutex]'s hand-off to the longest waiter, so a multi-group
-     * schedule could be barged indefinitely by single-group ones and never
-     * show at all. A bounded stall is preferred over an unbounded one.
+     * Locks already taken are held while waiting for the next, so a long hold
+     * in one group stalls schedules in another. Not separable from the
+     * guarantee: something has to hold `a` to stop a stream of `a`-only
+     * schedules starving a waiter on `[a, b]`, which would then fail by never
+     * showing rather than by waiting.
      *
      * [release] hands every group back whether the block returns, throws or is
      * cancelled, and never replaces what the block did with a failure of its
