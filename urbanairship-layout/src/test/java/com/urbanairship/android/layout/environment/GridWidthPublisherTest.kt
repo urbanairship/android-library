@@ -91,4 +91,14 @@ public class GridWidthPublisherTest {
         assertTrue(frames.isEmpty)
         assertNull(width)
     }
+
+    @Test
+    public fun testACancelledWidthCanBePublishedAgain() {
+        publisher.publish(320f)
+        publisher.cancel()
+
+        publisher.publish(320f)
+        frames.advance()
+        assertEquals(320f, width)
+    }
 }

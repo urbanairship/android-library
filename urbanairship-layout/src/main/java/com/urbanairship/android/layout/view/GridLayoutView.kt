@@ -102,6 +102,7 @@ internal class GridLayoutView(
 
     /** The inner width of the last measure, in points, which layout publishes as `$grids.current.width`. */
     private var measuredGridWidth: Float? = null
+    private var hasMeasured = false
     private val widthPublisher = GridWidthPublisher(model.gridState)
 
     private var contentHeight = 0
@@ -158,6 +159,12 @@ internal class GridLayoutView(
         }
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Reattached at the same size, the grid may not be laid out again to publish what detaching dropped.
+        if (hasMeasured) widthPublisher.publish(measuredGridWidth)
+    }
+
     override fun onDetachedFromWindow() {
         widthPublisher.cancel()
         super.onDetachedFromWindow()
@@ -205,6 +212,7 @@ internal class GridLayoutView(
         }
 
         measuredGridWidth = innerWidth?.let { it / density }
+        hasMeasured = true
         // Matched against the width just measured, not the published one, which arrives a pass later.
         val gridState = gridState(measuredGridWidth)
         val config = gridState.resolveRequired(model.viewInfo.viewOverrides?.config, model.viewInfo.config)
