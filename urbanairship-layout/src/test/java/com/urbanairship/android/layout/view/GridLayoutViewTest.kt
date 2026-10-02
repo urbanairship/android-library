@@ -19,6 +19,7 @@ import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.ui.LayoutViewModel
+import com.urbanairship.android.layout.util.UI_TEST_RANDOM_SEED
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.json.JsonValue
 import io.mockk.every
@@ -620,15 +621,15 @@ public class GridLayoutViewTest {
         val grid = grid(
             config = """{"columns": {"type": "fixed", "count": 1}}""",
             items = options + none,
-            extra = """"randomize_children": true, "header": {"view": ${label("top")}},"""
+            extra = """"randomize_children": true, "header": {"view": ${label("top")}},""",
+            environment = realEnvironment()
         )
         layout(grid, width = 200)
 
-        val all = cells(grid)
-        val header = all.first()
-        val noneCell = all.first { ((it as ViewGroup).getChildAt(0) as android.widget.TextView).text.toString() == "None" }
-        assertEquals("the header stays first", 0, header.top)
-        assertEquals("None stays last", all.drop(1).maxOf { it.top }, noneCell.top)
+        // ui-test:grid:6 shuffles to c b e d None a; sorting by order then moves None to the end.
+        val read = cells(grid).sortedBy { it.top }
+            .map { ((it as ViewGroup).getChildAt(0) as android.widget.TextView).text.toString() }
+        assertEquals(listOf("top", "c", "b", "e", "d", "a", "None"), read)
     }
 
     @Test
@@ -1036,7 +1037,8 @@ public class GridLayoutViewTest {
         reporter = mockk(relaxUnitFun = true),
         actionsRunner = mockk(relaxUnitFun = true),
         displayTimer = mockk(relaxed = true),
-        modelScope = testScope
+        modelScope = testScope,
+        shuffleSeed = UI_TEST_RANDOM_SEED
     )
 
     /** A predicate on the grid's own width, as its overrides and its items' see it. */

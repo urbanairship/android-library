@@ -35,6 +35,9 @@ internal class LinearLayoutModel(
     override fun establishesLength(direction: Direction): Boolean =
         items.any { it.establishesLength(direction) }
 
+    /** Whether any item's order can change with state. */
+    val hasItemOverrides: Boolean = items.any { !it.info.overrides?.config.isNullOrEmpty() }
+
 
     data class Item(
         val info: LinearLayoutItemInfo, val model: AnyModel

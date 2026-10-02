@@ -68,6 +68,12 @@ internal class LinearLayoutView(
         viewEnvironment = viewEnvironment
     )
 
+    /** The view stacked for each item: its own, or the list-item frame around it. */
+    private val itemViews = mutableMapOf<LinearLayoutModel.Item, View>()
+
+    /** The items in the order they're stacked and read. */
+    private var orderedItems: List<LinearLayoutModel.Item> = model.items.sortedBy { it.info.config.order }
+
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
         backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
@@ -75,13 +81,16 @@ internal class LinearLayoutView(
         clipChildren = false
         orientation = if (model.viewInfo.direction == Direction.VERTICAL) OrientationMode.VERTICAL else OrientationMode.HORIZONTAL
         gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
-        addItems(model.items)
+        addItems(orderedItems)
 
         model.listener = object : BaseModel.Listener {
             // An image layer resolves its own `view_overrides` against this; a video layer is
             // its own `MediaModel` and gets the state through that.
             override fun onStateUpdated(state: ThomasState) {
                 backgroundsPainter.state = state
+                if (model.hasItemOverrides) {
+                    restack(model.items.sortedBy { state.resolveRequired(it.info.overrides?.config, it.info.config).order })
+                }
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -170,20 +179,24 @@ internal class LinearLayoutView(
         return result
     }
 
-    private fun addItems(items: List<LinearLayoutModel.Item>) {
-        val listItems = if (isListView) {
-            items.filter { it.info.isListItem }.map { it.info }
-        } else {
-            items
-        }
+    /** Moves the item views into [items]' order, without detaching them from the window. */
+    private fun restack(items: List<LinearLayoutModel.Item>) {
+        if (items == orderedItems) return
+        orderedItems = items
+        val views = items.map { itemViews.getValue(it) }
+        views.forEach { detachViewFromParent(it) }
+        views.forEach { attachViewToParent(it, -1, it.layoutParams) }
+        requestLayout()
+        invalidate()
+    }
 
-        for (i in items.indices) {
-            val (itemInfo, itemModel) = items[i]
+    private fun addItems(items: List<LinearLayoutModel.Item>) {
+        for (item in items) {
+            val (itemInfo, itemModel) = item
             val lp = generateItemLayoutParams(itemInfo)
             val itemView = itemModel.createView(context, viewEnvironment, ItemProperties(itemInfo.size, itemInfo.position))
 
             if (isListView && itemInfo.isListItem) {
-                val listIndex = listItems.indexOf(itemInfo)
                 val accessibilityWrapper = ListItemFrame(context).apply {
                     layoutParams = lp
                 }
@@ -192,6 +205,7 @@ internal class LinearLayoutView(
                     override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
                         super.onInitializeAccessibilityNodeInfo(host, info)
 
+                        val listIndex = orderedItems.filter { it.info.isListItem }.indexOf(item)
                         val collectionItemInfo = AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(
                             listIndex,     // rowIndex
                             1,     // rowSpan
@@ -208,9 +222,11 @@ internal class LinearLayoutView(
 
                 accessibilityWrapper.addView(itemView)
                 addViewInLayout(accessibilityWrapper, -1, lp, true)
+                itemViews[item] = accessibilityWrapper
             } else {
                 itemView.layoutParams = lp
                 addViewInLayout(itemView, -1, lp, true)
+                itemViews[item] = itemView
             }
         }
     }

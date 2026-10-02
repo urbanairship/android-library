@@ -99,6 +99,8 @@ import com.urbanairship.android.layout.model.VideoController
 import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.util.ShuffleKey
+import com.urbanairship.android.layout.util.seededShuffled
 import kotlinx.coroutines.flow.StateFlow
 
 internal class ModelFactoryException(message: String) : Exception(message)
@@ -645,7 +647,7 @@ internal class ThomasModelFactory : ModelFactory {
                     (itemInfo as? LinearLayoutItemInfo)?.let {
                         LinearLayoutModel.Item(it, model)
                     } ?: throw ModelFactoryException("LinearLayoutItemInfo expected")
-                },
+                }.shuffledIf(info.randomizeChildren, ShuffleKey(environment.shuffleSeed, info.identifier)),
                 environment = environment,
                 properties = properties
             )
@@ -658,7 +660,8 @@ internal class ThomasModelFactory : ModelFactory {
                     viewInfo = info,
                     gridState = environment.layoutState.grid
                         ?: throw ModelFactoryException("Required grid state was null for GridLayout!"),
-                    items = info.items.map { GridLayoutModel.Item(it, modelFor(it)) },
+                    items = info.items.map { GridLayoutModel.Item(it, modelFor(it)) }
+                        .shuffledIf(info.randomizeChildren, ShuffleKey(environment.shuffleSeed, info.identifier)),
                     header = info.header?.let { GridLayoutModel.Edge(it, modelFor(it)) },
                     footer = info.footer?.let { GridLayoutModel.Edge(it, modelFor(it)) },
                     environment = environment,
@@ -969,3 +972,11 @@ internal class ThomasModelFactory : ModelFactory {
         private const val PARENT_GRID_TAG = "__parent_grid__"
     }
 }
+
+/**
+ * Returns the items in [key]'s shuffled order when [randomize] is set, else as they are.
+ *
+ * Derived from the key rather than drawn, so async content built again keeps the order already shown.
+ */
+private fun <T> List<T>.shuffledIf(randomize: Boolean, key: ShuffleKey): List<T> =
+    if (randomize) seededShuffled(key) else this
