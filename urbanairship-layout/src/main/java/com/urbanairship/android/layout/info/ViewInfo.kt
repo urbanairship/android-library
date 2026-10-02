@@ -21,6 +21,7 @@ import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.Image
+import com.urbanairship.android.layout.property.LinearLayoutItemConfig
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
@@ -514,10 +515,12 @@ internal open class CheckableInfo(
 // ------ Components ------
 
 internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
-    private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
+    /** Tells a `randomize_children` shuffle apart from others of the same item count. */
+    val identifier: String? = json.optionalField("identifier")
+    val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.require("direction"))
+    /** In list order; the model shuffles them. */
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
-        .let { if (randomizeChildren) it.shuffled() else it }
 
     override val children: List<LinearLayoutItemInfo> = items
 
@@ -548,7 +551,23 @@ internal class LinearLayoutItemInfo(
 
     val position: Position? = json["position"]?.let(Position::fromJson)
 
+    /** Where the item falls among its siblings. */
+    val config: LinearLayoutItemConfig =
+        json.optionalMap("config")?.let(LinearLayoutItemConfig::fromJson) ?: LinearLayoutItemConfig()
+
+    /**
+     * Changes to the item's properties with state, as a view's `view_overrides` change the view's:
+     * per property, the first match replaces it whole.
+     */
+    val overrides: Overrides? = json.optionalMap("overrides")?.let { Overrides(it) }
+
     val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class Overrides(json: JsonMap) {
+        val config = json.optionalList("config")?.map {
+            ViewPropertyOverride(it) { value -> LinearLayoutItemConfig.fromJson(value.requireMap()) }
+        }
+    }
 
     internal class AccessibilityRole(json: JsonMap) {
         val type: Type = Type.fromJson(json.requireField("type"))
@@ -585,10 +604,9 @@ internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View b
     val allConfigs: List<GridLayoutConfig> =
         listOf(config) + viewOverrides?.config.orEmpty().mapNotNull { it.value }
 
-    /** Shuffled once, when the scene is read, so a state change never reorders the options. */
-    private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
+    val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
+    /** In list order; the model shuffles them. */
     val items = json.requireField<JsonList>("items").map { GridLayoutItemInfo(it.requireMap()) }
-        .let { if (randomizeChildren) it.shuffled() else it }
 
     /** A view above the cells, as wide as the block of columns. */
     val header: GridLayoutEdgeInfo? = json.optionalMap("header")?.let(::GridLayoutEdgeInfo)

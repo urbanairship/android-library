@@ -232,7 +232,8 @@ private fun NativeContentView(
                 DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
             },
             stateStorage = content.store,
-            ai = ai
+            ai = ai,
+            randomSeed = content.randomSeed
         )
     }
 

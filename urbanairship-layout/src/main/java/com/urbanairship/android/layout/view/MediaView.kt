@@ -65,10 +65,10 @@ import com.urbanairship.android.layout.util.isLayoutRtl
  */
 internal class MediaView(
     context: Context,
-    model: MediaModel,
+    private val model: MediaModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-) : FrameLayout(context, null), BaseView, TappableView, ShrinkableView {
+) : FrameLayout(context, null), BaseView, TappableView, ShrinkableView, ButtonDescriptionSource {
 
     private val activityListener = object : SimpleActivityListener() {
         override fun onActivityPaused(activity: Activity) {
@@ -946,4 +946,6 @@ internal class MediaView(
         """.trimIndent()
 
     }
+
+    override fun buttonDescription(): String? = model.contentDescription(context)
 }

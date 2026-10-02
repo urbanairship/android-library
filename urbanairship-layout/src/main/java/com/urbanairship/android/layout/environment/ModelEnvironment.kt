@@ -13,6 +13,8 @@ import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.util.ThomasViewIdResolver
+import com.urbanairship.android.layout.util.randomShuffleSeed
+import com.urbanairship.android.layout.util.seededShuffled
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.util.combineStates
 import kotlinx.coroutines.CoroutineScope
@@ -43,6 +45,8 @@ internal class ModelEnvironment(
     val viewIdResolver: ThomasViewIdResolver = ThomasViewIdResolver(),
     val stateStorage: LayoutStateStorage? = null,
     val aiInference: ThomasAIInference? = null,
+    /** What every `randomize_children` order in the layout is derived from; see [seededShuffled]. */
+    val shuffleSeed: String = randomShuffleSeed(),
     /** The layout's `$environment`, shared by every copy [withState] makes. */
     private val environmentPublisher: ThomasEnvironmentPublisher = ThomasEnvironmentPublisher(),
     /**
@@ -76,6 +80,7 @@ internal class ModelEnvironment(
             channelRegistrar = this.channelRegistrar,
             viewIdResolver = this.viewIdResolver,
             aiInference = this.aiInference,
+            shuffleSeed = this.shuffleSeed,
             environmentPublisher = this.environmentPublisher,
             capabilities = this.capabilities
         )

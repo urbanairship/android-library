@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.screenshot
 
+import com.urbanairship.android.layout.util.UI_TEST_RANDOM_SEED
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
@@ -16,7 +17,6 @@ import com.urbanairship.json.JsonValue
  *    cosmetic: video/Vimeo/YouTube media and any `.svg` image are routed to a WebView by
  *    `MediaView`, and Robolectric draws no WebView content at all.
  *  - pager `automated_actions` are dropped, so stories hold their first page.
- *  - `randomize_children` is forced off, so option order is stable.
  *
  * `web_view` nodes are deliberately left alone. Their content cannot render, but keeping the node
  * still exercises the container geometry around it, which is the part a layout regression shows up
@@ -27,12 +27,14 @@ internal object SceneStubs {
     /** Any non-`.svg` URL works: [FakeImageLoader] ignores it and paints a fixed placeholder. */
     const val PLACEHOLDER_URL: String = "https://airship.test/uitest-placeholder.png"
 
+    /** The seed every capture's `randomize_children` orders come from: web's and iOS's UI-test seed. */
+    const val SHUFFLE_SEED: String = UI_TEST_RANDOM_SEED
+
     object Stubs {
         const val IMAGES = "images are placeholders"
         const val ANIMATED = "video shown as a placeholder image"
         const val WEB_VIEW = "web view renders blank"
         const val AUTO_ADVANCE = "auto-advance disabled, first page held"
-        const val RANDOMIZED = "randomized child order fixed"
     }
 
     private val STILL_MEDIA = setOf("image")
@@ -79,11 +81,6 @@ internal object SceneStubs {
 
         if (entries.remove("automated_actions") != null) {
             stubs += Stubs.AUTO_ADVANCE
-        }
-
-        if (entries["randomize_children"]?.getBoolean(false) == true) {
-            stubs += Stubs.RANDOMIZED
-            entries["randomize_children"] = JsonValue.wrap(false)
         }
 
         val builder = JsonMap.newBuilder()

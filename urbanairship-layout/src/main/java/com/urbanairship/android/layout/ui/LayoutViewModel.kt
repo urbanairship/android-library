@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.reporting.DisplayTimer
+import com.urbanairship.android.layout.util.randomShuffleSeed
 import kotlinx.coroutines.cancel
 
 internal class LayoutViewModel : ViewModel() {
@@ -30,7 +31,8 @@ internal class LayoutViewModel : ViewModel() {
         actionRunner: ThomasActionRunner,
         layoutState: LayoutState = LayoutState.EMPTY,
         stateStorage: LayoutStateStorage? = null,
-        aiInference: ThomasAIInference? = null
+        aiInference: ThomasAIInference? = null,
+        shuffleSeed: String? = null
     ): ModelEnvironment =
         environment ?: ModelEnvironment(
             layoutState = layoutState,
@@ -38,7 +40,8 @@ internal class LayoutViewModel : ViewModel() {
             actionsRunner = actionRunner,
             displayTimer = displayTimer,
             stateStorage = stateStorage,
-            aiInference = aiInference
+            aiInference = aiInference,
+            shuffleSeed = shuffleSeed ?: randomShuffleSeed()
         ).also {
             environment = it
         }

@@ -93,6 +93,7 @@ private fun MessageView.bindInternal(
     }
     storageFactory = { viewModel.viewStateStorage }
     aiProvider = { viewModel.ai }
+    randomSeedProvider = { viewModel.layoutRandomSeed }
 
     val job = launch { viewModel.states.collect(::render) }
     activeBindingJob = job
@@ -104,6 +105,7 @@ private fun MessageView.bindInternal(
                 analyticsFactory = null
                 storageFactory = null
                 aiProvider = null
+                randomSeedProvider = null
                 if (reportDismissOnClose) {
                     onDismissed()
                 }

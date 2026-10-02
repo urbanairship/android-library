@@ -73,7 +73,8 @@ internal class GridLayoutView(
     context: Context,
     private val model: GridLayoutModel,
     viewEnvironment: ViewEnvironment
-) : ViewGroup(context), BaseView, Clippable, ShrinkableView, LengthBasisProvider, FillsOfferedWidth {
+) : ViewGroup(context), BaseView, Clippable, ShrinkableView, LengthBasisProvider, FillsOfferedWidth,
+    ButtonDescriptionSource {
 
     private val clippableViewDelegate = ClippableViewDelegate()
 
@@ -183,6 +184,10 @@ internal class GridLayoutView(
     }
 
     override fun isShrinkable(): Boolean = model.isShrinkable
+
+    /** The header, the cells in placement order, then the footer, leaving out any background layer. */
+    override fun childrenInReadingOrder(): List<View> =
+        listOfNotNull(header) + cells.sortedBy { it.readingIndex } + listOfNotNull(footer)
 
     /** Ratio rows take their height from the grid's width, but only every config setting one makes that certain. */
     override fun establishesLength(horizontal: Boolean): Boolean {
