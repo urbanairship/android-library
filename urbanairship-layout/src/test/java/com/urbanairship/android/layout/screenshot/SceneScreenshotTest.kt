@@ -25,7 +25,6 @@ import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.ui.LayoutViewModel
-import com.urbanairship.android.layout.util.UI_TEST_RANDOM_SEED
 import com.urbanairship.android.layout.ui.ThomasBannerView
 import com.urbanairship.android.layout.ui.ThomasEmbeddedView
 import com.urbanairship.android.layout.view.ModalView
@@ -249,7 +248,7 @@ internal class SceneScreenshotTest(
             reporter = mockk<Reporter>(relaxUnitFun = true),
             displayTimer = DisplayTimer(activity),
             actionRunner = { _, _ -> },
-            shuffleSeed = UI_TEST_RANDOM_SEED
+            shuffleSeed = SceneStubs.SHUFFLE_SEED
         )
         return viewModel.getOrCreateModel(layout.view, modelEnvironment)
     }

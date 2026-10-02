@@ -88,7 +88,7 @@ A screenshot test is only as good as the frame it captures, and a Thomas scene h
 - **Loading states.** A capture only happens once the view tree has settled; Robolectric's looper is idled to quiescence first, so no load-in-progress placeholder or spinner phase reaches a diff.
 - **Pager automation.** Automated pager actions and auto-advance are dropped, so a story holds its first page instead of landing wherever the clock left it.
 - **Animation.** Transitions, indicator animations and anything else time-driven are disabled or fast-forwarded to their end state; a screenshot taken mid-animation is a coin flip.
-- **Randomised children.** `randomize_children` shuffles a container's children through an unseeded `shuffled()`, which cannot be made reproducible from outside. No fixture currently sets it; one that did would have to go in `sweep.skip` until the shuffle is seedable.
+- **Randomised children.** `randomize_children` stays on and shuffles with the fixed seed `"ui-test"` (`SceneStubs.SHUFFLE_SEED`), the one web and iOS UI tests use, so a randomized scene gets the same order every run and on every platform. Each such screenshot carries the stub `randomized children seeded with "ui-test"`.
 
 Anything else that cannot be pinned goes in `sweep.skip` in `config.json` as `"<path>": "reason"`, and the reason shows up in the report. A skip is visible by design — silently dropping a fixture is how a suite ends up testing less than it claims.
 
