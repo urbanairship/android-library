@@ -548,6 +548,37 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testMatchesItsWidthInsideTheBorderItDraws() {
+        Dispatchers.setMain(UnconfinedTestDispatcher(testDispatcher.scheduler))
+        val stroke = { width: Int -> """{"stroke_width": $width, "stroke_color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}""" }
+        // 320 less the overriding stroke of 12 drawn on both sides is 296; less the declared 4 would be 312.
+        val grid = build(
+            """
+            {"type": "grid_layout", "identifier": "grid",
+             "config": {"columns": {"type": "fixed", "count": 2}},
+             "border": ${stroke(4)},
+             "view_overrides": {
+               "config": [
+                 {"when_state_matches": ${gridWidth("""{"at_least": 297}""")}, "value": {"columns": {"type": "fixed", "count": 4}}},
+                 {"when_state_matches": ${gridWidth("""{"at_least": 296}""")}, "value": {"columns": {"type": "fixed", "count": 3}}}
+               ],
+               "border": [{"value": ${stroke(12)}}]
+             },
+             "items": [${List(4) { box(size = """{"width": "100%", "height": 20}""") }.joinToString()}]}
+            """.trimIndent(),
+            realEnvironment()
+        ) as ViewGroup
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        activity.setContentView(FrameLayout(activity).apply { addView(grid) })
+        nextFrame()
+        nextFrame()
+
+        assertEquals("the window it was laid out in", 320, grid.width)
+        assertEquals("the overriding stroke is drawn", 12, grid.paddingLeft)
+        assertEquals("three columns, matched at 296", 3, cells(grid).count { it.top == cells(grid)[0].top })
+    }
+
+    @Test
     public fun testItemsPlaceInTheOrderTheirConfigResolvesTo() {
         val first = """
             {"size": {"width": "100%", "height": 20},
