@@ -72,7 +72,7 @@ internal class LinearLayoutView(
     private val itemViews = mutableMapOf<LinearLayoutModel.Item, View>()
 
     /** The items in the order they're stacked and read. */
-    private var orderedItems: List<LinearLayoutModel.Item> = model.items.sortedBy { it.info.config.order }
+    private var orderedItems: List<LinearLayoutModel.Item> = model.orderedItems()
 
     init {
         backgroundsPainter.backgrounds = model.viewInfo.backgrounds
@@ -89,7 +89,7 @@ internal class LinearLayoutView(
             override fun onStateUpdated(state: ThomasState) {
                 backgroundsPainter.state = state
                 if (model.hasItemOverrides) {
-                    restack(model.items.sortedBy { state.resolveRequired(it.info.overrides?.config, it.info.config).order })
+                    restack(model.orderedItems(state))
                 }
             }
 

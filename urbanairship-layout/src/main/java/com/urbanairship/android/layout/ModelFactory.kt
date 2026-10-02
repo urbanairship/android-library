@@ -100,7 +100,7 @@ import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.util.ShuffleKey
-import com.urbanairship.android.layout.util.seededShuffled
+import com.urbanairship.android.layout.util.shuffledIf
 import kotlinx.coroutines.flow.StateFlow
 
 internal class ModelFactoryException(message: String) : Exception(message)
@@ -972,11 +972,3 @@ internal class ThomasModelFactory : ModelFactory {
         private const val PARENT_GRID_TAG = "__parent_grid__"
     }
 }
-
-/**
- * Returns the items in [key]'s shuffled order when [randomize] is set, else as they are.
- *
- * Derived from the key rather than drawn, so async content built again keeps the order already shown.
- */
-private fun <T> List<T>.shuffledIf(randomize: Boolean, key: ShuffleKey): List<T> =
-    if (randomize) seededShuffled(key) else this

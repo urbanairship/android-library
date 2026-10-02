@@ -164,6 +164,32 @@ public class LinearLayoutOrderTest {
     }
 
     @Test
+    public fun testAppliesAnOverrideThatAlreadyMatchesBeforeItIsAttached() {
+        val always = """"overrides": {"config": [{"value": {"order": -1}}]},"""
+        val json = """
+            {"type": "linear_layout", "direction": "vertical",
+             "items": [${item("a")}, ${item("b")}, ${item("c", always)}]}
+        """.trimIndent()
+        val view = LayoutViewModel().getOrCreateModel(ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), environment())
+            .createView(ApplicationProvider.getApplicationContext(), viewEnv, null) as ViewGroup
+        assertEquals(listOf("c", "a", "b"), texts(view))
+    }
+
+    @Test
+    public fun testAButtonDescribesAShuffledLayoutInTheOrderItIsShown() {
+        // ui-test:options:6 shuffles to e d None c a b; sorting by order then moves None to the end.
+        val button = """
+            {"type": "button_layout", "identifier": "button",
+             "view": {"type": "linear_layout", "direction": "vertical", "identifier": "options", "randomize_children": true,
+                      "items": [${(LETTERS.map { item(it) } + item("None", """"config": {"order": 1},""")).joinToString()}]}}
+        """.trimIndent()
+        val model = ThomasModelFactory().create(
+            ViewInfo.viewInfoFromJson(JsonValue.parseString(button).requireMap()), environment()
+        )
+        assertEquals("e, d, c, a, b, None", model.contentDescription(ApplicationProvider.getApplicationContext()))
+    }
+
+    @Test
     public fun testFollowsAnOverrideOnState() {
         val flip = """
             "overrides": {"config": [{

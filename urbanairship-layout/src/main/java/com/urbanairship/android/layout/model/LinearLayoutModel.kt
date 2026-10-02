@@ -5,6 +5,7 @@ import android.content.Context
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutInfo
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
@@ -37,6 +38,19 @@ internal class LinearLayoutModel(
 
     /** Whether any item's order can change with state. */
     val hasItemOverrides: Boolean = items.any { !it.info.overrides?.config.isNullOrEmpty() }
+
+    /**
+     * Returns the items in the order they stack and read: [items]' shuffle, then each item's order
+     * as [state] resolves it, list order among equal ones.
+     *
+     * @param state what the items' `overrides` match against: the layout's current state by default,
+     * and only read when an item has overrides.
+     * @return the ordered items.
+     */
+    fun orderedItems(state: ThomasState? = if (hasItemOverrides) layoutState.thomasState.value else null): List<Item> =
+        items.map { it to (state?.resolveRequired(it.info.overrides?.config, it.info.config) ?: it.info.config).order }
+            .sortedBy { (_, order) -> order }
+            .map { (item, _) -> item }
 
 
     data class Item(

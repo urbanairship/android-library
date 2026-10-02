@@ -45,6 +45,15 @@ internal fun <T> List<T>.seededShuffled(key: ShuffleKey): List<T> {
 }
 
 /**
+ * Returns the items in [key]'s shuffled order when [randomize] is set, else as they are.
+ *
+ * Derived from the key rather than drawn, so async content built again keeps the order already
+ * shown, and a button describes its children in the order they're shown.
+ */
+internal fun <T> List<T>.shuffledIf(randomize: Boolean, key: ShuffleKey): List<T> =
+    if (randomize) seededShuffled(key) else this
+
+/**
  * Builds the string a shuffle is hashed from: `<seed>:<identifier>:<count>`, or `<seed>:<count>`
  * for a layout without an identifier.
  *
