@@ -81,6 +81,18 @@ public class LinearLayoutOrderTest {
     }
 
     @Test
+    public fun testSortsAFractionalOrderBetweenWholeOnes() {
+        val stack = stack(
+            items = listOf(
+                item("a", """"config": {"order": 1},"""),
+                item("b", """"config": {"order": 0.5},"""),
+                item("c")
+            )
+        )
+        assertEquals(listOf("c", "b", "a"), texts(stack))
+    }
+
+    @Test
     public fun testKeepsListOrderWithoutOrders() {
         assertEquals(LETTERS, texts(stack(items = LETTERS.map { item(it) })))
     }

@@ -11,12 +11,12 @@ internal data class LinearLayoutItemConfig(
      * list order among equal ones. After a `randomize_children` shuffle, so a "None of these" at
      * order 1 stays last.
      */
-    val order: Int = 0
+    val order: Double = 0.0
 ) {
 
     companion object {
         fun fromJson(json: JsonMap): LinearLayoutItemConfig = LinearLayoutItemConfig(
-            order = (json.optionalField<Double>("order") ?: 0.0).toInt()
+            order = json.optionalField<Double>("order") ?: 0.0
         )
     }
 }

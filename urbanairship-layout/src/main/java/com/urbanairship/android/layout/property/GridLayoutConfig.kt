@@ -94,13 +94,13 @@ internal data class GridItemConfig(
      * list order among equal ones. After a `randomize_children` shuffle, so the shuffle mixes only
      * items of one order.
      */
-    val order: Int = 0
+    val order: Double = 0.0
 ) {
 
     companion object {
         fun fromJson(json: JsonMap): GridItemConfig = GridItemConfig(
             columnSpan = (json.optionalField<Double>("column_span") ?: 1.0).toInt(),
-            order = (json.optionalField<Double>("order") ?: 0.0).toInt()
+            order = json.optionalField<Double>("order") ?: 0.0
         )
     }
 }
