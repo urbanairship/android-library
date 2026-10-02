@@ -17,8 +17,6 @@ import com.urbanairship.json.JsonValue
  *    cosmetic: video/Vimeo/YouTube media and any `.svg` image are routed to a WebView by
  *    `MediaView`, and Robolectric draws no WebView content at all.
  *  - pager `automated_actions` are dropped, so stories hold their first page.
- *  - `randomize_children` is left on and shuffles with [SHUFFLE_SEED], web's and iOS's UI-test
- *    seed, so option order is stable and matches their screenshots.
  *
  * `web_view` nodes are deliberately left alone. Their content cannot render, but keeping the node
  * still exercises the container geometry around it, which is the part a layout regression shows up
@@ -29,7 +27,7 @@ internal object SceneStubs {
     /** Any non-`.svg` URL works: [FakeImageLoader] ignores it and paints a fixed placeholder. */
     const val PLACEHOLDER_URL: String = "https://airship.test/uitest-placeholder.png"
 
-    /** The seed every capture's `randomize_children` orders come from. */
+    /** The seed every capture's `randomize_children` orders come from: web's and iOS's UI-test seed. */
     const val SHUFFLE_SEED: String = UI_TEST_RANDOM_SEED
 
     object Stubs {
@@ -37,7 +35,6 @@ internal object SceneStubs {
         const val ANIMATED = "video shown as a placeholder image"
         const val WEB_VIEW = "web view renders blank"
         const val AUTO_ADVANCE = "auto-advance disabled, first page held"
-        const val SEEDED_SHUFFLE = "randomized children seeded with \"$SHUFFLE_SEED\""
     }
 
     private val STILL_MEDIA = setOf("image")
@@ -84,10 +81,6 @@ internal object SceneStubs {
 
         if (entries.remove("automated_actions") != null) {
             stubs += Stubs.AUTO_ADVANCE
-        }
-
-        if (entries["randomize_children"]?.getBoolean(false) == true) {
-            stubs += Stubs.SEEDED_SHUFFLE
         }
 
         val builder = JsonMap.newBuilder()
