@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.app.Activity
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -39,6 +40,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 /** The vectors are web-thomas's, so every platform orders a scene the same way. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -178,15 +180,49 @@ public class LinearLayoutOrderTest {
     @Test
     public fun testAButtonDescribesAShuffledLayoutInTheOrderItIsShown() {
         // ui-test:options:6 shuffles to e d None c a b; sorting by order then moves None to the end.
-        val button = """
+        val root = host(
+            """
             {"type": "button_layout", "identifier": "button",
              "view": {"type": "linear_layout", "direction": "vertical", "identifier": "options", "randomize_children": true,
                       "items": [${(LETTERS.map { item(it) } + item("None", """"config": {"order": 1},""")).joinToString()}]}}
-        """.trimIndent()
-        val model = ThomasModelFactory().create(
-            ViewInfo.viewInfoFromJson(JsonValue.parseString(button).requireMap()), environment()
+            """.trimIndent()
         )
-        assertEquals("e, d, c, a, b, None", model.contentDescription(ApplicationProvider.getApplicationContext()))
+        assertEquals("e, d, c, a, b, None", root.contentDescription)
+    }
+
+    @Test
+    public fun testAButtonsDescriptionFollowsItsItemsAsStateReordersAndHidesThem() {
+        val flip = """
+            "overrides": {"config": [{
+              "when_state_matches": {"scope": ["flipped"], "value": {"equals": true}},
+              "value": {"order": -1}
+            }]},
+        """.trimIndent()
+        val hiddenWhenFlipped = """
+            {"size": {"width": "100%", "height": "auto"},
+             "view": {"type": "label", "text": "b",
+                      "visibility": {"default": true, "invert_when_state_matches": {"scope": ["flipped"], "value": {"equals": true}}},
+                      "text_appearance": {"font_size": 14, "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}}}
+        """.trimIndent()
+        val root = host(
+            """
+            {"type": "state_controller",
+             "view": {"type": "linear_layout", "direction": "vertical", "items": [
+               $FLIP_BUTTON,
+               {"size": {"width": "100%", "height": "auto"},
+                "view": {"type": "button_layout", "identifier": "button",
+                         "view": {"type": "linear_layout", "direction": "vertical",
+                                  "items": [${item("a")}, $hiddenWhenFlipped, ${item("c", flip)}]}}}
+             ]}}
+            """.trimIndent()
+        )
+        val button = root.descendants().filterIsInstance<ButtonLayoutView>().single()
+        assertEquals("a, b, c", button.contentDescription)
+
+        root.descendants().filterIsInstance<LabelButtonView>().single().performClick()
+        testDispatcher.scheduler.advanceUntilIdle()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals("c moves first and b is hidden", "c, a", button.contentDescription)
     }
 
     @Test
@@ -197,13 +233,6 @@ public class LinearLayoutOrderTest {
               "value": {"order": -1}
             }]},
         """.trimIndent()
-        val button = """
-            {"size": {"width": "100%", "height": 40},
-             "view": {"type": "label_button", "identifier": "flip",
-                      "label": {"type": "label", "text": "flip",
-                                "text_appearance": {"font_size": 14, "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}},
-                      "event_handlers": [{"type": "tap", "state_actions": [{"type": "set", "key": "flipped", "value": true}]}]}}
-        """.trimIndent()
         val inner = """
             {"size": {"width": "100%", "height": "auto"},
              "view": {"type": "linear_layout", "direction": "vertical",
@@ -212,7 +241,7 @@ public class LinearLayoutOrderTest {
         val root = host(
             """
             {"type": "state_controller",
-             "view": {"type": "linear_layout", "direction": "vertical", "items": [$button, $inner]}}
+             "view": {"type": "linear_layout", "direction": "vertical", "items": [$FLIP_BUTTON, $inner]}}
             """.trimIndent()
         )
         val stack = root.descendants().filterIsInstance<LinearLayoutView>().last()
@@ -286,5 +315,14 @@ public class LinearLayoutOrderTest {
 
     private companion object {
         val LETTERS = listOf("a", "b", "c", "d", "e")
+
+        /** A button that sets `flipped` to true. */
+        val FLIP_BUTTON = """
+            {"size": {"width": "100%", "height": 40},
+             "view": {"type": "label_button", "identifier": "flip",
+                      "label": {"type": "label", "text": "flip",
+                                "text_appearance": {"font_size": 14, "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}},
+                      "event_handlers": [{"type": "tap", "state_actions": [{"type": "set", "key": "flipped", "value": true}]}]}}
+        """.trimIndent()
     }
 }

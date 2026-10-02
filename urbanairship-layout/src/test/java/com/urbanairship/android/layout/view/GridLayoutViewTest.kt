@@ -691,6 +691,25 @@ public class GridLayoutViewTest {
         capabilities = ThomasCapabilities.NONE
     )
 
+    @Test
+    public fun testAButtonAroundAGridDescribesItsItemsInPlacementOrder() {
+        val first = """{"config": {"order": 1}, "view": ${label("first written")}}"""
+        val second = """{"view": ${label("second written")}}"""
+        val button = build(
+            """
+            {"type": "button_layout", "identifier": "button",
+             "view": {"type": "grid_layout", "identifier": "grid",
+                      "config": {"columns": {"type": "fixed", "count": 2}},
+                      "header": {"view": ${label("top")}},
+                      "items": [$first, $second]}}
+            """.trimIndent()
+        )
+        button.measure(exactly(300), unspecified())
+        button.layout(0, 0, button.measuredWidth, button.measuredHeight)
+
+        assertEquals("top, second written, first written", button.contentDescription)
+    }
+
     private fun spreadColumns(maxSpace: Int?, horizontal: String) = """
         {"columns": {"type": "fit", "max": 4,
                      "min_width": {"type": "fixed", "size": 44},

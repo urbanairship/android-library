@@ -47,7 +47,7 @@ internal class LinearLayoutView(
     context: Context,
     private val model: LinearLayoutModel,
     private val viewEnvironment: ViewEnvironment
-) : WeightlessLinearLayout(context), BaseView, Clippable, ShrinkableView {
+) : WeightlessLinearLayout(context), BaseView, Clippable, ShrinkableView, ButtonDescriptionSource {
 
     private val clippableViewDelegate: ClippableViewDelegate = ClippableViewDelegate()
 
@@ -147,6 +147,9 @@ internal class LinearLayoutView(
 
 
     override fun isShrinkable(): Boolean = model.isShrinkable
+
+    /** The items as they're stacked, leaving out any background layer drawn as a child. */
+    override fun childrenInReadingOrder(): List<View> = orderedItems.mapNotNull { itemViews[it] }
 
     override fun isExcludedFromStack(child: View): Boolean = videoBackgrounds.contains(child)
 

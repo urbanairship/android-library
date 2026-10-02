@@ -94,9 +94,9 @@ internal class ButtonLayoutView(
         if (isButtonForAccessibility) {
             this.isClickable = true
             this.isFocusable = true
-            model.contentDescription(context)?.ifNotEmpty {
-                this.contentDescription = it
-            }
+            // Generated from what the button wraps unless it names its own; see [refreshDescription].
+            contentDescription = model.contentDescription(context)?.ifEmpty { null }
+                ?: generatedButtonDescription(view).ifEmpty { null }
             // To make it a single unit, the child view MUST be hidden from accessibility.
             view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         } else if (model.viewInfo.contentDescription != null || model.viewInfo.localizedContentDescription != null) {
@@ -124,6 +124,8 @@ internal class ButtonLayoutView(
             // its own `MediaModel` and gets the state through that.
             override fun onStateUpdated(state: ThomasState) {
                 backgroundsPainter.state = state
+                // Posted, so the views inside have taken this state before they're read.
+                if (generatesDescription) post { refreshDescription() }
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -193,6 +195,19 @@ internal class ButtonLayoutView(
         videoBackgrounds.placeInto(
             backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, paddingLeft, paddingTop
         )
+        // A grid only knows its reading order once it has placed its items.
+        if (generatesDescription) refreshDescription()
+    }
+
+    /** Whether the button reads its description from what it wraps, rather than naming one. */
+    private val generatesDescription: Boolean
+        get() = isButtonForAccessibility &&
+            model.viewInfo.contentDescription == null && model.viewInfo.localizedContentDescription == null
+
+    /** Sets the description from the views inside as they stand now, if it changed. */
+    private fun refreshDescription() {
+        val description = generatedButtonDescription(view).ifEmpty { null }
+        if (description != contentDescription?.toString()) contentDescription = description
     }
 
     // A `backgrounds` layer fills the host's box corner to corner, so a rounded host has to clip
