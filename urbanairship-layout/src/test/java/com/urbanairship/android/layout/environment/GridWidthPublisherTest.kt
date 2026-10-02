@@ -18,16 +18,19 @@ public class GridWidthPublisherTest {
     private val width: Float? get() = state.changes.value.width
 
     @Test
-    public fun testAnImmediateWidthIsPublishedAtOnce() {
-        publisher.publish(320f, immediate = true)
+    public fun testTheFirstWidthIsPublishedAtTheNextFrame() {
+        publisher.publish(320f)
+        assertNull(width)
 
+        frames.advance()
         assertEquals(320f, width)
         assertTrue(frames.isEmpty)
     }
 
     @Test
     public fun testAChangeIsPublishedAtTheNextFrame() {
-        publisher.publish(320f, immediate = true)
+        publisher.publish(320f)
+        frames.advance()
 
         publisher.publish(300f)
         assertEquals(320f, width)
@@ -38,7 +41,8 @@ public class GridWidthPublisherTest {
 
     @Test
     public fun testChangesWithinAFramePublishOnlyTheLatest() {
-        publisher.publish(320f, immediate = true)
+        publisher.publish(320f)
+        frames.advance()
 
         publisher.publish(310f)
         publisher.publish(300f)
@@ -52,15 +56,27 @@ public class GridWidthPublisherTest {
 
     @Test
     public fun testTheSameWidthSchedulesNothing() {
-        publisher.publish(320f, immediate = true)
+        publisher.publish(320f)
+        frames.advance()
 
         publisher.publish(320f)
         assertTrue(frames.isEmpty)
     }
 
     @Test
+    public fun testAFirstWidthOfNoneIsStillPublished() {
+        val stale = SharedState(GridState("grid", width = 320f))
+        val fresh = GridWidthPublisher(stale, nextFrame = frames)
+
+        fresh.publish(null)
+        frames.advance()
+        assertNull(stale.changes.value.width)
+    }
+
+    @Test
     public fun testLosingTheWidthIsPublishedToo() {
-        publisher.publish(320f, immediate = true)
+        publisher.publish(320f)
+        frames.advance()
 
         publisher.publish(null)
         frames.advance()
@@ -68,12 +84,11 @@ public class GridWidthPublisherTest {
     }
 
     @Test
-    public fun testAnImmediateWidthReplacesOneWaitingForTheNextFrame() {
-        publisher.publish(320f, immediate = true)
-        publisher.publish(300f)
+    public fun testCancelDropsAWidthWaitingForTheNextFrame() {
+        publisher.publish(320f)
 
-        publisher.publish(280f, immediate = true)
-        assertEquals(280f, width)
+        publisher.cancel()
         assertTrue(frames.isEmpty)
+        assertNull(width)
     }
 }

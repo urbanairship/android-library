@@ -572,9 +572,9 @@ internal class LinearLayoutItemInfo(
  * The grid's own width sets the columns; its items never do. A width of `auto` fills the room the
  * parent offers rather than hugging the items.
  *
- * `view_overrides.config` changes the config with state, as any view override does. Its
- * predicates, and its items' `overrides`, also see the grid's own width at `$grids.current.width`;
- * nothing inside the cells does.
+ * `view_overrides.config` changes the config with state, as any view override does. The grid's
+ * width is at `$grids.current.width` for the grid itself, its items' `overrides` and everything
+ * inside it, until a nested grid takes over.
  */
 internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
     val identifier: String = json.requireField("identifier")

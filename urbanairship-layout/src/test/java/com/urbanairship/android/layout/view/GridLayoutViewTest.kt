@@ -25,11 +25,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import androidx.core.view.isVisible
+import java.time.Duration
+import org.robolectric.Shadows.shadowOf
+import android.os.Looper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -529,15 +533,18 @@ public class GridLayoutViewTest {
              "view": {"type": "empty_view",
                       "visibility": {"default": true, "invert_when_state_matches": ${gridWidth("""{"at_least": 0}""")}}}}
         """.trimIndent()
+        // Collectors run inline, as on Dispatchers.Main.immediate, so a publish mid-layout would lose its layout requests.
+        Dispatchers.setMain(UnconfinedTestDispatcher(testDispatcher.scheduler))
         val environment = realEnvironment()
         val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(hidden, box()), environment = environment)
-        testDispatcher.scheduler.advanceUntilIdle()
 
-        layout(grid, width = 300)
-        testDispatcher.scheduler.advanceUntilIdle()
+        // Laid out by the window's own traversal, where a publish from inside layout would lose its requests.
+        nextFrame()
+        nextFrame()
 
         assertFalse("hidden by the grid's width", items(grid)[0].isVisible)
         assertTrue(items(grid)[1].isVisible)
+        assertEquals("and the grid is laid out again, closing up its column", 0, cells(grid)[1].left)
     }
 
     @Test
@@ -917,6 +924,12 @@ public class GridLayoutViewTest {
         val info = ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap())
         return LayoutViewModel().getOrCreateModel(info, environment)
             .createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
+    }
+
+    /** Runs the next frame's callbacks, where the grid publishes its width, and what they start. */
+    private fun nextFrame() {
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(20))
+        testDispatcher.scheduler.advanceUntilIdle()
     }
 
     /** A real environment, so state reaches the grid's descendants, which [mockEnv]'s don't. */
