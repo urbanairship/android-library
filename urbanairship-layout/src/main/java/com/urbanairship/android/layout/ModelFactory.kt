@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout
 
 import com.urbanairship.android.layout.environment.FormType
+import com.urbanairship.android.layout.environment.GridState
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.PagersViewTracker
@@ -192,6 +193,7 @@ internal class ThomasModelFactory : ModelFactory {
                 score = parent.score?.let { PARENT_SCORE_TAG },
                 layout = if (parent.layout != LayoutState.EMPTY.layout) PARENT_LAYOUT_TAG else null,
                 async = parent.asyncView?.let { PARENT_ASYNC_TAG },
+                grid = parent.grid?.let { PARENT_GRID_TAG },
                 story = null  // Story doesn't need inheritance
             )
         } ?: Controllers.Builder()
@@ -221,7 +223,7 @@ internal class ThomasModelFactory : ModelFactory {
             if (!parentTag.isNullOrEmpty()) {
                 processedNodes[parentTag]?.childTags?.add(node.tag)
             }
-            val childControllers = if (info.type.isController) {
+            val childControllers = if (info.type.isController || info.type == ViewType.GRID_LAYOUT) {
                 // If node is a controller, update the controllers for the child, add this node
                 // to the processed controllers map, and also update the controllers for this node
                 // so that it can access its own state.
@@ -272,7 +274,8 @@ internal class ThomasModelFactory : ModelFactory {
                 PARENT_RADIO_TAG,
                 PARENT_SCORE_TAG,
                 PARENT_LAYOUT_TAG,
-                PARENT_ASYNC_TAG -> null  // Handled in buildLayoutState
+                PARENT_ASYNC_TAG,
+                PARENT_GRID_TAG -> null  // Handled in buildLayoutState
                 else -> createMutableSharedState(ctrl.info.info, environment.stateStorage)  // Create new for async's controllers
             }
         }
@@ -286,6 +289,10 @@ internal class ThomasModelFactory : ModelFactory {
             .mapValues { VideoGroupBroadcastChannel() }
 
         val videoControlGroups = mutableMapOf<Tag, Pair<String, String>>()
+
+        val gridStates = controllers
+            .mapNotNull { (tag, ctrl) -> (ctrl.info.info as? GridLayoutInfo)?.let { tag to SharedState(GridState(it.identifier, width = null)) } }
+            .toMap()
 
         controllers.forEach { (tag, ctrl) ->
             val info = ctrl.info.info as? VideoControllerInfo ?: return@forEach
@@ -320,6 +327,7 @@ internal class ThomasModelFactory : ModelFactory {
                         videoCommandChannels = videoCommandChannels,
                         videoBroadcastChannels = videoBroadcastChannels,
                         videoControlGroups = videoControlGroups,
+                        gridStates = gridStates,
                         thomasState = { key -> thomasState(key, environment) },
                         parentLayoutState = parentLayoutState
                     )
@@ -343,7 +351,7 @@ internal class ThomasModelFactory : ModelFactory {
     private fun thomasState(key: ThomasStateKey, environment: ModelEnvironment): StateFlow<ThomasState> {
         val scope = thomasStates.getOrPut(key) {
             makeThomasState(
-                key.form, key.layout, key.pager, key.video, key.asyncView, environment.capabilities
+                key.form, key.layout, key.pager, key.video, key.asyncView, environment.capabilities, key.grid
             )
         }
         environment.stateScopes.add(scope, scopeOwner)
@@ -429,7 +437,8 @@ internal class ThomasModelFactory : ModelFactory {
         val layout: SharedState<State.Layout>,
         val pager: SharedState<State.Pager>?,
         val video: SharedState<State.Video>?,
-        val asyncView: SharedState<State.AsyncView>?
+        val asyncView: SharedState<State.AsyncView>?,
+        val grid: SharedState<GridState>?
     )
 
     data class LayoutNode(
@@ -466,7 +475,8 @@ internal class ThomasModelFactory : ModelFactory {
         val layout: Tag?,
         val story: Tag?,
         val video: List<Tag>,
-        val async: Tag?
+        val async: Tag?,
+        val grid: Tag?
     ) {
         @Suppress("UNCHECKED_CAST")
         fun buildLayoutState(
@@ -475,6 +485,7 @@ internal class ThomasModelFactory : ModelFactory {
             videoCommandChannels: Map<Tag, VideoCommandChannel>,
             videoBroadcastChannels: Map<Tag, VideoGroupBroadcastChannel>,
             videoControlGroups: Map<Tag, Pair<String, String>>,
+            gridStates: Map<Tag, SharedState<GridState>>,
             thomasState: (ThomasStateKey) -> StateFlow<ThomasState>,
             parentLayoutState: LayoutState? = null
         ): LayoutState {
@@ -524,6 +535,11 @@ internal class ThomasModelFactory : ModelFactory {
                 else -> async?.let { states[it] as? SharedState<State.AsyncView> }
             }
 
+            val gridFlow = when (grid) {
+                PARENT_GRID_TAG -> parentLayoutState?.grid
+                else -> grid?.let { gridStates[it] }
+            }
+
             val videoTag = video.firstOrNull()
             val parentVideoTag = video.getOrNull(1)
 
@@ -553,12 +569,13 @@ internal class ThomasModelFactory : ModelFactory {
                 score = scoreFlow,
                 layout = layoutFlow,
                 thomasState = thomasState(
-                    ThomasStateKey(formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow)
+                    ThomasStateKey(formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow, gridFlow)
                 ),
                 pagerTracker = pagerTracker,
                 video = videoFlow,
                 videoControl = videoControl,
-                asyncView = asyncFlow
+                asyncView = asyncFlow,
+                grid = gridFlow
             )
         }
 
@@ -571,7 +588,8 @@ internal class ThomasModelFactory : ModelFactory {
             var layout: Tag? = null,
             var story: Tag? = null,
             val video: List<Tag> = emptyList(),
-            var async: Tag? = null
+            var async: Tag? = null,
+            var grid: Tag? = null
         ) {
             fun update(type: ViewType, tag: Tag): Builder = when (type) {
                 ViewType.FORM_CONTROLLER,
@@ -584,6 +602,7 @@ internal class ThomasModelFactory : ModelFactory {
                 ViewType.STORY_INDICATOR -> copy(story = tag)
                 ViewType.VIDEO_CONTROLLER -> copy(video = listOf(tag) + video)
                 ViewType.ASYNC_VIEW_CONTROLLER -> copy(async = tag)
+                ViewType.GRID_LAYOUT -> copy(grid = tag)
                 else -> this
             }
 
@@ -596,7 +615,8 @@ internal class ThomasModelFactory : ModelFactory {
                 layout = layout,
                 story = story,
                 video = video.toList(),
-                async = async
+                async = async,
+                grid = grid
             )
         }
     }
@@ -636,6 +656,8 @@ internal class ThomasModelFactory : ModelFactory {
 
                 GridLayoutModel(
                     viewInfo = info,
+                    gridState = environment.layoutState.grid
+                        ?: throw ModelFactoryException("Required grid state was null for GridLayout!"),
                     items = info.items.map { GridLayoutModel.Item(it, modelFor(it)) },
                     header = info.header?.let { GridLayoutModel.Edge(it, modelFor(it)) },
                     footer = info.footer?.let { GridLayoutModel.Edge(it, modelFor(it)) },
@@ -944,5 +966,6 @@ internal class ThomasModelFactory : ModelFactory {
         private const val PARENT_SCORE_TAG = "__parent_score__"
         private const val PARENT_LAYOUT_TAG = "__parent_layout__"
         private const val PARENT_ASYNC_TAG = "__parent_async__"
+        private const val PARENT_GRID_TAG = "__parent_grid__"
     }
 }

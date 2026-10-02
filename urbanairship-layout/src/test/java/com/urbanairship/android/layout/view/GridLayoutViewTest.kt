@@ -29,7 +29,9 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import androidx.core.view.isVisible
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -281,7 +283,7 @@ public class GridLayoutViewTest {
     public fun testTheConfigIsPickedByTheGridsWidth() {
         val grid = grid(
             config = """{"columns": {"type": "fixed", "count": 2}, "cell_aspect_ratio": 1}""",
-            selectors = """[{"grid_width": {"at_least": 480}, "config": {"columns": {"type": "fixed", "count": 6}, "cell_aspect_ratio": 1}}]""",
+            overrides = """[{"when_state_matches": ${gridWidth("""{"at_least": 480}""")}, "value": {"columns": {"type": "fixed", "count": 6}, "cell_aspect_ratio": 1}}]""",
             items = List(6) { box() }
         )
         layout(grid, width = 479)
@@ -295,12 +297,12 @@ public class GridLayoutViewTest {
     public fun testEachItemResolvesItsSpanFromItsOwnSelectors() {
         val half = """
             {"size": {"width": "100%", "height": 20},
-             "config": {"default": {"column_span": 6},
-                        "selectors": [{"grid_width": {"at_most": 280}, "config": {"column_span": 12}}]},
+             "config": {"column_span": 6},
+             "overrides": {"config": [{"when_state_matches": ${gridWidth("""{"at_most": 280}""")}, "value": {"column_span": 12}}]},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val third = """
-            {"size": {"width": "100%", "height": 20}, "config": {"default": {"column_span": 4}},
+            {"size": {"width": "100%", "height": 20}, "config": {"column_span": 4},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val grid = grid(
@@ -521,16 +523,34 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testShowsItsWidthToTheViewsInsideItsCells() {
+        val hidden = """
+            {"size": {"width": "100%", "height": 20},
+             "view": {"type": "empty_view",
+                      "visibility": {"default": true, "invert_when_state_matches": ${gridWidth("""{"at_least": 0}""")}}}}
+        """.trimIndent()
+        val environment = realEnvironment()
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(hidden, box()), environment = environment)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        layout(grid, width = 300)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse("hidden by the grid's width", items(grid)[0].isVisible)
+        assertTrue(items(grid)[1].isVisible)
+    }
+
+    @Test
     public fun testItemsPlaceInTheOrderTheirConfigResolvesTo() {
         val first = """
             {"size": {"width": "100%", "height": 20},
-             "config": {"default": {"order": 0}},
+             "config": {"order": 0},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val second = """
             {"size": {"width": "100%", "height": 20},
-             "config": {"default": {"order": 0},
-                        "selectors": [{"grid_width": {"at_least": 400}, "config": {"order": -1}}]},
+             "config": {"order": 0},
+             "overrides": {"config": [{"when_state_matches": ${gridWidth("""{"at_least": 400}""")}, "value": {"order": -1}}]},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(first, second))
@@ -548,7 +568,7 @@ public class GridLayoutViewTest {
             """{"size": {"width": "100%", "height": 20}, "view": ${label(it)}}"""
         }
         val none = """
-            {"size": {"width": "100%", "height": 20}, "config": {"default": {"order": 1}},
+            {"size": {"width": "100%", "height": 20}, "config": {"order": 1},
              "view": ${label("None")}}
         """.trimIndent()
         val grid = grid(
@@ -588,10 +608,10 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": {"type": "grid_layout",
-                          "config": {"default": {"columns": {"type": "fit", "max": 3,
-                                                             "min_width": {"type": "fixed", "size": 40}},
-                                                 "column_spacing": {"type": "fixed", "space": 8}}},
+                 "view": {"type": "grid_layout", "identifier": "grid",
+                          "config": {"columns": {"type": "fit", "max": 3,
+                                                 "min_width": {"type": "fixed", "size": 40}},
+                                     "column_spacing": {"type": "fixed", "space": 8}},
                           "items": [${List(3) { box(size = """{"width": "100%", "height": 40}""") }.joinToString()}]}}
                 """,
                 """{"size": {"width": "50%", "height": 40}, "view": {"type": "empty_view"}}"""
@@ -693,7 +713,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": {"type": "grid_layout", "config": {"default": {"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}}},
+                 "view": {"type": "grid_layout", "identifier": "grid", "config": {"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}},
                           "items": [$image, $image]}}
                 """,
                 """{"size": {"width": "30%", "height": "auto"}, "view": ${label("thirty")}}"""
@@ -849,7 +869,7 @@ public class GridLayoutViewTest {
     }
 
     private fun grid(config: String): String = """
-        {"type": "grid_layout", "config": {"default": $config},
+        {"type": "grid_layout", "identifier": "grid", "config": $config,
          "items": [${List(4) { box() }.joinToString()}]}
     """.trimIndent()
 
@@ -869,26 +889,47 @@ public class GridLayoutViewTest {
         grid.layout(0, 0, grid.measuredWidth, grid.measuredHeight)
     }
 
-    private fun grid(config: String, items: List<String>, selectors: String? = null, extra: String = ""): ViewGroup =
+    private fun grid(
+        config: String,
+        items: List<String>,
+        overrides: String? = null,
+        extra: String = "",
+        environment: ModelEnvironment = mockEnv
+    ): ViewGroup =
         build(
             """
             {
               "type": "grid_layout",
+              "identifier": "grid",
               $extra
-              "config": {"default": $config ${selectors?.let { """, "selectors": $it""" } ?: ""}},
+              "config": $config,
+              ${overrides?.let { """"view_overrides": {"config": $it},""" } ?: ""}
               "items": [${items.joinToString()}]
             }
-            """.trimIndent()
+            """.trimIndent(),
+            environment
         ).also { view ->
             Robolectric.buildActivity(Activity::class.java).setup().get()
                 .setContentView(FrameLayout(view.context).apply { addView(view) })
         } as ViewGroup
 
-    private fun build(json: String): View {
+    private fun build(json: String, environment: ModelEnvironment = mockEnv): View {
         val info = ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap())
-        return LayoutViewModel().getOrCreateModel(info, mockEnv)
+        return LayoutViewModel().getOrCreateModel(info, environment)
             .createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
     }
+
+    /** A real environment, so state reaches the grid's descendants, which [mockEnv]'s don't. */
+    private fun realEnvironment() = ModelEnvironment(
+        layoutState = LayoutState.EMPTY,
+        reporter = mockk(relaxUnitFun = true),
+        actionsRunner = mockk(relaxUnitFun = true),
+        displayTimer = mockk(relaxed = true),
+        modelScope = testScope
+    )
+
+    /** A predicate on the grid's own width, as its overrides and its items' see it. */
+    private fun gridWidth(range: String) = """{"scope": ["${'$'}grids", "current", "width"], "value": $range}"""
 
     private fun box(
         size: String = """{"width": "100%", "height": "100%"}""",
@@ -897,7 +938,7 @@ public class GridLayoutViewTest {
     ) = """
         {
           "size": $size,
-          "config": {"default": {"column_span": $span}},
+          "config": {"column_span": $span},
           ${margin?.let { """"margin": $it,""" } ?: ""}
           "view": {"type": "empty_view"}
         }

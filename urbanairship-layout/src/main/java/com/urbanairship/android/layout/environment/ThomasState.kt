@@ -22,7 +22,8 @@ internal data class ThomasState(
     val pager: State.Pager?,
     val video: State.Video?,
     val asyncView: State.AsyncView?,
-    val capabilities: ThomasCapabilities
+    val capabilities: ThomasCapabilities,
+    val grid: GridState? = null
 ): JsonSerializable {
 
     private val json: JsonValue by lazy { buildJson() }
@@ -85,6 +86,12 @@ internal data class ThomasState(
                     ).toJsonValue())
                 }
 
+                grid?.let { grid ->
+                    put(GRIDS, jsonMapOf(
+                        CURRENT to grid
+                    ).toJsonValue())
+                }
+
                 capabilities.ai?.let { status ->
                     put(AI, jsonMapOf(
                         CURRENT to status
@@ -126,6 +133,7 @@ internal data class ThomasState(
         const val ASYNC_VIEW = "\$asyncView"
         const val AI = "\$ai"
         const val ENVIRONMENT = "\$environment"
+        const val GRIDS = "\$grids"
     }
 }
 
@@ -152,6 +160,24 @@ internal data class ThomasCapabilities(
     }
 }
 
+/**
+ * The nearest enclosing grid, at `$grids.current`: the grid itself in its own overrides and its
+ * items', and the grid a view sits in for anything inside it, until a nested grid takes over.
+ *
+ * Not persisted: the width is measured, so a restored one would be stale.
+ *
+ * @param identifier The grid's `identifier`.
+ * @param width The grid's inner width in points, or `null` for a grid with none to measure, which
+ * leaves `width` out so a predicate on it doesn't match.
+ */
+internal data class GridState(val identifier: String, val width: Float?) : JsonSerializable {
+    override fun toJsonValue(): JsonValue = jsonMapOf(WIDTH to width).toJsonValue()
+
+    private companion object {
+        const val WIDTH = "width"
+    }
+}
+
 internal fun makeThomasState(
     formState: SharedState<State.Form>?,
     layoutState: SharedState<State.Layout>?,
@@ -159,7 +185,8 @@ internal fun makeThomasState(
     videoState: SharedState<State.Video>?,
     asyncView: SharedState<State.AsyncView>?,
     capabilities: StateFlow<ThomasCapabilities> =
-        MutableStateFlow(ThomasCapabilities.NONE).asStateFlow()
+        MutableStateFlow(ThomasCapabilities.NONE).asStateFlow(),
+    grid: SharedState<GridState>? = null
 ): StateFlow<ThomasState> {
 
     val layout = layoutState
@@ -173,7 +200,14 @@ internal fun makeThomasState(
         flow3 = pagerState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow4 = videoState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow5 = asyncView?.changes ?: MutableStateFlow(null).asStateFlow(),
-        flow6 = capabilities,
-        transform = ::ThomasState
+        // combineStates stops at six flows, so the grid rides along with the capabilities.
+        flow6 = combineStates(
+            flow1 = capabilities,
+            flow2 = grid?.changes ?: MutableStateFlow(null).asStateFlow(),
+            transform = ::Pair
+        ),
+        transform = { layout, form, pager, video, async, (capabilities, grid) ->
+            ThomasState(layout, form, pager, video, async, capabilities, grid)
+        }
     )
 }

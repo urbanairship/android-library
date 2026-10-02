@@ -52,7 +52,9 @@ internal class LayoutState(
     val thomasState: StateFlow<ThomasState>,
     val thomasForm: ThomasForm?,
     val parentForm: ThomasForm?,
-    val pagerTracker: PagersViewTracker?
+    val pagerTracker: PagersViewTracker?,
+    /** The nearest enclosing grid, the grid itself included; `$grids.current`. */
+    val grid: SharedState<GridState>? = null
 ) {
     val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
     private var runningJobs = mutableMapOf<String, Job>()
