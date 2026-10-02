@@ -253,7 +253,7 @@ public class GridColumnsTest {
     }
 
     @Test
-    public fun testFloorsAFractionalColumnStart() {
+    public fun testReadsAFractionalColumnStartAsItsWholePart() {
         val config = GridItemConfig.fromJson(jsonMapOf("column_span" to 2, "column_start" to 5.7))
         assertEquals(5, config.columnStart)
     }

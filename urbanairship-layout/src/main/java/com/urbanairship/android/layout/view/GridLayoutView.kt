@@ -599,7 +599,7 @@ internal class GridLayoutView(
         fun measureItem(rowHeight: Int?) {
             val margin = resolveMargins()
             val innerWidth = (cellWidth - margin.left - margin.right).coerceAtLeast(0)
-            val widthSpec = specFor(info.size.width, innerWidth, capToBase = true)
+            val widthSpec = specFor(info.size.width, innerWidth, capsLength = true, capsShare = false)
 
             val height = info.size.height
             val aspectRatio = info.size.aspectRatio
@@ -615,13 +615,9 @@ internal class GridLayoutView(
                     height.isAbsolute -> exactly(dpToPx(height.getInt()))
                     else -> unspecified()
                 }
-                // A share over 100% would spill out of its row, so it stops at the whole of it.
-                height.isPercent -> exactly(
-                    (min(height.getFloat(), 1f) * (rowHeight - margin.top - margin.bottom).coerceAtLeast(0)).roundToInt()
-                )
                 else -> specFor(
                     height, (rowHeight - margin.top - margin.bottom).coerceAtLeast(0),
-                    capToBase = false
+                    capsLength = false, capsShare = true
                 )
             }
             item.measure(widthSpec, heightSpec)
@@ -630,14 +626,21 @@ internal class GridLayoutView(
         /**
          * Returns the spec for one axis of the item against [base], the cell less its margins.
          *
-         * A percentage is a share of [base]; with [capToBase] a fixed length never exceeds it, so an item
-         * never overflows into the next cell.
+         * A percentage is a share of [base]. As on web, a cell's width caps a fixed width, so an image
+         * fits the cell rather than being cropped by it, while its row caps a share of its height, so
+         * a `200%` item is no taller than the row. A `200%` width still spills into the next cell.
+         *
+         * @param capsLength whether a fixed length stops at [base].
+         * @param capsShare whether a share over 100% stops at the whole of [base].
          */
-        private fun specFor(dimension: Size.Dimension, base: Int, capToBase: Boolean): Int =
+        private fun specFor(dimension: Size.Dimension, base: Int, capsLength: Boolean, capsShare: Boolean): Int =
             when (dimension.type) {
-                Size.DimensionType.PERCENT -> exactly((dimension.getFloat() * base).roundToInt())
+                Size.DimensionType.PERCENT -> {
+                    val share = if (capsShare) min(dimension.getFloat(), 1f) else dimension.getFloat()
+                    exactly((share * base).roundToInt())
+                }
                 Size.DimensionType.ABSOLUTE -> dpToPx(dimension.getInt()).let {
-                    exactly(if (capToBase) min(it, base) else it)
+                    exactly(if (capsLength) min(it, base) else it)
                 }
                 Size.DimensionType.AUTO -> MeasureSpec.makeMeasureSpec(base, MeasureSpec.AT_MOST)
             }

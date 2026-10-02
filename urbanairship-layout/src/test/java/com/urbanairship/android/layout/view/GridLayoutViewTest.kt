@@ -808,6 +808,23 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testCapsAShareOver100PercentAtItsOwnRow() {
+        val grid = grid(config = TWO, items = listOf(card(40, "100%"), card(10, "200%")))
+        layout(grid, width = 360)
+        val (full, double) = items(grid).map { it.height }
+        assertEquals(full, double)
+        assertEquals(full, grid.height)
+    }
+
+    @Test
+    public fun testLetsAWidthOver100PercentSpillPastItsCellAsOnWeb() {
+        val wide = """{"size": {"width": "200%", "height": 20}, "view": {"type": "empty_view"}}"""
+        val grid = grid(config = TWO, items = listOf(wide, box()))
+        layout(grid, width = 360)
+        assertEquals(360, items(grid)[0].width)
+    }
+
+    @Test
     public fun testShrinksWhenTheTallestCardsContentDoes() {
         // The filler hides once the grid is at most 300 wide.
         val tall = card(200, "100%", fillerExtra = """, "visibility": {"default": true, "invert_when_state_matches": ${gridWidth("""{"at_most": 300}""")}}""")

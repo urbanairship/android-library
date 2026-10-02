@@ -6,7 +6,6 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
-import kotlin.math.floor
 
 /** How a grid divides its width into columns and places its rows. */
 internal data class GridLayoutConfig(
@@ -22,7 +21,10 @@ internal data class GridLayoutConfig(
      * the columns growing, or taller than its rows.
      */
     val contentPosition: Position = DEFAULT_CONTENT_POSITION,
-    /** Width divided by height for every cell, or null for rows as tall as their tallest item. */
+    /**
+     * Width divided by height for every cell, or null for rows as tall as their tallest item, or
+     * as [percentHeightBasis] pools them.
+     */
     val cellAspectRatio: Double? = null,
     /** What a cell's percentage height is a share of. No effect with [cellAspectRatio]. */
     val percentHeightBasis: PercentHeightBasis = PercentHeightBasis.ROW
@@ -129,7 +131,7 @@ internal data class GridItemConfig(
         fun fromJson(json: JsonMap): GridItemConfig = GridItemConfig(
             columnSpan = (json.optionalField<Double>("column_span") ?: 1.0).toInt(),
             order = json.optionalField<Double>("order") ?: 0.0,
-            columnStart = json.optionalField<Double>("column_start")?.let { floor(it).toInt() }
+            columnStart = json.optionalField<Double>("column_start")?.toInt()
         )
     }
 }
