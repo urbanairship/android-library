@@ -98,49 +98,78 @@ internal data class GridPlacement(
     val span: Int
 )
 
+/** What one item asks of placement. */
+internal data class GridItemRequest(
+    /** The columns it covers; capped between 1 and the column count. */
+    val span: Int,
+    /** The column it starts at, from 0 at the start edge, or null for the next free one. */
+    val start: Int? = null
+)
+
 /**
  * Places items in rows, in order, each covering its span of columns.
  *
- * An item that doesn't fit what is left of its row starts the next one, and no later item goes back
- * to fill the gap, so any row can come up short. A short row is offset by [alignment]: 3 columns
- * holding one item sit it at half-column 0 for start, 2 for center and 4 for end.
+ * An item without a start goes at the next free column, or starts the next row if it doesn't fit
+ * what is left; no later item goes back to fill a gap, so any row can come up short. A short row is
+ * offset by [alignment]: 3 columns holding one item sit it at half-column 0 for start, 2 for center
+ * and 4 for end.
  *
- * @param spans each item's requested span, in item order.
+ * An item with a start goes at that column, clamped so its span fits: in a 12-column grid, an
+ * 8-wide item at start 2 covers columns 2 to 9. A start behind the next free column begins a new
+ * row, and the columns it skips stay empty. A row holding any item with a start is drawn as
+ * placed, ignoring [alignment].
+ *
+ * @param items each item's span and start, in item order.
  * @param columns the column count, at least 1.
  * @param alignment where a short row sits.
  * @return each item's placement, in item order.
  */
 internal fun placeGridItems(
-    spans: List<Int>,
+    items: List<GridItemRequest>,
     columns: Int,
     alignment: HorizontalPosition
 ): List<GridPlacement> {
-    val rows = mutableListOf<MutableList<Pair<Int, Int>>>()
-    var row = mutableListOf<Pair<Int, Int>>()
-    var used = 0
-    spans.forEachIndexed { index, requested ->
-        val span = requested.coerceIn(1, columns)
-        if (used + span > columns) {
-            rows.add(row)
-            row = mutableListOf()
-            used = 0
-        }
-        row.add(index to span)
-        used += span
-    }
-    if (row.isNotEmpty()) rows.add(row)
+    data class Cell(val index: Int, val span: Int, val column: Int)
+    data class Row(val cells: List<Cell>, val positioned: Boolean)
 
-    val placements = arrayOfNulls<GridPlacement>(spans.size)
-    rows.forEachIndexed { rowIndex, cells ->
-        val leftover = columns - cells.sumOf { it.second }
-        var halfColumn = when (alignment) {
-            HorizontalPosition.START -> 0
-            HorizontalPosition.CENTER -> leftover
-            HorizontalPosition.END -> 2 * leftover
+    val rows = mutableListOf<Row>()
+    var row = mutableListOf<Cell>()
+    var positioned = false
+    var cursor = 0
+    fun nextRow() {
+        rows.add(Row(row, positioned))
+        row = mutableListOf()
+        positioned = false
+        cursor = 0
+    }
+
+    items.forEachIndexed { index, item ->
+        val span = item.span.coerceIn(1, columns)
+        if (item.start == null) {
+            if (cursor + span > columns) nextRow()
+            row.add(Cell(index, span, cursor))
+        } else {
+            val start = item.start.coerceIn(0, columns - span)
+            if (start < cursor) nextRow()
+            row.add(Cell(index, span, start))
+            positioned = true
+            cursor = start
         }
-        cells.forEach { (index, span) ->
-            placements[index] = GridPlacement(rowIndex, halfColumn, span)
-            halfColumn += 2 * span
+        cursor += span
+    }
+    if (row.isNotEmpty()) nextRow()
+
+    val placements = arrayOfNulls<GridPlacement>(items.size)
+    rows.forEachIndexed { rowIndex, (cells, isPositioned) ->
+        val leftover = columns - cells.sumOf { it.span }
+        val offset = when {
+            isPositioned -> 0
+            alignment == HorizontalPosition.CENTER -> leftover
+            alignment == HorizontalPosition.END -> 2 * leftover
+            else -> 0
+        }
+        cells.forEach { (index, span, column) ->
+            placements[index] = GridPlacement(rowIndex, offset + 2 * column, span)
         }
     }
     return placements.map { requireNotNull(it) }

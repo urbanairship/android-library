@@ -6,6 +6,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
+import kotlin.math.floor
 
 /** How a grid divides its width into columns and places its rows. */
 internal data class GridLayoutConfig(
@@ -22,7 +23,9 @@ internal data class GridLayoutConfig(
      */
     val contentPosition: Position = DEFAULT_CONTENT_POSITION,
     /** Width divided by height for every cell, or null for rows as tall as their tallest item. */
-    val cellAspectRatio: Double? = null
+    val cellAspectRatio: Double? = null,
+    /** What a cell's percentage height is a share of. No effect with [cellAspectRatio]. */
+    val percentHeightBasis: PercentHeightBasis = PercentHeightBasis.ROW
 ) {
 
     companion object {
@@ -36,8 +39,28 @@ internal data class GridLayoutConfig(
             partialRowPosition = json["partial_row_position"]?.let(HorizontalPosition::from)
                 ?: HorizontalPosition.START,
             contentPosition = json["content_position"]?.let(Position::fromJson) ?: DEFAULT_CONTENT_POSITION,
-            cellAspectRatio = json.optionalField<Double>("cell_aspect_ratio")?.takeIf { it > 0 }
+            cellAspectRatio = json.optionalField<Double>("cell_aspect_ratio")?.takeIf { it > 0 },
+            percentHeightBasis = json.optionalField<String>("percent_height_basis")
+                ?.let(PercentHeightBasis::from) ?: PercentHeightBasis.ROW
         )
+    }
+}
+
+/** What a grid cell's percentage height is a share of. */
+internal enum class PercentHeightBasis(val value: String) {
+    /** Its own row, as a percentage across a horizontal linear layout is. */
+    ROW("row"),
+
+    /**
+     * The tallest of the rows holding a percentage cell, which all take that height. `100%` on
+     * every item gives equal-height cards; rows of only `auto` and fixed cells keep their own.
+     */
+    TALLEST_ROW("tallest_row");
+
+    companion object {
+        @Throws(JsonException::class)
+        fun from(value: String): PercentHeightBasis = entries.firstOrNull { it.value == value }
+            ?: throw JsonException("Unknown PercentHeightBasis: $value")
     }
 }
 
@@ -94,13 +117,19 @@ internal data class GridItemConfig(
      * list order among equal ones. After a `randomize_children` shuffle, so the shuffle mixes only
      * items of one order.
      */
-    val order: Double = 0.0
+    val order: Double = 0.0,
+    /**
+     * The column the item starts at, from 0 at the start edge, instead of the next free one; null
+     * for the next free one. See [com.urbanairship.android.layout.util.placeGridItems].
+     */
+    val columnStart: Int? = null
 ) {
 
     companion object {
         fun fromJson(json: JsonMap): GridItemConfig = GridItemConfig(
             columnSpan = (json.optionalField<Double>("column_span") ?: 1.0).toInt(),
-            order = json.optionalField<Double>("order") ?: 0.0
+            order = json.optionalField<Double>("order") ?: 0.0,
+            columnStart = json.optionalField<Double>("column_start")?.let { floor(it).toInt() }
         )
     }
 }

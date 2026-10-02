@@ -710,6 +710,155 @@ public class GridLayoutViewTest {
         assertEquals("top, second written, first written", button.contentDescription)
     }
 
+    @Test
+    public fun testCentresAnEightOfTwelveCard() {
+        val grid = grid(config = TWELVE, items = listOf(started(span = 8, start = 2)))
+        layout(grid, width = 360)
+        // 30 a column: columns 2 to 9.
+        assertEquals(60, cells(grid)[0].left)
+        assertEquals(240, cells(grid)[0].width)
+    }
+
+    @Test
+    public fun testAColumnStartCountsFromTheRightInRtl() {
+        ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags =
+            ApplicationProvider.getApplicationContext<Context>().applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val grid = grid(config = TWELVE, items = listOf(started(span = 4, start = 1)))
+        grid.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        layout(grid, width = 360)
+        assertEquals(30, grid.width - cells(grid)[0].right)
+    }
+
+    @Test
+    public fun testTakesAColumnStartFromAnOverrideOnTheGridsWidth() {
+        val item = """
+            {"config": {"column_span": 8, "column_start": 2},
+             "overrides": {"config": [{"when_state_matches": ${gridWidth("""{"at_most": 400}""")},
+                                       "value": {"column_span": 12, "column_start": 0}}]},
+             "view": ${label("card")}}
+        """.trimIndent()
+        val grid = grid(config = TWELVE, items = listOf(item))
+        layout(grid, width = 360)
+        assertEquals(0, cells(grid)[0].left)
+        assertEquals(360, cells(grid)[0].width)
+    }
+
+    @Test
+    public fun testClosesUpAfterAnItemItsViewHidesOnTheGridsWidth() {
+        val hidden = """
+            {"config": {"column_span": 4},
+             "view": {"type": "empty_view",
+                      "visibility": {"default": true, "invert_when_state_matches": ${gridWidth("""{"at_most": 400}""")}}}}
+        """.trimIndent()
+        Dispatchers.setMain(UnconfinedTestDispatcher(testDispatcher.scheduler))
+        val grid = grid(config = TWELVE, items = listOf(hidden, box(span = 4)), environment = realEnvironment())
+        nextFrame()
+        nextFrame()
+
+        assertFalse(items(grid)[0].isVisible)
+        assertEquals("the shown item takes the first columns", 0, cells(grid)[1].left)
+    }
+
+    @Test
+    public fun testGivesEvery100PercentCardTheTallestCardsHeight() {
+        val grid = grid(config = TALLEST, items = listOf(20, 80, 40, 10).map { card(it, "100%") })
+        layout(grid, width = 360)
+        val (a, b, c, d) = items(grid).map { it.height }
+        assertEquals(listOf(b, b, b), listOf(a, c, d))
+        assertTrue("taller than the 80 filler alone: $b", b > 80)
+    }
+
+    @Test
+    public fun testLeavesEachRowItsOwnHeightByDefault() {
+        val grid = grid(config = TWO, items = listOf(20, 80, 40, 10).map { card(it, "100%") })
+        layout(grid, width = 360)
+        val (a, b, c, d) = items(grid).map { it.height }
+        assertEquals(a, b)
+        assertEquals(c, d)
+        assertEquals(40, b - c)
+    }
+
+    @Test
+    public fun testKeepsARowOfOnlyAutoCellsAtItsOwnHeight() {
+        val grid = grid(config = TALLEST, items = listOf(card(20, "100%"), card(30, "100%"), card(120, "auto", span = 2)))
+        layout(grid, width = 360)
+        val (a, b, banner) = items(grid).map { it.height }
+        assertEquals(a, b)
+        assertEquals(90, banner - b)
+    }
+
+    @Test
+    public fun testResolvesAShareUnder100PercentAgainstTheTallestRow() {
+        // A fixed height gives the pooled rows a basis: the tallest row is 100.
+        val grid = grid(
+            config = TALLEST,
+            items = listOf(box(size = """{"width": "100%", "height": 100}"""), card(10, "100%"), card(10, "50%"), card(10, "100%"))
+        )
+        layout(grid, width = 360)
+        assertEquals(listOf(100, 50, 100), items(grid).drop(1).map { it.height })
+    }
+
+    @Test
+    public fun testCapsAShareOver100PercentAtTheTallestRow() {
+        val grid = grid(config = TALLEST, items = listOf(card(40, "100%"), card(10, "200%")))
+        layout(grid, width = 360)
+        val (full, double) = items(grid).map { it.height }
+        assertEquals(full, double)
+        assertEquals(full, grid.height)
+    }
+
+    @Test
+    public fun testShrinksWhenTheTallestCardsContentDoes() {
+        // The filler hides once the grid is at most 300 wide.
+        val tall = card(200, "100%", fillerExtra = """, "visibility": {"default": true, "invert_when_state_matches": ${gridWidth("""{"at_most": 300}""")}}""")
+        Dispatchers.setMain(UnconfinedTestDispatcher(testDispatcher.scheduler))
+        val grid = grid(config = TALLEST, items = listOf(tall, card(30, "100%")), environment = realEnvironment())
+        val host = grid.parent as View
+        fun settleAt(width: Int) {
+            host.layoutParams = FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.WRAP_CONTENT)
+            host.requestLayout()
+            nextFrame()
+            nextFrame()
+        }
+
+        settleAt(400)
+        val (tallBefore, shortBefore) = items(grid).map { it.height }
+        assertEquals(tallBefore, shortBefore)
+        assertTrue("taller than the 200 filler: $tallBefore", tallBefore > 200)
+
+        settleAt(300)
+        val (tallAfter, shortAfter) = items(grid).map { it.height }
+        assertEquals(tallAfter, shortAfter)
+        assertTrue("down to the short card's 30 and a label: $shortAfter", shortAfter < 80)
+    }
+
+    @Test
+    public fun testTallestRowIgnoresTheGridsOwnHeight() {
+        val grid = grid(
+            config = TALLEST,
+            items = listOf(card(20, "100%"), card(40, "100%"), card(10, "100%")),
+            extra = """"header": {"view": ${label("top")}},"""
+        )
+        layout(grid, width = 360, height = 600)
+        val (a, b, c) = items(grid).drop(1).map { it.height }
+        assertEquals(listOf(b, b), listOf(a, c))
+        assertTrue("40 and a label, not a share of the 600: $b", b < 100)
+    }
+
+    /** A grid item at [start] covering [span] of the columns. */
+    private fun started(span: Int, start: Int) =
+        """{"config": {"column_span": $span, "column_start": $start}, "view": {"type": "empty_view"}}"""
+
+    /** A card holding [filler] points of empty view above a label, as an item of [height]. */
+    private fun card(filler: Int, height: String, span: Int = 1, fillerExtra: String = "") = """
+        {"size": {"width": "100%", "height": ${if (height.endsWith("%") || height == "auto") "\"$height\"" else height}},
+         "config": {"column_span": $span},
+         "view": {"type": "linear_layout", "direction": "vertical", "items": [
+           {"size": {"width": "100%", "height": $filler}, "view": {"type": "empty_view"$fillerExtra}},
+           ${label("label", size = """{"width": "100%", "height": "auto"}""")}
+         ]}}
+    """.trimIndent()
+
     private fun spreadColumns(maxSpace: Int?, horizontal: String) = """
         {"columns": {"type": "fit", "max": 4,
                      "min_width": {"type": "fixed", "size": 44},
@@ -1082,6 +1231,13 @@ public class GridLayoutViewTest {
              "text_appearance": {"font_size": 14, "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}}
         """.trimIndent()
         return if (size == null) view else """{"size": $size, "view": $view}"""
+    }
+
+    private companion object {
+        const val TWELVE = """{"columns": {"type": "fixed", "count": 12}}"""
+        const val TWO = """{"columns": {"type": "fixed", "count": 2}, "row_spacing": {"type": "fixed", "space": 8}}"""
+        const val TALLEST =
+            """{"columns": {"type": "fixed", "count": 2}, "row_spacing": {"type": "fixed", "space": 8}, "percent_height_basis": "tallest_row"}"""
     }
 
     private fun exactly(size: Int) = View.MeasureSpec.makeMeasureSpec(size, View.MeasureSpec.EXACTLY)

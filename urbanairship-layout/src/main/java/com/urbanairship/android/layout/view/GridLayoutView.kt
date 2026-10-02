@@ -32,10 +32,12 @@ import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridLayoutConfig
+import com.urbanairship.android.layout.property.PercentHeightBasis
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
+import com.urbanairship.android.layout.util.GridItemRequest
 import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -273,7 +275,11 @@ internal class GridLayoutView(
         val ordered = shown
             .map { cell -> cell to (itemConfigs[cell] ?: GridItemConfig()) }
             .sortedBy { (_, itemConfig) -> itemConfig.order }
-        val placements = placeGridItems(ordered.map { it.second.columnSpan }, columns, config.partialRowPosition)
+        val placements = placeGridItems(
+            ordered.map { (_, itemConfig) -> GridItemRequest(itemConfig.columnSpan, itemConfig.columnStart) },
+            columns,
+            config.partialRowPosition
+        )
         ordered.forEachIndexed { index, (cell, _) ->
             cell.placement = placements[index]
             cell.readingIndex = index
@@ -315,7 +321,18 @@ internal class GridLayoutView(
         // Header and footer rows size to their own content, a percentage a share of it.
         val bands = listOfNotNull(header?.takeIf { it.holdsItem }?.let { listOf(it) to null }) +
             rows + listOfNotNull(footer?.takeIf { it.holdsItem }?.let { listOf(it) to null })
-        val heights = bands.map { (row, rowHeight) -> measureRow(row, rowHeight, isEdge = row.first().gridItem == null) }
+        val pooled = pooledRows(rows.map { it.first }, config)
+        val pooledHeight = pooled.maxOfOrNull { rowContentHeight(it) } ?: 0
+        // Pooled rows answer the basis question together, as they share a height.
+        val pooledBasis = pooled.any { row -> row.any { it.establishesRowHeight() } }
+        val heights = bands.map { (row, rowHeight) ->
+            if (row in pooled) {
+                settleRow(row, pooledHeight, pooledBasis)
+                pooledHeight
+            } else {
+                measureRow(row, rowHeight, isEdge = row.first().gridItem == null)
+            }
+        }
 
         // Rows spread only into a height the grid has of its own, and only between two rows or
         // more; the header and footer stay the minimum from the cells.
@@ -358,6 +375,17 @@ internal class GridLayoutView(
         } ?: 0f
 
     /**
+     * Returns the rows that `percent_height_basis: tallest_row` lays out as one: those holding a
+     * percentage cell, unless a ratio already sets every row's height.
+     */
+    private fun pooledRows(rows: List<List<GridCell>>, config: GridLayoutConfig): List<List<GridCell>> {
+        if (config.percentHeightBasis != PercentHeightBasis.TALLEST_ROW || config.cellAspectRatio != null) {
+            return emptyList()
+        }
+        return rows.filter { row -> row.any { it.info.size.height.isPercent } }
+    }
+
+    /**
      * Measures one row's cells and returns the row's height.
      *
      * With a ratio every row is that tall. Otherwise a row is as tall as its tallest cell's
@@ -374,22 +402,35 @@ internal class GridLayoutView(
             return ratioRowHeight
         }
 
-        val hasBasis = isEdge || row.any { it.establishesRowHeight() }
-        val sharesOfRow = row.filter { cell ->
-            val height = cell.info.size.height
-            height.isPercent && (hasBasis || height.getFloat() >= 1f)
+        val rowHeight = rowContentHeight(row)
+        settleRow(row, rowHeight, hasBasis = isEdge || row.any { it.establishesRowHeight() })
+        return rowHeight
+    }
+
+    /**
+     * Measures every cell in a row with no row height yet and returns the tallest.
+     *
+     * A share of the row counts too: a `100%` label that wraps grows its row, as a percentage
+     * item's content does an auto grid track on web.
+     */
+    private fun rowContentHeight(row: List<GridCell>): Int =
+        row.maxOf { cell ->
+            cell.measureItem(rowHeight = null)
+            cell.item.measuredHeight + cell.verticalMargins
         }
 
-        // Every cell's content counts toward the row, a share of it included: a `100%` label that
-        // wraps grows its row, as a percentage item's content does an auto grid track on web.
-        var rowHeight = 0
-        row.forEach { cell ->
-            cell.measureItem(rowHeight = null)
-            rowHeight = max(rowHeight, cell.item.measuredHeight + cell.verticalMargins)
-        }
-        sharesOfRow.forEach { it.measureItem(rowHeight) }
+    /**
+     * Fixes a row's cells at [rowHeight], measuring each percentage height as a share of it.
+     *
+     * @param hasBasis whether something gives the row a height of its own; without one, a share
+     * under 100% keeps its content height.
+     */
+    private fun settleRow(row: List<GridCell>, rowHeight: Int, hasBasis: Boolean) {
+        row.filter { cell ->
+            val height = cell.info.size.height
+            height.isPercent && (hasBasis || height.getFloat() >= 1f)
+        }.forEach { it.measureItem(rowHeight) }
         row.forEach { it.measure(exactly(it.cellWidth), exactly(rowHeight)) }
-        return rowHeight
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -574,6 +615,10 @@ internal class GridLayoutView(
                     height.isAbsolute -> exactly(dpToPx(height.getInt()))
                     else -> unspecified()
                 }
+                // A share over 100% would spill out of its row, so it stops at the whole of it.
+                height.isPercent -> exactly(
+                    (min(height.getFloat(), 1f) * (rowHeight - margin.top - margin.bottom).coerceAtLeast(0)).roundToInt()
+                )
                 else -> specFor(
                     height, (rowHeight - margin.top - margin.bottom).coerceAtLeast(0),
                     capToBase = false
