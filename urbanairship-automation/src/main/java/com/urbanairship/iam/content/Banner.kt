@@ -19,6 +19,7 @@ import com.urbanairship.json.optionalField
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 import org.jetbrains.annotations.VisibleForTesting
 
 /** Display content for banner in-app message. */
@@ -263,8 +264,8 @@ public class Banner @VisibleForTesting internal constructor(
                 placement = content[PLACEMENT_KEY]?.let(Placement::fromJson) ?: Placement.BOTTOM,
                 template = content[TEMPLATE_KEY]?.let(Template::fromJson)
                     ?: Template.MEDIA_LEFT,
-                // The `duration` field is encoded in milliseconds.
-                duration = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS).milliseconds,
+                // Seconds, per the remote-data spec and as iOS reads it.
+                duration = content.opt(DURATION_KEY).getDouble(DEFAULT_DURATION.toDouble(DurationUnit.SECONDS)).seconds,
                 backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
                 dismissButtonColor = content[DISMISS_BUTTON_COLOR_KEY]?.let(InAppMessageColor::fromJson)
@@ -294,7 +295,7 @@ public class Banner @VisibleForTesting internal constructor(
         BUTTON_LAYOUT_KEY to buttonLayoutType,
         PLACEMENT_KEY to placement,
         TEMPLATE_KEY to template,
-        DURATION_KEY to duration.inWholeMilliseconds,
+        DURATION_KEY to duration.toDouble(DurationUnit.SECONDS),
         BACKGROUND_COLOR_KEY to backgroundColor,
         DISMISS_BUTTON_COLOR_KEY to dismissButtonColor,
         BORDER_RADIUS_KEY to borderRadius,
