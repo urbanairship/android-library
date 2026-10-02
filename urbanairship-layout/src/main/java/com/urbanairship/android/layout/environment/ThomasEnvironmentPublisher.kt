@@ -20,25 +20,11 @@ import kotlinx.coroutines.flow.asStateFlow
  *
  * The first reading, and one published with `immediate`, go out at once.
  *
- * @param nextFrame where the next frame's publish is scheduled; the main thread's [Choreographer].
+ * @param nextFrame where the next frame's publish is scheduled.
  */
 internal class ThomasEnvironmentPublisher(
-    private val nextFrame: NextFrame = ChoreographerNextFrame
+    private val nextFrame: NextFrame = NextFrame.Main
 ) {
-
-    /** Schedules a callback for the start of the next frame. */
-    internal interface NextFrame {
-        fun post(callback: Choreographer.FrameCallback)
-        fun remove(callback: Choreographer.FrameCallback)
-    }
-
-    private object ChoreographerNextFrame : NextFrame {
-        override fun post(callback: Choreographer.FrameCallback) =
-            Choreographer.getInstance().postFrameCallback(callback)
-
-        override fun remove(callback: Choreographer.FrameCallback) =
-            Choreographer.getInstance().removeFrameCallback(callback)
-    }
 
     private val _environment = MutableStateFlow<ThomasEnvironment?>(null)
 

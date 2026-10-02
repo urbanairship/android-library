@@ -18,6 +18,7 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionIn
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionItemInfoCompat
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.GridState
+import com.urbanairship.android.layout.environment.GridWidthPublisher
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.ThomasState
@@ -101,6 +102,8 @@ internal class GridLayoutView(
 
     /** The inner width of the last measure, in points, which layout publishes as `$grids.current.width`. */
     private var measuredGridWidth: Float? = null
+    private val widthPublisher = GridWidthPublisher(model.gridState)
+    private var hasLaidOut = false
 
     private var contentHeight = 0
     /** How wide the block of columns is, which is less than the grid once `max_width` caps them. */
@@ -341,7 +344,8 @@ internal class GridLayoutView(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         // From layout, not measure: a parent can measure more than once before settling on a width.
-        model.gridState.update { it.copy(width = measuredGridWidth) }
+        widthPublisher.publish(measuredGridWidth, immediate = !hasLaidOut)
+        hasLaidOut = true
         val spareHeight = (height - paddingTop - paddingBottom - contentHeight).coerceAtLeast(0)
         val offset = when (contentPosition.vertical) {
             VerticalPosition.TOP -> 0
