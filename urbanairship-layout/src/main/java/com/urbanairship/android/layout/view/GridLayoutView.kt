@@ -17,22 +17,25 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionInfoCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionItemInfoCompat
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.environment.GridState
+import com.urbanairship.android.layout.environment.GridWidthPublisher
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.GridCellInfo
+import com.urbanairship.android.layout.info.GridLayoutItemInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
-import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridItemConfig
+import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
-import com.urbanairship.android.layout.property.everyConfigHasRatio
-import com.urbanairship.android.layout.util.GridEnvironment
 import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -41,7 +44,6 @@ import com.urbanairship.android.layout.util.gridMaxColumnWidth
 import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.util.gridMinColumnWidth
 import com.urbanairship.android.layout.util.placeGridItems
-import com.urbanairship.android.layout.util.resolveGridConfig
 import com.urbanairship.android.layout.util.spreadSpace
 import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.BackgroundsPainter
@@ -96,6 +98,24 @@ internal class GridLayoutView(
     /** Every cell, header and footer included, in reading order. */
     private val allCells: List<GridCell>
 
+    /** The latest state at the grid, which its and its items' overrides match against. */
+    private var state = ThomasState(State.Layout.DEFAULT, null, null, null, null, ThomasCapabilities.NONE)
+        set(value) {
+            field = value
+            unboundedConfig = null
+        }
+
+    /** [state]'s config with no width to divide, worked out once per state; see [setsItsOwnWidthUnbounded]. */
+    private var unboundedConfig: GridLayoutConfig? = null
+
+    /** The configs the last measure laid out with, so a state change that leaves them alone doesn't lay out again. */
+    private var measuredConfigs: ResolvedConfigs? = null
+
+    /** The inner width of the last measure, in points, which layout publishes as `$grids.current.width`. */
+    private var measuredGridWidth: Float? = null
+    private var hasMeasured = false
+    private val widthPublisher = GridWidthPublisher(model.gridState)
+
     private var contentHeight = 0
     /** How wide the block of columns is, which is less than the grid once `max_width` caps them. */
     private var blockWidth = 0
@@ -106,21 +126,23 @@ internal class GridLayoutView(
         backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
         videoBackgrounds.addTo(this)
 
-        fun cell(info: GridCellInfo, itemModel: AnyModel, spans: GridConfigs<GridItemConfig>?) =
+        fun cell(info: GridCellInfo, itemModel: AnyModel) =
             GridCell(
                 context, info,
-                itemModel.createView(context, viewEnvironment, ItemProperties(info.size, info.position)),
-                spans
+                itemModel.createView(context, viewEnvironment, ItemProperties(info.size, info.position))
             ).also { addView(it) }
 
-        header = model.header?.let { cell(it.info, it.model, spans = null) }
-        cells = model.items.map { cell(it.info, it.model, it.info.config) }
-        footer = model.footer?.let { cell(it.info, it.model, spans = null) }
+        header = model.header?.let { cell(it.info, it.model) }
+        cells = model.items.map { cell(it.info, it.model) }
+        footer = model.footer?.let { cell(it.info, it.model) }
         allCells = listOfNotNull(header) + cells + listOfNotNull(footer)
 
         model.listener = object : BaseModel.Listener {
             override fun onStateUpdated(state: ThomasState) {
                 backgroundsPainter.state = state
+                val unboundedBefore = unboundedConfig
+                this@GridLayoutView.state = state
+                if (model.hasOverrides && configsChanged(unboundedBefore)) requestLayout()
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -149,17 +171,28 @@ internal class GridLayoutView(
         }
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Reattached at the same size, the grid may not be laid out again to publish what detaching dropped.
+        if (hasMeasured) widthPublisher.publish(measuredGridWidth)
+    }
+
+    override fun onDetachedFromWindow() {
+        widthPublisher.cancel()
+        super.onDetachedFromWindow()
+    }
+
     override fun isShrinkable(): Boolean = model.isShrinkable
 
     /** Ratio rows take their height from the grid's width, but only every config setting one makes that certain. */
     override fun establishesLength(horizontal: Boolean): Boolean {
-        if (!horizontal && model.viewInfo.config.everyConfigHasRatio) return true
+        if (!horizontal && model.everyConfigHasRatio) return true
         if (horizontal && setsItsOwnWidthUnbounded) return true
         return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.establishesLength(horizontal) } }
     }
 
     override fun statesLength(horizontal: Boolean): Boolean {
-        if (!horizontal && model.viewInfo.config.everyConfigHasRatio) return true
+        if (!horizontal && model.everyConfigHasRatio) return true
         if (horizontal && setsItsOwnWidthUnbounded) return true
         return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.statesLength(horizontal) } }
     }
@@ -170,15 +203,32 @@ internal class GridLayoutView(
      */
     private val setsItsOwnWidthUnbounded: Boolean
         get() {
-            val config = resolveGridConfig(model.viewInfo.config, environment(gridWidth = null))
+            val config = unboundedConfig
+                ?: resolveConfigs(gridState(width = null)).grid.also { unboundedConfig = it }
             return gridMinColumnWidth(config, resources.configuration.fontScale) != null
         }
 
-    private fun environment(gridWidth: Float?) = GridEnvironment(
-        windowSize = ResourceUtils.getWindowSize(context),
-        orientation = ResourceUtils.getOrientation(context),
-        gridWidth = gridWidth
+    /** The grid's config and each item's, as [state] resolves their overrides. */
+    private data class ResolvedConfigs(val grid: GridLayoutConfig, val items: List<GridItemConfig>)
+
+    private fun resolveConfigs(state: ThomasState) = ResolvedConfigs(
+        grid = state.resolveRequired(model.viewInfo.viewOverrides?.config, model.viewInfo.config),
+        items = model.items.map { state.resolveRequired(it.info.overrides?.config, it.info.config) }
     )
+
+    /**
+     * Whether the latest state changes a config the grid laid out with, at its width or with none.
+     *
+     * @param unboundedBefore the width-null config the previous state resolved, if anything asked.
+     */
+    private fun configsChanged(unboundedBefore: GridLayoutConfig?): Boolean {
+        val laidOut = measuredConfigs ?: return true
+        return resolveConfigs(gridState(measuredGridWidth)) != laidOut ||
+            (unboundedBefore != null && resolveConfigs(gridState(width = null)).grid != unboundedBefore)
+    }
+
+    /** The state the grid's and its items' overrides match against, with the grid at `$grids.current`. */
+    private fun gridState(width: Float?): ThomasState = state.copy(grid = GridState(model.viewInfo.identifier, width))
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density
@@ -192,8 +242,15 @@ internal class GridLayoutView(
             (MeasureSpec.getSize(widthMeasureSpec) - horizontalPadding).coerceAtLeast(0)
         }
 
-        val environment = environment(gridWidth = innerWidth?.let { it / density })
-        val config = resolveGridConfig(model.viewInfo.config, environment)
+        measuredGridWidth = innerWidth?.let { it / density }
+        hasMeasured = true
+        // A parent that measures EXACTLY at the size this unbounded pass gave would otherwise skip
+        // onMeasure, leaving the grid laid out at that width but publishing none.
+        if (innerWidth == null) forceLayout()
+        // Matched against the width just measured, not the published one, which arrives a pass later.
+        val gridState = gridState(measuredGridWidth)
+        val configs = resolveConfigs(gridState).also { measuredConfigs = it }
+        val config = configs.grid
         val textScale = resources.configuration.fontScale
         val columns = gridColumnCount(config, innerWidth?.let { it / density }, textScale)
         val minGap = config.columnSpacing.min * density
@@ -207,8 +264,9 @@ internal class GridLayoutView(
 
         // Against the same width as the grid's config, so a span and the count capping it agree.
         // Sorted stably, so items of one order keep list (or shuffled) order.
+        val itemConfigs = cells.zip(configs.items).toMap()
         val ordered = shown
-            .map { cell -> cell to (cell.spans?.let { resolveGridConfig(it, environment) } ?: GridItemConfig()) }
+            .map { cell -> cell to (itemConfigs[cell] ?: GridItemConfig()) }
             .sortedBy { (_, itemConfig) -> itemConfig.order }
         val placements = placeGridItems(ordered.map { it.second.columnSpan }, columns, config.partialRowPosition)
         ordered.forEachIndexed { index, (cell, _) ->
@@ -239,7 +297,7 @@ internal class GridLayoutView(
         (shown + edges).forEach { cell ->
             cell.hugsWidth = hugsWidth
             // A header or footer keeps its own height beside ratio rows.
-            cell.heightFromRatio = config.cellAspectRatio != null && cell.spans != null
+            cell.heightFromRatio = config.cellAspectRatio != null && cell.gridItem != null
             val placement = cell.placement
             val start = placement.halfColumn * (cellWidth + gap) / 2
             val end = start + placement.span * cellWidth + (placement.span - 1) * gap
@@ -252,7 +310,7 @@ internal class GridLayoutView(
         // Header and footer rows size to their own content, a percentage a share of it.
         val bands = listOfNotNull(header?.takeIf { it.holdsItem }?.let { listOf(it) to null }) +
             rows + listOfNotNull(footer?.takeIf { it.holdsItem }?.let { listOf(it) to null })
-        val heights = bands.map { (row, rowHeight) -> measureRow(row, rowHeight, isEdge = row.first().spans == null) }
+        val heights = bands.map { (row, rowHeight) -> measureRow(row, rowHeight, isEdge = row.first().gridItem == null) }
 
         // Rows spread only into a height the grid has of its own, and only between two rows or
         // more; the header and footer stay the minimum from the cells.
@@ -261,7 +319,7 @@ internal class GridLayoutView(
         } else {
             null
         }
-        val isEdge = bands.map { (row, _) -> row.first().spans == null }
+        val isEdge = bands.map { (row, _) -> row.first().gridItem == null }
         val edgesHeight = heights.indices.filter { isEdge[it] }.sumOf { heights[it] + minRowGap.toDouble() }.toFloat()
         val rowsHeight = heights.indices.filterNot { isEdge[it] }.sumOf { heights[it] }
         val rowGap = ownHeight?.let { spreadSpace(config.rowSpacing, (it - edgesHeight - rowsHeight) / density, rows.size) }
@@ -330,6 +388,8 @@ internal class GridLayoutView(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        // From layout, not measure: a parent can measure more than once before settling on a width.
+        widthPublisher.publish(measuredGridWidth)
         val spareHeight = (height - paddingTop - paddingBottom - contentHeight).coerceAtLeast(0)
         val offset = when (contentPosition.vertical) {
             VerticalPosition.TOP -> 0
@@ -426,10 +486,11 @@ internal class GridLayoutView(
     private class GridCell(
         context: Context,
         val info: GridCellInfo,
-        val item: View,
-        /** The item's span configs, or null for a header or footer, which spans every column. */
-        val spans: GridConfigs<GridItemConfig>?
+        val item: View
     ) : ViewGroup(context), AutoSizeProvider {
+
+        /** The grid item this cell holds, or null for a header or footer, which spans every column. */
+        val gridItem: GridLayoutItemInfo? = info as? GridLayoutItemInfo
 
         lateinit var placement: GridPlacement
         /** Where the item is read among the grid's shown items: its placement order. */

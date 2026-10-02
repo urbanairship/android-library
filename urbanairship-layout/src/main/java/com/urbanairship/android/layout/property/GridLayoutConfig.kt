@@ -6,7 +6,6 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
-import com.urbanairship.json.requireMap
 
 /** How a grid divides its width into columns and places its rows. */
 internal data class GridLayoutConfig(
@@ -166,93 +165,3 @@ internal data class GridColumnWidth(val type: Type, val size: Float) {
         }
     }
 }
-
-/**
- * A range of lengths in points, both ends inclusive, as in a JSON predicate's `at_least` and
- * `at_most`. An omitted end is unbounded.
- */
-internal data class LengthRange(val atLeast: Float? = null, val atMost: Float? = null) {
-
-    operator fun contains(length: Float): Boolean =
-        (atLeast == null || length >= atLeast) && (atMost == null || length <= atMost)
-
-    companion object {
-        fun fromJson(json: JsonMap): LengthRange = LengthRange(
-            atLeast = json.optionalField("at_least"),
-            atMost = json.optionalField("at_most")
-        )
-    }
-}
-
-/**
- * What a grid or grid item config selector matches on; a condition left out matches anything.
- */
-internal data class GridSelectorConditions(
-    /** Kept as written, so a platform this SDK doesn't know never matches rather than failing the scene. */
-    val platform: String? = null,
-    val windowSize: WindowSize? = null,
-    val orientation: Orientation? = null,
-    /** Matched against the grid's own width. Never matches a grid with no width. */
-    val gridWidth: LengthRange? = null
-) {
-
-    companion object {
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): GridSelectorConditions = GridSelectorConditions(
-            platform = json["platform"]?.requireString()?.lowercase(),
-            windowSize = json["window_size"]?.let(WindowSize::from),
-            orientation = json["orientation"]?.let(Orientation::from),
-            gridWidth = json.optionalMap("grid_width")?.let(LengthRange::fromJson)
-        )
-    }
-}
-
-/** A config for the conditions it names. */
-internal data class GridConfigSelector<T>(val conditions: GridSelectorConditions, val config: T)
-
-/**
- * A grid's or a grid item's `config`: the default, and the selectors that can replace it.
- *
- * The first selector whose conditions all match supplies the config, replacing the default whole
- * rather than merging into it.
- */
-internal data class GridConfigs<T>(
-    val default: T,
-    val selectors: List<GridConfigSelector<T>> = emptyList()
-) {
-
-    /** Every config this could resolve to. */
-    val all: List<T> = listOf(default) + selectors.map { it.config }
-
-    companion object {
-        /**
-         * Parses a `config` object.
-         *
-         * @param json the `config` object, holding `default` and optionally `selectors`.
-         * @param parse parses one config.
-         * @return the parsed configs.
-         */
-        @Throws(JsonException::class)
-        fun <T> fromJson(json: JsonMap, parse: (JsonMap) -> T): GridConfigs<T> = GridConfigs(
-            default = parse(json.requireField("default")),
-            selectors = json["selectors"]?.optList()?.map {
-                val selector = it.requireMap()
-                GridConfigSelector(
-                    conditions = GridSelectorConditions.fromJson(selector),
-                    config = parse(selector.requireField("config"))
-                )
-            } ?: emptyList()
-        )
-    }
-}
-
-/** Whether the grid sets its row heights from a ratio whichever config it lays out with. */
-internal val GridConfigs<GridLayoutConfig>.everyConfigHasRatio: Boolean
-    get() = all.all { it.cellAspectRatio != null }
-
-/**
- * Whether every config has `fit` columns with a minimum, so a grid with no width to divide is
- * `n × min + gaps` wide from its config alone, whichever config it lays out with.
- */
-internal val GridConfigs<GridLayoutConfig>.everyConfigFitsAMinimum: Boolean
-    get() = all.all { (it.columns as? GridColumns.Fit)?.minWidth?.size?.let { size -> size > 0 } == true }

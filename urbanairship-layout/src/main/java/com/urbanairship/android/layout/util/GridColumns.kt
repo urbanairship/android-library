@@ -2,46 +2,14 @@
 package com.urbanairship.android.layout.util
 
 import com.urbanairship.android.layout.property.GridColumns
-import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.GridColumnWidth
-import com.urbanairship.android.layout.property.GridSelectorConditions
 import com.urbanairship.android.layout.property.GridSpacing
 import com.urbanairship.android.layout.property.HorizontalPosition
-import com.urbanairship.android.layout.property.Orientation
-import com.urbanairship.android.layout.property.Platform
-import com.urbanairship.android.layout.property.WindowSize
 import kotlin.math.floor
 
 /** Slack in the column fit, so a width that fits a whole number of columns exactly still does after rounding. */
 private const val COLUMN_FIT_EPSILON = 0.5f
-
-/** What a grid config selector is matched against. */
-internal data class GridEnvironment(
-    val platform: Platform = Platform.ANDROID,
-    val windowSize: WindowSize?,
-    val orientation: Orientation?,
-    /** The grid's own inner width in points, or null when it has none to measure. */
-    val gridWidth: Float?
-)
-
-/**
- * Picks a grid's or a grid item's config: the first selector whose conditions all match, or the default.
- *
- * A selector naming `grid_width` never matches a grid with no width.
- *
- * @param configs the grid's or the item's `config`.
- * @param environment what the selectors are matched against: the grid's, for an item too.
- * @return the config to lay the grid or the item out with.
- */
-internal fun <T> resolveGridConfig(configs: GridConfigs<T>, environment: GridEnvironment): T =
-    configs.selectors.firstOrNull { it.conditions.matches(environment) }?.config ?: configs.default
-
-private fun GridSelectorConditions.matches(environment: GridEnvironment): Boolean =
-    (platform == null || platform == environment.platform.toString()) &&
-        (windowSize == null || windowSize == environment.windowSize) &&
-        (orientation == null || orientation == environment.orientation) &&
-        (gridWidth == null || (environment.gridWidth != null && environment.gridWidth in gridWidth))
 
 /**
  * Returns a grid's minimum column width in points, after any text scaling the config asks for.

@@ -50,6 +50,10 @@ public enum class ViewType(
     public val isController: Boolean
         get() = CONTROLLERS.contains(this)
 
+    /** Whether this view scopes state for the views inside it: every controller, and a grid's `$grids.current`. */
+    internal val isStateScope: Boolean
+        get() = isController || this == GRID_LAYOUT
+
     override fun toString(): String {
         return name.lowercase()
     }

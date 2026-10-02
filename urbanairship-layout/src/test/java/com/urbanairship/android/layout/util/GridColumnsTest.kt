@@ -3,35 +3,17 @@ package com.urbanairship.android.layout.util
 
 import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.GridColumns
-import com.urbanairship.android.layout.property.GridConfigSelector
-import com.urbanairship.android.layout.property.GridConfigs
-import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridColumnWidth
-import com.urbanairship.android.layout.property.GridSelectorConditions
 import com.urbanairship.android.layout.property.GridSpacing
 import com.urbanairship.android.layout.property.HorizontalPosition
-import com.urbanairship.android.layout.property.LengthRange
-import com.urbanairship.android.layout.property.Orientation
-import com.urbanairship.android.layout.property.Platform
-import com.urbanairship.android.layout.property.WindowSize
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 public class GridColumnsTest {
 
     private fun fixed(size: Float) = GridColumnWidth(GridColumnWidth.Type.FIXED, size)
     private fun textScaled(size: Float) = GridColumnWidth(GridColumnWidth.Type.TEXT_SCALED, size)
-
-    private val environment = GridEnvironment(
-        platform = Platform.ANDROID,
-        windowSize = WindowSize.SMALL,
-        orientation = Orientation.PORTRAIT,
-        gridWidth = 320f
-    )
 
     @Test
     public fun testFitsAsManyMinimumWidthColumnsAsTheWidthAllows() {
@@ -75,72 +57,6 @@ public class GridColumnsTest {
     @Test
     public fun testTreatsACountBelowOneAsOne() {
         assertEquals(1, gridColumnCount(GridLayoutConfig(columns = GridColumns.Fixed(count = 0)), 300f))
-    }
-
-    @Test
-    public fun testRangeIncludesBothEnds() {
-        val range = LengthRange(atLeast = 300f, atMost = 400f)
-        assertTrue(300f in range)
-        assertTrue(400f in range)
-        assertFalse(400.1f in range)
-        assertFalse(299.9f in LengthRange(atLeast = 300f))
-        assertTrue(10_000f in LengthRange(atLeast = 300f))
-        assertTrue(0f in LengthRange())
-    }
-
-    private val narrow = GridLayoutConfig(columns = GridColumns.Fixed(count = 2))
-    private val wide = GridLayoutConfig(columns = GridColumns.Fixed(count = 6))
-    private val tablet = GridLayoutConfig(columns = GridColumns.Fixed(count = 8))
-    private val configs = GridConfigs(
-        default = GridLayoutConfig(columns = GridColumns.Fixed(count = 4)),
-        selectors = listOf(
-            GridConfigSelector(GridSelectorConditions(gridWidth = LengthRange(atMost = 300f)), narrow),
-            GridConfigSelector(GridSelectorConditions(windowSize = WindowSize.LARGE), tablet),
-            GridConfigSelector(GridSelectorConditions(gridWidth = LengthRange(atLeast = 300f), platform = "android"), wide)
-        )
-    )
-
-    @Test
-    public fun testTakesTheFirstSelectorThatMatches() {
-        assertSame(narrow, resolveGridConfig(configs, environment.copy(gridWidth = 200f)))
-        assertSame(tablet, resolveGridConfig(configs, environment.copy(windowSize = WindowSize.LARGE)))
-        assertSame(wide, resolveGridConfig(configs, environment))
-    }
-
-    @Test
-    public fun testGivesASharedBoundaryToTheFirstSelectorListed() {
-        assertSame(narrow, resolveGridConfig(configs, environment.copy(gridWidth = 300f)))
-    }
-
-    @Test
-    public fun testRequiresEveryConditionASelectorNames() {
-        assertSame(configs.default, resolveGridConfig(configs, environment.copy(platform = Platform.IOS)))
-    }
-
-    @Test
-    public fun testAPlatformThisSdkDoesNotKnowNeverMatches() {
-        val unknown = GridConfigs(
-            default = GridLayoutConfig(columns = GridColumns.Fixed(count = 4)),
-            selectors = listOf(GridConfigSelector(GridSelectorConditions(platform = "none"), wide))
-        )
-        assertSame(unknown.default, resolveGridConfig(unknown, environment))
-    }
-
-    @Test
-    public fun testResolvesAnItemsConfigByTheSameRules() {
-        val item = GridConfigs(
-            default = GridItemConfig(columnSpan = 6),
-            selectors = listOf(
-                GridConfigSelector(GridSelectorConditions(gridWidth = LengthRange(atMost = 280f)), GridItemConfig(columnSpan = 12))
-            )
-        )
-        assertEquals(12, resolveGridConfig(item, environment.copy(gridWidth = 250f)).columnSpan)
-        assertEquals(6, resolveGridConfig(item, environment.copy(gridWidth = 300f)).columnSpan)
-    }
-
-    @Test
-    public fun testSkipsGridWidthSelectorsForAGridWithNoWidth() {
-        assertSame(configs.default, resolveGridConfig(configs, environment.copy(gridWidth = null)))
     }
 
     @Test

@@ -18,7 +18,6 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.FormInputType
-import com.urbanairship.android.layout.property.GridConfigs
 import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.Image
@@ -568,14 +567,23 @@ internal class LinearLayoutItemInfo(
 }
 
 /**
- * Rows of equal-width cells, laid out with the first config selector that matches, or the default.
+ * Rows of equal-width cells.
  *
  * The grid's own width sets the columns; its items never do. A width of `auto` fills the room the
  * parent offers rather than hugging the items.
+ *
+ * `view_overrides.config` changes the config with state, as any view override does. The grid's
+ * width is at `$grids.current.width` for the grid itself, its items' `overrides` and everything
+ * inside it, until a nested grid takes over.
  */
 internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
-    val config: GridConfigs<GridLayoutConfig> =
-        GridConfigs.fromJson(json.requireField("config"), GridLayoutConfig::fromJson)
+    val identifier: String = json.requireField("identifier")
+    val config: GridLayoutConfig = GridLayoutConfig.fromJson(json.requireField("config"))
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    /** Every config the grid could lay out with: its own, then each override's. */
+    val allConfigs: List<GridLayoutConfig> =
+        listOf(config) + viewOverrides?.config.orEmpty().mapNotNull { it.value }
 
     /** Shuffled once, when the scene is read, so a state change never reorders the options. */
     private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
@@ -594,6 +602,12 @@ internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View b
     val isListView: Boolean = json.optionalMap("accessibility_role")?.let {
         LinearLayoutInfo.AccessibilityRole.Type.fromJson(it.requireField("type"))
     } == LinearLayoutInfo.AccessibilityRole.Type.LIST_VIEW
+
+    internal class ViewOverrides(json: JsonMap) {
+        val config = json.optionalList("config")?.map {
+            ViewPropertyOverride(it) { value -> GridLayoutConfig.fromJson(value.requireMap()) }
+        }
+    }
 }
 
 /** How a grid lays out the view in one of its cells, or in its header or footer. */
@@ -614,12 +628,22 @@ internal class GridLayoutItemInfo(
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))), GridCellInfo {
     val identifier: String? = json.optionalField("identifier")
     override val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_GRID_CELL_SIZE
-    /** Where the item sits among the grid's columns, resolved by the grid's own selector rules. */
-    val config: GridConfigs<GridItemConfig> = json.optionalMap("config")
-        ?.let { GridConfigs.fromJson(it, GridItemConfig::fromJson) }
-        ?: GridConfigs(GridItemConfig())
+    /** Where the item sits among the grid's columns. */
+    val config: GridItemConfig = json.optionalMap("config")?.let(GridItemConfig::fromJson) ?: GridItemConfig()
+    /**
+     * Changes to the item's properties with state, as a view's `view_overrides` change the view's:
+     * per property, the first match replaces it whole. Items aren't views, so `view_overrides`
+     * can't reach them.
+     */
+    val overrides: Overrides? = json.optionalMap("overrides")?.let { Overrides(it) }
     override val margin: Margin? = json["margin"]?.let(Margin::fromJson)
     override val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
+
+    internal class Overrides(json: JsonMap) {
+        val config = json.optionalList("config")?.map {
+            ViewPropertyOverride(it) { value -> GridItemConfig.fromJson(value.requireMap()) }
+        }
+    }
 }
 
 /**

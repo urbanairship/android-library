@@ -13,6 +13,10 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.GridLayoutModel
+import com.urbanairship.android.layout.environment.ThomasState
+import com.urbanairship.android.layout.environment.ThomasCapabilities
+import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.ui.LayoutViewModel
 import com.urbanairship.images.ImageLoader
@@ -25,11 +29,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import androidx.core.view.isVisible
+import java.time.Duration
+import org.robolectric.Shadows.shadowOf
+import android.os.Looper
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -54,10 +64,14 @@ public class GridLayoutViewTest {
     private val testDispatcher = StandardTestDispatcher()
     private val testScope = TestScope(testDispatcher)
 
-    private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
-        every { layoutState } returns LayoutState.EMPTY
+    private val mockEnv: ModelEnvironment = mockEnv(LayoutState.EMPTY)
+
+    /** A stand-in environment that keeps the layout state the factory builds, a grid's state included. */
+    private fun mockEnv(state: LayoutState): ModelEnvironment = mockk(relaxed = true) {
+        every { layoutState } returns state
         every { layoutEvents } returns emptyFlow()
         every { modelScope } returns testScope
+        every { withState(any()) } answers { mockEnv(firstArg()) }
     }
     private val viewEnv: ViewEnvironment = mockk(relaxed = true) {
         every { isIgnoringSafeAreas } returns false
@@ -281,7 +295,7 @@ public class GridLayoutViewTest {
     public fun testTheConfigIsPickedByTheGridsWidth() {
         val grid = grid(
             config = """{"columns": {"type": "fixed", "count": 2}, "cell_aspect_ratio": 1}""",
-            selectors = """[{"grid_width": {"at_least": 480}, "config": {"columns": {"type": "fixed", "count": 6}, "cell_aspect_ratio": 1}}]""",
+            overrides = """[{"when_state_matches": ${gridWidth("""{"at_least": 480}""")}, "value": {"columns": {"type": "fixed", "count": 6}, "cell_aspect_ratio": 1}}]""",
             items = List(6) { box() }
         )
         layout(grid, width = 479)
@@ -295,12 +309,12 @@ public class GridLayoutViewTest {
     public fun testEachItemResolvesItsSpanFromItsOwnSelectors() {
         val half = """
             {"size": {"width": "100%", "height": 20},
-             "config": {"default": {"column_span": 6},
-                        "selectors": [{"grid_width": {"at_most": 280}, "config": {"column_span": 12}}]},
+             "config": {"column_span": 6},
+             "overrides": {"config": [{"when_state_matches": ${gridWidth("""{"at_most": 280}""")}, "value": {"column_span": 12}}]},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val third = """
-            {"size": {"width": "100%", "height": 20}, "config": {"default": {"column_span": 4}},
+            {"size": {"width": "100%", "height": 20}, "config": {"column_span": 4},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val grid = grid(
@@ -521,16 +535,68 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testShowsItsWidthToTheViewsInsideItsCells() {
+        val hidden = """
+            {"size": {"width": "100%", "height": 20},
+             "view": {"type": "empty_view",
+                      "visibility": {"default": true, "invert_when_state_matches": ${gridWidth("""{"at_least": 0}""")}}}}
+        """.trimIndent()
+        // Collectors run inline, as on Dispatchers.Main.immediate, so a publish mid-layout would lose its layout requests.
+        Dispatchers.setMain(UnconfinedTestDispatcher(testDispatcher.scheduler))
+        val environment = realEnvironment()
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(hidden, box()), environment = environment)
+
+        // Laid out by the window's own traversal, where a publish from inside layout would lose its requests.
+        nextFrame()
+        nextFrame()
+
+        assertFalse("hidden by the grid's width", items(grid)[0].isVisible)
+        assertTrue(items(grid)[1].isVisible)
+        assertEquals("and the grid is laid out again, closing up its column", 0, cells(grid)[1].left)
+    }
+
+    @Test
+    public fun testMatchesItsWidthInsideTheBorderItDraws() {
+        Dispatchers.setMain(UnconfinedTestDispatcher(testDispatcher.scheduler))
+        val stroke = { width: Int -> """{"stroke_width": $width, "stroke_color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}""" }
+        // 320 less the overriding stroke of 12 drawn on both sides is 296; less the declared 4 would be 312.
+        val grid = build(
+            """
+            {"type": "grid_layout", "identifier": "grid",
+             "config": {"columns": {"type": "fixed", "count": 2}},
+             "border": ${stroke(4)},
+             "view_overrides": {
+               "config": [
+                 {"when_state_matches": ${gridWidth("""{"at_least": 297}""")}, "value": {"columns": {"type": "fixed", "count": 4}}},
+                 {"when_state_matches": ${gridWidth("""{"at_least": 296}""")}, "value": {"columns": {"type": "fixed", "count": 3}}}
+               ],
+               "border": [{"value": ${stroke(12)}}]
+             },
+             "items": [${List(4) { box(size = """{"width": "100%", "height": 20}""") }.joinToString()}]}
+            """.trimIndent(),
+            realEnvironment()
+        ) as ViewGroup
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        activity.setContentView(FrameLayout(activity).apply { addView(grid) })
+        nextFrame()
+        nextFrame()
+
+        assertEquals("the window it was laid out in", 320, grid.width)
+        assertEquals("the overriding stroke is drawn", 12, grid.paddingLeft)
+        assertEquals("three columns, matched at 296", 3, cells(grid).count { it.top == cells(grid)[0].top })
+    }
+
+    @Test
     public fun testItemsPlaceInTheOrderTheirConfigResolvesTo() {
         val first = """
             {"size": {"width": "100%", "height": 20},
-             "config": {"default": {"order": 0}},
+             "config": {"order": 0},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val second = """
             {"size": {"width": "100%", "height": 20},
-             "config": {"default": {"order": 0},
-                        "selectors": [{"grid_width": {"at_least": 400}, "config": {"order": -1}}]},
+             "config": {"order": 0},
+             "overrides": {"config": [{"when_state_matches": ${gridWidth("""{"at_least": 400}""")}, "value": {"order": -1}}]},
              "view": {"type": "empty_view"}}
         """.trimIndent()
         val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(first, second))
@@ -548,7 +614,7 @@ public class GridLayoutViewTest {
             """{"size": {"width": "100%", "height": 20}, "view": ${label(it)}}"""
         }
         val none = """
-            {"size": {"width": "100%", "height": 20}, "config": {"default": {"order": 1}},
+            {"size": {"width": "100%", "height": 20}, "config": {"order": 1},
              "view": ${label("None")}}
         """.trimIndent()
         val grid = grid(
@@ -564,6 +630,65 @@ public class GridLayoutViewTest {
         assertEquals("the header stays first", 0, header.top)
         assertEquals("None stays last", all.drop(1).maxOf { it.top }, noneCell.top)
     }
+
+    @Test
+    public fun testPublishesTheWidthAParentMeasuresExactlyAfterAnUnboundedProbe() {
+        val environment = realEnvironment()
+        val json = """
+            {"type": "grid_layout", "identifier": "grid",
+             "config": {"columns": {"type": "fit", "max": 3, "min_width": {"type": "fixed", "size": 40}},
+                        "column_spacing": {"type": "fixed", "space": 8}},
+             "items": [${List(3) { box(size = """{"width": "100%", "height": 40}""") }.joinToString()}]}
+        """.trimIndent()
+        val model = LayoutViewModel().getOrCreateModel(
+            ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), environment
+        ) as GridLayoutModel
+        val grid = model.createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
+
+        // Laid out once at another width, so no pending layout forces the measures below to run.
+        layout(grid, width = 300)
+        // A hugging parent probes unbounded, then measures exactly at the size that gave.
+        grid.measure(unspecified(), unspecified())
+        val (width, height) = grid.measuredWidth to grid.measuredHeight
+        grid.measure(exactly(width), exactly(height))
+        grid.layout(0, 0, width, height)
+        nextFrame()
+
+        assertEquals("3 x 40 + 2 x 8", 136f, model.gridState.changes.value.width)
+    }
+
+    @Test
+    public fun testLaysOutAgainOnlyWhenAStateChangeChangesAConfig() {
+        val wide = """{"scope": ["wide"], "value": {"equals": true}}"""
+        val model = LayoutViewModel().getOrCreateModel(
+            ViewInfo.viewInfoFromJson(
+                JsonValue.parseString(
+                    """
+                    {"type": "grid_layout", "identifier": "grid",
+                     "config": {"columns": {"type": "fixed", "count": 2}},
+                     "view_overrides": {"config": [{"when_state_matches": $wide, "value": {"columns": {"type": "fixed", "count": 4}}}]},
+                     "items": [${List(4) { box() }.joinToString()}]}
+                    """.trimIndent()
+                ).requireMap()
+            ),
+            mockEnv
+        )
+        val grid = model.createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
+        layout(grid, width = 400)
+
+        model.listener?.onStateUpdated(stateWith("other" to true))
+        assertFalse("a key no override reads", grid.isLayoutRequested)
+
+        model.listener?.onStateUpdated(stateWith("wide" to true))
+        assertTrue("the override now matches", grid.isLayoutRequested)
+    }
+
+    /** A state whose layout scope holds [entry]. */
+    private fun stateWith(entry: Pair<String, Boolean>) = ThomasState(
+        layout = State.Layout(identifier = "test-layout").apply { state = mapOf(entry.first to JsonValue.wrap(entry.second)) },
+        form = null, pager = null, video = null, asyncView = null,
+        capabilities = ThomasCapabilities.NONE
+    )
 
     private fun spreadColumns(maxSpace: Int?, horizontal: String) = """
         {"columns": {"type": "fit", "max": 4,
@@ -588,10 +713,10 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": {"type": "grid_layout",
-                          "config": {"default": {"columns": {"type": "fit", "max": 3,
-                                                             "min_width": {"type": "fixed", "size": 40}},
-                                                 "column_spacing": {"type": "fixed", "space": 8}}},
+                 "view": {"type": "grid_layout", "identifier": "grid",
+                          "config": {"columns": {"type": "fit", "max": 3,
+                                                 "min_width": {"type": "fixed", "size": 40}},
+                                     "column_spacing": {"type": "fixed", "space": 8}},
                           "items": [${List(3) { box(size = """{"width": "100%", "height": 40}""") }.joinToString()}]}}
                 """,
                 """{"size": {"width": "50%", "height": 40}, "view": {"type": "empty_view"}}"""
@@ -693,7 +818,7 @@ public class GridLayoutViewTest {
             items = listOf(
                 """
                 {"size": {"width": "auto", "height": "auto"},
-                 "view": {"type": "grid_layout", "config": {"default": {"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}}},
+                 "view": {"type": "grid_layout", "identifier": "grid", "config": {"columns": {"type": "fixed", "count": 2}, "column_spacing": {"type": "fixed", "space": 8}},
                           "items": [$image, $image]}}
                 """,
                 """{"size": {"width": "30%", "height": "auto"}, "view": ${label("thirty")}}"""
@@ -849,7 +974,7 @@ public class GridLayoutViewTest {
     }
 
     private fun grid(config: String): String = """
-        {"type": "grid_layout", "config": {"default": $config},
+        {"type": "grid_layout", "identifier": "grid", "config": $config,
          "items": [${List(4) { box() }.joinToString()}]}
     """.trimIndent()
 
@@ -869,26 +994,53 @@ public class GridLayoutViewTest {
         grid.layout(0, 0, grid.measuredWidth, grid.measuredHeight)
     }
 
-    private fun grid(config: String, items: List<String>, selectors: String? = null, extra: String = ""): ViewGroup =
+    private fun grid(
+        config: String,
+        items: List<String>,
+        overrides: String? = null,
+        extra: String = "",
+        environment: ModelEnvironment = mockEnv
+    ): ViewGroup =
         build(
             """
             {
               "type": "grid_layout",
+              "identifier": "grid",
               $extra
-              "config": {"default": $config ${selectors?.let { """, "selectors": $it""" } ?: ""}},
+              "config": $config,
+              ${overrides?.let { """"view_overrides": {"config": $it},""" } ?: ""}
               "items": [${items.joinToString()}]
             }
-            """.trimIndent()
+            """.trimIndent(),
+            environment
         ).also { view ->
             Robolectric.buildActivity(Activity::class.java).setup().get()
                 .setContentView(FrameLayout(view.context).apply { addView(view) })
         } as ViewGroup
 
-    private fun build(json: String): View {
+    private fun build(json: String, environment: ModelEnvironment = mockEnv): View {
         val info = ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap())
-        return LayoutViewModel().getOrCreateModel(info, mockEnv)
+        return LayoutViewModel().getOrCreateModel(info, environment)
             .createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
     }
+
+    /** Runs the next frame's callbacks, where the grid publishes its width, and what they start. */
+    private fun nextFrame() {
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(20))
+        testDispatcher.scheduler.advanceUntilIdle()
+    }
+
+    /** A real environment, so state reaches the grid's descendants, which [mockEnv]'s don't. */
+    private fun realEnvironment() = ModelEnvironment(
+        layoutState = LayoutState.EMPTY,
+        reporter = mockk(relaxUnitFun = true),
+        actionsRunner = mockk(relaxUnitFun = true),
+        displayTimer = mockk(relaxed = true),
+        modelScope = testScope
+    )
+
+    /** A predicate on the grid's own width, as its overrides and its items' see it. */
+    private fun gridWidth(range: String) = """{"scope": ["${'$'}grids", "current", "width"], "value": $range}"""
 
     private fun box(
         size: String = """{"width": "100%", "height": "100%"}""",
@@ -897,7 +1049,7 @@ public class GridLayoutViewTest {
     ) = """
         {
           "size": $size,
-          "config": {"default": {"column_span": $span}},
+          "config": {"column_span": $span},
           ${margin?.let { """"margin": $it,""" } ?: ""}
           "view": {"type": "empty_view"}
         }
