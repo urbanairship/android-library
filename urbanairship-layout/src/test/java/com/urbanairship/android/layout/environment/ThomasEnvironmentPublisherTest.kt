@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.environment
 
 import android.content.Context
-import android.view.Choreographer
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.android.layout.property.WindowSize

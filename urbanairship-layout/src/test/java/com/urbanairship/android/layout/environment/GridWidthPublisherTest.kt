@@ -74,6 +74,26 @@ public class GridWidthPublisherTest {
     }
 
     @Test
+    public fun testAWidthAnotherViewReplacedIsPublishedAgain() {
+        publisher.publish(320f)
+        frames.advance()
+        // A newer view of the same grid writes its own width.
+        GridWidthPublisher(state, nextFrame = frames).publish(300f)
+        frames.advance()
+
+        publisher.publish(320f)
+        frames.advance()
+        assertEquals(320f, width)
+    }
+
+    @Test
+    public fun testAWidthAlreadyInTheStateSchedulesNothing() {
+        val inherited = SharedState(GridState("grid", width = 320f))
+        GridWidthPublisher(inherited, nextFrame = frames).publish(320f)
+        assertTrue(frames.isEmpty)
+    }
+
+    @Test
     public fun testLosingTheWidthIsPublishedToo() {
         publisher.publish(320f)
         frames.advance()

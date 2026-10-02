@@ -31,6 +31,7 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.GridItemConfig
+import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
@@ -99,6 +100,16 @@ internal class GridLayoutView(
 
     /** The latest state at the grid, which its and its items' overrides match against. */
     private var state = ThomasState(State.Layout.DEFAULT, null, null, null, null, ThomasCapabilities.NONE)
+        set(value) {
+            field = value
+            unboundedConfig = null
+        }
+
+    /** [state]'s config with no width to divide, worked out once per state; see [setsItsOwnWidthUnbounded]. */
+    private var unboundedConfig: GridLayoutConfig? = null
+
+    /** The configs the last measure laid out with, so a state change that leaves them alone doesn't lay out again. */
+    private var measuredConfigs: ResolvedConfigs? = null
 
     /** The inner width of the last measure, in points, which layout publishes as `$grids.current.width`. */
     private var measuredGridWidth: Float? = null
@@ -129,8 +140,9 @@ internal class GridLayoutView(
         model.listener = object : BaseModel.Listener {
             override fun onStateUpdated(state: ThomasState) {
                 backgroundsPainter.state = state
+                val unboundedBefore = unboundedConfig
                 this@GridLayoutView.state = state
-                if (model.hasOverrides) requestLayout()
+                if (model.hasOverrides && configsChanged(unboundedBefore)) requestLayout()
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -191,13 +203,32 @@ internal class GridLayoutView(
      */
     private val setsItsOwnWidthUnbounded: Boolean
         get() {
-            val config = gridState(width = null).resolveRequired(model.viewInfo.viewOverrides?.config, model.viewInfo.config)
+            val config = unboundedConfig
+                ?: resolveConfigs(gridState(width = null)).grid.also { unboundedConfig = it }
             return gridMinColumnWidth(config, resources.configuration.fontScale) != null
         }
 
+    /** The grid's config and each item's, as [state] resolves their overrides. */
+    private data class ResolvedConfigs(val grid: GridLayoutConfig, val items: List<GridItemConfig>)
+
+    private fun resolveConfigs(state: ThomasState) = ResolvedConfigs(
+        grid = state.resolveRequired(model.viewInfo.viewOverrides?.config, model.viewInfo.config),
+        items = model.items.map { state.resolveRequired(it.info.overrides?.config, it.info.config) }
+    )
+
+    /**
+     * Whether the latest state changes a config the grid laid out with, at its width or with none.
+     *
+     * @param unboundedBefore the width-null config the previous state resolved, if anything asked.
+     */
+    private fun configsChanged(unboundedBefore: GridLayoutConfig?): Boolean {
+        val laidOut = measuredConfigs ?: return true
+        return resolveConfigs(gridState(measuredGridWidth)) != laidOut ||
+            (unboundedBefore != null && resolveConfigs(gridState(width = null)).grid != unboundedBefore)
+    }
+
     /** The state the grid's and its items' overrides match against, with the grid at `$grids.current`. */
     private fun gridState(width: Float?): ThomasState = state.copy(grid = GridState(model.viewInfo.identifier, width))
-
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density
@@ -213,9 +244,13 @@ internal class GridLayoutView(
 
         measuredGridWidth = innerWidth?.let { it / density }
         hasMeasured = true
+        // A parent that measures EXACTLY at the size this unbounded pass gave would otherwise skip
+        // onMeasure, leaving the grid laid out at that width but publishing none.
+        if (innerWidth == null) forceLayout()
         // Matched against the width just measured, not the published one, which arrives a pass later.
         val gridState = gridState(measuredGridWidth)
-        val config = gridState.resolveRequired(model.viewInfo.viewOverrides?.config, model.viewInfo.config)
+        val configs = resolveConfigs(gridState).also { measuredConfigs = it }
+        val config = configs.grid
         val textScale = resources.configuration.fontScale
         val columns = gridColumnCount(config, innerWidth?.let { it / density }, textScale)
         val minGap = config.columnSpacing.min * density
@@ -229,11 +264,9 @@ internal class GridLayoutView(
 
         // Against the same width as the grid's config, so a span and the count capping it agree.
         // Sorted stably, so items of one order keep list (or shuffled) order.
+        val itemConfigs = cells.zip(configs.items).toMap()
         val ordered = shown
-            .map { cell ->
-                val itemConfig = cell.gridItem?.let { gridState.resolveRequired(it.overrides?.config, it.config) }
-                cell to (itemConfig ?: GridItemConfig())
-            }
+            .map { cell -> cell to (itemConfigs[cell] ?: GridItemConfig()) }
             .sortedBy { (_, itemConfig) -> itemConfig.order }
         val placements = placeGridItems(ordered.map { it.second.columnSpan }, columns, config.partialRowPosition)
         ordered.forEachIndexed { index, (cell, _) ->

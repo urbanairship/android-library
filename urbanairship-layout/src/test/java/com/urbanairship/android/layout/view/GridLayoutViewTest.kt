@@ -13,6 +13,10 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.GridLayoutModel
+import com.urbanairship.android.layout.environment.ThomasState
+import com.urbanairship.android.layout.environment.ThomasCapabilities
+import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.ui.LayoutViewModel
 import com.urbanairship.images.ImageLoader
@@ -60,10 +64,14 @@ public class GridLayoutViewTest {
     private val testDispatcher = StandardTestDispatcher()
     private val testScope = TestScope(testDispatcher)
 
-    private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
-        every { layoutState } returns LayoutState.EMPTY
+    private val mockEnv: ModelEnvironment = mockEnv(LayoutState.EMPTY)
+
+    /** A stand-in environment that keeps the layout state the factory builds, a grid's state included. */
+    private fun mockEnv(state: LayoutState): ModelEnvironment = mockk(relaxed = true) {
+        every { layoutState } returns state
         every { layoutEvents } returns emptyFlow()
         every { modelScope } returns testScope
+        every { withState(any()) } answers { mockEnv(firstArg()) }
     }
     private val viewEnv: ViewEnvironment = mockk(relaxed = true) {
         every { isIgnoringSafeAreas } returns false
@@ -622,6 +630,65 @@ public class GridLayoutViewTest {
         assertEquals("the header stays first", 0, header.top)
         assertEquals("None stays last", all.drop(1).maxOf { it.top }, noneCell.top)
     }
+
+    @Test
+    public fun testPublishesTheWidthAParentMeasuresExactlyAfterAnUnboundedProbe() {
+        val environment = realEnvironment()
+        val json = """
+            {"type": "grid_layout", "identifier": "grid",
+             "config": {"columns": {"type": "fit", "max": 3, "min_width": {"type": "fixed", "size": 40}},
+                        "column_spacing": {"type": "fixed", "space": 8}},
+             "items": [${List(3) { box(size = """{"width": "100%", "height": 40}""") }.joinToString()}]}
+        """.trimIndent()
+        val model = LayoutViewModel().getOrCreateModel(
+            ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), environment
+        ) as GridLayoutModel
+        val grid = model.createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
+
+        // Laid out once at another width, so no pending layout forces the measures below to run.
+        layout(grid, width = 300)
+        // A hugging parent probes unbounded, then measures exactly at the size that gave.
+        grid.measure(unspecified(), unspecified())
+        val (width, height) = grid.measuredWidth to grid.measuredHeight
+        grid.measure(exactly(width), exactly(height))
+        grid.layout(0, 0, width, height)
+        nextFrame()
+
+        assertEquals("3 x 40 + 2 x 8", 136f, model.gridState.changes.value.width)
+    }
+
+    @Test
+    public fun testLaysOutAgainOnlyWhenAStateChangeChangesAConfig() {
+        val wide = """{"scope": ["wide"], "value": {"equals": true}}"""
+        val model = LayoutViewModel().getOrCreateModel(
+            ViewInfo.viewInfoFromJson(
+                JsonValue.parseString(
+                    """
+                    {"type": "grid_layout", "identifier": "grid",
+                     "config": {"columns": {"type": "fixed", "count": 2}},
+                     "view_overrides": {"config": [{"when_state_matches": $wide, "value": {"columns": {"type": "fixed", "count": 4}}}]},
+                     "items": [${List(4) { box() }.joinToString()}]}
+                    """.trimIndent()
+                ).requireMap()
+            ),
+            mockEnv
+        )
+        val grid = model.createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
+        layout(grid, width = 400)
+
+        model.listener?.onStateUpdated(stateWith("other" to true))
+        assertFalse("a key no override reads", grid.isLayoutRequested)
+
+        model.listener?.onStateUpdated(stateWith("wide" to true))
+        assertTrue("the override now matches", grid.isLayoutRequested)
+    }
+
+    /** A state whose layout scope holds [entry]. */
+    private fun stateWith(entry: Pair<String, Boolean>) = ThomasState(
+        layout = State.Layout(identifier = "test-layout").apply { state = mapOf(entry.first to JsonValue.wrap(entry.second)) },
+        form = null, pager = null, video = null, asyncView = null,
+        capabilities = ThomasCapabilities.NONE
+    )
 
     private fun spreadColumns(maxSpace: Int?, horizontal: String) = """
         {"columns": {"type": "fit", "max": 4,

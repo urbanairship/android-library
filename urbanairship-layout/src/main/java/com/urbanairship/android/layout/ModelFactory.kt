@@ -223,10 +223,10 @@ internal class ThomasModelFactory : ModelFactory {
             if (!parentTag.isNullOrEmpty()) {
                 processedNodes[parentTag]?.childTags?.add(node.tag)
             }
-            val childControllers = if (info.type.isController || info.type == ViewType.GRID_LAYOUT) {
-                // If node is a controller, update the controllers for the child, add this node
-                // to the processed controllers map, and also update the controllers for this node
-                // so that it can access its own state.
+            val childControllers = if (info.type.isStateScope) {
+                // If node scopes state, update the controllers for the child, add this node to
+                // the processed controllers map, and also update the controllers for this node so
+                // that it can access its own state.
                 controllers.update(info.type, tag).also {
                     processedControllers[tag] = node
                     node.controllers = node.controllers.update(info.type, tag)
