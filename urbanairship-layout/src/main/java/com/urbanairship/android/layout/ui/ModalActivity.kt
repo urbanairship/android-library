@@ -111,7 +111,8 @@ public class ModalActivity : AppCompatActivity() {
                 reporter = reporter,
                 actionRunner = args.actionRunner,
                 displayTimer = displayTimer,
-                aiInference = DefaultThomasAIInference.create(args.ai)
+                aiInference = DefaultThomasAIInference.create(args.ai),
+                shuffleSeed = args.randomSeed
             )
 
             val model = viewModel.getOrCreateModel(args.payload.view, modelEnvironment)

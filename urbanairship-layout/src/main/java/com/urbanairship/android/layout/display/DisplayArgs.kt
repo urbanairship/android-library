@@ -30,5 +30,10 @@ public class DisplayArgs(
      * Supplied by the host rather than resolved here: a layout is built on the main
      * thread, and reaching the Airship singleton for it blocks until takeoff completes.
      */
-    public val ai: InternalAirshipAi? = null
+    public val ai: InternalAirshipAi? = null,
+    /**
+     * What every `randomize_children` order in the layout is derived from, so a host that shows
+     * the same layout again can show the same order. Null draws one per display.
+     */
+    public val randomSeed: String? = null
 )

@@ -82,6 +82,7 @@ public class EmbeddedLayout(
     private val imageCache: ImageCache? = args.imageCache
     private val actionRunner: ThomasActionRunner = args.actionRunner
     private val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(args.ai)
+    private val randomSeed: String? = args.randomSeed
 
 
     private val reporter: Reporter = ExternalReporter(externalListener)
@@ -169,7 +170,8 @@ public class EmbeddedLayout(
                 reporter = reporter,
                 actionRunner = actionRunner,
                 displayTimer = timer,
-                aiInference = aiInference
+                aiInference = aiInference,
+                shuffleSeed = randomSeed
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,

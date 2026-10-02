@@ -63,7 +63,9 @@ internal interface MessageCenterMessageViewModel {
                 data class Html(val webViewState: WebViewState = WebViewState.INIT): Content()
                 data class Native(
                     val layout: AirshipLayout,
-                    val store: LayoutDataStorage?
+                    val store: LayoutDataStorage?,
+                    /** See [Inbox.layoutRandomSeed]. */
+                    val randomSeed: String? = null
                 ): Content()
             }
 
@@ -297,7 +299,7 @@ internal class DefaultMessageCenterMessageViewModel(
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
                     val viewStore = makeStateStorage(message.id, layout)
-                    val content = State.MessageContent.Content.Native(layout, viewStore)
+                    val content = State.MessageContent.Content.Native(layout, viewStore, inbox.layoutRandomSeed(message))
                     State.MessageContent(message, content)
                 } else {
                     State.Error(State.Error.Type.UNAVAILABLE, messageId)
