@@ -65,6 +65,12 @@ public class SeededShuffleTest {
     }
 
     @Test
+    public fun testSeededShuffleGivesTheSameOrderForTheSameKey() {
+        val key = ShuffleKey("ui-test", "options")
+        assertEquals(order(8, key), order(8, key))
+    }
+
+    @Test
     public fun testSeededShuffleReturnsANewListAndLeavesTheInputAlone() {
         val items = listOf("a", "b", "c", "d", "e")
         val shuffled = items.seededShuffled(ShuffleKey("ui-test", "survey_options"))

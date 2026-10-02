@@ -11,9 +11,15 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.ThomasModelFactory
+import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.info.ViewInfo
+import com.urbanairship.android.layout.model.LinearLayoutModel
+import com.urbanairship.android.layout.model.PagerController
+import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.ui.LayoutViewModel
 import com.urbanairship.android.layout.util.UI_TEST_RANDOM_SEED
+import com.urbanairship.android.layout.util.randomShuffleSeed
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.json.JsonValue
 import io.mockk.every
@@ -97,6 +103,55 @@ public class LinearLayoutOrderTest {
     }
 
     @Test
+    public fun testOrdersLinearLayoutsApartByTheirIdentifiers() {
+        val root = host(
+            """
+            {"type": "linear_layout", "direction": "vertical",
+             "items": [${nested(shuffled("p1", "first"))}, ${nested(shuffled("p2", "second"))}]}
+            """.trimIndent()
+        )
+        val (first, second) = root.descendants().filterIsInstance<LinearLayoutView>().drop(1).toList()
+        // ui-test:first:5 → 4, 1, 0, 2, 3 and ui-test:second:5 → 1, 0, 3, 2, 4
+        assertEquals(listOf("p1-e", "p1-b", "p1-a", "p1-c", "p1-d"), texts(first))
+        assertEquals(listOf("p2-b", "p2-a", "p2-d", "p2-c", "p2-e"), texts(second))
+    }
+
+    @Test
+    public fun testGivesUnidentifiedLayoutsOfOneItemCountOneOrderOnAnyPage() {
+        val json = """
+            {"type": "pager_controller", "identifier": "pager",
+             "view": {"type": "pager", "items": [
+               {"identifier": "first", "view": ${shuffled("p1")}},
+               {"identifier": "second", "view": ${shuffled("p2")}}
+             ]}}
+        """.trimIndent()
+        val controller = ThomasModelFactory().create(
+            ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), environment()
+        ) as PagerController
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // ui-test:5 → 1, 3, 2, 0, 4
+        val pages = (controller.view as PagerModel).pages.map { labels(it as LinearLayoutModel) }
+        assertEquals(listOf("p1-b", "p1-d", "p1-c", "p1-a", "p1-e"), pages[0])
+        assertEquals(listOf("p2-b", "p2-d", "p2-c", "p2-a", "p2-e"), pages[1])
+    }
+
+    @Test
+    public fun testGivesADifferentSeedADifferentOrder() {
+        // seed-b:5 → 4, 1, 2, 0, 3
+        val model = build(shuffled("x"), environment(seed = "seed-b"))
+        assertEquals(listOf("x-e", "x-b", "x-c", "x-a", "x-d"), labels(model))
+    }
+
+    @Test
+    public fun testKeepsAnUnseededOrderWhenBuiltAgain() {
+        val environment = environment(seed = null)
+        val first = labels(build(shuffled("x"), environment))
+        assertEquals(LETTERS.map { "x-$it" }, first.sorted())
+        assertEquals(first, labels(build(shuffled("x"), environment)))
+    }
+
+    @Test
     public fun testFollowsAnOverrideOnState() {
         val flip = """
             "overrides": {"config": [{
@@ -158,14 +213,32 @@ public class LinearLayoutOrderTest {
     private fun texts(stack: ViewGroup): List<String> =
         (0 until stack.childCount).map { (stack.getChildAt(it) as TextView).text.toString() }
 
-    private fun environment() = ModelEnvironment(
+    private fun environment(seed: String? = UI_TEST_RANDOM_SEED) = ModelEnvironment(
         layoutState = LayoutState.EMPTY,
         reporter = mockk(relaxUnitFun = true),
         actionsRunner = mockk(relaxUnitFun = true),
         displayTimer = mockk(relaxed = true),
         modelScope = testScope,
-        shuffleSeed = UI_TEST_RANDOM_SEED
+        shuffleSeed = seed ?: randomShuffleSeed()
     )
+
+    private fun build(json: String, environment: ModelEnvironment): LinearLayoutModel =
+        ThomasModelFactory().create(
+            ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), environment
+        ) as LinearLayoutModel
+
+    /** The labels' text in a linear layout model's order. */
+    private fun labels(model: LinearLayoutModel): List<String> =
+        model.items.map { (it.model.viewInfo as LabelInfo).text }
+
+    /** Five shuffled labels, `<prefix>-a` to `<prefix>-e`. */
+    private fun shuffled(prefix: String, identifier: String? = null) = """
+        {"type": "linear_layout", "direction": "vertical", "randomize_children": true,
+         ${identifier?.let { """"identifier": "$it",""" } ?: ""}
+         "items": [${LETTERS.joinToString { item("$prefix-$it") }}]}
+    """.trimIndent()
+
+    private fun nested(view: String) = """{"size": {"width": "100%", "height": "auto"}, "view": $view}"""
 
     private fun item(text: String, fields: String = "") = """
         {"size": {"width": "100%", "height": "auto"}, $fields
