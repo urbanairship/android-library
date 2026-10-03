@@ -7,7 +7,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.property.BannerPlacement
 import com.urbanairship.android.layout.property.BannerPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
-import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -29,22 +29,10 @@ public class BannerPresentation public constructor(
     public val placementSelectors: List<BannerPlacementSelector>?
 ) : BasePresentation(PresentationType.BANNER) {
 
+    /** Returns the first placement whose selector [context]'s environment matches, else the default. */
     public fun getResolvedPlacement(context: Context): BannerPlacement {
-        if (placementSelectors == null || placementSelectors.isEmpty()) {
-            return defaultPlacement
-        }
-
-        val orientation = ResourceUtils.getOrientation(context)
-        val windowSize = ResourceUtils.getWindowSize(context)
-
-        // Try to find a matching placement selector.
-        return placementSelectors.firstOrNull {
-                (it.windowSize == null || it.windowSize == windowSize) &&
-                (it.orientation == null || it.orientation == orientation)
-            }
-            ?.placement
-        // Otherwise, return the default placement.
-            ?: defaultPlacement
+        val environment = SelectorEnvironment.from(context)
+        return placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
     }
 
     /** @hide */

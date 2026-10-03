@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
@@ -106,7 +107,7 @@ internal class StackImageView(
     }
 
     private fun createOrUpdateImage(item: StackItemInfo.ImageItem) {
-        val resolvedUrl = item.resolveUrl(ResourceUtils.isUiModeNight(context))
+        val resolvedUrl = item.resolveUrl(SelectorEnvironment.from(context))
         val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
         val url = cached?.path ?: resolvedUrl
 

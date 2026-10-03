@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
@@ -153,7 +154,7 @@ internal class StackImageButtonView(
     }
 
     private fun createOrUpdateImage(item: StackItemInfo.ImageItem) {
-        val resolvedUrl = item.resolveUrl(ResourceUtils.isUiModeNight(context))
+        val resolvedUrl = item.resolveUrl(SelectorEnvironment.from(context))
         val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
         val url = cached?.path ?: resolvedUrl
 

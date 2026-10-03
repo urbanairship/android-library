@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
@@ -50,7 +51,7 @@ internal class ImageButtonView(
 
         when (val image = model.viewInfo.image) {
             is Image.Url -> {
-                val resolvedUrl = image.resolveUrl(ResourceUtils.isUiModeNight(context))
+                val resolvedUrl = image.resolveUrl(SelectorEnvironment.from(context))
                 lastImageUrl = resolvedUrl
                 val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
                 val url = cached?.path ?: resolvedUrl
@@ -137,7 +138,7 @@ internal class ImageButtonView(
                 currentState = state
                 val resolvedImage = model.resolveImage(state)
                 if (resolvedImage is Image.Url) {
-                    val newUrl = resolvedImage.resolveUrl(ResourceUtils.isUiModeNight(context))
+                    val newUrl = resolvedImage.resolveUrl(SelectorEnvironment.from(context))
                     if (newUrl != lastImageUrl) {
                         lastImageUrl = newUrl
                         val cached = viewEnvironment.imageCache()?.get(newUrl)
