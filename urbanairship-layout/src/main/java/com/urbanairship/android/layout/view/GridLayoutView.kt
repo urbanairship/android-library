@@ -32,10 +32,12 @@ import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridLayoutConfig
+import com.urbanairship.android.layout.property.PercentHeightBasis
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
+import com.urbanairship.android.layout.util.GridItemRequest
 import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -273,7 +275,11 @@ internal class GridLayoutView(
         val ordered = shown
             .map { cell -> cell to (itemConfigs[cell] ?: GridItemConfig()) }
             .sortedBy { (_, itemConfig) -> itemConfig.order }
-        val placements = placeGridItems(ordered.map { it.second.columnSpan }, columns, config.partialRowPosition)
+        val placements = placeGridItems(
+            ordered.map { (_, itemConfig) -> GridItemRequest(itemConfig.columnSpan, itemConfig.columnStart) },
+            columns,
+            config.partialRowPosition
+        )
         ordered.forEachIndexed { index, (cell, _) ->
             cell.placement = placements[index]
             cell.readingIndex = index
@@ -315,7 +321,18 @@ internal class GridLayoutView(
         // Header and footer rows size to their own content, a percentage a share of it.
         val bands = listOfNotNull(header?.takeIf { it.holdsItem }?.let { listOf(it) to null }) +
             rows + listOfNotNull(footer?.takeIf { it.holdsItem }?.let { listOf(it) to null })
-        val heights = bands.map { (row, rowHeight) -> measureRow(row, rowHeight, isEdge = row.first().gridItem == null) }
+        val pooled = pooledRows(rows.map { it.first }, config)
+        val pooledHeight = pooled.maxOfOrNull { rowContentHeight(it) } ?: 0
+        // Pooled rows answer the basis question together, as they share a height.
+        val pooledBasis = pooled.any { row -> row.any { it.establishesRowHeight() } }
+        val heights = bands.map { (row, rowHeight) ->
+            if (row in pooled) {
+                settleRow(row, pooledHeight, pooledBasis)
+                pooledHeight
+            } else {
+                measureRow(row, rowHeight, isEdge = row.first().gridItem == null)
+            }
+        }
 
         // Rows spread only into a height the grid has of its own, and only between two rows or
         // more; the header and footer stay the minimum from the cells.
@@ -358,6 +375,17 @@ internal class GridLayoutView(
         } ?: 0f
 
     /**
+     * Returns the rows that `percent_height_basis: tallest_row` lays out as one: those holding a
+     * percentage cell, unless a ratio already sets every row's height.
+     */
+    private fun pooledRows(rows: List<List<GridCell>>, config: GridLayoutConfig): List<List<GridCell>> {
+        if (config.percentHeightBasis != PercentHeightBasis.TALLEST_ROW || config.cellAspectRatio != null) {
+            return emptyList()
+        }
+        return rows.filter { row -> row.any { it.info.size.height.isPercent } }
+    }
+
+    /**
      * Measures one row's cells and returns the row's height.
      *
      * With a ratio every row is that tall. Otherwise a row is as tall as its tallest cell's
@@ -374,22 +402,37 @@ internal class GridLayoutView(
             return ratioRowHeight
         }
 
-        val hasBasis = isEdge || row.any { it.establishesRowHeight() }
-        val sharesOfRow = row.filter { cell ->
-            val height = cell.info.size.height
-            height.isPercent && (hasBasis || height.getFloat() >= 1f)
+        val rowHeight = rowContentHeight(row)
+        settleRow(row, rowHeight, hasBasis = isEdge || row.any { it.establishesRowHeight() })
+        return rowHeight
+    }
+
+    /**
+     * Measures every cell in a row with no row height yet and returns the tallest.
+     *
+     * A share of the row counts too: a `100%` label that wraps grows its row, as a percentage
+     * item's content does an auto grid track on web.
+     */
+    private fun rowContentHeight(row: List<GridCell>): Int =
+        row.maxOf { cell ->
+            cell.measureItem(rowHeight = null)
+            cell.contentHeight = cell.item.measuredHeight
+            cell.item.measuredHeight + cell.verticalMargins
         }
 
-        // Every cell's content counts toward the row, a share of it included: a `100%` label that
-        // wraps grows its row, as a percentage item's content does an auto grid track on web.
-        var rowHeight = 0
-        row.forEach { cell ->
-            cell.measureItem(rowHeight = null)
-            rowHeight = max(rowHeight, cell.item.measuredHeight + cell.verticalMargins)
-        }
-        sharesOfRow.forEach { it.measureItem(rowHeight) }
+    /**
+     * Fixes a row's cells at [rowHeight], measuring each percentage height as a share of it, but
+     * never below the cell's content: a 50% cell whose content made the row tall keeps its content.
+     *
+     * @param hasBasis whether something gives the row a height of its own; without one, a share
+     * under 100% keeps its content height.
+     */
+    private fun settleRow(row: List<GridCell>, rowHeight: Int, hasBasis: Boolean) {
+        row.filter { cell ->
+            val height = cell.info.size.height
+            height.isPercent && (hasBasis || height.getFloat() >= 1f)
+        }.forEach { it.measureItem(rowHeight, floorsAtContent = true) }
         row.forEach { it.measure(exactly(it.cellWidth), exactly(rowHeight)) }
-        return rowHeight
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -550,15 +593,20 @@ internal class GridLayoutView(
             }
         }
 
+        /** The item's height as [GridLayoutView.rowContentHeight] last measured it, with no row height. */
+        var contentHeight = 0
+
         /**
          * Measures the item against this cell's width and, where it is known, the row's height.
          *
          * @param rowHeight the row's height in pixels, or null while the row is sizing to its items.
+         * @param floorsAtContent whether a share of the row stays at least [contentHeight], as a CSS
+         * grid item's automatic minimum keeps it on web.
          */
-        fun measureItem(rowHeight: Int?) {
+        fun measureItem(rowHeight: Int?, floorsAtContent: Boolean = false) {
             val margin = resolveMargins()
             val innerWidth = (cellWidth - margin.left - margin.right).coerceAtLeast(0)
-            val widthSpec = specFor(info.size.width, innerWidth, capToBase = true)
+            val widthSpec = specFor(info.size.width, innerWidth, capsLength = true, capsShare = false)
 
             val height = info.size.height
             val aspectRatio = info.size.aspectRatio
@@ -576,7 +624,8 @@ internal class GridLayoutView(
                 }
                 else -> specFor(
                     height, (rowHeight - margin.top - margin.bottom).coerceAtLeast(0),
-                    capToBase = false
+                    capsLength = false, capsShare = true,
+                    atLeast = if (floorsAtContent) contentHeight else 0
                 )
             }
             item.measure(widthSpec, heightSpec)
@@ -585,14 +634,29 @@ internal class GridLayoutView(
         /**
          * Returns the spec for one axis of the item against [base], the cell less its margins.
          *
-         * A percentage is a share of [base]; with [capToBase] a fixed length never exceeds it, so an item
-         * never overflows into the next cell.
+         * A percentage is a share of [base]. As on web, a cell's width caps a fixed width, so an image
+         * fits the cell rather than being cropped by it, while its row caps a share of its height, so
+         * a `200%` item is no taller than the row. A `200%` width still spills into the next cell.
+         *
+         * @param capsLength whether a fixed length stops at [base].
+         * @param capsShare whether a share over 100% stops at the whole of [base].
+         * @param atLeast the least a share comes to, itself held to [base] under [capsShare].
          */
-        private fun specFor(dimension: Size.Dimension, base: Int, capToBase: Boolean): Int =
+        private fun specFor(
+            dimension: Size.Dimension,
+            base: Int,
+            capsLength: Boolean,
+            capsShare: Boolean,
+            atLeast: Int = 0
+        ): Int =
             when (dimension.type) {
-                Size.DimensionType.PERCENT -> exactly((dimension.getFloat() * base).roundToInt())
+                Size.DimensionType.PERCENT -> {
+                    val share = if (capsShare) min(dimension.getFloat(), 1f) else dimension.getFloat()
+                    val length = max((share * base).roundToInt(), atLeast)
+                    exactly(if (capsShare) min(length, base) else length)
+                }
                 Size.DimensionType.ABSOLUTE -> dpToPx(dimension.getInt()).let {
-                    exactly(if (capToBase) min(it, base) else it)
+                    exactly(if (capsLength) min(it, base) else it)
                 }
                 Size.DimensionType.AUTO -> MeasureSpec.makeMeasureSpec(base, MeasureSpec.AT_MOST)
             }

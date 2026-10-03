@@ -1,11 +1,13 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.util
 
+import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridLayoutConfig
 import com.urbanairship.android.layout.property.GridColumns
 import com.urbanairship.android.layout.property.GridColumnWidth
 import com.urbanairship.android.layout.property.GridSpacing
 import com.urbanairship.android.layout.property.HorizontalPosition
+import com.urbanairship.json.jsonMapOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -14,6 +16,12 @@ public class GridColumnsTest {
 
     private fun fixed(size: Float) = GridColumnWidth(GridColumnWidth.Type.FIXED, size)
     private fun textScaled(size: Float) = GridColumnWidth(GridColumnWidth.Type.TEXT_SCALED, size)
+
+    /** Requests for items with these spans and no start. */
+    private fun spans(vararg values: Int) = values.map { GridItemRequest(it) }
+
+    /** Each item's row and whole start column. */
+    private fun cells(placements: List<GridPlacement>) = placements.map { it.row to it.halfColumn / 2 }
 
     @Test
     public fun testFitsAsManyMinimumWidthColumnsAsTheWidthAllows() {
@@ -61,35 +69,35 @@ public class GridColumnsTest {
 
     @Test
     public fun testFillsRowsInOrderAndLeavesOnlyTheLastOneShort() {
-        val placed = placeGridItems(List(7) { 1 }, 3, HorizontalPosition.START)
+        val placed = placeGridItems(spans(1, 1, 1, 1, 1, 1, 1), 3, HorizontalPosition.START)
         assertEquals(listOf(0, 0, 0, 1, 1, 1, 2), placed.map { it.row })
         assertEquals(listOf(0, 2, 4, 0, 2, 4, 0), placed.map { it.halfColumn })
     }
 
     @Test
     public fun testOffsetsAShortRowByHalfColumnsForCenterAndEnd() {
-        assertEquals(GridPlacement(1, 2, 1), placeGridItems(List(4) { 1 }, 3, HorizontalPosition.CENTER)[3])
-        assertEquals(1, placeGridItems(List(5) { 1 }, 3, HorizontalPosition.CENTER)[3].halfColumn)
-        assertEquals(4, placeGridItems(List(4) { 1 }, 3, HorizontalPosition.END)[3].halfColumn)
+        assertEquals(GridPlacement(1, 2, 1), placeGridItems(spans(1, 1, 1, 1), 3, HorizontalPosition.CENTER)[3])
+        assertEquals(1, placeGridItems(spans(1, 1, 1, 1, 1), 3, HorizontalPosition.CENTER)[3].halfColumn)
+        assertEquals(4, placeGridItems(spans(1, 1, 1, 1), 3, HorizontalPosition.END)[3].halfColumn)
     }
 
     @Test
     public fun testStartsANewRowForAnItemThatDoesNotFitWithoutBackfilling() {
-        val placed = placeGridItems(listOf(2, 2, 1), 3, HorizontalPosition.START)
+        val placed = placeGridItems(spans(2, 2, 1), 3, HorizontalPosition.START)
         assertEquals(listOf(0, 1, 1), placed.map { it.row })
         assertEquals(listOf(0, 0, 4), placed.map { it.halfColumn })
     }
 
     @Test
     public fun testAlignsAnyShortRowNotJustTheLast() {
-        val placed = placeGridItems(listOf(2, 3), 3, HorizontalPosition.CENTER)
+        val placed = placeGridItems(spans(2, 3), 3, HorizontalPosition.CENTER)
         assertEquals(GridPlacement(0, 1, 2), placed[0])
         assertEquals(GridPlacement(1, 0, 3), placed[1])
     }
 
     @Test
     public fun testClampsASpanToTheColumnCountAndToAtLeastOne() {
-        val placed = placeGridItems(listOf(5, 0), 3, HorizontalPosition.START)
+        val placed = placeGridItems(spans(5, 0), 3, HorizontalPosition.START)
         assertEquals(listOf(3, 1), placed.map { it.span })
         assertEquals(listOf(0, 1), placed.map { it.row })
     }
@@ -170,5 +178,83 @@ public class GridColumnsTest {
     public fun testScalesOnlyATextScaledMinimum() {
         assertEquals(44f, gridMinColumnWidth(GridLayoutConfig(columns = GridColumns.Fit(max = 3, minWidth = fixed(44f))), 1.5f))
         assertEquals(66f, gridMinColumnWidth(GridLayoutConfig(columns = GridColumns.Fit(max = 3, minWidth = textScaled(44f))), 1.5f))
+    }
+
+    @Test
+    public fun testStartsAnItemAtItsColumn() {
+        assertEquals(
+            listOf(GridPlacement(0, 4, 8)),
+            placeGridItems(listOf(GridItemRequest(8, start = 2)), 12, HorizontalPosition.START)
+        )
+    }
+
+    @Test
+    public fun testClampsAStartSoTheSpanFits() {
+        val placed = placeGridItems(
+            listOf(GridItemRequest(4, start = 10), GridItemRequest(4, start = -3), GridItemRequest(2, start = 5)),
+            12,
+            HorizontalPosition.START
+        )
+        // 10 clamps to 8; -3 to 0, a new row.
+        assertEquals(listOf(0 to 8, 1 to 0, 1 to 5), cells(placed))
+    }
+
+    @Test
+    public fun testKeepsACentredBlockValidAsTheColumnCountDrops() {
+        // 8 wide from 2 in 12 columns; in 6 the span caps at 6 and the start at 0.
+        assertEquals(
+            listOf(GridPlacement(0, 0, 6)),
+            placeGridItems(listOf(GridItemRequest(8, start = 2)), 6, HorizontalPosition.START)
+        )
+    }
+
+    @Test
+    public fun testBeginsANewRowForAStartBehindTheNextFreeColumn() {
+        val placed = placeGridItems(listOf(GridItemRequest(6), GridItemRequest(4, start = 2)), 12, HorizontalPosition.START)
+        assertEquals(listOf(0 to 0, 1 to 2), cells(placed))
+    }
+
+    @Test
+    public fun testLeavesSkippedColumnsEmptyAndContinuesAfterTheStartedItem() {
+        val placed = placeGridItems(
+            listOf(GridItemRequest(2), GridItemRequest(2, start = 6), GridItemRequest(2), GridItemRequest(4)),
+            12,
+            HorizontalPosition.START
+        )
+        // Columns 2–5 stay empty; the third item follows at 8, the fourth doesn't fit.
+        assertEquals(listOf(0 to 0, 0 to 6, 0 to 8, 1 to 0), cells(placed))
+    }
+
+    @Test
+    public fun testDrawsARowWithAStartAsPlacedWhateverTheAlignment() {
+        val placed = placeGridItems(
+            listOf(GridItemRequest(4, start = 0), GridItemRequest(2), GridItemRequest(2)),
+            12,
+            HorizontalPosition.CENTER
+        )
+        assertEquals(listOf(0, 8, 12), placed.map { it.halfColumn })
+    }
+
+    @Test
+    public fun testStillAlignsTheRowsWithoutAStart() {
+        val placed = placeGridItems(
+            listOf(
+                GridItemRequest(12),
+                GridItemRequest(4, start = 4),
+                GridItemRequest(2),
+                GridItemRequest(12),
+                GridItemRequest(4)
+            ),
+            12,
+            HorizontalPosition.CENTER
+        )
+        // Row 1 holds a start and stays put; row 3, short by 8, centres at half-column 8.
+        assertEquals(listOf(0 to 0, 1 to 4, 1 to 8, 2 to 0, 3 to 4), cells(placed))
+    }
+
+    @Test
+    public fun testReadsAFractionalColumnStartAsItsWholePart() {
+        val config = GridItemConfig.fromJson(jsonMapOf("column_span" to 2, "column_start" to 5.7))
+        assertEquals(5, config.columnStart)
     }
 }
