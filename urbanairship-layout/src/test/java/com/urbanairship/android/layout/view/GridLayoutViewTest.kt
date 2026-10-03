@@ -825,6 +825,44 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testTallestRowKeepsAShareUnder100PercentAtLeastAsTallAsItsContent() {
+        // A fixed height gives the pooled rows a basis; the 50% card's content is the tallest.
+        val grid = grid(
+            config = TALLEST,
+            items = listOf(box(size = """{"width": "100%", "height": 20}"""), card(40, "100%"), card(80, "50%"), card(10, "100%"))
+        )
+        layout(grid, width = 360)
+        val (_, _, half, beside) = items(grid).map { it.height }
+        assertTrue("the 50% card keeps its 80 filler and label: $half", half > 80)
+        assertEquals("its content sets the pooled height", beside, half)
+    }
+
+    @Test
+    public fun testTallestRowKeepsAWrappingLabelsLinesInAShareUnder100Percent() {
+        val wrapping = """
+            {"size": {"width": "100%", "height": "50%"},
+             "view": {"type": "label", "text": "A much longer body that wraps across several lines inside its narrow grid cell for sure",
+                      "text_appearance": {"font_size": 14, "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}}}
+        """.trimIndent()
+        val grid = grid(
+            config = TALLEST,
+            items = listOf(box(size = """{"width": "100%", "height": 20}"""), card(10, "100%"), wrapping, card(10, "100%"))
+        )
+        layout(grid, width = 360)
+        val label = items(grid)[2] as android.widget.TextView
+        assertEquals("no line is clamped away", Int.MAX_VALUE, label.maxLines)
+        assertEquals("the label's lines set the pooled height", items(grid)[3].height, label.height)
+    }
+
+    @Test
+    public fun testAShareUnder100PercentStaysAtLeastAsTallAsItsContentInItsOwnRow() {
+        // The fixed item gives the row a basis, and the 50% card's content makes the row tall.
+        val grid = grid(config = TWO, items = listOf(box(size = """{"width": "100%", "height": 20}"""), card(80, "50%")))
+        layout(grid, width = 360)
+        assertEquals(cells(grid)[1].height, items(grid)[1].height)
+    }
+
+    @Test
     public fun testShrinksWhenTheTallestCardsContentDoes() {
         // The filler hides once the grid is at most 300 wide.
         val tall = card(200, "100%", fillerExtra = """, "visibility": {"default": true, "invert_when_state_matches": ${gridWidth("""{"at_most": 300}""")}}""")

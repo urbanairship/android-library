@@ -416,11 +416,13 @@ internal class GridLayoutView(
     private fun rowContentHeight(row: List<GridCell>): Int =
         row.maxOf { cell ->
             cell.measureItem(rowHeight = null)
+            cell.contentHeight = cell.item.measuredHeight
             cell.item.measuredHeight + cell.verticalMargins
         }
 
     /**
-     * Fixes a row's cells at [rowHeight], measuring each percentage height as a share of it.
+     * Fixes a row's cells at [rowHeight], measuring each percentage height as a share of it, but
+     * never below the cell's content: a 50% cell whose content made the row tall keeps its content.
      *
      * @param hasBasis whether something gives the row a height of its own; without one, a share
      * under 100% keeps its content height.
@@ -429,7 +431,7 @@ internal class GridLayoutView(
         row.filter { cell ->
             val height = cell.info.size.height
             height.isPercent && (hasBasis || height.getFloat() >= 1f)
-        }.forEach { it.measureItem(rowHeight) }
+        }.forEach { it.measureItem(rowHeight, floorsAtContent = true) }
         row.forEach { it.measure(exactly(it.cellWidth), exactly(rowHeight)) }
     }
 
@@ -591,12 +593,17 @@ internal class GridLayoutView(
             }
         }
 
+        /** The item's height as [GridLayoutView.rowContentHeight] last measured it, with no row height. */
+        var contentHeight = 0
+
         /**
          * Measures the item against this cell's width and, where it is known, the row's height.
          *
          * @param rowHeight the row's height in pixels, or null while the row is sizing to its items.
+         * @param floorsAtContent whether a share of the row stays at least [contentHeight], as a CSS
+         * grid item's automatic minimum keeps it on web.
          */
-        fun measureItem(rowHeight: Int?) {
+        fun measureItem(rowHeight: Int?, floorsAtContent: Boolean = false) {
             val margin = resolveMargins()
             val innerWidth = (cellWidth - margin.left - margin.right).coerceAtLeast(0)
             val widthSpec = specFor(info.size.width, innerWidth, capsLength = true, capsShare = false)
@@ -617,7 +624,8 @@ internal class GridLayoutView(
                 }
                 else -> specFor(
                     height, (rowHeight - margin.top - margin.bottom).coerceAtLeast(0),
-                    capsLength = false, capsShare = true
+                    capsLength = false, capsShare = true,
+                    atLeast = if (floorsAtContent) contentHeight else 0
                 )
             }
             item.measure(widthSpec, heightSpec)
@@ -632,12 +640,20 @@ internal class GridLayoutView(
          *
          * @param capsLength whether a fixed length stops at [base].
          * @param capsShare whether a share over 100% stops at the whole of [base].
+         * @param atLeast the least a share comes to, itself held to [base] under [capsShare].
          */
-        private fun specFor(dimension: Size.Dimension, base: Int, capsLength: Boolean, capsShare: Boolean): Int =
+        private fun specFor(
+            dimension: Size.Dimension,
+            base: Int,
+            capsLength: Boolean,
+            capsShare: Boolean,
+            atLeast: Int = 0
+        ): Int =
             when (dimension.type) {
                 Size.DimensionType.PERCENT -> {
                     val share = if (capsShare) min(dimension.getFloat(), 1f) else dimension.getFloat()
-                    exactly((share * base).roundToInt())
+                    val length = max((share * base).roundToInt(), atLeast)
+                    exactly(if (capsShare) min(length, base) else length)
                 }
                 Size.DimensionType.ABSOLUTE -> dpToPx(dimension.getInt()).let {
                     exactly(if (capsLength) min(it, base) else it)
