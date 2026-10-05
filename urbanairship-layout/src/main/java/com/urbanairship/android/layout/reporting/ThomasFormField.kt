@@ -43,6 +43,13 @@ public sealed class ThomasFormField<T>(
         val aiInference: ThomasAIInferenceOutcome? = null
     )
 
+    /** The field's result once it's known: its instant one, or what its fetch returned. */
+    internal val result: Result<T>?
+        get() = when (val type = fieldType) {
+            is FieldType.Async -> type.fetcher.results.value?.value
+            is FieldType.Instant -> type.result
+        }
+
     internal val status: ThomasFormFieldStatus<T>
         get() {
             return when(val type = fieldType) {
@@ -152,6 +159,7 @@ public sealed class ThomasFormField<T>(
                 // Reported here and nowhere else. A redacted field still reports what the
                 // model derived — redaction hides the text, not the inference.
                 builder.put(KEY_AI_INFERENCE, valid?.result?.aiInference?.reported)
+                builder.put(KEY_REGISTRATION, valid?.result?.channels?.firstOrNull()?.registrationJson)
             }
             return builder.build()
         }
@@ -270,6 +278,7 @@ public sealed class ThomasFormField<T>(
         private const val KEY_STATUS: String = "status"
         private const val KEY_IS_REDACTED: String = "is_redacted"
         private const val KEY_AI_INFERENCE: String = "ai_inference"
+        private const val KEY_REGISTRATION: String = "registration"
         private const val REDACTED_VALUE: String = "REDACTED"
         private const val KEY_SCORE_ID: String = "score_id"
         private const val KEY_CHILDREN: String = "children"
@@ -445,6 +454,13 @@ public sealed class ThomasFormField<T>(
         }
     }
 }
+
+/** The options this channel is registered with, as the form result event reports them. */
+private val ThomasChannelRegistration.registrationJson: JsonValue
+    get() = when (this) {
+        is ThomasChannelRegistration.Email -> options.toJsonValue()
+        is ThomasChannelRegistration.Sms -> registration.toJsonValue()
+    }
 
 internal sealed class ThomasFormFieldStatus<T> {
     data class Valid<T>(val result: ThomasFormField.Result<T>): ThomasFormFieldStatus<T>()
