@@ -159,7 +159,10 @@ public class ThomasBannerView internal constructor(
     private fun applyWindowInsets() {
         val insets = ViewCompat.getRootWindowInsets(this) ?: return
 
-        if (environment.isIgnoringSafeAreas) {
+        // The placement shown, not the view environment's, which a condition can't change.
+        if (resolvedPlacement().shouldIgnoreSafeArea()) {
+            // A switch from a placement that padded leaves no padding behind.
+            updatePadding(left = 0, top = 0, right = 0, bottom = 0)
             bannerFrame?.let { ViewCompat.dispatchApplyWindowInsets(it, insets) }
             return
         }
