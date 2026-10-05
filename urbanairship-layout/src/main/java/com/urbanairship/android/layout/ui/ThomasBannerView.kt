@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ui
 
+import com.urbanairship.android.layout.property.BannerPlacement
 import android.content.Context
 import android.graphics.Rect
 import android.os.Build
@@ -47,13 +48,13 @@ public class ThomasBannerView internal constructor(
      * The banner's configured transition, defaulting to a slide when the payload omits one.
      */
     private val bannerTransition: BannerTransition
-        get() = presentation.getResolvedPlacement(context).transition ?: BannerTransition.default()
+        get() = resolvedPlacement().transition ?: BannerTransition.default()
 
     /**
      * The edge the banner slides from/to.
      */
     private val bannerPosition: VerticalPosition
-        get() = presentation.getResolvedPlacement(context).position.vertical
+        get() = resolvedPlacement().position.vertical
 
     /**
      * Listener notified when the banner frame's bounds (relative to this view) change. Used by
@@ -67,18 +68,38 @@ public class ThomasBannerView internal constructor(
         model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
+    /** The scene's views, built again when its selectors read new environment conditions. */
+    private var containerView: View? = null
+
     init {
         id = model.viewId
         model.seedEnvironment(this)
         configureBanner()
+        EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged() }
+    }
+
+    /** Returns the placement the window and the layout's environment conditions select now. */
+    internal fun resolvedPlacement(): BannerPlacement =
+        presentation.getResolvedPlacement(context, model.environmentConditionValues)
+
+    /**
+     * Builds the scene's views again when its selectors read the new values, and fits the banner
+     * to the placement they select.
+     */
+    private fun onEnvironmentConditionsChanged() {
+        if (model.viewsSelectOnEnvironmentConditions) {
+            val frame = bannerFrame ?: return
+            containerView?.let(frame::removeView)
+            containerView = model.createView(context, environment, null).also(frame::addView)
+        }
+        applySizeConstraints()
     }
 
     private fun configureBanner() {
-        val placement = presentation.getResolvedPlacement(context)
+        val placement = resolvedPlacement()
         val size = placement.size
         val frame = makeFrame(size)
-        val containerView = model.createView(context, environment, null)
-        frame.addView(containerView)
+        containerView = model.createView(context, environment, null).also(frame::addView)
         addView(frame)
         LayoutUtils.applyBorderAndBackground(frame, null, placement.border, placement.backgroundColor)
         applyShadow(frame, placement.shadow)
@@ -191,7 +212,7 @@ public class ThomasBannerView internal constructor(
      */
     private fun applySizeConstraints() {
         val frame = bannerFrame ?: return
-        val placement = presentation.getResolvedPlacement(context)
+        val placement = resolvedPlacement()
         val viewId = frame.id
         val size = placement.size
         val margin = placement.margin
@@ -260,7 +281,7 @@ public class ThomasBannerView internal constructor(
 
     /** Re-applies the size constraints if the window differs from the one they were built for. */
     private fun refitIfWindowChanged() {
-        val ignoreSafeArea = presentation.getResolvedPlacement(context).shouldIgnoreSafeArea()
+        val ignoreSafeArea = resolvedPlacement().shouldIgnoreSafeArea()
         val window = ResourceUtils.getWindowPixels(context, this)
         if (window.width(ignoreSafeArea) != lastWindowWidth || window.height(ignoreSafeArea) != lastWindowHeight) {
             applySizeConstraints()

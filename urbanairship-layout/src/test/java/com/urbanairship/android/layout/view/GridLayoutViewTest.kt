@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.ui.LayoutViewModel
 import com.urbanairship.android.layout.util.UI_TEST_RANDOM_SEED
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -633,16 +634,17 @@ public class GridLayoutViewTest {
     }
 
     @Test
-    public fun testPublishesTheWidthAParentMeasuresExactlyAfterAnUnboundedProbe() {
+    public fun testPublishesConditionsForTheWidthAParentMeasuresExactlyAfterAnUnboundedProbe() {
         val environment = realEnvironment()
         val json = """
             {"type": "grid_layout", "identifier": "grid",
+             "grid_state": {"conditions": {"wide": [{"width": {"at_least": 136}, "value": true}]}},
              "config": {"columns": {"type": "fit", "max": 3, "min_width": {"type": "fixed", "size": 40}},
                         "column_spacing": {"type": "fixed", "space": 8}},
              "items": [${List(3) { box(size = """{"width": "100%", "height": 40}""") }.joinToString()}]}
         """.trimIndent()
         val model = LayoutViewModel().getOrCreateModel(
-            ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), environment
+            parse(json), environment
         ) as GridLayoutModel
         val grid = model.createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
 
@@ -655,22 +657,20 @@ public class GridLayoutViewTest {
         grid.layout(0, 0, width, height)
         nextFrame()
 
-        assertEquals("3 x 40 + 2 x 8", 136f, model.gridState.changes.value.width)
+        assertEquals("chosen at 3 x 40 + 2 x 8", jsonMapOf("wide" to true), model.gridState.changes.value.conditions)
     }
 
     @Test
     public fun testLaysOutAgainOnlyWhenAStateChangeChangesAConfig() {
         val wide = """{"scope": ["wide"], "value": {"equals": true}}"""
         val model = LayoutViewModel().getOrCreateModel(
-            ViewInfo.viewInfoFromJson(
-                JsonValue.parseString(
+            parse(
                     """
                     {"type": "grid_layout", "identifier": "grid",
                      "config": {"columns": {"type": "fixed", "count": 2}},
                      "view_overrides": {"config": [{"when_state_matches": $wide, "value": {"columns": {"type": "fixed", "count": 4}}}]},
                      "items": [${List(4) { box() }.joinToString()}]}
                     """.trimIndent()
-                ).requireMap()
             ),
             mockEnv
         )
@@ -1243,7 +1243,7 @@ public class GridLayoutViewTest {
         } as ViewGroup
 
     private fun build(json: String, environment: ModelEnvironment = mockEnv): View {
-        val info = ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap())
+        val info = parse(json)
         return LayoutViewModel().getOrCreateModel(info, environment)
             .createView(ApplicationProvider.getApplicationContext(), viewEnv, null)
     }
@@ -1265,7 +1265,33 @@ public class GridLayoutViewTest {
     )
 
     /** A predicate on the grid's own width, as its overrides and its items' see it. */
-    private fun gridWidth(range: String) = """{"scope": ["${'$'}grids", "current", "width"], "value": $range}"""
+    /** The width ranges [gridWidth] asked for, each a condition [parse] declares on every grid. */
+    private val widthConditions = linkedMapOf<String, String>()
+
+    /** A predicate on the grid's width being in [range], through a `grid_state` condition [parse] declares. */
+    private fun gridWidth(range: String): String {
+        val name = widthConditions.getOrPut(range) { "width_${widthConditions.size}" }
+        return """{"scope": ["${'$'}grids", "current", "conditions", "$name"], "value": {"equals": true}}"""
+    }
+
+    /** Parses [json], declaring each condition [gridWidth] asked for on every grid in it. */
+    private fun parse(json: String): ViewInfo =
+        ViewInfo.viewInfoFromJson(withWidthConditions(JsonValue.parseString(json)).requireMap())
+
+    private fun withWidthConditions(value: JsonValue): JsonValue = when {
+        value.isJsonList -> JsonValue.wrap(value.optList().list.map(::withWidthConditions))
+        value.isJsonMap -> {
+            val entries = value.optMap().map.mapValues { withWidthConditions(it.value) }.toMutableMap()
+            if (entries["type"]?.string == "grid_layout" && widthConditions.isNotEmpty() && "grid_state" !in entries) {
+                val conditions = widthConditions.entries.associate { (range, name) ->
+                    name to JsonValue.parseString("""[{"width": $range, "value": true}]""")
+                }
+                entries["grid_state"] = JsonValue.wrap(mapOf("conditions" to conditions))
+            }
+            JsonValue.wrap(entries)
+        }
+        else -> value
+    }
 
     private fun box(
         size: String = """{"width": "100%", "height": "100%"}""",

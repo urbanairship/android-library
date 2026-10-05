@@ -30,10 +30,19 @@ public class BannerPresentation public constructor(
 ) : BasePresentation(PresentationType.BANNER) {
 
     /** Returns the first placement whose selector [context]'s environment matches, else the default. */
-    public fun getResolvedPlacement(context: Context): BannerPlacement {
-        val environment = SelectorEnvironment.from(context)
-        return placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
-    }
+    public fun getResolvedPlacement(context: Context): BannerPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context))
+
+    /**
+     * Returns the first placement whose selector matches [context]'s environment and the layout's
+     * environment [conditions], else the default. A root view's own context sits above the one its
+     * views carry conditions in, so it passes them.
+     */
+    internal fun getResolvedPlacement(context: Context, conditions: JsonMap): BannerPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context).copy(conditions = conditions))
+
+    private fun getResolvedPlacement(environment: SelectorEnvironment): BannerPlacement =
+        placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

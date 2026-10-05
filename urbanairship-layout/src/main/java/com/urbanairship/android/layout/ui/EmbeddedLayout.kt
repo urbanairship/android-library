@@ -98,7 +98,8 @@ public class EmbeddedLayout(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun getPlacement(): EmbeddedPlacement? {
         val presentation = (payload.presentation as? EmbeddedPresentation)
-        return presentation?.getResolvedPlacement(context)
+        // The view's own once there is one, since only it knows the layout's environment conditions.
+        return currentView?.get()?.placement ?: presentation?.getResolvedPlacement(context)
     }
 
     public fun getOrCreateView(
@@ -171,7 +172,9 @@ public class EmbeddedLayout(
                 actionRunner = actionRunner,
                 displayTimer = timer,
                 aiInference = aiInference,
-                shuffleSeed = randomSeed
+                shuffleSeed = randomSeed,
+                environmentConditions = payload.environmentConditions,
+                viewsSelectOnEnvironmentConditions = payload.viewSelectsOnEnvironmentConditions
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,

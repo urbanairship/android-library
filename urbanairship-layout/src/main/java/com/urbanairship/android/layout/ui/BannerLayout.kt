@@ -123,7 +123,8 @@ public class BannerLayout(
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun getPlacement(): BannerPlacement =
-        presentation.getResolvedPlacement(context)
+        // The view's own once there is one, since only it knows the layout's environment conditions.
+        currentView?.get()?.resolvedPlacement() ?: presentation.getResolvedPlacement(context)
 
     /**
      * Creates the banner view, notifying the optional [frameBoundsChangedListener] when the
@@ -197,7 +198,9 @@ public class BannerLayout(
                 actionRunner = actionRunner,
                 displayTimer = timer,
                 aiInference = aiInference,
-                shuffleSeed = randomSeed
+                shuffleSeed = randomSeed,
+                environmentConditions = payload.environmentConditions,
+                viewsSelectOnEnvironmentConditions = payload.viewSelectsOnEnvironmentConditions
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,

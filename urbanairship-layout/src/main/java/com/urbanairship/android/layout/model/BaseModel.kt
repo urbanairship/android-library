@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.json.JsonMap
 import android.content.Context
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
@@ -11,6 +12,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.EnvironmentFrame
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
@@ -112,6 +114,15 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         environment.publishEnvironment(rootView, frame, immediate)
     }
 
+    /** See [ModelEnvironment.environmentConditionValues]; read by the root view. */
+    val environmentConditionValues: JsonMap get() = environment.environmentConditionValues
+
+    /** See [ModelEnvironment.environmentConditionChanges]; watched by the root view. */
+    val environmentConditionChanges: Flow<JsonMap> get() = environment.environmentConditionChanges
+
+    /** See [ModelEnvironment.viewsSelectOnEnvironmentConditions]. */
+    val viewsSelectOnEnvironmentConditions: Boolean get() = environment.viewsSelectOnEnvironmentConditions
+
     /** See [ModelEnvironment.seedEnvironment]; called on the root model by the root view. */
     fun seedEnvironment(rootView: AndroidView) {
         environment.seedEnvironment(rootView)
@@ -124,7 +135,10 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     ): T {
         background = null
 
-        val view = onCreateView(context, viewEnvironment, itemProperties)
+        // Every view below the root shares this, so a selector resolved from any view's context
+        // can match the layout's environment conditions.
+        val conditionsContext = EnvironmentConditionsContext.wrap(context) { environment.environmentConditionValues }
+        val view = onCreateView(conditionsContext, viewEnvironment, itemProperties)
         onViewCreated(view)
 
         updateBackground()

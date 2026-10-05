@@ -20,7 +20,10 @@ import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.GridItemConfig
 import com.urbanairship.android.layout.property.GridLayoutConfig
+import com.urbanairship.android.layout.property.Conditions
+import com.urbanairship.android.layout.property.GridConditionSelector
 import com.urbanairship.android.layout.property.Image
+import com.urbanairship.android.layout.property.conditionsIn
 import com.urbanairship.android.layout.property.LinearLayoutItemConfig
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
@@ -592,13 +595,15 @@ internal class LinearLayoutItemInfo(
  * The grid's own width sets the columns; its items never do. A width of `auto` fills the room the
  * parent offers rather than hugging the items.
  *
- * `view_overrides.config` changes the config with state, as any view override does. The grid's
- * width is at `$grids.current.width` for the grid itself, its items' `overrides` and everything
- * inside it, until a nested grid takes over.
+ * `view_overrides.config` changes the config with state, as any view override does. Its
+ * `grid_state.conditions`, chosen from its width, are at `$grids.current.conditions` for the grid
+ * itself, its items' `overrides` and everything inside it, until a nested grid takes over.
  */
 internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
     val identifier: String = json.requireField("identifier")
     val config: GridLayoutConfig = GridLayoutConfig.fromJson(json.requireField("config"))
+    /** Breakpoints on the grid's content width, chosen at `$grids.current.conditions`. */
+    val gridConditions: Conditions<GridConditionSelector> = json.conditionsIn("grid_state", GridConditionSelector::fromJson)
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
     /** Every config the grid could lay out with: its own, then each override's. */

@@ -11,7 +11,10 @@ import com.urbanairship.android.layout.ai.ThomasAIStatus
 import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
+import com.urbanairship.android.layout.property.Conditions
+import com.urbanairship.android.layout.property.EnvironmentConditions
 import com.urbanairship.android.layout.reporting.DisplayTimer
+import com.urbanairship.json.JsonMap
 import com.urbanairship.android.layout.util.ThomasViewIdResolver
 import com.urbanairship.android.layout.util.randomShuffleSeed
 import com.urbanairship.android.layout.util.seededShuffled
@@ -27,6 +30,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
@@ -47,8 +52,15 @@ internal class ModelEnvironment(
     val aiInference: ThomasAIInference? = null,
     /** What every `randomize_children` order in the layout is derived from; see [seededShuffled]. */
     val shuffleSeed: String = randomShuffleSeed(),
+    /** The scene's `environment_state.conditions`, which `$environment.conditions` is chosen from. */
+    environmentConditions: EnvironmentConditions = Conditions(emptyMap()),
+    /**
+     * Whether a color or media selector in the layout names `environment_conditions`, so its views
+     * are built again when a chosen value changes.
+     */
+    val viewsSelectOnEnvironmentConditions: Boolean = false,
     /** The layout's `$environment`, shared by every copy [withState] makes. */
-    private val environmentPublisher: ThomasEnvironmentPublisher = ThomasEnvironmentPublisher(),
+    private val environmentPublisher: ThomasEnvironmentPublisher = ThomasEnvironmentPublisher(environmentConditions),
     /**
      * [ThomasCapabilities.ai] is null until the model reports in, and forever when there is no
      * model to report — a layout with no AI never sees a `$ai` state key at all.
@@ -81,6 +93,7 @@ internal class ModelEnvironment(
             viewIdResolver = this.viewIdResolver,
             aiInference = this.aiInference,
             shuffleSeed = this.shuffleSeed,
+            viewsSelectOnEnvironmentConditions = this.viewsSelectOnEnvironmentConditions,
             environmentPublisher = this.environmentPublisher,
             capabilities = this.capabilities
         )
@@ -100,6 +113,14 @@ internal class ModelEnvironment(
     fun publishEnvironment(rootView: View, frame: EnvironmentFrame?, immediate: Boolean = false) {
         environmentPublisher.publish(rootView, frame, immediate)
     }
+
+    /** The environment conditions' chosen values as last published; none before the first reading. */
+    val environmentConditionValues: JsonMap
+        get() = environmentPublisher.environment.value?.conditions ?: JsonMap.EMPTY_MAP
+
+    /** The chosen values each time a published reading changes them. */
+    val environmentConditionChanges: Flow<JsonMap> =
+        environmentPublisher.environment.map { it?.conditions ?: JsonMap.EMPTY_MAP }.distinctUntilChanged()
 
     /** See [ThomasEnvironmentPublisher.seed]; the root view calls this when it's created. */
     @MainThread

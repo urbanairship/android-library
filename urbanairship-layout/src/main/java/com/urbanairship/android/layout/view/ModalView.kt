@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.ui.EnvironmentConditionsWatcher
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -53,7 +54,16 @@ internal class ModalView(
      */
     internal val shadeView: View
 
-    private val placement: ModalPlacement = presentation.getResolvedPlacement(context)
+    private val placement: ModalPlacement
+
+    /**
+     * Called once the layout's environment conditions select a different placement; this view stops
+     * applying and reporting [placement] from then on, and the activity recreates.
+     */
+    var onPlacementSuperseded: (() -> Unit)? = null
+
+    /** The scene's views, built again when its selectors read new environment conditions. */
+    private lateinit var contentView: View
 
     /**
      * Set once a configuration change resolves a different placement. `ModalActivity` recreates
@@ -78,6 +88,7 @@ internal class ModalView(
 
     init {
         model.seedEnvironment(this)
+        placement = resolvePlacement()
         clipToPadding = false
 
         val size = placement.size
@@ -117,7 +128,7 @@ internal class ModalView(
                 }
         }
 
-        val contentView = model.createView(context, viewEnvironment, null)
+        contentView = model.createView(context, viewEnvironment, null)
         containerView.addView(contentView)
 
         modalFrame.addView(containerView)
@@ -131,6 +142,7 @@ internal class ModalView(
         addView(shadeView, 0)
 
         applyConstraints()
+        EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged(viewEnvironment) }
 
         if (viewEnvironment.isIgnoringSafeAreas) {
             setOnApplyWindowInsetsListener(modalFrame) { _: View, insets: WindowInsetsCompat ->
@@ -290,7 +302,7 @@ internal class ModalView(
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         if (isPlacementSuperseded) return
-        if (presentation.getResolvedPlacement(context) !== placement) {
+        if (resolvePlacement() !== placement) {
             isPlacementSuperseded = true
             return
         }
@@ -300,4 +312,24 @@ internal class ModalView(
         requestLayout()
     }
 
+    private fun resolvePlacement(): ModalPlacement =
+        presentation.getResolvedPlacement(context, model.environmentConditionValues)
+
+    /**
+     * Hands the activity a placement the new values select, or builds the scene's views again when
+     * its selectors read them.
+     */
+    private fun onEnvironmentConditionsChanged(viewEnvironment: ViewEnvironment) {
+        if (isPlacementSuperseded) return
+        if (resolvePlacement() !== placement) {
+            isPlacementSuperseded = true
+            onPlacementSuperseded?.invoke()
+            return
+        }
+        if (!model.viewsSelectOnEnvironmentConditions) return
+        val parent = contentView.parent as? ViewGroup ?: return
+        parent.removeView(contentView)
+        contentView = model.createView(context, viewEnvironment, null)
+        parent.addView(contentView)
+    }
 }

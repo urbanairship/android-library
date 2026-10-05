@@ -50,10 +50,12 @@ internal class ThomasEmbeddedView(
         model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
-    private var placement: EmbeddedPlacement = presentation.getResolvedPlacement(context)
+    /** The placement shown, which the layout's environment conditions can select too. */
+    internal lateinit var placement: EmbeddedPlacement
+        private set
 
     /** The scene, created once and moved into a new frame when the placement changes. */
-    private val contentView: View
+    private var contentView: View
 
     /** The window [applyConstraints] last sized the frame against. */
     private var constrainedWindow: WindowPixels? = null
@@ -61,8 +63,10 @@ internal class ThomasEmbeddedView(
     init {
         id = model.viewId
         model.seedEnvironment(this)
+        placement = resolvePlacement()
         contentView = model.createView(context, environment, null)
         configure(placement)
+        EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged() }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -84,7 +88,7 @@ internal class ThomasEmbeddedView(
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         // A host that handles its own config changes keeps this view, so selectors re-resolve here.
-        val resolved = presentation.getResolvedPlacement(context)
+        val resolved = resolvePlacement()
         if (resolved !== placement) {
             placement = resolved
             frame?.let(::removeView)
@@ -95,6 +99,24 @@ internal class ThomasEmbeddedView(
         }
         environmentFrame.onConfigurationChanged()
         requestLayout()
+    }
+
+    private fun resolvePlacement(): EmbeddedPlacement =
+        presentation.getResolvedPlacement(context, model.environmentConditionValues)
+
+    /**
+     * Moves the scene into a new frame when the new values select another placement, building its
+     * views again first when its selectors read them.
+     */
+    private fun onEnvironmentConditionsChanged() {
+        val resolved = resolvePlacement()
+        val rebuild = model.viewsSelectOnEnvironmentConditions
+        if (!rebuild && resolved === placement) return
+        placement = resolved
+        frame?.let(::removeView)
+        (contentView.parent as? ViewGroup)?.removeView(contentView)
+        if (rebuild) contentView = model.createView(context, environment, null)
+        configure(resolved)
     }
 
     private fun reapplyConstraintsIfWindowChanged() {
