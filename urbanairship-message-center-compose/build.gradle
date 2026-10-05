@@ -62,4 +62,6 @@ dependencies {
 
     // Unit Tests
     testImplementation project(':urbanairship-test')
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.compose.ui.test.manifest)
 }

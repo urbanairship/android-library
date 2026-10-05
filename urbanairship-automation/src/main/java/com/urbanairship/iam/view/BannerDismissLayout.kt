@@ -53,11 +53,14 @@ internal class BannerDismissLayout @JvmOverloads constructor(
     var listener: Listener? = null
 
     /**
-     * The view's y translation as a fraction of its height.
+     * The view's y translation as a fraction of [slideDistance].
      * Used to animate a view into the screen with a ObjectAnimator.
+     *
+     * `-1` puts a top banner just above the screen and `1` puts a bottom banner just below it, so
+     * the slide spans only the banner rather than this full-screen layout.
      */
     var yFraction: Float
-        get() = if (height == 0) 0f else translationY / height
+        get() = slideDistance.let { if (it == 0) 0f else translationY / it }
         set(value) {
             // The view's height is only populated after the view has been laid out.
             // We can workaround this by adding a OnPreDrawListener and set the yFraction.
@@ -73,7 +76,17 @@ internal class BannerDismissLayout @JvmOverloads constructor(
                     }
                 viewTreeObserver.addOnPreDrawListener(preDrawListener)
             } else {
-                translationY = yFraction * height
+                translationY = value * slideDistance
+            }
+        }
+
+    /** How far the banner must move to leave the screen through its placement's edge. */
+    private val slideDistance: Int
+        get() {
+            val banner = getChildAt(0) ?: return height
+            return when (placement) {
+                Banner.Placement.TOP -> banner.bottom
+                Banner.Placement.BOTTOM -> height - banner.top
             }
         }
 

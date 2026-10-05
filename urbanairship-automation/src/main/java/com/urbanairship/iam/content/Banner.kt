@@ -192,7 +192,8 @@ public class Banner @VisibleForTesting internal constructor(
                 placement = content[PLACEMENT_KEY]?.let(Placement::fromJson) ?: Placement.BOTTOM,
                 template = content[TEMPLATE_KEY]?.let(Template::fromJson)
                     ?: Template.MEDIA_LEFT,
-                durationMs = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS),
+                // Seconds, per the remote-data spec and as iOS reads it.
+                durationMs = (content.opt(DURATION_KEY).getDouble(DEFAULT_DURATION_MS / 1000.0) * 1000).toLong(),
                 backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
                 dismissButtonColor = content[DISMISS_BUTTON_COLOR_KEY]?.let(InAppMessageColor::fromJson)
@@ -222,7 +223,7 @@ public class Banner @VisibleForTesting internal constructor(
         BUTTON_LAYOUT_KEY to buttonLayoutType,
         PLACEMENT_KEY to placement,
         TEMPLATE_KEY to template,
-        DURATION_KEY to durationMs,
+        DURATION_KEY to durationMs / 1000.0,
         BACKGROUND_COLOR_KEY to backgroundColor,
         DISMISS_BUTTON_COLOR_KEY to dismissButtonColor,
         BORDER_RADIUS_KEY to borderRadius,
