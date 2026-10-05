@@ -67,10 +67,12 @@ internal class ThomasEnvironmentPublisher(
      * activity is recreated, leaves the last reading in place until its own first layout.
      *
      * @param rootView the layout's root view; see [ThomasEnvironment.from].
+     * @param frame the frame the root view will be laid out at, where the host knows it before
+     * layout, as a modal filling its window does.
      */
     @MainThread
-    fun seed(rootView: View) {
-        if (_environment.value == null) publish(rootView, frame = null)
+    fun seed(rootView: View, frame: EnvironmentFrame? = null) {
+        if (_environment.value == null) publish(rootView, frame)
     }
 
     /** @see publish */

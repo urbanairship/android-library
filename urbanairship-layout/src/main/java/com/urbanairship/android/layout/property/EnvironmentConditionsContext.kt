@@ -27,6 +27,13 @@ internal class EnvironmentConditionsContext(
         fun wrap(context: Context, conditions: () -> JsonMap): Context =
             if (find(context) != null) context else EnvironmentConditionsContext(context, conditions)
 
+        /**
+         * Returns the context [context] wraps when it's one of these, else [context]: what a host's
+         * custom view handler expects, an activity among them.
+         */
+        fun unwrap(context: Context): Context =
+            (context as? EnvironmentConditionsContext)?.baseContext ?: context
+
         /** Returns the chosen values of the layout [context] belongs to, or none outside one. */
         fun conditionsOf(context: Context): JsonMap = find(context)?.conditions?.invoke() ?: JsonMap.EMPTY_MAP
 

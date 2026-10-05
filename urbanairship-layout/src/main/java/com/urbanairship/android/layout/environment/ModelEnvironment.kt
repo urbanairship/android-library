@@ -125,8 +125,8 @@ internal class ModelEnvironment(
 
     /** See [ThomasEnvironmentPublisher.seed]; the root view calls this when it's created. */
     @MainThread
-    fun seedEnvironment(rootView: View) {
-        environmentPublisher.seed(rootView)
+    fun seedEnvironment(rootView: View, frame: EnvironmentFrame? = null) {
+        environmentPublisher.seed(rootView, frame)
     }
 }
 

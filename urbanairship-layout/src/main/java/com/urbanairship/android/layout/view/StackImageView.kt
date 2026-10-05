@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import android.graphics.drawable.Drawable
 import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.content.Context
 import android.view.View
@@ -42,6 +43,9 @@ internal class StackImageView(
 
     private val imageView: CropImageView by lazy { makeImageView() }
 
+    /** The shape item's drawable, which the view's own background and border are laid over. */
+    private var baseBackground: Drawable? = null
+
     init {
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
 
@@ -51,7 +55,6 @@ internal class StackImageView(
 
         renderItems(model.viewInfo.items)
 
-        val baseBackground = this.background
         model.listener = object : BaseModel.Listener {
             override fun setEnabled(enabled: Boolean) {
                 this@StackImageView.isEnabled = enabled
@@ -92,7 +95,10 @@ internal class StackImageView(
     private fun renderItems(items: List<StackItemInfo>) {
         items.forEach { item ->
             when (item) {
-                is StackItemInfo.ShapeItem -> background = item.shape.getDrawable(context)
+                is StackItemInfo.ShapeItem -> {
+                    baseBackground = item.shape.getDrawable(context)
+                    background = baseBackground
+                }
                 is StackItemInfo.IconItem -> createOrUpdateIcon(item.icon as Image.Icon)
                 is StackItemInfo.ImageItem -> createOrUpdateImage(item)
             }

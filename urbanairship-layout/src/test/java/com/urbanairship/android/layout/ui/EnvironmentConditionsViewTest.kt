@@ -2,13 +2,19 @@
 package com.urbanairship.android.layout.ui
 
 import android.app.Activity
+import android.widget.EditText
+import android.view.Gravity
+import android.content.Context
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.urbanairship.Airship
+import com.urbanairship.android.layout.view.StackImageView
+import com.urbanairship.android.layout.AirshipCustomViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -30,6 +36,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
@@ -96,9 +103,80 @@ public class EnvironmentConditionsViewTest {
         assertEquals(1f, view.placement.size.width.getFloat())
     }
 
+    @Test
+    public fun testRecolorsInPlaceWithoutMovingTheSceneWhenThePlacementStaysTheSame() {
+        val (view, host) = embedded(width = 300, scene = scene(LABEL))
+        val label = label(view)
+        val parent = label.parent
+
+        cross(host)
+        assertSame("still in the same container", parent, label.parent)
+        assertTrue(label.isAttachedToWindow)
+        assertEquals(BLUE, label.currentTextColor)
+    }
+
+    @Test
+    public fun testAMultilineTextInputKeepsItsTopAlignmentWhenRecolored() {
+        val input = """
+            {"type": "form_controller", "identifier": "form", "submit": "submit_event",
+             "view": {"type": "text_input", "identifier": "input", "input_type": "text_multiline",
+                      "text_appearance": {"font_size": 14, "color": $COLOR}}}
+        """.trimIndent()
+        val (view, host) = embedded(width = 300, scene = scene(input))
+        val field = view.descendants().filterIsInstance<EditText>().single()
+        assertEquals(RED, field.currentTextColor)
+
+        cross(host)
+        assertEquals(BLUE, field.currentTextColor)
+        assertEquals(Gravity.TOP, field.gravity and Gravity.VERTICAL_GRAVITY_MASK)
+    }
+
+    @Test
+    public fun testAStackImageKeepsItsOwnBackgroundOverItsRecoloredShape() {
+        val stack = """
+            {"type": "stack_image_view", "identifier": "stack", "background_color": $COLOR,
+             "items": [{"type": "shape", "shape": {"type": "rectangle", "color": $COLOR}}]}
+        """.trimIndent()
+        val (view, host) = embedded(width = 300, scene = scene(stack))
+        val image = view.descendants().filterIsInstance<StackImageView>().single()
+        assertTrue("the shape with the view's background over it", image.background is LayerDrawable)
+
+        cross(host)
+        assertTrue("still both, not the shape alone: ${image.background}", image.background is LayerDrawable)
+    }
+
+    @Test
+    public fun testACustomViewHandlerStillGetsTheContextItWasGiven() {
+        var given: Context? = null
+        AirshipCustomViewManager.register("probe") { context, _ -> given = context; View(context) }
+        try {
+            embedded(width = 300, scene = scene("""{"type": "custom_view", "name": "probe"}"""))
+            assertTrue("an activity, as before: $given", given is Activity)
+        } finally {
+            AirshipCustomViewManager.unregister("probe")
+        }
+    }
+
+    /** Widens the host past the `size` breakpoint and settles. */
+    private fun cross(host: FrameLayout) {
+        host.layoutParams = FrameLayout.LayoutParams(500, ViewGroup.LayoutParams.WRAP_CONTENT)
+        settle()
+    }
+
+    /** An embedded scene showing [view], with the frame's `size` condition and no placement selectors. */
+    private fun scene(view: String) = """
+        {"version": 1,
+         "environment_state": {"conditions": {"size": [
+           {"frame_width": {"at_most": 400}, "value": "compact"}, {"value": "expanded"}
+         ]}},
+         "presentation": {"type": "embedded", "embedded_id": "home",
+           "default_placement": {"size": {"width": "100%", "height": "auto"}}},
+         "view": $view}
+    """.trimIndent()
+
     /** An embedded scene in a host [width] wide, whose `size` condition reads the frame's width. */
-    private fun embedded(width: Int): Pair<ThomasEmbeddedView, FrameLayout> {
-        val layout = LayoutInfo(JsonValue.parseString(SCENE).optMap())
+    private fun embedded(width: Int, scene: String = SCENE): Pair<ThomasEmbeddedView, FrameLayout> {
+        val layout = LayoutInfo(JsonValue.parseString(scene).optMap())
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val environment = ModelEnvironment(
             layoutState = LayoutState.EMPTY,
@@ -140,6 +218,15 @@ public class EnvironmentConditionsViewTest {
     private companion object {
         const val RED = 0xFFFF0000.toInt()
         const val BLUE = 0xFF0000FF.toInt()
+
+        /** Red while the `size` condition is compact, else blue. */
+        val COLOR = """
+            {"default": {"type": "hex", "hex": "#0000FF", "alpha": 1},
+             "selectors": [{"environment_conditions": {"size": "compact"},
+                            "color": {"type": "hex", "hex": "#FF0000", "alpha": 1}}]}
+        """.trimIndent()
+
+        val LABEL = """{"type": "label", "text": "x", "text_appearance": {"font_size": 14, "color": $COLOR}}"""
 
         val SCENE = """
             {"version": 1,

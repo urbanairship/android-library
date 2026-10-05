@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.ui
 
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import android.content.Context
 import android.content.res.Configuration
@@ -33,6 +34,9 @@ internal class ThomasEmbeddedView(
 ) : ConstraintLayout(context) {
 
     private var frame: ConstrainedFrameLayout? = null
+
+    /** The container inside [frame] that draws the placement's background and border. */
+    private var container: ClippableFrameLayout? = null
 
     internal var listener: Listener? = null
 
@@ -109,16 +113,22 @@ internal class ThomasEmbeddedView(
         presentation.getResolvedPlacement(context, model.environmentConditionValues)
 
     /**
-     * Moves the scene into a new frame when the new values select another placement, or when the
-     * placement's colors may resolve differently; the scene's own views refresh themselves.
+     * Moves the scene into a new frame when the new values select another placement, and otherwise
+     * resolves the placement's colors again in place; the scene's own views refresh themselves.
      */
     private fun onEnvironmentConditionsChanged() {
         val resolved = resolvePlacement()
-        if (resolved === placement && !model.viewsSelectOnEnvironmentConditions) return
-        placement = resolved
-        frame?.let(::removeView)
-        (contentView.parent as? ViewGroup)?.removeView(contentView)
-        configure(resolved)
+        if (resolved !== placement) {
+            placement = resolved
+            frame?.let(::removeView)
+            (contentView.parent as? ViewGroup)?.removeView(contentView)
+            configure(resolved)
+        } else if (model.viewsSelectOnEnvironmentConditions) {
+            // Moving the content would detach it: text inputs lose focus, and media restart.
+            val container = container ?: return
+            val background = Background(placement.backgroundColor, placement.border)
+            LayoutUtils.updateBackground(container, background, background)
+        }
     }
 
     private fun reapplyConstraintsIfWindowChanged() {
@@ -143,7 +153,7 @@ internal class ThomasEmbeddedView(
                 widthSpec,
                 heightSpec
             )
-        }
+        }.also { this.container = it }
 
         // Make a frame to display the layout in
         ConstrainedFrameLayout(context, size).apply {

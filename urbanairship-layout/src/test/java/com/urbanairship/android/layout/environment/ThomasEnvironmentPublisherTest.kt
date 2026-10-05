@@ -205,6 +205,17 @@ public class ThomasEnvironmentPublisherTest {
         assertEquals(published(laidOut), publisher.environment.value)
     }
 
+    /** As a modal seeds the frame it will fill, so its placement sees frame conditions from the start. */
+    @Test
+    public fun testASeedWithAKnownFrameChoosesItsConditionsAtOnce() {
+        val rootView = View(ApplicationProvider.getApplicationContext<Context>())
+        val density = rootView.resources.displayMetrics.density
+
+        publisher.seed(rootView, EnvironmentFrame(width = (300 * density).toInt(), height = (300 * density).toInt()))
+
+        assertEquals("tall", publisher.environment.value!!.conditions.opt("frame").string)
+    }
+
     /** A recreated root view leaves the last frame in place, and its first layout lands at once. */
     @Test
     public fun testARecreatedRootViewsFirstLayoutAppliesAtOnce() {

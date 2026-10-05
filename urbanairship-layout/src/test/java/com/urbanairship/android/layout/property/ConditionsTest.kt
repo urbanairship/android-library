@@ -2,12 +2,14 @@
 package com.urbanairship.android.layout.property
 
 import com.urbanairship.android.layout.environment.PredicateEnvironment
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.environment.ThomasEnvironment
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -142,6 +144,21 @@ public class ConditionsTest {
         val selector = SelectorConditions.fromJson(JsonValue.parseString("""{"environment_conditions": {"size": "compact"}}""").optMap())
         val none = SelectorEnvironment(darkMode = false, windowSize = WindowSize.SMALL, orientation = Orientation.PORTRAIT)
         assertFalse(selector.matches(none))
+    }
+
+    @Test
+    public fun testAPlacementColorOnAConditionCountsAsSelectingOnConditions() {
+        val scene = JsonValue.parseString(
+            """
+            {"version": 1,
+             "presentation": {"type": "modal", "default_placement": {"size": {"width": "100%", "height": "auto"},
+               "shade_color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1},
+                 "selectors": [{"environment_conditions": {"size": "compact"},
+                                "color": {"type": "hex", "hex": "#FF0000", "alpha": 1}}]}}},
+             "view": {"type": "empty_view"}}
+            """.trimIndent()
+        ).optMap()
+        assertTrue(LayoutInfo(scene).viewSelectsOnEnvironmentConditions)
     }
 
     @Test

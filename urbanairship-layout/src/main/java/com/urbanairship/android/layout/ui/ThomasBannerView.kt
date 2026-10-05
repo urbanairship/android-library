@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ui
 
+import android.view.ViewGroup
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import com.urbanairship.android.layout.property.BannerPlacement
@@ -84,29 +85,50 @@ public class ThomasBannerView internal constructor(
     internal fun resolvedPlacement(): BannerPlacement =
         presentation.getResolvedPlacement(context, model.environmentConditionValues)
 
+    /** The scene, created once and moved into a new frame when the placement changes. */
+    private lateinit var contentView: View
+
+    /** The placement the frame was built for. */
+    private lateinit var shownPlacement: BannerPlacement
+
     /**
-     * Fits the banner to the placement the new values select, and resolves its colors again; the
-     * scene's own views refresh themselves.
+     * Moves the scene into a frame for the placement the new values select, or resolves the
+     * frame's colors again in place; the scene's own views refresh themselves.
      */
     private fun onEnvironmentConditionsChanged() {
+        val resolved = resolvedPlacement()
+        if (resolved !== shownPlacement) {
+            bannerFrame?.let(::removeView)
+            buildFrame(resolved)
+            applySizeConstraints()
+            // The pinned edge, and so its inset padding, can move with the placement.
+            applyWindowInsets()
+            return
+        }
         val frame = bannerFrame ?: return
         if (model.viewsSelectOnEnvironmentConditions) {
-            val placement = resolvedPlacement()
-            val background = Background(placement.backgroundColor, placement.border)
+            val background = Background(resolved.backgroundColor, resolved.border)
             LayoutUtils.updateBackground(frame, background, background)
-            applyShadow(frame, placement.shadow)
+            applyShadow(frame, resolved.shadow)
         }
         applySizeConstraints()
     }
 
-    private fun configureBanner() {
-        val placement = resolvedPlacement()
-        val size = placement.size
-        val frame = makeFrame(size)
-        frame.addView(model.createView(context, environment, null))
+    /** Builds a frame sized, colored and shadowed for [placement], and moves the scene into it. */
+    private fun buildFrame(placement: BannerPlacement): ConstrainedFrameLayout {
+        val frame = makeFrame(placement.size)
+        (contentView.parent as? ViewGroup)?.removeView(contentView)
+        frame.addView(contentView)
         addView(frame)
         LayoutUtils.applyBorderAndBackground(frame, null, placement.border, placement.backgroundColor)
         applyShadow(frame, placement.shadow)
+        shownPlacement = placement
+        return frame
+    }
+
+    private fun configureBanner() {
+        contentView = model.createView(context, environment, null)
+        val frame = buildFrame(resolvedPlacement())
 
         applySizeConstraints()
 

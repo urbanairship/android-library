@@ -177,16 +177,6 @@ public class BannerLayout(
             }
         }.also(activityMonitor::addApplicationListener)
 
-        val placement = presentation.getResolvedPlacement(activity)
-        val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
-            activity,
-            activityMonitor,
-            webViewClientFactory,
-            imageCache,
-            placement.shouldIgnoreSafeArea(),
-            payload.version
-        )
-
         val viewModelProvider = ViewModelProvider(BannerViewModelStores.owner(viewInstanceId))
         val viewModel = viewModelProvider[viewInstanceId, LayoutViewModel::class.java]
 
@@ -201,6 +191,19 @@ public class BannerLayout(
                 shuffleSeed = randomSeed,
                 environmentConditions = payload.environmentConditions,
                 viewsSelectOnEnvironmentConditions = payload.viewSelectsOnEnvironmentConditions
+            )
+
+            // Seeded before the placement is read, so its safe-area handling is chosen with the
+            // environment conditions the banner will see.
+            modelEnvironment.seedEnvironment(activity.window.decorView)
+            val placement = presentation.getResolvedPlacement(activity, modelEnvironment.environmentConditionValues)
+            val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
+                activity,
+                activityMonitor,
+                webViewClientFactory,
+                imageCache,
+                placement.shouldIgnoreSafeArea(),
+                payload.version
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,

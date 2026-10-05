@@ -216,9 +216,10 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         viewScope.launch {
             layoutState.thomasState.collect {
                 val conditionsChanged = takeEnvironmentConditions(it)
+                // Before the background, which a view's own base layer sits under.
+                if (conditionsChanged) (view as? EnvironmentConditionsSensitive)?.onEnvironmentConditionsChanged()
                 updateBackground(it, force = conditionsChanged)
                 updateVisibility(it)
-                if (conditionsChanged) (view as? EnvironmentConditionsSensitive)?.onEnvironmentConditionsChanged()
                 listener?.onStateUpdated(it)
             }
         }

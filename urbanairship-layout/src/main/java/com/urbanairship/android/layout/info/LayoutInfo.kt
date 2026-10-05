@@ -25,7 +25,7 @@ public data class LayoutInfo(
     public val contentDescription: ThomasContentDescriptionInfo? = null,
     /** The scene's `environment_state.conditions`, chosen at `$environment.conditions`. */
     public val environmentConditions: Conditions<EnvironmentConditionSelector> = Conditions(emptyMap()),
-    /** Whether a color or media selector in [view] names `environment_conditions`. */
+    /** Whether a selector in [view] or [presentation] names `environment_conditions`. */
     public val viewSelectsOnEnvironmentConditions: Boolean = false
 ) {
     public constructor(json: JsonMap) : this(
@@ -37,7 +37,8 @@ public data class LayoutInfo(
         contentDescription = json.optionalMap("content_description")
             ?.let(ThomasContentDescriptionInfo::fromJson),
         environmentConditions = json.conditionsIn("environment_state", EnvironmentConditionSelector::fromJson),
-        viewSelectsOnEnvironmentConditions = json.opt("view").namesKey("environment_conditions")
+        viewSelectsOnEnvironmentConditions = json.opt("view").namesKey("environment_conditions") ||
+            json.opt("presentation").namesKey("environment_conditions")
     )
 
     public val isEmbedded: Boolean

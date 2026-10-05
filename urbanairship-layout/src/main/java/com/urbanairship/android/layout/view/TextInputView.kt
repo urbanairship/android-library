@@ -137,7 +137,7 @@ internal class TextInputView(
 
     /** Applies its text and hint colors again; its end icon resolves with every state update already. */
     override fun onEnvironmentConditionsChanged() {
-        LayoutUtils.applyTextAppearance(input, model.viewInfo.textAppearance)
+        LayoutUtils.applyTextColor(input, model.viewInfo.textAppearance)
         model.viewInfo.textAppearance.hintColor?.let { input.setHintTextColor(it.resolve(context)) }
     }
 
