@@ -42,6 +42,9 @@ internal class TextInputView(
 ) : LinearLayout(context), BaseView, TappableView, EnvironmentConditionsSensitive {
 
     private val clicksChannel = Channel<Unit>(UNLIMITED)
+
+    /** The SMS country picker's adapter, which applies its colors as it binds each row. */
+    private var smsLocaleAdapter: SmsLocaleAdapter? = null
     private val input: AppCompatEditText by lazy { makeTextInput(model) }
 
     private val touchListener = OnTouchListener { v: View, event: MotionEvent ->
@@ -139,6 +142,7 @@ internal class TextInputView(
     override fun onEnvironmentConditionsChanged() {
         LayoutUtils.applyTextColor(input, model.viewInfo.textAppearance)
         model.viewInfo.textAppearance.hintColor?.let { input.setHintTextColor(it.resolve(context)) }
+        smsLocaleAdapter?.notifyDataSetChanged()
     }
 
     private fun makeTextInput(model: TextInputModel): AppCompatEditText {
@@ -160,6 +164,7 @@ internal class TextInputView(
             context = context,
             locales = model.viewInfo.smsLocales ?: emptyList(),
             appearance = model.viewInfo.textAppearance.localePickerAppearance)
+        smsLocaleAdapter = adapter
 
         return Spinner(context).apply {
             background = null

@@ -91,6 +91,9 @@ public class ThomasBannerView internal constructor(
     /** The placement the frame was built for. */
     private lateinit var shownPlacement: BannerPlacement
 
+    /** Called whenever the layout's environment conditions or configuration select another placement. */
+    internal var onPlacementChanged: ((BannerPlacement) -> Unit)? = null
+
     /**
      * Moves the scene into a frame for the placement the new values select, or resolves the
      * frame's colors again in place; the scene's own views refresh themselves.
@@ -105,13 +108,12 @@ public class ThomasBannerView internal constructor(
             applyWindowInsets()
             return
         }
+        // The same placement has the same size, so only its colors can have changed.
+        if (!model.selectsOnEnvironmentConditions) return
         val frame = bannerFrame ?: return
-        if (model.viewsSelectOnEnvironmentConditions) {
-            val background = Background(resolved.backgroundColor, resolved.border)
-            LayoutUtils.updateBackground(frame, background, background)
-            applyShadow(frame, resolved.shadow)
-        }
-        applySizeConstraints()
+        val background = Background(resolved.backgroundColor, resolved.border)
+        LayoutUtils.updateBackground(frame, background, background)
+        applyShadow(frame, resolved.shadow)
     }
 
     /** Builds a frame sized, colored and shadowed for [placement], and moves the scene into it. */
@@ -123,6 +125,7 @@ public class ThomasBannerView internal constructor(
         LayoutUtils.applyBorderAndBackground(frame, null, placement.border, placement.backgroundColor)
         applyShadow(frame, placement.shadow)
         shownPlacement = placement
+        onPlacementChanged?.invoke(placement)
         return frame
     }
 
@@ -310,7 +313,10 @@ public class ThomasBannerView internal constructor(
 
     /** Re-applies the size constraints if the window differs from the one they were built for. */
     private fun refitIfWindowChanged() {
-        val ignoreSafeArea = resolvedPlacement().shouldIgnoreSafeArea()
+        val placement = resolvedPlacement()
+        // A configuration change can select another placement too; the host reads its edge and transition.
+        onPlacementChanged?.invoke(placement)
+        val ignoreSafeArea = placement.shouldIgnoreSafeArea()
         val window = ResourceUtils.getWindowPixels(context, this)
         if (window.width(ignoreSafeArea) != lastWindowWidth || window.height(ignoreSafeArea) != lastWindowHeight) {
             applySizeConstraints()

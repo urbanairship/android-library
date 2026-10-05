@@ -7,8 +7,9 @@ package com.urbanairship.android.layout.view
  * built with.
  *
  * Its model calls [onEnvironmentConditionsChanged] when the layout's chosen values change, in a
- * layout whose selectors name them: before it re-applies the view's background and border, and
- * before the state update that carries the values.
+ * layout whose selectors name them, while it handles the state update that carries them: before
+ * it re-applies the view's background and border, and before its listener's `onStateUpdated`. A
+ * view can rely on that order, as `LabelView` does by clearing the cache `onStateUpdated` reads.
  */
 internal interface EnvironmentConditionsSensitive {
 

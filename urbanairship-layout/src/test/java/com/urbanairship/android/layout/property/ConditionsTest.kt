@@ -158,7 +158,7 @@ public class ConditionsTest {
              "view": {"type": "empty_view"}}
             """.trimIndent()
         ).optMap()
-        assertTrue(LayoutInfo(scene).viewSelectsOnEnvironmentConditions)
+        assertTrue(LayoutInfo(scene).selectsOnEnvironmentConditions)
     }
 
     @Test

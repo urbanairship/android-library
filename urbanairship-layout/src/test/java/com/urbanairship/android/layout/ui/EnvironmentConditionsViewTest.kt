@@ -234,7 +234,7 @@ public class EnvironmentConditionsViewTest {
         displayTimer = mockk(relaxed = true),
         modelScope = testScope,
         environmentConditions = layout.environmentConditions,
-        viewsSelectOnEnvironmentConditions = layout.viewSelectsOnEnvironmentConditions
+        selectsOnEnvironmentConditions = layout.selectsOnEnvironmentConditions
     )
 
     /** Widens the host past the `size` breakpoint and settles. */
@@ -265,7 +265,7 @@ public class EnvironmentConditionsViewTest {
             displayTimer = mockk(relaxed = true),
             modelScope = testScope,
             environmentConditions = layout.environmentConditions,
-            viewsSelectOnEnvironmentConditions = layout.viewSelectsOnEnvironmentConditions
+            selectsOnEnvironmentConditions = layout.selectsOnEnvironmentConditions
         )
         val model = LayoutViewModel().getOrCreateModel(layout.view, environment)
         val view = ThomasEmbeddedView(activity, model, layout.presentation as EmbeddedPresentation, viewEnv, fillWidth = true)

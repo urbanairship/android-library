@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -206,10 +207,12 @@ private fun EmbeddedViewContent(
                 label = "Airship Embedded View (\"${state.embeddedId}\")",
                 modifier = modifier,
             ){ layout ->
+                // Collected, since the layout's environment conditions can change its placement.
+                val placement = layout?.placementUpdates?.collectAsState()?.value
                 EmbeddedViewWrapper(
                     embeddedId = state.embeddedId,
                     embeddedLayout = layout,
-                    embeddedSize = state.placementSize
+                    embeddedSize = placement?.size
                         ?.toEmbeddedSize(parentWidthProvider, parentHeightProvider),
                     placeholder = placeholder,
                     modifier = Modifier.wrapContentSize(),

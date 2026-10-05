@@ -66,10 +66,10 @@ internal class ModalView(
      */
     var onPlacementSuperseded: (() -> Unit)? = null
 
-
     /**
-     * Set once a configuration change resolves a different placement. `ModalActivity` recreates
-     * for that, but asynchronously, so until then this view stops applying and reporting the old one.
+     * Set once a configuration change or the layout's environment conditions resolve a different
+     * placement. `ModalActivity` recreates for that, but asynchronously, so until then this view
+     * stops applying and reporting the old one.
      */
     private var isPlacementSuperseded = false
 
@@ -329,7 +329,7 @@ internal class ModalView(
             onPlacementSuperseded?.invoke()
             return
         }
-        if (!model.viewsSelectOnEnvironmentConditions) return
+        if (!model.selectsOnEnvironmentConditions) return
         val background = Background(placement.backgroundColor, placement.border)
         LayoutUtils.updateBackground(modalFrame, background, background)
         applyShadeAndShadow()

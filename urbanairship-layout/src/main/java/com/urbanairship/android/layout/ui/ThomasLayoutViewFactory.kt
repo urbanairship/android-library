@@ -94,7 +94,7 @@ public object ThomasLayoutViewFactory {
                 aiInference = DefaultThomasAIInference.create(displayArgs.ai),
                 shuffleSeed = displayArgs.randomSeed,
                 environmentConditions = displayArgs.payload.environmentConditions,
-                viewsSelectOnEnvironmentConditions = displayArgs.payload.viewSelectsOnEnvironmentConditions
+                selectsOnEnvironmentConditions = displayArgs.payload.selectsOnEnvironmentConditions
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = displayArgs.payload.view,

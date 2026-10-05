@@ -120,11 +120,21 @@ public class BannerLayout(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun getPresentation(): BannerPresentation = presentation
 
+    private val _placement = MutableStateFlow(presentation.getResolvedPlacement(context))
+
+    /**
+     * The placement shown, for a host's edge, swipe and transitions. Until the view exists it's the
+     * one the configuration selects; the view then reports the one its environment conditions
+     * select, and every later change. A host collects this rather than reading [getPlacement] once.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val placementUpdates: StateFlow<BannerPlacement> = _placement.asStateFlow()
+
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun getPlacement(): BannerPlacement =
-        // The view's own once there is one, since only it knows the layout's environment conditions.
-        currentView?.get()?.resolvedPlacement() ?: presentation.getResolvedPlacement(context)
+    public fun getPlacement(): BannerPlacement = placementUpdates.value
 
     /**
      * Creates the banner view, notifying the optional [frameBoundsChangedListener] when the
@@ -190,7 +200,7 @@ public class BannerLayout(
                 aiInference = aiInference,
                 shuffleSeed = randomSeed,
                 environmentConditions = payload.environmentConditions,
-                viewsSelectOnEnvironmentConditions = payload.viewSelectsOnEnvironmentConditions
+                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions
             )
 
             // Seeded before the placement is read, so its safe-area handling is chosen with the
@@ -245,6 +255,8 @@ public class BannerLayout(
             stateUpdateReportJob?.cancel()
             stateUpdateReportJob = modelEnvironment.stateScopes.reportTo(externalListener, layoutScope)
 
+            bannerView.onPlacementChanged = { _placement.value = it }
+            _placement.value = bannerView.resolvedPlacement()
             currentView = WeakReference(bannerView)
             return bannerView
         } catch (e: ModelFactoryException) {

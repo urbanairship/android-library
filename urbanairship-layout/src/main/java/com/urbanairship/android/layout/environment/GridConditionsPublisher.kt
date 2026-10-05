@@ -11,13 +11,13 @@ import com.urbanairship.json.JsonMap
  * `$grids.current.conditions`.
  *
  * Conditions are published only when they change, so a resize that crosses no breakpoint changes
- * no state. Every change publishes at the start of the next frame, and only the latest of those that arrive
- * before it goes out, as [ThomasEnvironmentPublisher] does for a resize. The grid reports from
- * `onLayout`, and the collectors inside it run inline on the main thread: published then, the
- * layouts they request would be dropped when the pass finishes, leaving views sized for the old
- * conditions. The first change waits too, so until it lands a grid's contents see the conditions
- * already in [state]: those chosen with no width for a new grid, or the last published for a view
- * built again.
+ * no state. Every change publishes at the start of the next frame, and only the latest of those
+ * that arrive before it goes out, as [ThomasEnvironmentPublisher] does for a resize. The grid
+ * reports from `onLayout`, and the collectors inside it run inline on the main thread: published
+ * then, the layouts they request would be dropped when the pass finishes, leaving views sized for
+ * the old conditions. The first change waits too, so until it lands a grid's contents see the
+ * conditions already in [state]: those chosen with no width for a new grid, or the last published
+ * for a view built again.
  *
  * Each view of the grid has its own publisher over the model's [state], and calls [cancel] when it
  * detaches so conditions it measured can't land after a newer view's.

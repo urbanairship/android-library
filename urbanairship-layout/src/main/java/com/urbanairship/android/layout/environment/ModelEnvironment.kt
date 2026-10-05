@@ -59,7 +59,7 @@ internal class ModelEnvironment(
      * resolve what they resolved once again when a chosen value changes; see
      * [com.urbanairship.android.layout.view.EnvironmentConditionsSensitive].
      */
-    val viewsSelectOnEnvironmentConditions: Boolean = false,
+    val selectsOnEnvironmentConditions: Boolean = false,
     /** The layout's `$environment`, shared by every copy [withState] makes. */
     private val environmentPublisher: ThomasEnvironmentPublisher = ThomasEnvironmentPublisher(environmentConditions),
     /**
@@ -94,7 +94,7 @@ internal class ModelEnvironment(
             viewIdResolver = this.viewIdResolver,
             aiInference = this.aiInference,
             shuffleSeed = this.shuffleSeed,
-            viewsSelectOnEnvironmentConditions = this.viewsSelectOnEnvironmentConditions,
+            selectsOnEnvironmentConditions = this.selectsOnEnvironmentConditions,
             environmentPublisher = this.environmentPublisher,
             capabilities = this.capabilities
         )
