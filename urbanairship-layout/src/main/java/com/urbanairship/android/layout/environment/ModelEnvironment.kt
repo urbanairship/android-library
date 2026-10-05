@@ -123,11 +123,6 @@ internal class ModelEnvironment(
     val environmentConditionChanges: Flow<JsonMap> =
         environmentPublisher.environment.map { it?.conditions ?: JsonMap.EMPTY_MAP }.distinctUntilChanged()
 
-    /** Returns the environment conditions a reading of [rootView]'s window with [frame] would choose. */
-    @MainThread
-    fun environmentConditionsFor(rootView: View, frame: EnvironmentFrame?): JsonMap =
-        environmentPublisher.conditionsFor(ThomasEnvironment.from(rootView, frame))
-
     /** See [ThomasEnvironmentPublisher.seed]; the root view calls this when it's created. */
     @MainThread
     fun seedEnvironment(rootView: View, frame: EnvironmentFrame? = null) {

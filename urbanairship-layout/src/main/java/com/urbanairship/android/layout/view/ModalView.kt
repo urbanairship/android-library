@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.view
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import com.urbanairship.android.layout.ui.EnvironmentConditionsWatcher
-import com.urbanairship.android.layout.ui.ModalPlacementResolver
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -298,7 +297,7 @@ internal class ModalView(
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         if (isPlacementSuperseded) return
-        if (supersedes(resolvePlacement())) {
+        if (resolvePlacement() !== placement) {
             isPlacementSuperseded = true
             return
         }
@@ -310,15 +309,6 @@ internal class ModalView(
 
     private fun resolvePlacement(): ModalPlacement =
         presentation.getResolvedPlacement(context, model.environmentConditionValues)
-
-    /** Chooses only placements that the frame they'd fill would choose again; see [ModalPlacementResolver]. */
-    private val resolver by lazy {
-        ModalPlacementResolver(context, presentation, this) { frame -> model.environmentConditionsFor(this, frame) }
-    }
-
-    /** Returns whether [resolved] replaces the placement shown: it differs, and it's stable. */
-    private fun supersedes(resolved: ModalPlacement): Boolean =
-        resolved !== placement && resolver.isStable(resolved)
 
     /** Resolves the shade and the frame's shadow colors, against the layout's environment conditions now. */
     private fun applyShadeAndShadow() {
@@ -334,7 +324,7 @@ internal class ModalView(
      */
     private fun onEnvironmentConditionsChanged() {
         if (isPlacementSuperseded) return
-        if (supersedes(resolvePlacement())) {
+        if (resolvePlacement() !== placement) {
             isPlacementSuperseded = true
             onPlacementSuperseded?.invoke()
             return

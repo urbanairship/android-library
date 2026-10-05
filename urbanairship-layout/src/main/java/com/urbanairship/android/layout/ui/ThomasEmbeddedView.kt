@@ -68,9 +68,6 @@ internal class ThomasEmbeddedView(
     /** The scene, created once and moved into a new frame when the placement changes. */
     private val contentView: View
 
-    /** The placement moves the layout's environment conditions made since the window last changed. */
-    private val conditionMoves = PlacementCycleBreaker<EmbeddedPlacement, WindowPixels>()
-
     /** The window [applyConstraints] last sized the frame against. */
     private var constrainedWindow: WindowPixels? = null
 
@@ -102,7 +99,6 @@ internal class ThomasEmbeddedView(
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         // A host that handles its own config changes keeps this view, so selectors re-resolve here.
-        conditionMoves.reset()
         val resolved = resolvePlacement()
         if (resolved !== placement) show(resolved) else reapplyConstraintsIfWindowChanged()
         environmentFrame.onConfigurationChanged()
@@ -119,8 +115,6 @@ internal class ThomasEmbeddedView(
     private fun onEnvironmentConditionsChanged() {
         val resolved = resolvePlacement()
         if (resolved !== placement) {
-            // A host that sizes this view by its placement sets the frame the conditions read.
-            if (!conditionMoves.allows(placement, resolved, ResourceUtils.getWindowPixels(context, this))) return
             show(resolved)
         } else if (model.selectsOnEnvironmentConditions) {
             // Moving the content would detach it: text inputs lose focus, and media restart.

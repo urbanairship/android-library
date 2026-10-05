@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ui
 
+import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.environment.EnvironmentFrame
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -113,13 +115,10 @@ public class ModalActivity : AppCompatActivity() {
                 selectsOnEnvironmentConditions = args.payload.selectsOnEnvironmentConditions
             )
 
-            // Chosen against the frame the view will fill, and seeded with it here rather than by
-            // the view, so the placement the window is built around sees the conditions it will.
-            val resolver = ModalPlacementResolver(this, presentation, window.decorView) { frame ->
-                modelEnvironment.environmentConditionsFor(window.decorView, frame)
-            }
-            placement = resolver.initialPlacement()
-            modelEnvironment.seedEnvironment(window.decorView, resolver.frameFor(placement))
+            // Seeded here rather than by the view, with the frame the view will fill, so the
+            // placement the window is built around is chosen with the conditions it will see.
+            modelEnvironment.seedEnvironment(window.decorView, modalFrame())
+            placement = presentation.getResolvedPlacement(this, modelEnvironment.environmentConditionValues)
 
             handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
 
@@ -274,6 +273,20 @@ public class ModalActivity : AppCompatActivity() {
             )
         )
         dismissReported = true
+    }
+
+    /**
+     * Returns the frame the modal view will be laid out at: the whole window, which it fills edge to
+     * edge, or below API 28, where the platform keeps the content inside the system bars, the safe
+     * window.
+     */
+    private fun modalFrame(): EnvironmentFrame {
+        val window = ResourceUtils.getWindowPixels(this, this.window.decorView)
+        return if (isAtLeastApi28) {
+            EnvironmentFrame(window.width, window.height)
+        } else {
+            EnvironmentFrame(window.safeWidth, window.safeHeight)
+        }
     }
 
     private fun handleIgnoreSafeAreas(shouldIgnoreSafeArea: Boolean) {

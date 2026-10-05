@@ -121,10 +121,6 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     /** See [ModelEnvironment.environmentConditionChanges]; watched by the root view. */
     val environmentConditionChanges: Flow<JsonMap> get() = environment.environmentConditionChanges
 
-    /** See [ModelEnvironment.environmentConditionsFor]; the root view asks it of frames it may fill. */
-    fun environmentConditionsFor(rootView: AndroidView, frame: EnvironmentFrame?): JsonMap =
-        environment.environmentConditionsFor(rootView, frame)
-
     /** See [ModelEnvironment.selectsOnEnvironmentConditions]. */
     val selectsOnEnvironmentConditions: Boolean get() = environment.selectsOnEnvironmentConditions
 
