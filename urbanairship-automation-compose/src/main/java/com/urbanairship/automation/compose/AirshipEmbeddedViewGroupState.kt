@@ -2,6 +2,7 @@ package com.urbanairship.automation.compose
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -122,18 +123,23 @@ public data class EmbeddedViewItem internal constructor(
     /** The content to display for this embedded view item. */
     @Composable
     public fun content() {
-        val layout = EmbeddedLayout(
-            context = LocalContext.current,
-            embeddedViewId = request.embeddedViewId,
-            viewInstanceId = request.viewInstanceId,
-            args = request.displayArgsProvider.invoke(),
-            embeddedViewManager = EmbeddedViewManager
-        )
+        val context = LocalContext.current
+        // Once per instance: its view, and the placement collected below, belong to this one layout.
+        val layout = remember(request.viewInstanceId) {
+            EmbeddedLayout(
+                context = context,
+                embeddedViewId = request.embeddedViewId,
+                viewInstanceId = request.viewInstanceId,
+                args = request.displayArgsProvider.invoke(),
+                embeddedViewManager = EmbeddedViewManager
+            )
+        }
+        val placement by layout.placementUpdates.collectAsState()
 
         EmbeddedViewWrapper(
             embeddedId = request.embeddedViewId,
             embeddedLayout = layout,
-            embeddedSize = layout.getPlacement()?.size?.toEmbeddedSize(),
+            embeddedSize = placement?.size?.toEmbeddedSize(),
             placeholder = null,
             modifier = Modifier.fillMaxWidth()
         )

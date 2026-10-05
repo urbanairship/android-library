@@ -39,7 +39,6 @@ import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.choose
 import com.urbanairship.android.layout.util.GridItemRequest
-import com.urbanairship.json.JsonMap
 import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -63,6 +62,7 @@ import com.urbanairship.android.layout.widget.drawInsideStroke
 import com.urbanairship.android.layout.widget.establishesLength
 import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.statesLength
+import com.urbanairship.json.JsonMap
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -240,8 +240,18 @@ internal class GridLayoutView(
     private fun gridState(width: Float?): ThomasState =
         state.copy(grid = GridState(model.viewInfo.identifier, conditionsAt(width)))
 
+    /** The width [chosenConditions] were chosen for; measure and layout ask again at the same one. */
+    private var chosenWidth: Float? = null
+    private var chosenConditions: JsonMap? = null
+
     /** The grid's conditions as chosen from [width], its inner width in points, or none to measure. */
-    private fun conditionsAt(width: Float?): JsonMap = model.viewInfo.gridConditions.choose(width?.toDouble())
+    private fun conditionsAt(width: Float?): JsonMap {
+        chosenConditions?.takeIf { width == chosenWidth }?.let { return it }
+        return model.viewInfo.gridConditions.choose(width?.toDouble()).also {
+            chosenWidth = width
+            chosenConditions = it
+        }
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density

@@ -59,8 +59,13 @@ public data class EnvironmentConditionSelector(
     val value: JsonValue
 ) {
 
-    internal fun matches(environment: ThomasEnvironment): Boolean =
-        shared.matches(SelectorEnvironment.from(environment)) &&
+    /**
+     * Returns whether this selector matches [environment].
+     *
+     * @param shared [environment]'s shared selector fields, built once for every selector checked.
+     */
+    internal fun matches(environment: ThomasEnvironment, shared: SelectorEnvironment): Boolean =
+        this.shared.matches(shared) &&
             windowWidth.admitsIfNamed(environment.windowWidth) &&
             windowHeight.admitsIfNamed(environment.windowHeight) &&
             safeWindowWidth.admitsIfNamed(environment.safeWindowWidth) &&
@@ -133,8 +138,10 @@ public data class Conditions<T> internal constructor(private val selectors: Map<
 internal typealias EnvironmentConditions = Conditions<EnvironmentConditionSelector>
 
 /** Chooses each environment condition's value from the measured [environment]. */
-internal fun EnvironmentConditions.choose(environment: ThomasEnvironment): JsonMap =
-    choose({ it.matches(environment) }, { it.value })
+internal fun EnvironmentConditions.choose(environment: ThomasEnvironment): JsonMap {
+    val shared = SelectorEnvironment.from(environment)
+    return choose({ it.matches(environment, shared) }, { it.value })
+}
 
 /** A grid's `grid_state.conditions`. */
 internal typealias GridConditions = Conditions<GridConditionSelector>

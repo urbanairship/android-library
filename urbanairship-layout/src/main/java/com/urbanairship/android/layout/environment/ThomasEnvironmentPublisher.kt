@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.environment
 
+import com.urbanairship.json.JsonMap
 import android.view.Choreographer
 import android.view.View
 import androidx.annotation.MainThread
@@ -74,6 +75,9 @@ internal class ThomasEnvironmentPublisher(
     fun seed(rootView: View, frame: EnvironmentFrame? = null) {
         if (_environment.value == null) publish(rootView, frame)
     }
+
+    /** Returns the environment conditions [measured] would choose, without publishing it. */
+    fun conditionsFor(measured: ThomasEnvironment): JsonMap = conditions.choose(measured)
 
     /** @see publish */
     @MainThread

@@ -26,7 +26,7 @@ public data class LayoutInfo(
     /** The scene's `environment_state.conditions`, chosen at `$environment.conditions`. */
     public val environmentConditions: Conditions<EnvironmentConditionSelector> = Conditions(emptyMap()),
     /** Whether a selector in [view] or [presentation] names `environment_conditions`. */
-    public val viewSelectsOnEnvironmentConditions: Boolean = false
+    public val selectsOnEnvironmentConditions: Boolean = false
 ) {
     public constructor(json: JsonMap) : this(
         version = json.requireField("version"),
@@ -37,7 +37,7 @@ public data class LayoutInfo(
         contentDescription = json.optionalMap("content_description")
             ?.let(ThomasContentDescriptionInfo::fromJson),
         environmentConditions = json.conditionsIn("environment_state", EnvironmentConditionSelector::fromJson),
-        viewSelectsOnEnvironmentConditions = json.opt("view").namesKey("environment_conditions") ||
+        selectsOnEnvironmentConditions = json.opt("view").namesKey("environment_conditions") ||
             json.opt("presentation").namesKey("environment_conditions")
     )
 

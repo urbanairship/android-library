@@ -16,6 +16,7 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.view.StackImageView
 import com.urbanairship.android.layout.AirshipCustomViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
+import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 import com.urbanairship.android.layout.view.ModalView
 import com.urbanairship.android.layout.environment.EnvironmentFrame
@@ -106,6 +107,20 @@ public class EnvironmentConditionsViewTest {
         host.layoutParams = FrameLayout.LayoutParams(500, ViewGroup.LayoutParams.WRAP_CONTENT)
         settle()
         assertEquals(1f, view.placement.size.width.getFloat())
+    }
+
+    @Test
+    public fun testStopsSwappingPlacementsWhenTheHostSizesTheViewByItsPlacement() {
+        val (view, host) = embedded(width = 500, scene = CYCLING)
+        var moves = 0
+        // As the automation hosts do: each placement's width percent of the host, filled.
+        val sizeByPlacement = { placement: EmbeddedPlacement ->
+            view.layoutParams = FrameLayout.LayoutParams((500 * placement.size.width.getFloat()).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        view.onPlacementChanged = { moves++; sizeByPlacement(it) }
+        sizeByPlacement(view.placement)
+        repeat(4) { settle() }
+        assertTrue("$moves moves", moves in 1..2)
     }
 
     @Test
@@ -234,7 +249,7 @@ public class EnvironmentConditionsViewTest {
         displayTimer = mockk(relaxed = true),
         modelScope = testScope,
         environmentConditions = layout.environmentConditions,
-        viewsSelectOnEnvironmentConditions = layout.viewSelectsOnEnvironmentConditions
+        selectsOnEnvironmentConditions = layout.selectsOnEnvironmentConditions
     )
 
     /** Widens the host past the `size` breakpoint and settles. */
@@ -265,7 +280,7 @@ public class EnvironmentConditionsViewTest {
             displayTimer = mockk(relaxed = true),
             modelScope = testScope,
             environmentConditions = layout.environmentConditions,
-            viewsSelectOnEnvironmentConditions = layout.viewSelectsOnEnvironmentConditions
+            selectsOnEnvironmentConditions = layout.selectsOnEnvironmentConditions
         )
         val model = LayoutViewModel().getOrCreateModel(layout.view, environment)
         val view = ThomasEmbeddedView(activity, model, layout.presentation as EmbeddedPresentation, viewEnv, fillWidth = true)
@@ -334,6 +349,17 @@ public class EnvironmentConditionsViewTest {
                "placement_selectors": [{"environment_conditions": {"size": "compact"},
                  "placement": {"size": {"width": "90%", "height": "90%"}}}]},
              "view": {"type": "empty_view"}}
+        """.trimIndent()
+
+        /** Wide, the frame selects the narrow placement; narrow, the default wide one. */
+        val CYCLING = """
+            {"version": 1, $SIZE,
+             "presentation": {"type": "embedded", "embedded_id": "home",
+               "default_placement": {"size": {"width": "100%", "height": "auto"}},
+               "placement_selectors": [{"environment_conditions": {"size": "expanded"},
+                 "placement": {"size": {"width": "50%", "height": "auto"}}}]},
+             "view": {"type": "label", "text": "x",
+               "text_appearance": {"font_size": 14, "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}}}
         """.trimIndent()
 
         val LABEL = """{"type": "label", "text": "x", "text_appearance": {"font_size": 14, "color": $COLOR}}"""

@@ -94,13 +94,21 @@ public class EmbeddedLayout(
 
     private val isVisible: StateFlow<Boolean> = _isVisible.asStateFlow()
 
+    private val _placement = MutableStateFlow((payload.presentation as? EmbeddedPresentation)?.getResolvedPlacement(context))
+
+    /**
+     * The placement shown, for a host to size itself by. Until the view exists it's the one the
+     * configuration selects; the view then reports the one its environment conditions select, and
+     * every later change. A host collects this rather than reading [getPlacement] once.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val placementUpdates: StateFlow<EmbeddedPlacement?> = _placement.asStateFlow()
+
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun getPlacement(): EmbeddedPlacement? {
-        val presentation = (payload.presentation as? EmbeddedPresentation)
-        // The view's own once there is one, since only it knows the layout's environment conditions.
-        return currentView?.get()?.placement ?: presentation?.getResolvedPlacement(context)
-    }
+    public fun getPlacement(): EmbeddedPlacement? = placementUpdates.value
 
     public fun getOrCreateView(
         fillWidth: Boolean = false,
@@ -174,7 +182,7 @@ public class EmbeddedLayout(
                 aiInference = aiInference,
                 shuffleSeed = randomSeed,
                 environmentConditions = payload.environmentConditions,
-                viewsSelectOnEnvironmentConditions = payload.viewSelectsOnEnvironmentConditions
+                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,
@@ -219,6 +227,8 @@ public class EmbeddedLayout(
                 }
             }
 
+            embeddedView.onPlacementChanged = { _placement.value = it }
+            _placement.value = embeddedView.placement
             currentView = WeakReference(embeddedView)
             return embeddedView
         } catch (e: ModelFactoryException) {

@@ -36,7 +36,7 @@ internal class LayoutViewModel : ViewModel() {
         aiInference: ThomasAIInference? = null,
         shuffleSeed: String? = null,
         environmentConditions: Conditions<EnvironmentConditionSelector> = Conditions(emptyMap()),
-        viewsSelectOnEnvironmentConditions: Boolean = false
+        selectsOnEnvironmentConditions: Boolean = false
     ): ModelEnvironment =
         environment ?: ModelEnvironment(
             layoutState = layoutState,
@@ -47,7 +47,7 @@ internal class LayoutViewModel : ViewModel() {
             aiInference = aiInference,
             shuffleSeed = shuffleSeed ?: randomShuffleSeed(),
             environmentConditions = environmentConditions,
-            viewsSelectOnEnvironmentConditions = viewsSelectOnEnvironmentConditions
+            selectsOnEnvironmentConditions = selectsOnEnvironmentConditions
         ).also {
             environment = it
         }

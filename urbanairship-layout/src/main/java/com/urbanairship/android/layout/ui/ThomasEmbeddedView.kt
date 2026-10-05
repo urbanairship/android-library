@@ -62,8 +62,14 @@ internal class ThomasEmbeddedView(
     internal lateinit var placement: EmbeddedPlacement
         private set
 
+    /** Called whenever the layout's environment conditions or configuration select another placement. */
+    internal var onPlacementChanged: ((EmbeddedPlacement) -> Unit)? = null
+
     /** The scene, created once and moved into a new frame when the placement changes. */
     private val contentView: View
+
+    /** The placement moves the layout's environment conditions made since the window last changed. */
+    private val conditionMoves = PlacementCycleBreaker<EmbeddedPlacement, WindowPixels>()
 
     /** The window [applyConstraints] last sized the frame against. */
     private var constrainedWindow: WindowPixels? = null
@@ -96,15 +102,9 @@ internal class ThomasEmbeddedView(
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         // A host that handles its own config changes keeps this view, so selectors re-resolve here.
+        conditionMoves.reset()
         val resolved = resolvePlacement()
-        if (resolved !== placement) {
-            placement = resolved
-            frame?.let(::removeView)
-            (contentView.parent as? ViewGroup)?.removeView(contentView)
-            configure(resolved)
-        } else {
-            reapplyConstraintsIfWindowChanged()
-        }
+        if (resolved !== placement) show(resolved) else reapplyConstraintsIfWindowChanged()
         environmentFrame.onConfigurationChanged()
         requestLayout()
     }
@@ -119,16 +119,24 @@ internal class ThomasEmbeddedView(
     private fun onEnvironmentConditionsChanged() {
         val resolved = resolvePlacement()
         if (resolved !== placement) {
-            placement = resolved
-            frame?.let(::removeView)
-            (contentView.parent as? ViewGroup)?.removeView(contentView)
-            configure(resolved)
-        } else if (model.viewsSelectOnEnvironmentConditions) {
+            // A host that sizes this view by its placement sets the frame the conditions read.
+            if (!conditionMoves.allows(placement, resolved, ResourceUtils.getWindowPixels(context, this))) return
+            show(resolved)
+        } else if (model.selectsOnEnvironmentConditions) {
             // Moving the content would detach it: text inputs lose focus, and media restart.
             val container = container ?: return
             val background = Background(placement.backgroundColor, placement.border)
             LayoutUtils.updateBackground(container, background, background)
         }
+    }
+
+    /** Moves the scene into a new frame for [resolved]. */
+    private fun show(resolved: EmbeddedPlacement) {
+        placement = resolved
+        onPlacementChanged?.invoke(resolved)
+        frame?.let(::removeView)
+        (contentView.parent as? ViewGroup)?.removeView(contentView)
+        configure(resolved)
     }
 
     private fun reapplyConstraintsIfWindowChanged() {

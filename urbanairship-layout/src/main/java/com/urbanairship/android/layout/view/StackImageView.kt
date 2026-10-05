@@ -116,8 +116,13 @@ internal class StackImageView(
         }
     }
 
+    /** The URL [createOrUpdateImage] last loaded, so rendering again doesn't reload the same image. */
+    private var loadedImageUrl: String? = null
+
     private fun createOrUpdateImage(item: StackItemInfo.ImageItem) {
         val resolvedUrl = item.resolveUrl(SelectorEnvironment.from(context))
+        if (resolvedUrl == loadedImageUrl) return
+        loadedImageUrl = resolvedUrl
         val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
         val url = cached?.path ?: resolvedUrl
 
