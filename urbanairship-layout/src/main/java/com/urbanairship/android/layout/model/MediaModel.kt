@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasState
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.property.EventHandler
@@ -129,8 +130,8 @@ internal class MediaModel(
         pagerState?.update { state -> state.copyWithMediaPaused(pageId, videoId, isLoading) }
     }
 
-    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String =
-        viewInfo.resolveUrl(state, isDarkMode)
+    fun resolveUrl(state: ThomasState?, environment: SelectorEnvironment): String =
+        viewInfo.resolveUrl(state, environment)
 
     init {
         if (isPlayableMedia) { registerVideoState() }

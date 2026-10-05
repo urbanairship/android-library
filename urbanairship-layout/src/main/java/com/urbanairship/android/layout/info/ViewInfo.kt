@@ -34,6 +34,7 @@ import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.ParallaxBackground
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.property.StateAction
@@ -721,14 +722,14 @@ internal class MediaInfo(
 
     /**
      * The url to show for [state]: the `view_overrides` this state selects, then the
-     * `url_selectors` that pick between light and dark.
+     * `url_selectors` the environment matches.
      *
      * @param state the scene's current state, or `null` before any has arrived, which resolves to
      *   the declared url.
-     * @param isDarkMode whether to prefer a dark-mode selector.
+     * @param environment what the `url_selectors` match against.
      * @return the url to load.
      */
-    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {
+    fun resolveUrl(state: ThomasState?, environment: SelectorEnvironment): String {
         val resolvedUrl = state?.resolveRequired(
             overrides = viewOverrides?.url,
             default = url
@@ -737,7 +738,7 @@ internal class MediaInfo(
             overrides = viewOverrides?.urlSelectors,
             default = urlSelectors
         ) ?: urlSelectors
-        return MediaUrlSelector.resolve(resolvedUrl, resolvedSelectors, isDarkMode)
+        return MediaUrlSelector.resolve(resolvedUrl, resolvedSelectors, environment)
     }
 
     internal class ViewOverrides(json: JsonMap) {
@@ -964,8 +965,8 @@ internal sealed interface StackItemInfo {
         val cropPosition: Position,
         val urlSelectors: List<MediaUrlSelector> = emptyList(),
     ) : StackItemInfo {
-        fun resolveUrl(isDarkMode: Boolean): String =
-            MediaUrlSelector.resolve(imageUrl, urlSelectors, isDarkMode)
+        fun resolveUrl(environment: SelectorEnvironment): String =
+            MediaUrlSelector.resolve(imageUrl, urlSelectors, environment)
     }
 
     companion object {

@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.property.ModalPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
-import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 
@@ -23,21 +23,10 @@ public class ModalPresentation public constructor(
     public val disableBackButton: Boolean
 ) : BasePresentation(PresentationType.MODAL) {
 
+    /** Returns the first placement whose selector [context]'s environment matches, else the default. */
     public fun getResolvedPlacement(context: Context): ModalPlacement {
-        if (placementSelectors == null || placementSelectors.isEmpty()) {
-            return defaultPlacement
-        }
-
-        val orientation = ResourceUtils.getOrientation(context)
-        val windowSize = ResourceUtils.getWindowSize(context)
-
-        // Try to find a matching placement selector.
-        return placementSelectors.firstOrNull {
-                (it.windowSize == null || it.windowSize == windowSize) &&
-                (it.orientation == null || it.orientation == orientation)
-            }?.placement
-            // Otherwise, return the default placement.
-            ?: defaultPlacement
+        val environment = SelectorEnvironment.from(context)
+        return placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
     }
 
     /** @hide */

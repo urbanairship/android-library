@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -213,8 +214,7 @@ internal class MediaView(
 
             override fun onStateUpdated(state: ThomasState) {
                 currentState = state
-                val isDarkMode = ResourceUtils.isUiModeNight(context)
-                val newUrl = model.resolveUrl(state, isDarkMode)
+                val newUrl = model.resolveUrl(state, SelectorEnvironment.from(context))
                 if (newUrl == lastMediaUrl) return
                 lastMediaUrl = newUrl
                 val cached = viewEnvironment.imageCache()?.get(newUrl)
@@ -370,7 +370,7 @@ internal class MediaView(
         offered(spec)?.takeIf { !hasContentSizedAncestor(horizontal) }
 
     private fun configureImageView(model: MediaModel) {
-        val resolvedUrl = model.resolveUrl(currentState, ResourceUtils.isUiModeNight(context))
+        val resolvedUrl = model.resolveUrl(currentState, SelectorEnvironment.from(context))
         lastMediaUrl = resolvedUrl
         val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
         val url = cached?.path ?: resolvedUrl
@@ -534,7 +534,7 @@ internal class MediaView(
         val webViewWeakReference = WeakReference(wv)
         val load = Runnable {
             webViewWeakReference.get()?.let { weakWebView ->
-                val resolvedUrl = model.resolveUrl(currentState, ResourceUtils.isUiModeNight(context))
+                val resolvedUrl = model.resolveUrl(currentState, SelectorEnvironment.from(context))
                 lastMediaUrl = resolvedUrl
                 when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> {

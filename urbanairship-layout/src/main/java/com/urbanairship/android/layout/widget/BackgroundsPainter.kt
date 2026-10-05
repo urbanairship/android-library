@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.widget
 
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -195,7 +196,7 @@ internal class BackgroundsPainter(
 
         /** Loads [layer]'s url for the current [state], unless that is already what's showing. */
         fun load(layer: Background.MediaBackground) {
-            val resolvedUrl = layer.mediaInfo.resolveUrl(state, ResourceUtils.isUiModeNight(context))
+            val resolvedUrl = layer.mediaInfo.resolveUrl(state, SelectorEnvironment.from(context))
             if (resolvedUrl == loadedUrl) return
             loadedUrl = resolvedUrl
 

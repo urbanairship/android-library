@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.property.EmbeddedPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
-import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -21,28 +21,10 @@ public class EmbeddedPresentation(
     public val embeddedId: String
 ) : BasePresentation(PresentationType.EMBEDDED) {
 
-    /** @hide */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    /** Returns the first placement whose selector [context]'s environment matches, else the default. */
     public fun getResolvedPlacement(context: Context): EmbeddedPlacement {
-        if (placementSelectors.isNullOrEmpty()) {
-            return defaultPlacement
-        }
-        val orientation = ResourceUtils.getOrientation(context)
-        val windowSize = ResourceUtils.getWindowSize(context)
-
-        // Try to find a matching placement selector.
-        for (selector in placementSelectors) {
-            if (selector.windowSize != null && selector.windowSize != windowSize) {
-                continue
-            }
-            if (selector.orientation != null && selector.orientation != orientation) {
-                continue
-            }
-            return selector.placement
-        }
-
-        // Otherwise, return the default placement.
-        return defaultPlacement
+        val environment = SelectorEnvironment.from(context)
+        return placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
     }
 
     internal companion object {
