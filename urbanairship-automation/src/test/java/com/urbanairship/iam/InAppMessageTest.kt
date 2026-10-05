@@ -128,7 +128,7 @@ public class InAppMessageTest {
                     backgroundColor = InAppMessageColor(Color.parseColor("#ffffff")),
                     dismissButtonColor = InAppMessageColor(Color.parseColor("#000000")),
                     borderRadius = 5F,
-                    durationMs = 100,
+                    durationMs = 100_000,
                     placement = Banner.Placement.TOP
                 )
             ),
