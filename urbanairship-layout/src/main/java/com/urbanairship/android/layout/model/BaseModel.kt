@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.android.layout.view.EnvironmentConditionsSensitive
+import com.urbanairship.json.JsonMap
 import android.content.Context
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
@@ -11,6 +13,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.EnvironmentFrame
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
@@ -112,6 +115,15 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         environment.publishEnvironment(rootView, frame, immediate)
     }
 
+    /** See [ModelEnvironment.environmentConditionValues]; read by the root view. */
+    val environmentConditionValues: JsonMap get() = environment.environmentConditionValues
+
+    /** See [ModelEnvironment.environmentConditionChanges]; watched by the root view. */
+    val environmentConditionChanges: Flow<JsonMap> get() = environment.environmentConditionChanges
+
+    /** See [ModelEnvironment.viewsSelectOnEnvironmentConditions]. */
+    val viewsSelectOnEnvironmentConditions: Boolean get() = environment.viewsSelectOnEnvironmentConditions
+
     /** See [ModelEnvironment.seedEnvironment]; called on the root model by the root view. */
     fun seedEnvironment(rootView: AndroidView) {
         environment.seedEnvironment(rootView)
@@ -124,7 +136,10 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     ): T {
         background = null
 
-        val view = onCreateView(context, viewEnvironment, itemProperties)
+        // Every view below the root shares this, so a selector resolved from any view's context
+        // can match the layout's environment conditions.
+        val conditionsContext = EnvironmentConditionsContext.wrap(context) { environment.environmentConditionValues }
+        val view = onCreateView(conditionsContext, viewEnvironment, itemProperties)
         onViewCreated(view)
 
         updateBackground()
@@ -200,7 +215,10 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
         viewScope.launch {
             layoutState.thomasState.collect {
-                updateBackground(it)
+                val conditionsChanged = takeEnvironmentConditions(it)
+                // Before the background, which a view's own base layer sits under.
+                if (conditionsChanged) (view as? EnvironmentConditionsSensitive)?.onEnvironmentConditionsChanged()
+                updateBackground(it, force = conditionsChanged)
                 updateVisibility(it)
                 listener?.onStateUpdated(it)
             }
@@ -315,7 +333,26 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =
         environment.attributeHandler.update(attributes)
 
-    private fun updateBackground(state: ThomasState? = null) {
+    /** The environment conditions this model's view last resolved its selectors with. */
+    private var appliedConditions: JsonMap? = null
+
+    /**
+     * Records [state]'s environment conditions and returns whether they differ from those the view
+     * resolved with, in a layout whose color or media selectors name them.
+     */
+    private fun takeEnvironmentConditions(state: ThomasState): Boolean {
+        val conditions = state.capabilities.environment?.conditions ?: JsonMap.EMPTY_MAP
+        val changed = environment.viewsSelectOnEnvironmentConditions &&
+            appliedConditions != null && conditions != appliedConditions
+        appliedConditions = conditions
+        return changed
+    }
+
+    /**
+     * Resolves the background and border for [state], and hands them to the view when they differ
+     * from those it has, or when [force] says a color it resolved may now resolve differently.
+     */
+    private fun updateBackground(state: ThomasState? = null, force: Boolean = false) {
         val background = if (state != null) {
             Background(
                 color = state.resolveOptional(
@@ -330,7 +367,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
             Background(color = viewInfo.backgroundColor, border = viewInfo.border)
         }
 
-        if (background != this.background) {
+        if (force || background != this.background) {
             listener?.setBackground(this.background, background)
             this.background = background
         }

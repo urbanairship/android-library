@@ -5,6 +5,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.android.layout.info.ViewPropertyOverride
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.JsonMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -22,31 +24,28 @@ public class ThomasStateGridTest {
         capabilities = ThomasCapabilities.NONE
     )
 
-    private fun gridWidth(range: String) = JsonPredicate.parse(
-        JsonValue.parseString("""{"scope": ["${'$'}grids", "current", "width"], "value": $range}""")
+    /** A predicate on the grid's `size` condition. */
+    private fun gridSize(value: String) = JsonPredicate.parse(
+        JsonValue.parseString("""{"scope": ["${'$'}grids", "current", "conditions", "size"], "value": {"equals": "$value"}}""")
     )
 
     private val overrides = listOf(
-        ViewPropertyOverride(gridWidth("""{"at_most": 300}"""), "narrow"),
-        ViewPropertyOverride(gridWidth("""{"at_least": 300}"""), "wide")
+        ViewPropertyOverride(gridSize("narrow"), "narrow"),
+        ViewPropertyOverride(gridSize("wide"), "wide")
     )
 
-    private fun resolve(width: Float?) = state.copy(grid = GridState("grid", width)).resolveRequired(overrides, "default")
+    private fun resolve(conditions: JsonMap) =
+        state.copy(grid = GridState("grid", conditions)).resolveRequired(overrides, "default")
 
     @Test
-    public fun testTakesTheFirstOverrideThatMatchesTheGridsWidth() {
-        assertEquals("narrow", resolve(200f))
-        assertEquals("wide", resolve(400f))
+    public fun testTakesTheOverrideThatMatchesTheGridsCondition() {
+        assertEquals("narrow", resolve(jsonMapOf("size" to "narrow")))
+        assertEquals("wide", resolve(jsonMapOf("size" to "wide")))
     }
 
     @Test
-    public fun testGivesASharedBoundaryToTheFirstOverrideListed() {
-        assertEquals("narrow", resolve(300f))
-    }
-
-    @Test
-    public fun testAGridWithNoWidthMatchesNoWidthPredicate() {
-        assertEquals("default", resolve(null))
+    public fun testAConditionNoSelectorChoseMatchesNoPredicateOnIt() {
+        assertEquals("default", resolve(JsonMap.EMPTY_MAP))
     }
 
     @Test

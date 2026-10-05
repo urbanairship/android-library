@@ -38,8 +38,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 
 internal class TextInputView(
     context: Context,
-    model: TextInputModel
-) : LinearLayout(context), BaseView, TappableView {
+    private val model: TextInputModel
+) : LinearLayout(context), BaseView, TappableView, EnvironmentConditionsSensitive {
 
     private val clicksChannel = Channel<Unit>(UNLIMITED)
     private val input: AppCompatEditText by lazy { makeTextInput(model) }
@@ -134,6 +134,12 @@ internal class TextInputView(
     internal fun textChanges() = input.textChanges()
     internal val text: Editable?
         get() = input.text
+
+    /** Applies its text and hint colors again; its end icon resolves with every state update already. */
+    override fun onEnvironmentConditionsChanged() {
+        LayoutUtils.applyTextColor(input, model.viewInfo.textAppearance)
+        model.viewInfo.textAppearance.hintColor?.let { input.setHintTextColor(it.resolve(context)) }
+    }
 
     private fun makeTextInput(model: TextInputModel): AppCompatEditText {
         val isSingleLine = model.viewInfo.inputType != FormInputType.TEXT_MULTILINE

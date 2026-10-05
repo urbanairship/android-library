@@ -18,7 +18,7 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionIn
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionItemInfoCompat
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.GridState
-import com.urbanairship.android.layout.environment.GridWidthPublisher
+import com.urbanairship.android.layout.environment.GridConditionsPublisher
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.ThomasState
@@ -37,7 +37,9 @@ import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
+import com.urbanairship.android.layout.property.choose
 import com.urbanairship.android.layout.util.GridItemRequest
+import com.urbanairship.json.JsonMap
 import com.urbanairship.android.layout.util.GridPlacement
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -114,10 +116,10 @@ internal class GridLayoutView(
     /** The configs the last measure laid out with, so a state change that leaves them alone doesn't lay out again. */
     private var measuredConfigs: ResolvedConfigs? = null
 
-    /** The inner width of the last measure, in points, which layout publishes as `$grids.current.width`. */
+    /** The inner width of the last measure, in points, which layout publishes conditions for. */
     private var measuredGridWidth: Float? = null
     private var hasMeasured = false
-    private val widthPublisher = GridWidthPublisher(model.gridState)
+    private val conditionsPublisher = GridConditionsPublisher(model.gridState)
 
     private var contentHeight = 0
     /** How wide the block of columns is, which is less than the grid once `max_width` caps them. */
@@ -177,11 +179,11 @@ internal class GridLayoutView(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         // Reattached at the same size, the grid may not be laid out again to publish what detaching dropped.
-        if (hasMeasured) widthPublisher.publish(measuredGridWidth)
+        if (hasMeasured) conditionsPublisher.publish(conditionsAt(measuredGridWidth))
     }
 
     override fun onDetachedFromWindow() {
-        widthPublisher.cancel()
+        conditionsPublisher.cancel()
         super.onDetachedFromWindow()
     }
 
@@ -235,7 +237,11 @@ internal class GridLayoutView(
     }
 
     /** The state the grid's and its items' overrides match against, with the grid at `$grids.current`. */
-    private fun gridState(width: Float?): ThomasState = state.copy(grid = GridState(model.viewInfo.identifier, width))
+    private fun gridState(width: Float?): ThomasState =
+        state.copy(grid = GridState(model.viewInfo.identifier, conditionsAt(width)))
+
+    /** The grid's conditions as chosen from [width], its inner width in points, or none to measure. */
+    private fun conditionsAt(width: Float?): JsonMap = model.viewInfo.gridConditions.choose(width?.toDouble())
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val density = resources.displayMetrics.density
@@ -254,7 +260,7 @@ internal class GridLayoutView(
         // A parent that measures EXACTLY at the size this unbounded pass gave would otherwise skip
         // onMeasure, leaving the grid laid out at that width but publishing none.
         if (innerWidth == null) forceLayout()
-        // Matched against the width just measured, not the published one, which arrives a pass later.
+        // Matched against the width just measured, not the published conditions, which arrive a pass later.
         val gridState = gridState(measuredGridWidth)
         val configs = resolveConfigs(gridState).also { measuredConfigs = it }
         val config = configs.grid
@@ -437,7 +443,7 @@ internal class GridLayoutView(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         // From layout, not measure: a parent can measure more than once before settling on a width.
-        widthPublisher.publish(measuredGridWidth)
+        conditionsPublisher.publish(conditionsAt(measuredGridWidth))
         val spareHeight = (height - paddingTop - paddingBottom - contentHeight).coerceAtLeast(0)
         val offset = when (contentPosition.vertical) {
             VerticalPosition.TOP -> 0

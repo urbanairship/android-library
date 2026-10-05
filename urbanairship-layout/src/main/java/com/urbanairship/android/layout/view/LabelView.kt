@@ -35,7 +35,7 @@ internal class LabelView(
     context: Context,
     private val model: LabelModel,
     itemProperties: ItemProperties?
-) : AppCompatTextView(context), BaseView, ButtonDescriptionSource {
+) : AppCompatTextView(context), BaseView, ButtonDescriptionSource, EnvironmentConditionsSensitive {
 
     private var lastState: LabelModel.ResolvedState? = null
 
@@ -414,6 +414,11 @@ internal class LabelView(
 
         /** Carries the gap span. A real space, so it reorders with the icon beside it. */
         const val GAP_PLACEHOLDER = " "
+    }
+
+    /** Its text color, markdown colors and icons resolve again with the state update that follows. */
+    override fun onEnvironmentConditionsChanged() {
+        lastState = null
     }
 
     /** A label's description, else its text as shown, less the placeholders its icons ride on. */

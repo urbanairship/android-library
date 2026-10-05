@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import android.content.ContextWrapper
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ResolvedVideoCommand
@@ -70,7 +71,8 @@ public class VideoControllerTest {
         val itemProperties = ItemProperties(size = null)
         controller.createView(context, viewEnv, itemProperties)
 
-        verify { mockView.createView(eq(context), eq(viewEnv), itemProperties) }
+        // Wrapped once, so the views below carry the layout's environment conditions.
+        verify { mockView.createView(match { (it as? ContextWrapper)?.baseContext === context }, eq(viewEnv), itemProperties) }
     }
 
     @Test

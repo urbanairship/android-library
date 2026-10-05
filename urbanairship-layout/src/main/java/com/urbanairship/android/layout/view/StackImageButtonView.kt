@@ -49,18 +49,23 @@ internal class StackImageButtonView(
     private val model: StackImageButtonModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-) : FrameLayout(context), BaseView, TappableView {
+) : FrameLayout(context), BaseView, TappableView, EnvironmentConditionsSensitive {
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
 
     private var lastState: StackImageButtonModel.ResolvedState? = null
+
+    /** The state its items were last rendered for. */
+    private var currentState: ThomasState? = null
+
+    /** The shape item's drawable, which the view's own background and border are laid over. */
+    private var baseBackground: Drawable? = null
 
     private val button: CropImageButton by lazy { makeImageButton(model) }
 
     init {
         renderItems(model.viewInfo.items)
 
-        val baseBackground = this.background
         model.listener = object : ButtonModel.Listener {
             override fun setEnabled(enabled: Boolean) {
                 if (button.isEnabled != enabled) {
@@ -114,7 +119,14 @@ internal class StackImageButtonView(
         }
     }
 
+    /** Renders its items again now, so the shape is in place for the background laid over it. */
+    override fun onEnvironmentConditionsChanged() {
+        lastState = null
+        updateButton(currentState)
+    }
+
     private fun updateButton(state: ThomasState?) {
+        currentState = state
         val resolvedState = model.resolveState(context, state)
         if (resolvedState == this.lastState) {
             return
@@ -133,7 +145,10 @@ internal class StackImageButtonView(
     private fun renderItems(items: List<StackItemInfo>) {
         items.forEach { item ->
             when (item) {
-                is StackItemInfo.ShapeItem -> background = buildLayerDrawable(context, item.shape)
+                is StackItemInfo.ShapeItem -> {
+                    baseBackground = buildLayerDrawable(context, item.shape)
+                    background = baseBackground
+                }
                 is StackItemInfo.IconItem -> createOrUpdateIcon(item.icon as Image.Icon)
                 is StackItemInfo.ImageItem -> createOrUpdateImage(item)
             }

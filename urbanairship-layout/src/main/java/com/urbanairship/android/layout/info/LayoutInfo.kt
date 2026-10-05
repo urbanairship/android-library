@@ -5,7 +5,11 @@ import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.BasePresentation
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
+import com.urbanairship.android.layout.property.Conditions
+import com.urbanairship.android.layout.property.EnvironmentConditionSelector
+import com.urbanairship.android.layout.property.conditionsIn
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 
@@ -18,7 +22,11 @@ public data class LayoutInfo(
     public val hash: Int,
     public val options: NativeControlOptions? = null,
     /** What this layout says about itself, read when something has to choose between layouts. */
-    public val contentDescription: ThomasContentDescriptionInfo? = null
+    public val contentDescription: ThomasContentDescriptionInfo? = null,
+    /** The scene's `environment_state.conditions`, chosen at `$environment.conditions`. */
+    public val environmentConditions: Conditions<EnvironmentConditionSelector> = Conditions(emptyMap()),
+    /** Whether a selector in [view] or [presentation] names `environment_conditions`. */
+    public val viewSelectsOnEnvironmentConditions: Boolean = false
 ) {
     public constructor(json: JsonMap) : this(
         version = json.requireField("version"),
@@ -27,7 +35,10 @@ public data class LayoutInfo(
         hash = json.hashCode(),
         options = json["options"]?.let(NativeControlOptions::fromJson),
         contentDescription = json.optionalMap("content_description")
-            ?.let(ThomasContentDescriptionInfo::fromJson)
+            ?.let(ThomasContentDescriptionInfo::fromJson),
+        environmentConditions = json.conditionsIn("environment_state", EnvironmentConditionSelector::fromJson),
+        viewSelectsOnEnvironmentConditions = json.opt("view").namesKey("environment_conditions") ||
+            json.opt("presentation").namesKey("environment_conditions")
     )
 
     public val isEmbedded: Boolean
@@ -38,4 +49,11 @@ public data class LayoutInfo(
 
     public val embeddedViewId: String?
         get() = (presentation as? EmbeddedPresentation)?.embeddedId
+}
+
+/** Whether [key] is a key anywhere in this value, at any depth. */
+private fun JsonValue.namesKey(key: String): Boolean = when {
+    isJsonMap -> optMap().map.any { (name, value) -> name == key || value.namesKey(key) }
+    isJsonList -> optList().list.any { it.namesKey(key) }
+    else -> false
 }
