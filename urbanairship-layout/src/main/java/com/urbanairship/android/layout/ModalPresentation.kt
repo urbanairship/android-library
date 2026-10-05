@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.property.ModalPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
 import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
 /**
@@ -24,10 +25,19 @@ public class ModalPresentation public constructor(
 ) : BasePresentation(PresentationType.MODAL) {
 
     /** Returns the first placement whose selector [context]'s environment matches, else the default. */
-    public fun getResolvedPlacement(context: Context): ModalPlacement {
-        val environment = SelectorEnvironment.from(context)
-        return placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
-    }
+    public fun getResolvedPlacement(context: Context): ModalPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context))
+
+    /**
+     * Returns the first placement whose selector matches [context]'s environment and the layout's
+     * environment [conditions], else the default. A root view's own context sits above the one its
+     * views carry conditions in, so it passes them.
+     */
+    internal fun getResolvedPlacement(context: Context, conditions: JsonMap): ModalPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context).copy(conditions = conditions))
+
+    private fun getResolvedPlacement(environment: SelectorEnvironment): ModalPlacement =
+        placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

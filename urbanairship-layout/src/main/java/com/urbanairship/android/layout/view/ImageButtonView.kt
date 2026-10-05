@@ -35,10 +35,10 @@ import kotlinx.coroutines.flow.Flow
 
 internal class ImageButtonView(
     context: Context,
-    model: ImageButtonModel,
+    private val model: ImageButtonModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-    ) : FrameLayout(context), BaseView, TappableView {
+    ) : FrameLayout(context), BaseView, TappableView, EnvironmentConditionsSensitive {
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
     private var currentState: ThomasState? = null
@@ -170,6 +170,13 @@ internal class ImageButtonView(
                 contentDescription = it
             }
         }
+    }
+
+    /** Tints its icon again; a URL image resolves with every state update already. */
+    override fun onEnvironmentConditionsChanged() {
+        val icon = model.resolveImage(currentState) as? Image.Icon ?: return
+        button.setImageDrawable(icon.getDrawable(context, isEnabled))
+        button.imageTintList = LayoutUtils.pressedColorStateList(icon.tint.resolve(context))
     }
 
     private fun applyImageRippleEffect(view: ImageButton, tapEffect: TapEffect, radii: FloatArray?) {

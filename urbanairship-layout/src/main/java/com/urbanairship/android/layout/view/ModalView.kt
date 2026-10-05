@@ -1,6 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.model.Background
+import com.urbanairship.android.layout.property.EnvironmentConditionsContext
+import com.urbanairship.android.layout.ui.EnvironmentConditionsWatcher
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -12,7 +15,6 @@ import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import androidx.annotation.ColorInt
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_PARENT
@@ -53,7 +55,17 @@ internal class ModalView(
      */
     internal val shadeView: View
 
-    private val placement: ModalPlacement = presentation.getResolvedPlacement(context)
+    /** What the placement's colors resolve against, so their selectors see the layout's environment conditions. */
+    private val conditionsContext = EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues }
+
+    private val placement: ModalPlacement
+
+    /**
+     * Called once the layout's environment conditions select a different placement; this view stops
+     * applying and reporting [placement] from then on, and the activity recreates.
+     */
+    var onPlacementSuperseded: (() -> Unit)? = null
+
 
     /**
      * Set once a configuration change resolves a different placement. `ModalActivity` recreates
@@ -78,13 +90,12 @@ internal class ModalView(
 
     init {
         model.seedEnvironment(this)
+        placement = resolvePlacement()
         clipToPadding = false
 
         val size = placement.size
         val margin = placement.margin
-        @ColorInt val shadeColor = placement.shadeColor?.resolve(context)
-
-        modalFrame = ConstrainedFrameLayout(context, size).apply {
+        modalFrame = ConstrainedFrameLayout(conditionsContext, size).apply {
             id = generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT).apply {
                 margin?.let {
@@ -101,10 +112,6 @@ internal class ModalView(
             outlineProvider = ViewOutlineProvider.BOUNDS
 
             LayoutUtils.applyBorderAndBackground(this,null, placement.border, placement.backgroundColor)
-
-            placement.shadow?.androidShadow?.let { shadow ->
-                applyShadow(this, shadow.color.resolve(context), shadow.elevation)
-            }
         }
 
         val containerView = ClippableFrameLayout(context).apply {
@@ -117,20 +124,20 @@ internal class ModalView(
                 }
         }
 
-        val contentView = model.createView(context, viewEnvironment, null)
-        containerView.addView(contentView)
+        containerView.addView(model.createView(context, viewEnvironment, null))
 
         modalFrame.addView(containerView)
         addView(modalFrame)
 
-        shadeView = View(context).apply {
+        shadeView = View(conditionsContext).apply {
             layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            shadeColor?.let { setBackgroundColor(it) }
         }
 
         addView(shadeView, 0)
+        applyShadeAndShadow()
 
         applyConstraints()
+        EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged() }
 
         if (viewEnvironment.isIgnoringSafeAreas) {
             setOnApplyWindowInsetsListener(modalFrame) { _: View, insets: WindowInsetsCompat ->
@@ -290,7 +297,7 @@ internal class ModalView(
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         if (isPlacementSuperseded) return
-        if (presentation.getResolvedPlacement(context) !== placement) {
+        if (resolvePlacement() !== placement) {
             isPlacementSuperseded = true
             return
         }
@@ -300,4 +307,31 @@ internal class ModalView(
         requestLayout()
     }
 
+    private fun resolvePlacement(): ModalPlacement =
+        presentation.getResolvedPlacement(context, model.environmentConditionValues)
+
+    /** Resolves the shade and the frame's shadow colors, against the layout's environment conditions now. */
+    private fun applyShadeAndShadow() {
+        placement.shadeColor?.let { shadeView.setBackgroundColor(it.resolve(conditionsContext)) }
+        placement.shadow?.androidShadow?.let { shadow ->
+            applyShadow(modalFrame, shadow.color.resolve(conditionsContext), shadow.elevation)
+        }
+    }
+
+    /**
+     * Hands the activity a placement the new values select, or resolves the placement's colors
+     * again; the scene's own views refresh themselves.
+     */
+    private fun onEnvironmentConditionsChanged() {
+        if (isPlacementSuperseded) return
+        if (resolvePlacement() !== placement) {
+            isPlacementSuperseded = true
+            onPlacementSuperseded?.invoke()
+            return
+        }
+        if (!model.viewsSelectOnEnvironmentConditions) return
+        val background = Background(placement.backgroundColor, placement.border)
+        LayoutUtils.updateBackground(modalFrame, background, background)
+        applyShadeAndShadow()
+    }
 }

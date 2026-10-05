@@ -388,6 +388,17 @@ internal object LayoutUtils {
         }
     }
 
+    /** Sets [textView]'s text color from [textAppearance], dimmed while disabled. */
+    fun applyTextColor(textView: TextView, textAppearance: TextAppearance) {
+        val textColor = textAppearance.color.resolve(textView.context)
+        textView.setTextColor(
+            ColorStateListBuilder()
+                .add(generateDisabledColor(Color.TRANSPARENT, textColor), -AndroidR.attr.state_enabled)
+                .add(textColor)
+                .build()
+        )
+    }
+
     @JvmStatic
     fun applyTextAppearance(textView: TextView, textAppearance: TextAppearance) {
         val context = textView.context
@@ -395,15 +406,7 @@ internal object LayoutUtils {
         textView.textSize = textAppearance.fontSize.toFloat()
         textView.includeFontPadding = false
 
-        val textColor = textAppearance.color.resolve(context)
-        val disabledTextColor = generateDisabledColor(Color.TRANSPARENT, textColor)
-
-        textView.setTextColor(
-            ColorStateListBuilder()
-                .add(disabledTextColor, -AndroidR.attr.state_enabled)
-                .add(textColor)
-                .build()
-        )
+        applyTextColor(textView, textAppearance)
 
         var fontWeight = 0
         var italic = false

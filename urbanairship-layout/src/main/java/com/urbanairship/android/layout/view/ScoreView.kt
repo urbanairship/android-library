@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import androidx.core.view.descendants
 import android.content.Context
 import android.util.SparseIntArray
 import android.view.View
@@ -32,7 +33,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 internal class ScoreView(
     context: Context,
     model: ScoreModel,
-) : ConstraintLayout(context), BaseView, TappableView {
+) : ConstraintLayout(context), BaseView, TappableView, EnvironmentConditionsSensitive {
 
     private val clicksChannel = Channel<Unit>(Channel.UNLIMITED)
     var onScoreSelectedListener: ((Int) -> Unit)? = null
@@ -81,6 +82,10 @@ internal class ScoreView(
                 LayoutUtils.updateBackground(this@ScoreView, old, new)
             }
         }
+    }
+
+    override fun onEnvironmentConditionsChanged() {
+        descendants.filterIsInstance<ScoreItemView>().forEach { it.onEnvironmentConditionsChanged() }
     }
 
     private fun configureNumberRange(style: NumberRange) {

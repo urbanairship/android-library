@@ -99,6 +99,7 @@ import com.urbanairship.android.layout.model.VideoController
 import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.choose
 import com.urbanairship.android.layout.util.ShuffleKey
 import com.urbanairship.android.layout.util.shuffledIf
 import kotlinx.coroutines.flow.StateFlow
@@ -293,7 +294,7 @@ internal class ThomasModelFactory : ModelFactory {
         val videoControlGroups = mutableMapOf<Tag, Pair<String, String>>()
 
         val gridStates = controllers
-            .mapNotNull { (tag, ctrl) -> (ctrl.info.info as? GridLayoutInfo)?.let { tag to SharedState(GridState(it.identifier, width = null)) } }
+            .mapNotNull { (tag, ctrl) -> (ctrl.info.info as? GridLayoutInfo)?.let { tag to SharedState(GridState(it.identifier, it.gridConditions.choose(width = null))) } }
             .toMap()
 
         controllers.forEach { (tag, ctrl) ->

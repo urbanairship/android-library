@@ -7,6 +7,7 @@ import android.view.View.MeasureSpec
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.android.layout.property.WindowSize
 import com.urbanairship.json.JsonPredicate
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import org.junit.Assert.assertEquals
@@ -33,6 +34,10 @@ public class ThomasEnvironmentTest {
         locale = Locale.CANADA_FRENCH
     )
 
+    /** [environment] as predicates read it, with [conditions] chosen. */
+    private fun ThomasEnvironment.json(conditions: JsonMap = JsonMap.EMPTY_MAP): JsonMap =
+        PredicateEnvironment.of(this, conditions).toJsonValue().optMap()
+
     @Test
     public fun testJson() {
         val expected = jsonMapOf(
@@ -40,44 +45,29 @@ public class ThomasEnvironmentTest {
             "dark_mode" to true,
             "text_scale" to 1.5,
             "window" to jsonMapOf(
-                "width" to 360.0,
-                "height" to 640.0,
                 "orientation" to "portrait",
                 "size" to "small"
-            ),
-            "safe_window" to jsonMapOf(
-                "width" to 360.0,
-                "height" to 600.0
             ),
             "layout_direction" to "ltr",
             "locale" to jsonMapOf(
                 "identifier" to "fr-CA",
                 "language" to "fr",
                 "region" to "CA"
-            )
-        ).toJsonValue()
+            ),
+            "conditions" to jsonMapOf("size" to "compact")
+        )
 
-        assertEquals(expected, environment.toJsonValue())
+        assertEquals(expected, environment.json(jsonMapOf("size" to "compact")))
     }
 
     @Test
-    public fun testTheFrameIsIncludedOnceItIsLaidOut() {
-        val framed = environment.copy(frameWidth = 320.0, frameHeight = 200.0)
+    public fun testHoldsNoSizes() {
+        val json = environment.copy(frameWidth = 320.0, frameHeight = 200.0).json()
 
-        assertEquals(
-            jsonMapOf("width" to 320.0, "height" to 200.0).toJsonValue(),
-            framed.toJsonValue().optMap().opt("frame")
-        )
-    }
-
-    @Test
-    public fun testAFrameAxisTheContentDecidesIsOmitted() {
-        val widthOnly = environment.copy(frameWidth = 320.0)
-
-        assertEquals(
-            jsonMapOf("width" to 320.0).toJsonValue(),
-            widthOnly.toJsonValue().optMap().opt("frame")
-        )
+        assertFalse(json.opt("window").optMap().containsKey("width"))
+        assertFalse(json.opt("window").optMap().containsKey("height"))
+        assertFalse(json.containsKey("safe_window"))
+        assertFalse(json.containsKey("frame"))
     }
 
     @Test
@@ -142,7 +132,7 @@ public class ThomasEnvironmentTest {
     @Config(qualifiers = "ar-rEG-ldrtl")
     public fun testReadsTheLayoutDirectionAndLocale() {
         val context: Context = ApplicationProvider.getApplicationContext()
-        val json = ThomasEnvironment.from(View(context), null).toJsonValue().optMap()
+        val json = ThomasEnvironment.from(View(context), null).json()
 
         assertEquals("rtl", json.opt("layout_direction").string)
         assertEquals(
@@ -153,7 +143,7 @@ public class ThomasEnvironmentTest {
 
     @Test
     public fun testALocaleWithNoRegionOmitsIt() {
-        val french = environment.copy(locale = Locale.FRENCH).toJsonValue().optMap().opt("locale")
+        val french = environment.copy(locale = Locale.FRENCH).json().opt("locale")
 
         assertEquals(jsonMapOf("identifier" to "fr", "language" to "fr").toJsonValue(), french)
     }
@@ -164,7 +154,7 @@ public class ThomasEnvironmentTest {
     public fun testAWindowWiderThanItIsTallIsLandscape() {
         val landscape = environment.copy(windowWidth = 640.0, windowHeight = 360.0)
 
-        assertEquals("landscape", landscape.toJsonValue().optMap().opt("window").optMap().opt("orientation").string)
+        assertEquals("landscape", landscape.json().opt("window").optMap().opt("orientation").string)
     }
 
     @Test
@@ -184,38 +174,40 @@ public class ThomasEnvironmentTest {
     public fun testIsInStateWithoutAStateController() {
         val json = state(layoutState = emptyMap()).toJsonValue()
 
-        assertEquals(environment.toJsonValue(), json.optMap().opt("\$environment"))
+        assertEquals(environment.json().toJsonValue(), json.optMap().opt("\$environment"))
     }
 
     @Test
     public fun testAValueWrittenToTheLayoutStateIsNotRead() {
         val written = mapOf("\$environment" to JsonValue.wrap("written"))
 
-        assertEquals(environment.toJsonValue(), state(written).toJsonValue().optMap().opt("\$environment"))
+        assertEquals(environment.json().toJsonValue(), state(written).toJsonValue().optMap().opt("\$environment"))
         assertFalse(state(written, environment = null).toJsonValue().optMap().containsKey("\$environment"))
     }
 
     @Test
-    public fun testAPredicateMatchesTheWindow() {
-        val narrow = JsonPredicate.parse(
+    public fun testAPredicateMatchesAnEnvironmentCondition() {
+        val compact = JsonPredicate.parse(
             JsonValue.parseString(
-                """{"scope": ["${'$'}environment", "window", "width"], "value": {"at_most": 360}}"""
+                """{"scope": ["${'$'}environment", "conditions", "size"], "value": {"equals": "compact"}}"""
             )
         )
 
-        assertTrue(narrow.apply(state(emptyMap())))
-        assertFalse(narrow.apply(state(emptyMap(), environment.copy(windowWidth = 600.0))))
+        assertTrue(compact.apply(state(emptyMap(), conditions = jsonMapOf("size" to "compact"))))
+        assertFalse(compact.apply(state(emptyMap(), conditions = jsonMapOf("size" to "expanded"))))
+        assertFalse(compact.apply(state(emptyMap())))
     }
 
     private fun state(
         layoutState: Map<String, JsonValue>,
-        environment: ThomasEnvironment? = this.environment
+        environment: ThomasEnvironment? = this.environment,
+        conditions: JsonMap = JsonMap.EMPTY_MAP
     ): ThomasState = ThomasState(
         layout = State.Layout(identifier = "test-layout").apply { state = layoutState },
         form = null,
         pager = null,
         video = null,
         asyncView = null,
-        capabilities = ThomasCapabilities(environment = environment)
+        capabilities = ThomasCapabilities(environment = environment?.let { PredicateEnvironment.of(it, conditions) })
     )
 }

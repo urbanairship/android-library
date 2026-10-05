@@ -22,10 +22,19 @@ public class EmbeddedPresentation(
 ) : BasePresentation(PresentationType.EMBEDDED) {
 
     /** Returns the first placement whose selector [context]'s environment matches, else the default. */
-    public fun getResolvedPlacement(context: Context): EmbeddedPlacement {
-        val environment = SelectorEnvironment.from(context)
-        return placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
-    }
+    public fun getResolvedPlacement(context: Context): EmbeddedPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context))
+
+    /**
+     * Returns the first placement whose selector matches [context]'s environment and the layout's
+     * environment [conditions], else the default. A root view's own context sits above the one its
+     * views carry conditions in, so it passes them.
+     */
+    internal fun getResolvedPlacement(context: Context, conditions: JsonMap): EmbeddedPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context).copy(conditions = conditions))
+
+    private fun getResolvedPlacement(environment: SelectorEnvironment): EmbeddedPlacement =
+        placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
 
     internal companion object {
         private const val KEY_EMBEDDED_ID = "embedded_id"

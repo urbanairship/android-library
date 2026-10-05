@@ -1,5 +1,7 @@
 package com.urbanairship.android.layout.ui
 
+import com.urbanairship.android.layout.model.Background
+import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import android.content.Context
 import android.content.res.Configuration
 import android.view.View
@@ -33,6 +35,9 @@ internal class ThomasEmbeddedView(
 
     private var frame: ConstrainedFrameLayout? = null
 
+    /** The container inside [frame] that draws the placement's background and border. */
+    private var container: ClippableFrameLayout? = null
+
     internal var listener: Listener? = null
 
     /**
@@ -50,7 +55,12 @@ internal class ThomasEmbeddedView(
         model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
-    private var placement: EmbeddedPlacement = presentation.getResolvedPlacement(context)
+    /** What the placement's colors resolve against, so their selectors see the layout's environment conditions. */
+    private val conditionsContext = EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues }
+
+    /** The placement shown, which the layout's environment conditions can select too. */
+    internal lateinit var placement: EmbeddedPlacement
+        private set
 
     /** The scene, created once and moved into a new frame when the placement changes. */
     private val contentView: View
@@ -61,8 +71,10 @@ internal class ThomasEmbeddedView(
     init {
         id = model.viewId
         model.seedEnvironment(this)
+        placement = resolvePlacement()
         contentView = model.createView(context, environment, null)
         configure(placement)
+        EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged() }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -84,7 +96,7 @@ internal class ThomasEmbeddedView(
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         // A host that handles its own config changes keeps this view, so selectors re-resolve here.
-        val resolved = presentation.getResolvedPlacement(context)
+        val resolved = resolvePlacement()
         if (resolved !== placement) {
             placement = resolved
             frame?.let(::removeView)
@@ -95,6 +107,28 @@ internal class ThomasEmbeddedView(
         }
         environmentFrame.onConfigurationChanged()
         requestLayout()
+    }
+
+    private fun resolvePlacement(): EmbeddedPlacement =
+        presentation.getResolvedPlacement(context, model.environmentConditionValues)
+
+    /**
+     * Moves the scene into a new frame when the new values select another placement, and otherwise
+     * resolves the placement's colors again in place; the scene's own views refresh themselves.
+     */
+    private fun onEnvironmentConditionsChanged() {
+        val resolved = resolvePlacement()
+        if (resolved !== placement) {
+            placement = resolved
+            frame?.let(::removeView)
+            (contentView.parent as? ViewGroup)?.removeView(contentView)
+            configure(resolved)
+        } else if (model.viewsSelectOnEnvironmentConditions) {
+            // Moving the content would detach it: text inputs lose focus, and media restart.
+            val container = container ?: return
+            val background = Background(placement.backgroundColor, placement.border)
+            LayoutUtils.updateBackground(container, background, background)
+        }
     }
 
     private fun reapplyConstraintsIfWindowChanged() {
@@ -114,12 +148,12 @@ internal class ThomasEmbeddedView(
         }
 
         // Layout container (Frame -> Container -> Model view)
-        val container = ClippableFrameLayout(context).apply {
+        val container = ClippableFrameLayout(conditionsContext).apply {
             layoutParams = FrameLayout.LayoutParams(
                 widthSpec,
                 heightSpec
             )
-        }
+        }.also { this.container = it }
 
         // Make a frame to display the layout in
         ConstrainedFrameLayout(context, size).apply {

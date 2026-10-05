@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.widget
 
 import android.R
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.widget.Checkable
 import android.widget.ImageView
 import androidx.annotation.MainThread
@@ -12,10 +11,10 @@ import com.urbanairship.android.layout.shape.Shape
 
 public class ShapeView @JvmOverloads public constructor(
     context: Context,
-    checkedShapes: List<Shape>,
-    uncheckedShapes: List<Shape>,
-    checkedIcon: Image.Icon? = null,
-    uncheckedIcon: Image.Icon? = null
+    private val checkedShapes: List<Shape>,
+    private val uncheckedShapes: List<Shape>,
+    private val checkedIcon: Image.Icon? = null,
+    private val uncheckedIcon: Image.Icon? = null
 ) : ImageView(context), Checkable, Clippable {
 
     private val clippableViewDelegate = ClippableViewDelegate()
@@ -26,10 +25,14 @@ public class ShapeView @JvmOverloads public constructor(
         id = generateViewId()
         scaleType = ScaleType.CENTER_INSIDE
 
-        val drawable: Drawable = Shape.Companion.buildStateListDrawable(
-            context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon
+        rebuildDrawable()
+    }
+
+    /** Builds its checked and unchecked shapes again, resolving their colors against the context now. */
+    internal fun rebuildDrawable() {
+        setImageDrawable(
+            Shape.Companion.buildStateListDrawable(context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon)
         )
-        setImageDrawable(drawable)
     }
 
     override fun setChecked(checked: Boolean) {

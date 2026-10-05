@@ -8,12 +8,14 @@ import com.urbanairship.android.layout.property.Orientation
 import com.urbanairship.android.layout.property.WindowSize
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.json.JsonSerializable
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.util.Locale
 
 /**
- * The platform, window and frame a layout is shown in, as predicates read it at `$environment`.
+ * The platform, window and frame a layout is shown in, as measured: what its environment conditions
+ * are chosen from. Predicates read [PredicateEnvironment] instead, which leaves the sizes out.
  *
  * `window` is the window the layout's activity runs in, measured before the system bars' insets,
  * and `safe_window` the same window after them; every presentation sees the same numbers. `frame`
@@ -45,59 +47,13 @@ internal data class ThomasEnvironment(
     val frameHeight: Double? = null,
     val isRtl: Boolean = false,
     val locale: Locale = Locale.US
-) : JsonSerializable {
+) {
 
     /** Landscape when the window is wider than it is tall, and portrait otherwise. */
     val orientation: Orientation
         get() = if (windowWidth > windowHeight) Orientation.LANDSCAPE else Orientation.PORTRAIT
 
-    override fun toJsonValue(): JsonValue = jsonMapOf(
-        PLATFORM to PLATFORM_ANDROID,
-        DARK_MODE to darkMode,
-        TEXT_SCALE to textScale,
-        WINDOW to jsonMapOf(
-            WIDTH to windowWidth,
-            HEIGHT to windowHeight,
-            ORIENTATION to orientation.toString(),
-            SIZE to windowSize?.toString()
-        ),
-        SAFE_WINDOW to jsonMapOf(
-            WIDTH to safeWindowWidth,
-            HEIGHT to safeWindowHeight
-        ),
-        FRAME to if (frameWidth != null || frameHeight != null) {
-            jsonMapOf(WIDTH to frameWidth, HEIGHT to frameHeight)
-        } else {
-            null
-        },
-        LAYOUT_DIRECTION to if (isRtl) RTL else LTR,
-        LOCALE to jsonMapOf(
-            IDENTIFIER to locale.toLanguageTag(),
-            LANGUAGE to locale.language.ifEmpty { null },
-            REGION to locale.country.ifEmpty { null }
-        )
-    ).toJsonValue()
-
     companion object {
-        private const val PLATFORM = "platform"
-        private const val PLATFORM_ANDROID = "android"
-        private const val DARK_MODE = "dark_mode"
-        private const val TEXT_SCALE = "text_scale"
-        private const val WINDOW = "window"
-        private const val WIDTH = "width"
-        private const val HEIGHT = "height"
-        private const val ORIENTATION = "orientation"
-        private const val SIZE = "size"
-        private const val SAFE_WINDOW = "safe_window"
-        private const val FRAME = "frame"
-        private const val LAYOUT_DIRECTION = "layout_direction"
-        private const val LTR = "ltr"
-        private const val RTL = "rtl"
-        private const val LOCALE = "locale"
-        private const val IDENTIFIER = "identifier"
-        private const val LANGUAGE = "language"
-        private const val REGION = "region"
-
         /**
          * Reads the environment from [rootView]'s window and configuration, and [frame]'s size.
          *
@@ -125,6 +81,76 @@ internal data class ThomasEnvironment(
                 locale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
             )
         }
+    }
+}
+
+/**
+ * The environment as predicates read it at `$environment`: what changes rarely, and the scene's
+ * environment conditions' chosen values. The window, safe window and frame sizes stay out, so a
+ * resize that crosses no breakpoint changes nothing a predicate reads.
+ *
+ * @param conditions each environment condition's chosen value; a condition no selector matched is
+ * left out.
+ */
+internal data class PredicateEnvironment(
+    val darkMode: Boolean,
+    val textScale: Double,
+    val windowSize: WindowSize?,
+    val orientation: Orientation,
+    val isRtl: Boolean,
+    val locale: Locale,
+    val conditions: JsonMap
+) : JsonSerializable {
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        PLATFORM to PLATFORM_ANDROID,
+        DARK_MODE to darkMode,
+        TEXT_SCALE to textScale,
+        WINDOW to jsonMapOf(
+            ORIENTATION to orientation.toString(),
+            SIZE to windowSize?.toString()
+        ),
+        LAYOUT_DIRECTION to if (isRtl) RTL else LTR,
+        LOCALE to jsonMapOf(
+            IDENTIFIER to locale.toLanguageTag(),
+            LANGUAGE to locale.language.ifEmpty { null },
+            REGION to locale.country.ifEmpty { null }
+        ),
+        CONDITIONS to conditions
+    ).toJsonValue()
+
+    companion object {
+        private const val PLATFORM = "platform"
+        private const val PLATFORM_ANDROID = "android"
+        private const val DARK_MODE = "dark_mode"
+        private const val TEXT_SCALE = "text_scale"
+        private const val WINDOW = "window"
+        private const val ORIENTATION = "orientation"
+        private const val SIZE = "size"
+        private const val LAYOUT_DIRECTION = "layout_direction"
+        private const val LTR = "ltr"
+        private const val RTL = "rtl"
+        private const val LOCALE = "locale"
+        private const val IDENTIFIER = "identifier"
+        private const val LANGUAGE = "language"
+        private const val REGION = "region"
+        private const val CONDITIONS = "conditions"
+
+        /**
+         * Returns [environment] as predicates read it, with [conditions] chosen from it.
+         *
+         * @param environment the measured environment.
+         * @param conditions its environment conditions' chosen values.
+         */
+        fun of(environment: ThomasEnvironment, conditions: JsonMap): PredicateEnvironment = PredicateEnvironment(
+            darkMode = environment.darkMode,
+            textScale = environment.textScale,
+            windowSize = environment.windowSize,
+            orientation = environment.orientation,
+            isRtl = environment.isRtl,
+            locale = environment.locale,
+            conditions = conditions
+        )
     }
 }
 

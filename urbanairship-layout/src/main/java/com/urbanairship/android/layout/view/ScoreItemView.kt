@@ -1,7 +1,6 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.widget.Checkable
 import androidx.annotation.Dimension
 import androidx.appcompat.widget.AppCompatRadioButton
@@ -47,15 +46,7 @@ internal class ScoreItemView(
         isSingleLine = true
         includeFontPadding = true
 
-        val background: Drawable = Shape.buildStateListDrawable(
-            context,
-            bindings.selected.shapes,
-            bindings.unselected.shapes,
-            null,
-            null
-        )
-
-        setBackground(background)
+        rebuildBackground()
         foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
 
         configure()
@@ -66,6 +57,16 @@ internal class ScoreItemView(
 
         updateTextState()
         updatePadding(padding, padding, padding, padding)
+    }
+
+    /** Resolves its shapes' and text's colors again, against the context now. */
+    fun onEnvironmentConditionsChanged() {
+        rebuildBackground()
+        updateTextState()
+    }
+
+    private fun rebuildBackground() {
+        background = Shape.buildStateListDrawable(context, bindings.selected.shapes, bindings.unselected.shapes, null, null)
     }
 
     private fun updateTextState() {

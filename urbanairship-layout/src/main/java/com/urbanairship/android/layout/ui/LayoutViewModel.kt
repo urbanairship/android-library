@@ -14,6 +14,8 @@ import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.property.Conditions
+import com.urbanairship.android.layout.property.EnvironmentConditionSelector
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.util.randomShuffleSeed
 import kotlinx.coroutines.cancel
@@ -32,7 +34,9 @@ internal class LayoutViewModel : ViewModel() {
         layoutState: LayoutState = LayoutState.EMPTY,
         stateStorage: LayoutStateStorage? = null,
         aiInference: ThomasAIInference? = null,
-        shuffleSeed: String? = null
+        shuffleSeed: String? = null,
+        environmentConditions: Conditions<EnvironmentConditionSelector> = Conditions(emptyMap()),
+        viewsSelectOnEnvironmentConditions: Boolean = false
     ): ModelEnvironment =
         environment ?: ModelEnvironment(
             layoutState = layoutState,
@@ -41,7 +45,9 @@ internal class LayoutViewModel : ViewModel() {
             displayTimer = displayTimer,
             stateStorage = stateStorage,
             aiInference = aiInference,
-            shuffleSeed = shuffleSeed ?: randomShuffleSeed()
+            shuffleSeed = shuffleSeed ?: randomShuffleSeed(),
+            environmentConditions = environmentConditions,
+            viewsSelectOnEnvironmentConditions = viewsSelectOnEnvironmentConditions
         ).also {
             environment = it
         }
