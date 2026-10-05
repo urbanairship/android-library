@@ -1,6 +1,7 @@
 package com.urbanairship.http
 
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
@@ -37,7 +38,7 @@ internal class DefaultHttpClient : HttpClient {
             }
 
             val connection = openConnection(actualUrl) as HttpURLConnection
-            continuation.invokeOnCancellation { connection.disconnect() }
+            continuation.invokeOnCancellation { connection.disconnectSafely() }
 
             try {
                 connection.apply {
@@ -98,7 +99,7 @@ internal class DefaultHttpClient : HttpClient {
                     continuation.resumeWithException(e)
                 }
             } finally {
-                connection.disconnect()
+                connection.disconnectSafely()
             }
         }
     }
@@ -123,6 +124,18 @@ internal class DefaultHttpClient : HttpClient {
                 value.first()
             }
         }
+    }
+}
+
+// Third-party HttpURLConnection wrappers (e.g. Firebase Performance's network
+// instrumentation) can throw from disconnect() due to bugs in their own code;
+// since nothing here depends on disconnect() succeeding, don't let that crash the app.
+@VisibleForTesting
+internal fun HttpURLConnection.disconnectSafely() {
+    try {
+        disconnect()
+    } catch (e: Exception) {
+        UALog.v(e) { "Failed to disconnect" }
     }
 }
 
