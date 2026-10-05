@@ -34,6 +34,9 @@ android {
             // Only the debug task ever captures. Declaring the same output directory on both the
             // debug and release tasks would put two tasks in conflict over it.
             all { test ->
+                // Every Robolectric test here shares one JVM, which outgrows the default 512m.
+                test.maxHeapSize = '1g'
+
                 if (!wantsScreenshots || test.name != 'testDebugUnitTest') {
                     test.filter.excludeTestsMatching '*SceneScreenshotTest*'
                     return
