@@ -232,10 +232,20 @@ internal val View.isLayoutRtl: Boolean
 internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
     findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
 
-/** Returns true if this event's raw coordinates fall within [view]'s visible bounds. */
+/**
+ * Returns true if this event's raw coordinates fall within [view]'s visible bounds.
+ *
+ * Raw coordinates are relative to the display, but [View.getGlobalVisibleRect] is relative to the
+ * window, so the touch is moved into the window first. The two only agree for a window at the
+ * display's origin, which a freeform or split-screen window isn't.
+ *
+ * @param view the view to test against.
+ * @return whether the event lands on the visible part of [view].
+ */
 internal fun MotionEvent.isWithinBounds(view: View): Boolean {
     val rect = Rect().apply { view.getGlobalVisibleRect(this) }
-    return rect.contains(rawX.toInt(), rawY.toInt())
+    val window = IntArray(2).also { view.rootView.getLocationOnScreen(it) }
+    return rect.contains(rawX.toInt() - window[0], rawY.toInt() - window[1])
 }
 
 /**
