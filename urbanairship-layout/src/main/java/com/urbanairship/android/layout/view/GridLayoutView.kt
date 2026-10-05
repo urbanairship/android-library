@@ -195,13 +195,14 @@ internal class GridLayoutView(
     override fun establishesLength(horizontal: Boolean): Boolean {
         if (!horizontal && model.everyConfigHasRatio) return true
         if (horizontal && setsItsOwnWidthUnbounded) return true
-        return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.establishesLength(horizontal) } }
+        // allCells, so a shown header or footer counts as an item does.
+        return allCells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.establishesLength(horizontal) } }
     }
 
     override fun statesLength(horizontal: Boolean): Boolean {
         if (!horizontal && model.everyConfigHasRatio) return true
         if (horizontal && setsItsOwnWidthUnbounded) return true
-        return cells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.statesLength(horizontal) } }
+        return allCells.any { it.holdsItem && it.suppliesLength(horizontal) { view -> view.statesLength(horizontal) } }
     }
 
     /**
