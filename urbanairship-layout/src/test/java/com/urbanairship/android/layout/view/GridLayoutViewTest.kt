@@ -13,6 +13,7 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.model.GridLayoutModel
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ThomasCapabilities
@@ -929,6 +930,44 @@ public class GridLayoutViewTest {
          "row_spacing": {"type": "spread", "min_space": 8${maxSpace?.let { """, "max_space": $it""" } ?: ""}},
          "content_position": {"horizontal": "start", "vertical": "center"}}
     """.trimIndent()
+
+    @Test
+    public fun testAFixedHeightHeaderGivesAGridOfPercentItemsAHeight() {
+        val percent = box(size = """{"width": "100%", "height": "100%"}""")
+        val json = """
+            {"type": "grid_layout", "identifier": "grid",
+             "config": {"columns": {"type": "fixed", "count": 2}},
+             "header": {"size": {"width": "100%", "height": 40}, "view": {"type": "empty_view"}},
+             "items": [$percent, $percent]}
+        """.trimIndent()
+        val model = LayoutViewModel().getOrCreateModel(
+            ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), mockEnv
+        ) as GridLayoutModel
+        val grid = model.createView(ApplicationProvider.getApplicationContext(), viewEnv, null) as GridLayoutView
+
+        // As on iOS, a header or footer counts as an item does: it's a cell with a size of its own.
+        assertTrue(model.establishesLength(Direction.VERTICAL))
+        assertTrue(grid.establishesLength(horizontal = false))
+        assertTrue(grid.statesLength(horizontal = false))
+        assertFalse("its width is still the items'", model.establishesLength(Direction.HORIZONTAL))
+    }
+
+    @Test
+    public fun testAnAutoFooterDefersToWhatItHolds() {
+        val percent = box(size = """{"width": "100%", "height": "100%"}""")
+        val fixed = """{"type": "container", "items": [{"position": {"horizontal": "center", "vertical": "center"},
+            "size": {"width": 20, "height": 20}, "view": {"type": "empty_view"}}]}"""
+        val json = """
+            {"type": "grid_layout", "identifier": "grid",
+             "config": {"columns": {"type": "fixed", "count": 2}},
+             "footer": {"size": {"width": "100%", "height": "auto"}, "view": $fixed},
+             "items": [$percent]}
+        """.trimIndent()
+        val model = LayoutViewModel().getOrCreateModel(
+            ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap()), mockEnv
+        ) as GridLayoutModel
+        assertTrue(model.establishesLength(Direction.VERTICAL))
+    }
 
     @Test
     public fun testAnUnboundedFitGridIsAWidthBasisForAPercentSibling() {

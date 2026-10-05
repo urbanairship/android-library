@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.environment.GridState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.GridCellInfo
 import com.urbanairship.android.layout.info.GridLayoutEdgeInfo
 import com.urbanairship.android.layout.info.GridLayoutInfo
 import com.urbanairship.android.layout.info.GridLayoutItemInfo
@@ -51,7 +52,9 @@ internal class GridLayoutModel(
         if (direction == Direction.HORIZONTAL && everyConfigFitsAMinimum) {
             return true
         }
-        return items.any { it.establishesLength(direction) }
+        // The header and footer are cells too, so either can give the grid a length, as an item can.
+        return items.any { it.establishesLength(direction) } ||
+            listOfNotNull(header, footer).any { it.establishesLength(direction) }
     }
 
     /** Whether the grid sets its row heights from a ratio whichever config it lays out with. */
@@ -69,24 +72,16 @@ internal class GridLayoutModel(
         val info: GridLayoutItemInfo,
         val model: AnyModel
     ) {
-        internal fun establishesLength(direction: Direction): Boolean {
-            val dimension = when (direction) {
-                Direction.VERTICAL -> info.size.height
-                Direction.HORIZONTAL -> info.size.width
-            }
-            return when (dimension.type) {
-                Size.DimensionType.ABSOLUTE -> true
-                Size.DimensionType.PERCENT -> false
-                Size.DimensionType.AUTO -> model.establishesLength(direction)
-            }
-        }
+        internal fun establishesLength(direction: Direction): Boolean = cellEstablishesLength(info, model, direction)
     }
 
     /** The header or footer, and its model. */
     data class Edge(
         val info: GridLayoutEdgeInfo,
         val model: AnyModel
-    )
+    ) {
+        internal fun establishesLength(direction: Direction): Boolean = cellEstablishesLength(info, model, direction)
+    }
 
     override fun onCreateView(
         context: Context,
@@ -94,5 +89,21 @@ internal class GridLayoutModel(
         itemProperties: ItemProperties?
     ) = GridLayoutView(context, this, viewEnvironment).apply {
         id = viewId
+    }
+}
+
+/**
+ * Whether a cell holding [model] at [info]'s size gives its grid a length on [direction]: a fixed
+ * size does, a percentage doesn't, and `auto` defers to what it holds.
+ */
+private fun cellEstablishesLength(info: GridCellInfo, model: AnyModel, direction: Direction): Boolean {
+    val dimension = when (direction) {
+        Direction.VERTICAL -> info.size.height
+        Direction.HORIZONTAL -> info.size.width
+    }
+    return when (dimension.type) {
+        Size.DimensionType.ABSOLUTE -> true
+        Size.DimensionType.PERCENT -> false
+        Size.DimensionType.AUTO -> model.establishesLength(direction)
     }
 }
