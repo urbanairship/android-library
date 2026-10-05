@@ -1,7 +1,6 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.widget.Checkable
 import androidx.annotation.Dimension
 import androidx.appcompat.widget.AppCompatRadioButton

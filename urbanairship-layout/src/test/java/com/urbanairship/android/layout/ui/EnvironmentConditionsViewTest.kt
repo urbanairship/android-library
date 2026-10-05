@@ -16,6 +16,11 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.view.StackImageView
 import com.urbanairship.android.layout.AirshipCustomViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
+import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
+import com.urbanairship.android.layout.view.ModalView
+import com.urbanairship.android.layout.environment.EnvironmentFrame
+import com.urbanairship.android.layout.ModalPresentation
+import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -157,6 +162,81 @@ public class EnvironmentConditionsViewTest {
         }
     }
 
+    @Test
+    public fun testABannerMovesTheSameContentIntoAFrameForThePlacementTheConditionSelects() {
+        val layout = LayoutInfo(JsonValue.parseString(BANNER).optMap())
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val model = LayoutViewModel().getOrCreateModel(layout.view, environment(layout))
+        val banner = ThomasBannerView(activity, model, layout.presentation as BannerPresentation, viewEnv)
+        val host = FrameLayout(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(300, ViewGroup.LayoutParams.WRAP_CONTENT)
+            addView(banner, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        activity.setContentView(FrameLayout(activity).apply { addView(host) })
+        settle()
+        val label = label(banner)
+        val compactFrame = banner.descendants().filterIsInstance<ConstrainedFrameLayout>().single()
+        assertEquals("compact selects the red placement", RED, (compactFrame.background as ColorDrawable).color)
+
+        cross(host)
+        val expandedFrame = banner.descendants().filterIsInstance<ConstrainedFrameLayout>().single()
+        assertTrue("a new frame for the new placement", expandedFrame !== compactFrame)
+        assertEquals(BLUE, (expandedFrame.background as ColorDrawable).color)
+        assertSame("the same content, moved", label, label(banner))
+        assertSame(expandedFrame, label.parent)
+    }
+
+    @Test
+    public fun testAModalAsksForARecreateOnceWhenItsFrameSelectsAnotherPlacement() {
+        var recreates = 0
+        val (_, host) = modal(seedFrame = false) { recreates++ }
+        // Seeded without a frame, it chose the expanded placement; its first layout reports 300 wide.
+        assertEquals(1, recreates)
+
+        host.requestLayout()
+        settle()
+        assertEquals("only once", 1, recreates)
+    }
+
+    @Test
+    public fun testAModalSeededWithTheFrameItFillsNeverRecreates() {
+        var recreates = 0
+        modal(seedFrame = true) { recreates++ }
+        assertEquals(0, recreates)
+    }
+
+    /**
+     * A modal in a host 300 wide, whose placement selector reads the frame's `size`, seeded with
+     * that frame, as `ModalActivity` seeds it, when [seedFrame].
+     */
+    private fun modal(seedFrame: Boolean, onRecreate: () -> Unit): Pair<ModalView, FrameLayout> {
+        val layout = LayoutInfo(JsonValue.parseString(MODAL).optMap())
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val environment = environment(layout)
+        if (seedFrame) environment.seedEnvironment(activity.window.decorView, EnvironmentFrame(300, 600))
+        val model = LayoutViewModel().getOrCreateModel(layout.view, environment)
+        val view = ModalView(activity, model, layout.presentation as ModalPresentation, viewEnv).apply {
+            onPlacementSuperseded = onRecreate
+        }
+        val host = FrameLayout(activity).apply {
+            layoutParams = FrameLayout.LayoutParams(300, 600)
+            addView(view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
+        activity.setContentView(FrameLayout(activity).apply { addView(host) })
+        settle()
+        return view to host
+    }
+
+    private fun environment(layout: LayoutInfo) = ModelEnvironment(
+        layoutState = LayoutState.EMPTY,
+        reporter = mockk(relaxUnitFun = true),
+        actionsRunner = mockk(relaxUnitFun = true),
+        displayTimer = mockk(relaxed = true),
+        modelScope = testScope,
+        environmentConditions = layout.environmentConditions,
+        viewsSelectOnEnvironmentConditions = layout.viewSelectsOnEnvironmentConditions
+    )
+
     /** Widens the host past the `size` breakpoint and settles. */
     private fun cross(host: FrameLayout) {
         host.layoutParams = FrameLayout.LayoutParams(500, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -224,6 +304,36 @@ public class EnvironmentConditionsViewTest {
             {"default": {"type": "hex", "hex": "#0000FF", "alpha": 1},
              "selectors": [{"environment_conditions": {"size": "compact"},
                             "color": {"type": "hex", "hex": "#FF0000", "alpha": 1}}]}
+        """.trimIndent()
+
+        /** The frame's `size` condition, compact up to 400 wide. */
+        const val SIZE = """
+            "environment_state": {"conditions": {"size": [
+              {"frame_width": {"at_most": 400}, "value": "compact"}, {"value": "expanded"}
+            ]}}
+        """
+
+        val BANNER = """
+            {"version": 1, $SIZE,
+             "presentation": {"type": "banner",
+               "default_placement": {"size": {"width": "100%", "height": "auto"},
+                 "position": {"horizontal": "center", "vertical": "top"},
+                 "background_color": {"default": {"type": "hex", "hex": "#0000FF", "alpha": 1}}},
+               "placement_selectors": [{"environment_conditions": {"size": "compact"},
+                 "placement": {"size": {"width": "100%", "height": "auto"},
+                   "position": {"horizontal": "center", "vertical": "bottom"},
+                   "background_color": {"default": {"type": "hex", "hex": "#FF0000", "alpha": 1}}}}]},
+             "view": {"type": "label", "text": "x",
+               "text_appearance": {"font_size": 14, "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}}}
+        """.trimIndent()
+
+        val MODAL = """
+            {"version": 1, $SIZE,
+             "presentation": {"type": "modal",
+               "default_placement": {"size": {"width": "100%", "height": "100%"}},
+               "placement_selectors": [{"environment_conditions": {"size": "compact"},
+                 "placement": {"size": {"width": "90%", "height": "90%"}}}]},
+             "view": {"type": "empty_view"}}
         """.trimIndent()
 
         val LABEL = """{"type": "label", "text": "x", "text_appearance": {"font_size": 14, "color": $COLOR}}"""

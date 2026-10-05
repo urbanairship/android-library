@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.widget
 
 import android.R
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.widget.Checkable
 import android.widget.ImageView
 import androidx.annotation.MainThread
