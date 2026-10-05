@@ -36,7 +36,7 @@ internal class StackImageView(
     private val model: StackImageViewModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-) : FrameLayout(context), BaseView {
+) : FrameLayout(context), BaseView, EnvironmentConditionsSensitive {
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
 
@@ -83,6 +83,10 @@ internal class StackImageView(
             // Clear any padding so that we can use the entire view area
             setPadding(0, 0, 0, 0)
         }
+    }
+
+    override fun onEnvironmentConditionsChanged() {
+        renderItems(model.viewInfo.items)
     }
 
     private fun renderItems(items: List<StackItemInfo>) {

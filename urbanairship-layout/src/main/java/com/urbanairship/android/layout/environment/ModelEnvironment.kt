@@ -56,7 +56,8 @@ internal class ModelEnvironment(
     environmentConditions: EnvironmentConditions = Conditions(emptyMap()),
     /**
      * Whether a color or media selector in the layout names `environment_conditions`, so its views
-     * are built again when a chosen value changes.
+     * resolve what they resolved once again when a chosen value changes; see
+     * [com.urbanairship.android.layout.view.EnvironmentConditionsSensitive].
      */
     val viewsSelectOnEnvironmentConditions: Boolean = false,
     /** The layout's `$environment`, shared by every copy [withState] makes. */

@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.ui
 
 import android.app.Activity
+import android.graphics.drawable.ColorDrawable
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +30,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,13 +73,17 @@ public class EnvironmentConditionsViewTest {
     }
 
     @Test
-    public fun testCrossingABreakpointBuildsTheViewsAgainWithTheNewValue() {
+    public fun testCrossingABreakpointRecolorsTheSameViewsInPlace() {
         val (view, host) = embedded(width = 300)
-        assertEquals(RED, labelColor(view))
+        val label = label(view)
+        assertEquals(RED, label.currentTextColor)
+        assertEquals(RED, (label.background as ColorDrawable).color)
 
         host.layoutParams = FrameLayout.LayoutParams(500, ViewGroup.LayoutParams.WRAP_CONTENT)
         settle()
-        assertEquals(BLUE, labelColor(view))
+        assertSame("the label isn't rebuilt", label, label(view))
+        assertEquals(BLUE, label.currentTextColor)
+        assertEquals(BLUE, (label.background as ColorDrawable).color)
     }
 
     @Test
@@ -122,7 +128,9 @@ public class EnvironmentConditionsViewTest {
         }
     }
 
-    private fun labelColor(view: View): Int = view.descendants().filterIsInstance<TextView>().single().currentTextColor
+    private fun label(view: View): TextView = view.descendants().filterIsInstance<TextView>().single()
+
+    private fun labelColor(view: View): Int = label(view).currentTextColor
 
     private fun View.descendants(): Sequence<View> = sequence {
         yield(this@descendants)
@@ -144,6 +152,10 @@ public class EnvironmentConditionsViewTest {
                "placement_selectors": [{"environment_conditions": {"size": "compact"},
                  "placement": {"size": {"width": "50%", "height": "auto"}}}]},
              "view": {"type": "label", "text": "x",
+               "background_color": {
+                 "default": {"type": "hex", "hex": "#0000FF", "alpha": 1},
+                 "selectors": [{"environment_conditions": {"size": "compact"},
+                                "color": {"type": "hex", "hex": "#FF0000", "alpha": 1}}]},
                "text_appearance": {"font_size": 14, "color": {
                  "default": {"type": "hex", "hex": "#0000FF", "alpha": 1},
                  "selectors": [{"environment_conditions": {"size": "compact"},

@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import androidx.core.view.children
 import android.content.Context
 import android.view.Gravity
 import android.view.View
@@ -23,7 +24,7 @@ import com.urbanairship.R as CoreR
 internal class PagerIndicatorView(
     context: Context,
     private val model: PagerIndicatorModel
-) : LinearLayout(context), BaseView, ShrinkableView {
+) : LinearLayout(context), BaseView, ShrinkableView, EnvironmentConditionsSensitive {
 
     init {
         orientation = HORIZONTAL
@@ -102,6 +103,10 @@ internal class PagerIndicatorView(
         }
 
         super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY))
+    }
+
+    override fun onEnvironmentConditionsChanged() {
+        children.filterIsInstance<ShapeView>().forEach { it.rebuildDrawable() }
     }
 
     /**

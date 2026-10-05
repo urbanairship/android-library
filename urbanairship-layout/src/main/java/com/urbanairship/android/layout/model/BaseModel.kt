@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.android.layout.view.EnvironmentConditionsSensitive
 import com.urbanairship.json.JsonMap
 import android.content.Context
 import android.view.View.OnAttachStateChangeListener
@@ -214,8 +215,10 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
         viewScope.launch {
             layoutState.thomasState.collect {
-                updateBackground(it)
+                val conditionsChanged = takeEnvironmentConditions(it)
+                updateBackground(it, force = conditionsChanged)
                 updateVisibility(it)
+                if (conditionsChanged) (view as? EnvironmentConditionsSensitive)?.onEnvironmentConditionsChanged()
                 listener?.onStateUpdated(it)
             }
         }
@@ -329,7 +332,26 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =
         environment.attributeHandler.update(attributes)
 
-    private fun updateBackground(state: ThomasState? = null) {
+    /** The environment conditions this model's view last resolved its selectors with. */
+    private var appliedConditions: JsonMap? = null
+
+    /**
+     * Records [state]'s environment conditions and returns whether they differ from those the view
+     * resolved with, in a layout whose color or media selectors name them.
+     */
+    private fun takeEnvironmentConditions(state: ThomasState): Boolean {
+        val conditions = state.capabilities.environment?.conditions ?: JsonMap.EMPTY_MAP
+        val changed = environment.viewsSelectOnEnvironmentConditions &&
+            appliedConditions != null && conditions != appliedConditions
+        appliedConditions = conditions
+        return changed
+    }
+
+    /**
+     * Resolves the background and border for [state], and hands them to the view when they differ
+     * from those it has, or when [force] says a color it resolved may now resolve differently.
+     */
+    private fun updateBackground(state: ThomasState? = null, force: Boolean = false) {
         val background = if (state != null) {
             Background(
                 color = state.resolveOptional(
@@ -344,7 +366,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
             Background(color = viewInfo.backgroundColor, border = viewInfo.border)
         }
 
-        if (background != this.background) {
+        if (force || background != this.background) {
             listener?.setBackground(this.background, background)
             this.background = background
         }

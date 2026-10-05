@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ui
 
+import com.urbanairship.android.layout.model.Background
+import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import com.urbanairship.android.layout.property.BannerPlacement
 import android.content.Context
 import android.graphics.Rect
@@ -68,8 +70,8 @@ public class ThomasBannerView internal constructor(
         model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
-    /** The scene's views, built again when its selectors read new environment conditions. */
-    private var containerView: View? = null
+    /** What the placement's colors resolve against, so their selectors see the layout's environment conditions. */
+    private val conditionsContext = EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues }
 
     init {
         id = model.viewId
@@ -83,14 +85,16 @@ public class ThomasBannerView internal constructor(
         presentation.getResolvedPlacement(context, model.environmentConditionValues)
 
     /**
-     * Builds the scene's views again when its selectors read the new values, and fits the banner
-     * to the placement they select.
+     * Fits the banner to the placement the new values select, and resolves its colors again; the
+     * scene's own views refresh themselves.
      */
     private fun onEnvironmentConditionsChanged() {
+        val frame = bannerFrame ?: return
         if (model.viewsSelectOnEnvironmentConditions) {
-            val frame = bannerFrame ?: return
-            containerView?.let(frame::removeView)
-            containerView = model.createView(context, environment, null).also(frame::addView)
+            val placement = resolvedPlacement()
+            val background = Background(placement.backgroundColor, placement.border)
+            LayoutUtils.updateBackground(frame, background, background)
+            applyShadow(frame, placement.shadow)
         }
         applySizeConstraints()
     }
@@ -99,7 +103,7 @@ public class ThomasBannerView internal constructor(
         val placement = resolvedPlacement()
         val size = placement.size
         val frame = makeFrame(size)
-        containerView = model.createView(context, environment, null).also(frame::addView)
+        frame.addView(model.createView(context, environment, null))
         addView(frame)
         LayoutUtils.applyBorderAndBackground(frame, null, placement.border, placement.backgroundColor)
         applyShadow(frame, placement.shadow)
@@ -171,7 +175,7 @@ public class ThomasBannerView internal constructor(
     }
 
     private fun makeFrame(size: ConstrainedSize) =
-        ConstrainedFrameLayout(context, size).apply {
+        ConstrainedFrameLayout(conditionsContext, size).apply {
             id = generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
             addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
@@ -187,7 +191,7 @@ public class ThomasBannerView internal constructor(
         val androidShadow = shadow?.androidShadow
         if (androidShadow != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val color = androidShadow.color.resolve(context)
+                val color = androidShadow.color.resolve(conditionsContext)
                 view.outlineAmbientShadowColor = color
                 view.outlineSpotShadowColor = color
             }

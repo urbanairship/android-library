@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.widget
 
+import com.urbanairship.android.layout.view.EnvironmentConditionsSensitive
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -24,7 +25,7 @@ import com.urbanairship.android.layout.view.BaseView
 internal abstract class CheckableView<M : CheckableModel<*, *>>(
     context: Context,
     protected val model: M
-) : FrameLayout(context), BaseView {
+) : FrameLayout(context), BaseView, EnvironmentConditionsSensitive {
 
     var checkedChangeListener: CheckableViewAdapter.OnCheckedChangeListener? = null
 
@@ -78,8 +79,19 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
         }
     }
 
+    /** Its switch, which resolves its track colors once. */
+    private var switchView: SwitchCompat? = null
+
+    /** Its checkbox, which resolves its shapes' colors once. */
+    private var checkboxView: ShapeButton? = null
+
+    override fun onEnvironmentConditionsChanged() {
+        switchView?.let { LayoutUtils.applySwitchStyle(it, model.viewInfo.style as SwitchStyle) }
+        checkboxView?.rebuildBackground()
+    }
+
     private fun configureSwitch(style: SwitchStyle) {
-        val switchView = createSwitchView(style)
+        val switchView = createSwitchView(style).also { this.switchView = it }
         switchView.id = model.checkableViewId
         LayoutUtils.applySwitchStyle(switchView, style)
         checkableView = CheckableViewAdapter.Switch(switchView)
@@ -93,7 +105,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
     }
 
     private fun configureCheckbox(style: CheckboxStyle) {
-        val checkboxView = createCheckboxView(style)
+        val checkboxView = createCheckboxView(style).also { this.checkboxView = it }
         checkboxView.id = model.checkableViewId
         checkableView = CheckableViewAdapter.Checkbox(checkboxView)
 

@@ -186,8 +186,12 @@ internal class BackgroundsPainter(
      */
     var state: ThomasState? = null
         set(value) {
+            val conditionsChanged = value?.environmentConditions != field?.environmentConditions
             field = value
             mediaViews.forEach { (layer, held) -> held.load(layer) }
+            // Color and gradient layers resolve while drawing, so a color selector on a condition
+            // only needs a redraw.
+            if (conditionsChanged) invalidate()
         }
 
     /** An image layer's view, and the url currently in it. */
@@ -645,3 +649,6 @@ internal class BackgroundsPainter(
         )
     }
 }
+
+/** The layout's environment conditions as this state carries them. */
+private val ThomasState.environmentConditions get() = capabilities.environment?.conditions

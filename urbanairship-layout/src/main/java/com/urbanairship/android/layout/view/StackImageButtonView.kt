@@ -49,7 +49,7 @@ internal class StackImageButtonView(
     private val model: StackImageButtonModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-) : FrameLayout(context), BaseView, TappableView {
+) : FrameLayout(context), BaseView, TappableView, EnvironmentConditionsSensitive {
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
 
@@ -112,6 +112,11 @@ internal class StackImageButtonView(
                 contentDescription = it
             }
         }
+    }
+
+    /** Its items render again with the state update that follows. */
+    override fun onEnvironmentConditionsChanged() {
+        lastState = null
     }
 
     private fun updateButton(state: ThomasState?) {

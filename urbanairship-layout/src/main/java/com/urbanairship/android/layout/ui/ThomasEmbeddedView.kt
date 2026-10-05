@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.ui
 
+import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import android.content.Context
 import android.content.res.Configuration
 import android.view.View
@@ -50,12 +51,15 @@ internal class ThomasEmbeddedView(
         model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
+    /** What the placement's colors resolve against, so their selectors see the layout's environment conditions. */
+    private val conditionsContext = EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues }
+
     /** The placement shown, which the layout's environment conditions can select too. */
     internal lateinit var placement: EmbeddedPlacement
         private set
 
     /** The scene, created once and moved into a new frame when the placement changes. */
-    private var contentView: View
+    private val contentView: View
 
     /** The window [applyConstraints] last sized the frame against. */
     private var constrainedWindow: WindowPixels? = null
@@ -105,17 +109,15 @@ internal class ThomasEmbeddedView(
         presentation.getResolvedPlacement(context, model.environmentConditionValues)
 
     /**
-     * Moves the scene into a new frame when the new values select another placement, building its
-     * views again first when its selectors read them.
+     * Moves the scene into a new frame when the new values select another placement, or when the
+     * placement's colors may resolve differently; the scene's own views refresh themselves.
      */
     private fun onEnvironmentConditionsChanged() {
         val resolved = resolvePlacement()
-        val rebuild = model.viewsSelectOnEnvironmentConditions
-        if (!rebuild && resolved === placement) return
+        if (resolved === placement && !model.viewsSelectOnEnvironmentConditions) return
         placement = resolved
         frame?.let(::removeView)
         (contentView.parent as? ViewGroup)?.removeView(contentView)
-        if (rebuild) contentView = model.createView(context, environment, null)
         configure(resolved)
     }
 
@@ -136,7 +138,7 @@ internal class ThomasEmbeddedView(
         }
 
         // Layout container (Frame -> Container -> Model view)
-        val container = ClippableFrameLayout(context).apply {
+        val container = ClippableFrameLayout(conditionsContext).apply {
             layoutParams = FrameLayout.LayoutParams(
                 widthSpec,
                 heightSpec
