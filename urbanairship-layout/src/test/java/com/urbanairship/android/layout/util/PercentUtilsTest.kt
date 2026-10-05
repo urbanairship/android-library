@@ -42,12 +42,23 @@ class PercentUtilsTest {
         Assert.assertTrue(PercentUtils.isPercent("12.%"))
         Assert.assertTrue(PercentUtils.isPercent(".5%"))
 
+        // Malformed, but still percentages, as on iOS: they read as a number or as 0, never as points.
+        Assert.assertTrue(PercentUtils.isPercent("%"))
+        Assert.assertTrue(PercentUtils.isPercent("-10%"))
+        Assert.assertTrue(PercentUtils.isPercent("something 10%"))
+
         Assert.assertFalse(PercentUtils.isPercent("dog"))
-        Assert.assertFalse(PercentUtils.isPercent("%"))
         Assert.assertFalse(PercentUtils.isPercent("."))
-        Assert.assertFalse(PercentUtils.isPercent("-10%"))
         Assert.assertFalse(PercentUtils.isPercent("10"))
-        Assert.assertFalse(PercentUtils.isPercent("something 10%"))
+    }
+
+    @Test
+    fun aMalformedPercentageReadsAsIOSReadsIt() {
+        Assert.assertEquals(0.0, PercentUtils.parse("%").toDouble(), 0.0001)
+        Assert.assertEquals(-0.1, PercentUtils.parse("-10%").toDouble(), 0.0001)
+        Assert.assertEquals(0.0, PercentUtils.parse("something 10%").toDouble(), 0.0001)
+        Assert.assertEquals(0.12, PercentUtils.parse("12.%").toDouble(), 0.0001)
+        Assert.assertEquals(0.005, PercentUtils.parse(".5%").toDouble(), 0.0001)
     }
 
     /** A size that isn't a percentage is read as points, so a missed one used to throw on read. */
