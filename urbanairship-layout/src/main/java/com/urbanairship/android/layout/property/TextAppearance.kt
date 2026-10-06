@@ -78,13 +78,23 @@ public open class TextAppearance {
 
         @JvmStatic
         @Throws(JsonException::class)
-        public fun fromJson(json: JsonValue): TextAppearance {
+        public fun fromJson(json: JsonValue): TextAppearance = fromJson(json, TextAlignment.CENTER)
+
+        /**
+         * Parses a text appearance, with [defaultAlignment] where it states none.
+         *
+         * @param json the `text_appearance` object.
+         * @param defaultAlignment the alignment to use when `alignment` is left out.
+         * @return the parsed appearance.
+         */
+        @Throws(JsonException::class)
+        internal fun fromJson(json: JsonValue, defaultAlignment: TextAlignment): TextAppearance {
             val content = json.requireMap()
 
             return TextAppearance(
                 color = Color.fromJson(content.require(KEY_COLOR)),
                 fontSize = content.optionalField(KEY_FONT_SIZE) ?: 14,
-                alignment = content[KEY_ALIGNMENT]?.let(TextAlignment::from) ?: TextAlignment.CENTER,
+                alignment = content[KEY_ALIGNMENT]?.let(TextAlignment::from) ?: defaultAlignment,
                 textStyles = content.optionalList(KEY_STYLES)?.map(TextStyle::from) ?: emptyList(),
                 fontWeight = content.optionalField(KEY_FONT_WEIGHT) ?: 0,
                 fontFamilies = content.optionalList(KEY_FONT_FAMILIES)?.mapNotNull { it.string } ?: emptyList(),

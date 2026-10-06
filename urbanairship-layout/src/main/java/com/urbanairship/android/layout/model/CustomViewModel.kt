@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import android.content.Context
 import android.view.View
 import com.urbanairship.android.layout.AirshipCustomViewArguments
@@ -45,7 +46,7 @@ internal class CustomViewModel(
             )
         )
 
-        return handler?.onCreateView(context, args)
+        return handler?.onCreateView(EnvironmentConditionsContext.unwrap(context), args)
     }
 
     override fun onCreateView(

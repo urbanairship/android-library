@@ -92,6 +92,7 @@ public class MessageViewModelTest {
             coEvery { getMessage("native-id") } returns message
             coEvery { loadMessageLayout(message) } returns layout
             every { makeViewStateStorage("native-id") } returns storage
+            every { layoutRandomSeed(message) } returns "native-id:channel-id"
         }
         val viewModel = MessageViewModel(inbox)
 
@@ -111,6 +112,7 @@ public class MessageViewModelTest {
 
         coVerify { storage.prepare("restore-1") }
         assertThat(viewModel.viewStateStorage).isEqualTo(storage)
+        assertThat(viewModel.layoutRandomSeed).isEqualTo("native-id:channel-id")
     }
 
     @Test
@@ -122,6 +124,7 @@ public class MessageViewModelTest {
             coEvery { getMessage("native-id") } returns message
             coEvery { loadMessageLayout(message) } returns layout
             every { makeViewStateStorage("native-id") } returns storage
+            every { layoutRandomSeed(message) } returns "native-id:channel-id"
         }
         val viewModel = MessageViewModel(inbox)
 

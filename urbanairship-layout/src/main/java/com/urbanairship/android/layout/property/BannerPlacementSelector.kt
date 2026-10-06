@@ -6,16 +6,14 @@ import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
-public class BannerPlacementSelector public constructor(
+public class BannerPlacementSelector(
     @JvmField public val placement: BannerPlacement,
-    @JvmField public val windowSize: WindowSize?,
-    @JvmField public val orientation: Orientation?
+    /** What the environment has to match for [placement] to apply. */
+    @JvmField public val conditions: SelectorConditions
 ) {
 
     public companion object {
         private const val KEY_PLACEMENT = "placement"
-        private const val KEY_WINDOW_SIZE = "window_size"
-        private const val KEY_ORIENTATION = "orientation"
 
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): BannerPlacementSelector {
@@ -23,8 +21,7 @@ public class BannerPlacementSelector public constructor(
 
             return BannerPlacementSelector(
                 placement = BannerPlacement.fromJson(content.require(KEY_PLACEMENT)),
-                windowSize = content[KEY_WINDOW_SIZE]?.let(WindowSize::from),
-                orientation = content[KEY_ORIENTATION]?.let(Orientation::from)
+                conditions = SelectorConditions.fromJson(content)
             )
         }
 

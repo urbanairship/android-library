@@ -86,6 +86,12 @@ internal enum class DebugScreen(
         descRes = R.string.ua_debug_app_info_desc,
         icon = R.drawable.ic_smartphone,
         isTopLevel = true,
+    ),
+    AI(
+        titleRes = R.string.ua_debug_ai_title,
+        descRes = R.string.ua_debug_ai_desc,
+        icon = R.drawable.ic_smart_toy,
+        isTopLevel = true,
     );
 
 

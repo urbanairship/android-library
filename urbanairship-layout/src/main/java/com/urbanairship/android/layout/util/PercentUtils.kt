@@ -6,16 +6,20 @@ import java.util.regex.Pattern
 public object PercentUtils {
 
     private val PATTERN_NON_NUMERIC: Pattern = Pattern.compile("[^\\d.]")
-    private val PATTERN_PERCENT_W_SYMBOL: Pattern = Pattern.compile("^\\d{1,3}%$")
 
-    public fun isPercent(string: String): Boolean {
-        return PATTERN_PERCENT_W_SYMBOL.matcher(string).matches()
-    }
+    /** Returns whether [string] is a percentage: anything ending in `%`, as iOS reads one. */
+    public fun isPercent(string: String): Boolean = string.endsWith("%")
 
-    public fun parse(percentString: String): Float {
-        val number = digits(percentString)
-        return number.toFloat() / 100f
-    }
+    /**
+     * Returns [percentString] as a fraction, such as `0.125` for `12.5%`.
+     *
+     * The `%` is optional. A number that doesn't parse, such as in `%`, reads as `0`, as on iOS.
+     *
+     * @param percentString the percentage, with or without its `%`.
+     * @return the percentage divided by 100.
+     */
+    public fun parse(percentString: String): Float =
+        (percentString.removeSuffix("%").toFloatOrNull() ?: 0f) / 100f
 
     public fun digits(number: String): String {
         return PATTERN_NON_NUMERIC.matcher(number).replaceAll("")

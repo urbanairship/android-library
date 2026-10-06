@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasStateScopes
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.ViewInfo
@@ -48,7 +49,9 @@ internal class AsyncLayoutModel(
     private val factory: ModelFactory,
     private val requestSession: RequestSession = Airship.runtimeConfig.requestSession,
     private val contactIdFetcher: () -> String? = { Airship.contact.lastContactId },
-    private val channelIdFetcher: () -> String? = { Airship.channel.id }
+    private val channelIdFetcher: () -> String? = { Airship.channel.id },
+    /** The owner of the async content this model is part of, or `null` in the static tree. */
+    private val enclosingScopeOwner: ThomasStateScopes.Owner? = null
 ) : BaseModel<AsyncLayoutView, AsyncViewControllerInfo, BaseModel.Listener>(
     viewInfo = viewInfo,
     environment = environment,
@@ -61,6 +64,9 @@ internal class AsyncLayoutModel(
     private var viewEnvironment: ViewEnvironment? = null
     private var itemProperties: ItemProperties? = null
     private var cacheManager: AssetCacheManager? = null
+
+    /** The owner of the controller scopes in the content on display. */
+    private var contentScopeOwner: ThomasStateScopes.Owner? = null
 
     init {
         environment.layoutEvents
@@ -251,13 +257,16 @@ internal class AsyncLayoutModel(
         viewEnvironment: ViewEnvironment,
         itemProperties: ItemProperties?,
     ) {
+        val scopeOwner = enclosingScopeOwner?.child() ?: environment.stateScopes.owner()
         val model = runCatching {
             factory.create(
                 info = info,
                 environment = environment,
-                parentLayoutState = environment.layoutState
+                parentLayoutState = environment.layoutState,
+                scopeOwner = scopeOwner
             )
         }.getOrElse {
+            scopeOwner.release()
             UALog.e(it) { "Failed to inflate async layout JSON" }
             asyncState.update { current ->
                 State.AsyncView.Error(
@@ -269,6 +278,9 @@ internal class AsyncLayoutModel(
             return@pushViewToDisplay
         }
 
+        // After the build, so a scope both builds use keeps reporting instead of being dropped and rebuilt.
+        contentScopeOwner?.release()
+        contentScopeOwner = scopeOwner
         _state.update { ContentToDisplay(model, viewEnvironment, itemProperties) }
     }
 

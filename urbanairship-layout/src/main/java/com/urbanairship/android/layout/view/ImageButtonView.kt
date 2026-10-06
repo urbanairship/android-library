@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
@@ -34,10 +35,10 @@ import kotlinx.coroutines.flow.Flow
 
 internal class ImageButtonView(
     context: Context,
-    model: ImageButtonModel,
+    private val model: ImageButtonModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-    ) : FrameLayout(context), BaseView, TappableView {
+    ) : FrameLayout(context), BaseView, TappableView, EnvironmentConditionsSensitive {
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
     private var currentState: ThomasState? = null
@@ -50,7 +51,7 @@ internal class ImageButtonView(
 
         when (val image = model.viewInfo.image) {
             is Image.Url -> {
-                val resolvedUrl = image.resolveUrl(ResourceUtils.isUiModeNight(context))
+                val resolvedUrl = image.resolveUrl(SelectorEnvironment.from(context))
                 lastImageUrl = resolvedUrl
                 val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
                 val url = cached?.path ?: resolvedUrl
@@ -137,7 +138,7 @@ internal class ImageButtonView(
                 currentState = state
                 val resolvedImage = model.resolveImage(state)
                 if (resolvedImage is Image.Url) {
-                    val newUrl = resolvedImage.resolveUrl(ResourceUtils.isUiModeNight(context))
+                    val newUrl = resolvedImage.resolveUrl(SelectorEnvironment.from(context))
                     if (newUrl != lastImageUrl) {
                         lastImageUrl = newUrl
                         val cached = viewEnvironment.imageCache()?.get(newUrl)
@@ -169,6 +170,13 @@ internal class ImageButtonView(
                 contentDescription = it
             }
         }
+    }
+
+    /** Tints its icon again; a URL image resolves with every state update already. */
+    override fun onEnvironmentConditionsChanged() {
+        val icon = model.resolveImage(currentState) as? Image.Icon ?: return
+        button.setImageDrawable(icon.getDrawable(context, isEnabled))
+        button.imageTintList = LayoutUtils.pressedColorStateList(icon.tint.resolve(context))
     }
 
     private fun applyImageRippleEffect(view: ImageButton, tapEffect: TapEffect, radii: FloatArray?) {

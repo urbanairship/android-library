@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.environment
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
+import com.urbanairship.android.layout.info.ThomasFormRegistrationOverrides
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.ThomasFormField
@@ -22,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -111,7 +113,19 @@ internal class ThomasForm(
         return feed.changes.value.lastProcessedStatus(identifier)
     }
 
-    suspend fun prepareSubmit(): Pair<ReportingEvent.FormResult, FormInfo>? {
+    /**
+     * Validates the form and marks it submitted.
+     *
+     * @param registrationOverrides The form's registration overrides, applied to the result's
+     * channels.
+     * @param thomasState The layout state override predicates and values read from; its form is
+     * replaced with the submitted one.
+     * @return The form result and reporting context, or `null` if the form isn't valid.
+     */
+    suspend fun prepareSubmit(
+        registrationOverrides: ThomasFormRegistrationOverrides? = null,
+        thomasState: StateFlow<ThomasState>? = null
+    ): Pair<ReportingEvent.FormResult, FormInfo>? {
         if (!validate()) {
             return null
         }
@@ -123,8 +137,12 @@ internal class ThomasForm(
                     data = submitted.formResult(),
                     context = LayoutData.EMPTY, //will be set later
                     attributes = submitted.attributes(),
-                    channels = submitted.channels()
+                    channels = submitted.channels(
+                        registrationOverrides = registrationOverrides,
+                        state = thomasState?.value?.copy(form = submitted)?.toJsonValue()
+                            ?: JsonValue.NULL
                     )
+                )
                 cont.resume(Pair(event, submitted.reportingContext()))
                 submitted
             }

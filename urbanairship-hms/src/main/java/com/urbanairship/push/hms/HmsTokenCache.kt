@@ -28,7 +28,7 @@ internal class HmsTokenCache @VisibleForTesting constructor() {
         synchronized(lock) {
             if (token == null) {
                 token = readToken(context)
-                UALog.v("HMS token from cache: $token")
+                UALog.v("Read HMS token from cache.")
             }
             return token
         }
@@ -42,7 +42,7 @@ internal class HmsTokenCache @VisibleForTesting constructor() {
             this.token = token
             if (token != null) {
                 writeToken(context, token)
-                UALog.v("Cached HMS token %s", token)
+                UALog.v("Cached HMS token.")
             } else {
                 deleteToken(context)
                 UALog.v("Deleted cached HMS token")

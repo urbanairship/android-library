@@ -164,8 +164,8 @@ public open class ActionRunRequest {
     public open fun runSync(): ActionResult {
         return try {
             runBlocking { runSuspending().result }
-        } catch (ex: InterruptedException) {
-            UALog.e("Failed to run action with arguments ${createActionArguments()}")
+        } catch (ex: Exception) {
+            UALog.e(ex, "Failed to run action with arguments ${createActionArguments()}")
             ActionResult.newErrorResult(ex)
         }
     }
@@ -213,7 +213,15 @@ public open class ActionRunRequest {
         val handler = Handler(runLooper)
 
         scope.launch {
-            val result = runSuspending()
+            // Guarantees the callback contract holds no matter what an action throws, so
+            // anything awaiting it (e.g. ActionRunner.runSuspending) can't hang forever.
+            val result = try {
+                runSuspending()
+            } catch (e: Exception) {
+                val arguments = createActionArguments()
+                UALog.e(e, "Failed to run action with arguments $arguments")
+                ActionRunResult(arguments, ActionResult.newErrorResult(e))
+            }
 
             handler.post { callback?.onFinish(result.arguments, result.result) }
         }
@@ -299,11 +307,11 @@ public open class ActionRunRequest {
                     UALog.i( "Action $name will not be run. Registry predicate rejected the arguments: $arguments")
                     return@async  ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS)
                 } else {
-                    return@async  entry.getActionForSituation(situation).run(arguments)
+                    return@async entry.getActionForSituation(situation).runSuspending(arguments)
                 }
             }
 
-            action?.let { return@async  it.run(arguments) }
+            action?.let { return@async it.runSuspending(arguments) }
 
             ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND)
         }.await()

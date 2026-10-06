@@ -247,7 +247,8 @@ internal class SceneScreenshotTest(
         val modelEnvironment = viewModel.getOrCreateEnvironment(
             reporter = mockk<Reporter>(relaxUnitFun = true),
             displayTimer = DisplayTimer(activity),
-            actionRunner = { _, _ -> }
+            actionRunner = { _, _ -> },
+            shuffleSeed = SceneStubs.SHUFFLE_SEED
         )
         return viewModel.getOrCreateModel(layout.view, modelEnvironment)
     }

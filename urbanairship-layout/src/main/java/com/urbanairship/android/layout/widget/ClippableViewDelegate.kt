@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.annotation.Dimension
 import androidx.annotation.MainThread
+import com.urbanairship.android.layout.R
 
 /**
  * View delegate that supports clipping a view to a border radius.
@@ -38,6 +39,8 @@ internal class ClippableViewDelegate {
      */
     @MainThread
     fun setClipPathBorderRadii(view: View, radii: FloatArray?) {
+        view.setTag(R.id.ua_border_radii, radii)
+        view.invalidate()
         val radii = radii ?: kotlin.run {
             view.clipToOutline = false
             view.outlineProvider = ViewOutlineProvider.BOUNDS

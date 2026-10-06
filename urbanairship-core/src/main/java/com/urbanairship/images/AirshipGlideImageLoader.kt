@@ -92,7 +92,13 @@ internal object AirshipGlideImageLoader : ImageLoader {
             // Upscaling will be handled by the ImageView's scaleType.
             .downsample(DownsampleStrategy.CENTER_INSIDE)
             .dontTransform()
-            .transition(withCrossFade(100))
+            .apply {
+                // See ImageRequestOptions.disableTransition -- a crossfade never completes against
+                // a target view that's never attached to a window.
+                if (!imageRequestOptions.disableTransition) {
+                    transition(withCrossFade(100))
+                }
+            }
             .into(
                 AirshipImageViewTarget(
                     imageView,

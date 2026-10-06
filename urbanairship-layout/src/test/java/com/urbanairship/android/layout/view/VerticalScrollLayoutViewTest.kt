@@ -50,6 +50,7 @@ public class VerticalScrollLayoutViewTest {
 
         val model: VerticalScrollLayoutModel = mockk(relaxed = true)
         every { model.view } returns childModel
+        every { model.viewInfo } returns mockk(relaxed = true)
 
         val viewEnvironment: ViewEnvironment = mockk(relaxed = true)
         every { viewEnvironment.layoutVersion } returns layoutVersion

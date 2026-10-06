@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ai
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.ai.Evaluation
@@ -45,13 +46,16 @@ internal data class ThomasAIStatus(
  * reported.
  * @param additionalContext Layout-authored context, appended after the app provider's.
  * @param subjectHints Layout-authored data passed through to the app's context provider.
+ *
+ * @hide
  */
-internal data class ThomasAIInferenceRequest(
-    val prompt: String,
-    val text: String,
-    val outputSchema: AirshipJsonSchema,
-    val additionalContext: EvaluationContext = EvaluationContext.EMPTY,
-    val subjectHints: Map<String, String> = emptyMap()
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class ThomasAIInferenceRequest @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
+    public val prompt: String,
+    public val text: String,
+    public val outputSchema: AirshipJsonSchema,
+    public val additionalContext: EvaluationContext = EvaluationContext.EMPTY,
+    public val subjectHints: Map<String, String> = emptyMap()
 )
 
 /**
@@ -148,8 +152,15 @@ internal class DefaultThomasAIInference(
  *
  * The output shape is layout-defined, so the raw JSON *is* the output — the scene writes it
  * into layout state as-is rather than decoding a fixed type.
+ *
+ * Public (rather than `internal`) so the debug UI can drive the exact production prompt —
+ * building `instructions()`/`prompt(context:)` from it directly — instead of a hand-copied
+ * duplicate that could drift.
+ *
+ * @hide
  */
-internal class TextInputInferenceEvaluation(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class TextInputInferenceEvaluation @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
     private val request: ThomasAIInferenceRequest
 ) : Evaluation<JsonValue, SceneTextInputSubject> {
 

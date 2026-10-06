@@ -38,9 +38,4 @@ internal class CropImageView(
     fun setImagePosition(position: Position?) {
         delegate.setImagePosition(position)
     }
-
-    /** See [CropImageDelegate.setWholeImagePosition]. */
-    fun setWholeImagePosition(position: Position?) {
-        delegate.setWholeImagePosition(position)
-    }
 }

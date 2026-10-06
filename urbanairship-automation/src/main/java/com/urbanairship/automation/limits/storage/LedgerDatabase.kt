@@ -30,7 +30,10 @@ internal abstract class LedgerDatabase : RoomDatabase() {
                 context,
                 LedgerDatabase::class.java,
                 path
-            ).fallbackToDestructiveMigrationOnDowngrade(true).build()
+            )
+                .fallbackToDestructiveMigrationOnDowngrade(true)
+                .fallbackToDestructiveMigration(true)
+                .build()
         }
 
         @VisibleForTesting

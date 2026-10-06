@@ -183,6 +183,14 @@ tasks.register('fetchLayouts', Exec) {
     commandLine 'bash', './scripts/fetch-layouts.sh'
 }
 
+// The same fetch plus the per-page scenes cut from each pager, which is what the
+// screenshot sweep needs and roughly twice the Scene list to scroll. `fetchLayouts`
+// is the way back to the short list.
+tasks.register('fetchLayoutsUitests', Exec) {
+    workingDir rootDir
+    commandLine 'bash', './scripts/fetch-layouts.sh', '--uitests'
+}
+
 // Warn-only reminder to fetch the Scene fixtures if they are missing. Never
 // fails the build: the devapp must build without access to thomas-layouts
 // (the Scene list just shows empty).

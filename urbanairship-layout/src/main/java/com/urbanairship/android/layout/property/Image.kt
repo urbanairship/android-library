@@ -43,8 +43,8 @@ public sealed class Image(
         public val urlSelectors: List<MediaUrlSelector> = emptyList(),
     ) : Image(Type.URL) {
 
-        public fun resolveUrl(isDarkMode: Boolean): String =
-            MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
+        internal fun resolveUrl(environment: SelectorEnvironment): String =
+            MediaUrlSelector.resolve(url, urlSelectors, environment)
 
         internal companion object {
             private const val KEY_URL = "url"

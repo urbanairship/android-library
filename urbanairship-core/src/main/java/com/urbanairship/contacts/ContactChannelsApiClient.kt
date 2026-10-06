@@ -61,7 +61,11 @@ internal class ContactChannelsApiClient(
                                 commercialOptedIn = map.isoDateAsInstant(COMMERCIAL_OPTED_IN_KEY),
                                 commercialOptedOut = map.isoDateAsInstant(COMMERCIAL_OPTED_OUT_KEY),
                                 transactionalOptedIn = map.isoDateAsInstant(TRANSACTIONAL_OPTED_IN_KEY),
-                                transactionalOptedOut = map.isoDateAsInstant(TRANSACTIONAL_OPTED_OUT_KEY)
+                                transactionalOptedOut = map.isoDateAsInstant(TRANSACTIONAL_OPTED_OUT_KEY),
+                                openTrackingOptedIn = map.isoDateAsInstant(OPEN_TRACKING_OPTED_IN_KEY),
+                                openTrackingOptedOut = map.isoDateAsInstant(OPEN_TRACKING_OPTED_OUT_KEY),
+                                clickTrackingOptedIn = map.isoDateAsInstant(CLICK_TRACKING_OPTED_IN_KEY),
+                                clickTrackingOptedOut = map.isoDateAsInstant(CLICK_TRACKING_OPTED_OUT_KEY)
                             )
                         )
                     }
@@ -98,6 +102,10 @@ internal class ContactChannelsApiClient(
         private const val COMMERCIAL_OPTED_OUT_KEY = "commercial_opted_out"
         private const val TRANSACTIONAL_OPTED_IN_KEY = "transactional_opted_in"
         private const val TRANSACTIONAL_OPTED_OUT_KEY = "transactional_opted_out"
+        private const val OPEN_TRACKING_OPTED_IN_KEY = "open_tracking_opted_in"
+        private const val OPEN_TRACKING_OPTED_OUT_KEY = "open_tracking_opted_out"
+        private const val CLICK_TRACKING_OPTED_IN_KEY = "click_tracking_opted_in"
+        private const val CLICK_TRACKING_OPTED_OUT_KEY = "click_tracking_opted_out"
 
         // SMS
         private const val SMS_TYPE = "sms"

@@ -68,12 +68,7 @@ internal class DefaultAssetFileManager(
     @Throws(IOException::class)
     override fun ensureCacheDirectory(identifier: String): File {
         ensureRootCacheDirectory()
-        val subDir = File(rootFolder, identifier)
-        val normalizedRoot = rootFolder.toPath().normalize()
-        val normalizedSubDir = subDir.toPath().normalize()
-        if (!normalizedSubDir.startsWith(normalizedRoot)) {
-            throw IOException("Invalid cache identifier, resolves outside the cache root: $identifier")
-        }
+        val subDir = resolveCacheSubDirectory(identifier)
 
         if (!subDir.exists()) {
             if (!subDir.mkdirs()) {
@@ -119,8 +114,9 @@ internal class DefaultAssetFileManager(
         UALog.v { "Moved asset file from '$from' to '$to'" }
     }
 
+    @Throws(IOException::class)
     override fun clearAssets(identifier: String) {
-        FileUtils.deleteRecursively(File(rootFolder, identifier))
+        FileUtils.deleteRecursively(resolveCacheSubDirectory(identifier))
     }
 
     @Throws(IOException::class)
@@ -132,6 +128,17 @@ internal class DefaultAssetFileManager(
         }
 
         return rootFolder.toUri()
+    }
+
+    @Throws(IOException::class)
+    private fun resolveCacheSubDirectory(identifier: String): File {
+        val subDir = File(rootFolder, identifier)
+        val normalizedRoot = rootFolder.toPath().normalize()
+        val normalizedSubDir = subDir.toPath().normalize()
+        if (normalizedSubDir == normalizedRoot || !normalizedSubDir.startsWith(normalizedRoot)) {
+            throw IOException("Invalid cache identifier, resolves outside the cache root: $identifier")
+        }
+        return subDir
     }
 
     companion object {

@@ -10,14 +10,14 @@ import android.widget.SpinnerAdapter
 import android.widget.TextView
 import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.property.SmsLocale
-import com.urbanairship.android.layout.property.TextInputTextAppearance
+import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.util.airshipEmojiFlag
 
 internal class SmsLocaleAdapter(
     private val context: Context,
     private val locales: List<SmsLocale>,
-    private val appearance: TextInputTextAppearance?
+    private val appearance: TextAppearance?
 ): BaseAdapter(), SpinnerAdapter {
 
     override fun getCount(): Int = locales.size

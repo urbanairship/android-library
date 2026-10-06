@@ -13,7 +13,6 @@ import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.view.ImageButtonView
 import com.urbanairship.android.layout.view.MediaView
 import java.lang.ref.WeakReference
-import kotlin.math.min
 
 /**
  * Delegate for shared `ImageView` cropping logic. Used by `CropImageButton` and `CropImageView`,
@@ -25,7 +24,6 @@ internal class CropImageDelegate(view: ImageView) {
 
     private var offsetHorizontal = DEFAULT_OFFSET
     private var offsetVertical = DEFAULT_OFFSET
-    private var fitsWhole = false
 
     private var parentWidthSpec: Int = 0
     private var parentHeightSpec: Int = 0
@@ -58,30 +56,6 @@ internal class CropImageDelegate(view: ImageView) {
         applyCropOffset()
     }
 
-    /**
-     * Paints the whole image inside the view, anchored at [position], or hands the view back to
-     * [ScaleType.FIT_CENTER].
-     *
-     * An image fitted whole into a view wider or taller than its own shape leaves slack, and
-     * `FIT_CENTER` always splits that evenly. This gives it to the anchor instead.
-     *
-     * @param position where to anchor the image, or null to centre it.
-     */
-    fun setWholeImagePosition(position: Position?) {
-        val view = weakView.get() ?: return
-
-        fitsWhole = position != null
-        if (position == null) {
-            view.setScaleType(ScaleType.FIT_CENTER)
-            return
-        }
-
-        view.setScaleType(ScaleType.MATRIX)
-        offsetHorizontal = position.offsetHorizontal()
-        offsetVertical = position.offsetVertical()
-        applyCropOffset()
-    }
-
     private fun applyCropOffset() {
         val view = weakView.get() ?: return
         val drawable = view.getDrawable() ?: return
@@ -94,19 +68,6 @@ internal class CropImageDelegate(view: ImageView) {
         if (drawableWidth <= 0 || drawableHeight <= 0) return
         val viewWidth: Int = with(view) { width - paddingLeft - paddingRight }
         val viewHeight: Int = with(view) { height - paddingTop - paddingBottom }
-
-        if (fitsWhole) {
-            view.setImageMatrix(
-                view.getImageMatrix().apply {
-                    setRectToRect(
-                        RectF(0f, 0f, drawableWidth.toFloat(), drawableHeight.toFloat()),
-                        wholeImageBounds(drawableWidth, drawableHeight, viewWidth, viewHeight),
-                        Matrix.ScaleToFit.FILL
-                    )
-                }
-            )
-            return
-        }
 
         val scale = when {
             // 100% width, auto height -> scale to fit width
@@ -139,28 +100,6 @@ internal class CropImageDelegate(view: ImageView) {
         }
 
         view.setImageMatrix(matrix)
-    }
-
-    /**
-     * The rectangle the whole image is painted into: as large as it fits in the view without
-     * overrunning either axis, with whatever that leaves over given to the anchor.
-     */
-    private fun wholeImageBounds(
-        drawableWidth: Int,
-        drawableHeight: Int,
-        viewWidth: Int,
-        viewHeight: Int
-    ): RectF {
-        val scale = min(
-            viewWidth.toFloat() / drawableWidth.toFloat(),
-            viewHeight.toFloat() / drawableHeight.toFloat()
-        )
-        val width = drawableWidth * scale
-        val height = drawableHeight * scale
-        val left = offsetHorizontal * (viewWidth - width)
-        val top = offsetVertical * (viewHeight - height)
-
-        return RectF(left, top, left + width, top + height)
     }
 
     private fun Position?.offsetHorizontal(): Float = when (this?.horizontal) {

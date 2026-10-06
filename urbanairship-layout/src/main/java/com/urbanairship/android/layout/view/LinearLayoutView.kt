@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.view
 
 import android.animation.LayoutTransition
 import android.content.Context
+import android.graphics.Canvas
 import android.view.Gravity.CENTER_HORIZONTAL
 import android.view.Gravity.CENTER_VERTICAL
 import android.view.View
@@ -15,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutInfo
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
@@ -22,14 +24,22 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LinearLayoutModel
+import com.urbanairship.android.layout.property.Background as BackgroundLayer
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size.DimensionType.ABSOLUTE
 import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
 import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
+import com.urbanairship.android.layout.widget.BackgroundsPainter
+import com.urbanairship.android.layout.widget.backgroundsBoxHeight
+import com.urbanairship.android.layout.widget.backgroundsBoxWidth
+import com.urbanairship.android.layout.widget.paintBackgroundsBox
+import com.urbanairship.android.layout.widget.drawInsideStroke
+import com.urbanairship.android.layout.widget.VideoBackgroundChildren
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
+import com.urbanairship.android.layout.widget.ListItemFrame
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout
 
@@ -37,20 +47,52 @@ internal class LinearLayoutView(
     context: Context,
     private val model: LinearLayoutModel,
     private val viewEnvironment: ViewEnvironment
-) : WeightlessLinearLayout(context), BaseView, Clippable, ShrinkableView {
+) : WeightlessLinearLayout(context), BaseView, Clippable, ShrinkableView, ButtonDescriptionSource {
 
     private val clippableViewDelegate: ClippableViewDelegate = ClippableViewDelegate()
 
     private val isListView: Boolean = model.viewInfo.accessibilityRole?.type == LinearLayoutInfo.AccessibilityRole.Type.LIST_VIEW
 
+    // Never touched by measure/layout above -- see `BackgroundsPainter`.
+    private val backgroundsPainter = BackgroundsPainter(context, viewEnvironment) {
+        // postInvalidate(), not invalidate() -- the image loader's onImageLoaded callback
+        // is not guaranteed to run on the UI thread, and invalidate() silently no-ops when
+        // called off it.
+        postInvalidate()
+    }
+
+    private val videoBackgrounds = VideoBackgroundChildren(
+        layers = model.viewInfo.backgrounds.orEmpty().map { it to null },
+        models = model.videoBackgroundModels,
+        context = context,
+        viewEnvironment = viewEnvironment
+    )
+
+    /** The view stacked for each item: its own, or the list-item frame around it. */
+    private val itemViews = mutableMapOf<LinearLayoutModel.Item, View>()
+
+    /** The items in the order they're stacked and read. */
+    private var orderedItems: List<LinearLayoutModel.Item> = model.orderedItems()
 
     init {
+        backgroundsPainter.backgrounds = model.viewInfo.backgrounds
+        backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
+        videoBackgrounds.addTo(this)
         clipChildren = false
         orientation = if (model.viewInfo.direction == Direction.VERTICAL) OrientationMode.VERTICAL else OrientationMode.HORIZONTAL
         gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
-        addItems(model.items)
+        addItems(orderedItems)
 
         model.listener = object : BaseModel.Listener {
+            // An image layer resolves its own `view_overrides` against this; a video layer is
+            // its own `MediaModel` and gets the state through that.
+            override fun onStateUpdated(state: ThomasState) {
+                backgroundsPainter.state = state
+                if (model.hasItemOverrides) {
+                    restack(model.orderedItems(state))
+                }
+            }
+
             override fun setVisibility(visible: Boolean) {
                 isVisible = visible
             }
@@ -106,21 +148,59 @@ internal class LinearLayoutView(
 
     override fun isShrinkable(): Boolean = model.isShrinkable
 
-    private fun addItems(items: List<LinearLayoutModel.Item>) {
-        val listItems = if (isListView) {
-            items.filter { it.info.isListItem }.map { it.info }
-        } else {
-            items
-        }
+    /** The items as they're stacked, leaving out any background layer drawn as a child. */
+    override fun childrenInReadingOrder(): List<View> = orderedItems.mapNotNull { itemViews[it] }
 
-        for (i in items.indices) {
-            val (itemInfo, itemModel) = items[i]
+    override fun isExcludedFromStack(child: View): Boolean = videoBackgrounds.contains(child)
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        // Left out of the stack above, so it never got measured or placed there.
+        videoBackgrounds.placeInto(
+            backgroundsPainter, backgroundsBoxWidth, backgroundsBoxHeight, paddingLeft, paddingTop
+        )
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        // Children stop inside the stroke, so a rounded one isn't painted over at the corners.
+        drawInsideStroke(canvas) {
+            paintBackgroundsBox(canvas) { w, h -> backgroundsPainter.drawLayersBefore(canvas, w, h) }
+            super.dispatchDraw(canvas)
+        }
+    }
+
+    override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        // Anything stacked above a layer drawn as a real view has to blend against that view's
+        // live pixels, so it goes down here rather than before the children.
+        val attachedIndex = videoBackgrounds.indexOf(child)
+        if (attachedIndex >= 0) {
+            paintBackgroundsBox(canvas) { w, h ->
+                backgroundsPainter.drawLayersAfter(canvas, w, h, attachedIndex)
+            }
+        }
+        return result
+    }
+
+    /** Moves the item views into [items]' order, without detaching them from the window. */
+    private fun restack(items: List<LinearLayoutModel.Item>) {
+        if (items == orderedItems) return
+        orderedItems = items
+        val views = items.map { itemViews.getValue(it) }
+        views.forEach { detachViewFromParent(it) }
+        views.forEach { attachViewToParent(it, -1, it.layoutParams) }
+        requestLayout()
+        invalidate()
+    }
+
+    private fun addItems(items: List<LinearLayoutModel.Item>) {
+        for (item in items) {
+            val (itemInfo, itemModel) = item
             val lp = generateItemLayoutParams(itemInfo)
             val itemView = itemModel.createView(context, viewEnvironment, ItemProperties(itemInfo.size, itemInfo.position))
 
             if (isListView && itemInfo.isListItem) {
-                val listIndex = listItems.indexOf(itemInfo)
-                val accessibilityWrapper = FrameLayout(context).apply {
+                val accessibilityWrapper = ListItemFrame(context).apply {
                     layoutParams = lp
                 }
 
@@ -128,6 +208,7 @@ internal class LinearLayoutView(
                     override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
                         super.onInitializeAccessibilityNodeInfo(host, info)
 
+                        val listIndex = orderedItems.filter { it.info.isListItem }.indexOf(item)
                         val collectionItemInfo = AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(
                             listIndex,     // rowIndex
                             1,     // rowSpan
@@ -144,9 +225,11 @@ internal class LinearLayoutView(
 
                 accessibilityWrapper.addView(itemView)
                 addViewInLayout(accessibilityWrapper, -1, lp, true)
+                itemViews[item] = accessibilityWrapper
             } else {
                 itemView.layoutParams = lp
                 addViewInLayout(itemView, -1, lp, true)
+                itemViews[item] = itemView
             }
         }
     }

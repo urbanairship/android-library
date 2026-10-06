@@ -67,6 +67,12 @@ public class MessageViewModel internal constructor(
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         get() = _viewStateStorage
 
+    private var _layoutRandomSeed: String? = null
+    /** The current native message's `randomSeed`; see [Inbox.layoutRandomSeed]. */
+    public val layoutRandomSeed: String?
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        get() = _layoutRandomSeed
+
 
     /**
      * The currently loaded [Message], if we have one.
@@ -174,6 +180,7 @@ public class MessageViewModel internal constructor(
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
                     _viewStateStorage = makeViewStateStorage(message.id, layout)
+                    _layoutRandomSeed = inbox.layoutRandomSeed(message)
 
                     val content = MessageViewState.MessageContent.Content.Native(layout)
                     MessageViewState.MessageContent(message, content)

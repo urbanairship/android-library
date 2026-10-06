@@ -207,6 +207,20 @@ public class Inbox @VisibleForTesting internal constructor(
         return scope.async { inboxJobHandler.loadAirshipLayout(message) }.await()
     }
 
+    /**
+     * Returns the seed a native message's `randomize_children` orders are derived from:
+     * `<message id>:<channel id>`, or the message ID alone before the channel is created.
+     *
+     * Each device sees one order for a message every time it's opened, and different devices
+     * see different orders.
+     *
+     * @param message the native message.
+     * @return the seed to pass as the layout's `randomSeed`.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun layoutRandomSeed(message: Message): String =
+        listOfNotNull(message.id, airshipChannel.id).joinToString(":")
+
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun makeViewStateStorage(messageId: String): LayoutDataStorage {
         return PersistentLayoutDataStorage(

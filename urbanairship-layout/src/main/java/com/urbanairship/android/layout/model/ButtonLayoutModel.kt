@@ -9,10 +9,6 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
-import com.urbanairship.android.layout.info.LabelInfo
-import com.urbanairship.android.layout.info.MediaInfo
-import com.urbanairship.android.layout.info.ViewGroupInfo
-import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.ButtonLayoutView
 
@@ -31,6 +27,14 @@ internal class ButtonLayoutModel(
     properties = properties,
 ) {
 
+    /** See [videoBackgroundModels] -- a playable layer is a real child view, not painted. */
+    val videoBackgroundModels = videoBackgroundModels(
+        layers = viewInfo.backgrounds,
+        pagerState = environment.layoutState.pager,
+        environment = environment,
+        properties = properties
+    )
+
     /** Wraps a view without resizing it, so what it wraps answers for it. */
     override fun establishesLength(direction: Direction): Boolean =
         view.establishesLength(direction)
@@ -38,7 +42,7 @@ internal class ButtonLayoutModel(
     override var isShrinkable: Boolean = view.isShrinkable
 
     override fun contentDescription(context: Context): String? {
-        return viewInfo.contentDescriptionResolver(context)
+        return context.resolveContentDescription(viewInfo.contentDescription, viewInfo.localizedContentDescription)
     }
 
     override fun reportingDescription(context: Context): String {
@@ -51,44 +55,6 @@ internal class ButtonLayoutModel(
         id = viewId
     }
 }
-
-private val ViewInfo.childContentDescriptionResolvers: List<(Context) -> String?>
-    get() {
-        return when (this) {
-            is LabelInfo -> listOf { context: Context ->
-                context.resolveContentDescription(
-                    this.contentDescription, this.localizedContentDescription
-                ) ?: text
-            }
-
-            is MediaInfo -> listOf { context: Context ->
-                context.resolveContentDescription(
-                    this.contentDescription, this.localizedContentDescription
-                )
-            }
-
-            is ButtonLayoutInfo -> emptyList()
-
-            is ViewGroupInfo<*> -> this.children.toList()
-                .flatMap { it.info.childContentDescriptionResolvers }
-
-            else -> emptyList()
-        }
-    }
-
-private val ButtonLayoutInfo.contentDescriptionResolver: (Context) -> String?
-    get() {
-        if (contentDescription != null || localizedContentDescription != null) {
-            return { context ->
-                context.resolveContentDescription(
-                    contentDescription, localizedContentDescription
-                )
-            }
-        }
-
-        val childResolvers = this.view.childContentDescriptionResolvers
-        return { context -> childResolvers.mapNotNull { it.invoke(context) }.joinToString(", ") }
-    }
 
 private val ButtonLayoutInfo.reportingDescriptionResolver: (Context) -> String
     get() = { context ->

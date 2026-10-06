@@ -172,6 +172,18 @@ public class InboxTest {
         assertEquals(expected, payload)
     }
 
+    @Test
+    public fun testLayoutRandomSeedIsTheMessageAndChannelIds() {
+        every { mockChannel.id } returns "channel-id"
+        assertEquals("message-id:channel-id", inbox.layoutRandomSeed(createMessage("message-id")))
+    }
+
+    @Test
+    public fun testLayoutRandomSeedIsTheMessageIdWithoutAChannel() {
+        every { mockChannel.id } returns null
+        assertEquals("message-id", inbox.layoutRandomSeed(createMessage("message-id")))
+    }
+
     /** Test channel creation updates the user. */
     @Test
     public fun testChannelCreateUpdatesUser(): TestResult = runTest {

@@ -26,4 +26,8 @@ public data class Request(
         headers = emptyMap(),
         followRedirects = followRedirects
     )
+
+    override fun toString(): String = "Request(url=$url, method=$method, auth=$auth, " +
+            "body=${body?.javaClass?.simpleName}, headers=${headers.keys}, " +
+            "followRedirects=$followRedirects)"
 }

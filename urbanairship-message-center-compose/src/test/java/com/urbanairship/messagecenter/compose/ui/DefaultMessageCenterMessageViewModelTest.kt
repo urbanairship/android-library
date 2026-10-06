@@ -128,6 +128,7 @@ public class DefaultMessageCenterMessageViewModelTest {
             coEvery { getMessage("native-id") } returns message
             coEvery { loadMessageLayout(message) } returns layout
             every { makeViewStateStorage("native-id") } returns storage
+            every { layoutRandomSeed(message) } returns "native-id:channel-id"
         }
         val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
 
@@ -136,7 +137,7 @@ public class DefaultMessageCenterMessageViewModelTest {
 
             viewModel.handle(Action.LoadMessage("native-id"))
             assertThat(awaitItem()).isEqualTo(State.Loading("native-id"))
-            assertThat(awaitItem()).isEqualTo(State.MessageContent(message, Content.Native(layout, storage)))
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(message, Content.Native(layout, storage, "native-id:channel-id")))
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -152,6 +153,7 @@ public class DefaultMessageCenterMessageViewModelTest {
             coEvery { getMessage("native-id") } returns message
             coEvery { loadMessageLayout(message) } returns layout
             every { makeViewStateStorage("native-id") } returns storage
+            every { layoutRandomSeed(message) } returns "native-id:channel-id"
         }
         val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
 
@@ -160,7 +162,7 @@ public class DefaultMessageCenterMessageViewModelTest {
 
             viewModel.handle(Action.LoadMessage("native-id"))
             assertThat(awaitItem()).isEqualTo(State.Loading("native-id"))
-            assertThat(awaitItem()).isEqualTo(State.MessageContent(message, Content.Native(layout, null)))
+            assertThat(awaitItem()).isEqualTo(State.MessageContent(message, Content.Native(layout, null, "native-id:channel-id")))
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -327,6 +329,7 @@ public class DefaultMessageCenterMessageViewModelTest {
             coEvery { getMessage("native-id") } returns message
             coEvery { loadMessageLayout(message) } returns layout
             every { makeViewStateStorage("native-id") } returns mockk(relaxed = true)
+            every { layoutRandomSeed(message) } returns "native-id:channel-id"
         }
         val viewModel = DefaultMessageCenterMessageViewModel(inbox = inbox)
 

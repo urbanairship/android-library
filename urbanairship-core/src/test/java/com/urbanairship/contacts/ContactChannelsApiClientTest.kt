@@ -61,7 +61,11 @@ public class ContactChannelsApiClientTest {
                     "commercial_opted_in": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(1000))}",
                     "commercial_opted_out": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(2000))}",
                     "transactional_opted_in": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))}",
-                    "transactional_opted_out": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(4000))}"
+                    "transactional_opted_out": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(4000))}",
+                    "open_tracking_opted_in": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(5000))}",
+                    "open_tracking_opted_out": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(6000))}",
+                    "click_tracking_opted_in": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(7000))}",
+                    "click_tracking_opted_out": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(8000))}"
                    }
                 ]
             }
@@ -94,6 +98,10 @@ public class ContactChannelsApiClientTest {
                     commercialOptedOut = Instant.ofEpochMilli(2000),
                     transactionalOptedIn = Instant.ofEpochMilli(3000),
                     transactionalOptedOut = Instant.ofEpochMilli(4000),
+                    openTrackingOptedIn = Instant.ofEpochMilli(5000),
+                    openTrackingOptedOut = Instant.ofEpochMilli(6000),
+                    clickTrackingOptedIn = Instant.ofEpochMilli(7000),
+                    clickTrackingOptedOut = Instant.ofEpochMilli(8000),
                 )
             )
         )

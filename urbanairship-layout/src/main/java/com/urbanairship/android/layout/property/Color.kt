@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.property
 import android.content.Context
 import android.graphics.Color
 import androidx.annotation.ColorInt
-import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -16,14 +15,11 @@ public class Color public constructor(
     private val selectors: List<ColorSelector>
 ) {
 
+    /** Returns the first selector's color that [context]'s environment matches, else the default. */
     @ColorInt
     public fun resolve(context: Context): Int {
-        // Look for a selector that matches the current UI mode.
-        val isDarkMode = ResourceUtils.isUiModeNight(context)
-        return selectors
-            .firstOrNull { it.isDarkMode == isDarkMode }
-            ?.color
-            ?: defaultColor
+        val environment = SelectorEnvironment.from(context)
+        return selectors.firstOrNull { it.conditions.matches(environment) }?.color ?: defaultColor
     }
 
     public companion object {

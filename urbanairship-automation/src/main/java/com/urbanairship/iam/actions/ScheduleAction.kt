@@ -7,10 +7,10 @@ import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
 import com.urbanairship.actions.ActionValue
+import com.urbanairship.actions.SuspendingAction
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.inAppAutomation
-import kotlinx.coroutines.runBlocking
 
 /**
  * Action to schedule actions.
@@ -30,7 +30,7 @@ constructor(
     private val scheduler: suspend (AutomationSchedule) -> Unit = {
         Airship.inAppAutomation.upsertSchedules(listOf(it))
     }
-) : Action() {
+) : SuspendingAction() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when(arguments.situation) {
@@ -42,10 +42,10 @@ constructor(
         }
     }
 
-    override fun perform(arguments: ActionArguments): ActionResult {
+    override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
         val schedule = AutomationSchedule.fromJson(arguments.value.toJsonValue())
 
-        runBlocking { scheduler.invoke(schedule) }
+        scheduler.invoke(schedule)
 
         return ActionResult.newResult(ActionValue.wrap(schedule.identifier))
     }

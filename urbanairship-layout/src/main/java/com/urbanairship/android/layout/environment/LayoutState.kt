@@ -7,8 +7,10 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.StateControllerInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.info.ThomasFormRegistrationOverrides
 import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -50,7 +52,9 @@ internal class LayoutState(
     val thomasState: StateFlow<ThomasState>,
     val thomasForm: ThomasForm?,
     val parentForm: ThomasForm?,
-    val pagerTracker: PagersViewTracker?
+    val pagerTracker: PagersViewTracker?,
+    /** The nearest enclosing grid, the grid itself included; `$grids.current`. */
+    val grid: SharedState<GridState>? = null
 ) {
     val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
     private var runningJobs = mutableMapOf<String, Job>()
@@ -239,7 +243,7 @@ internal sealed class State(val type: Type): JsonSerializable {
         val pageIds: List<String> = emptyList(),
         val durations: List<Duration?> = emptyList(),
         val progress: Int = 0,
-        val mediaPausedVideos: Map<String, String> = emptyMap(),
+        val mediaPausedVideos: Map<String, String?> = emptyMap(),
         val isManuallyPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false,
         val branching: PagerControllerBranching? = null,
@@ -248,8 +252,16 @@ internal sealed class State(val type: Type): JsonSerializable {
     ) : State(Type.PAGER) {
 
 
+        /**
+         * Whether a video the current page is showing is still loading, so a story's automated
+         * advance should wait for it.
+         *
+         * A `null` page id is a video that belongs to the pager rather than to one page -- a
+         * `backgrounds` layer, which stays on screen across every page -- so it holds whichever
+         * page is showing, not just the one that happened to be up when it started loading.
+         */
         val isMediaPaused: Boolean
-            get() = mediaPausedVideos.any { it.value == currentPageId }
+            get() = mediaPausedVideos.any { (_, pageId) -> pageId == null || pageId == currentPageId }
 
         val isPaused
             get() = isMediaPaused || isManuallyPaused
@@ -302,7 +314,8 @@ internal sealed class State(val type: Type): JsonSerializable {
             return copy(isScrolling = isScrolling)
         }
 
-        fun copyWithMediaPaused(pageId: String, videoId: String, isPaused: Boolean): Pager {
+        /** @param pageId the page the video belongs to, or `null` for one the pager itself owns. */
+        fun copyWithMediaPaused(pageId: String?, videoId: String, isPaused: Boolean): Pager {
             val updatedMap = if (isPaused) {
                 mediaPausedVideos + (videoId to pageId)
             } else {
@@ -537,15 +550,43 @@ internal sealed class State(val type: Type): JsonSerializable {
             return map.toMap()
         }
 
-        internal fun channels(): List<ThomasChannelRegistration> {
-            return filteredFields.values
-                .mapNotNull { value ->
-                    when(val method = value.fieldType) {
-                        is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
-                        is ThomasFormField.FieldType.Instant -> method.result
-                    }?.channels
+        /**
+         * Returns the channels this form's inputs register, with [registrationOverrides] applied
+         * to its email inputs.
+         *
+         * @param registrationOverrides The form's overrides.
+         * @param state The form's state, the root override predicates and values read from.
+         * @return The channels to register.
+         */
+        internal fun channels(
+            registrationOverrides: ThomasFormRegistrationOverrides? = null,
+            state: JsonValue = JsonValue.NULL
+        ): List<ThomasChannelRegistration> {
+            return filteredFields.values.flatMap { field ->
+                val result = when (val method = field.fieldType) {
+                    is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
+                    is ThomasFormField.FieldType.Instant -> method.result
+                } ?: return@flatMap emptyList()
+
+                val channels = result.channels.orEmpty()
+                val isEmailInput = (field as? ThomasFormField.TextInput)?.textInput == FormInputType.EMAIL
+                if (registrationOverrides?.email.isNullOrEmpty() || !isEmailInput) {
+                    return@flatMap channels
                 }
-                .flatten()
+
+                // The input's own options may be absent, so the address comes from the result.
+                val address = result.value as? String
+                if (address.isNullOrEmpty()) {
+                    return@flatMap channels
+                }
+
+                val options = channels.filterIsInstance<ThomasChannelRegistration.Email>()
+                    .firstOrNull()?.options
+                val resolved = registrationOverrides?.resolveEmail(field.identifier, options, state)
+                    ?.let { ThomasChannelRegistration.Email(address, it) }
+
+                channels.filterNot { it is ThomasChannelRegistration.Email } + listOfNotNull(resolved)
+            }
         }
 
         internal data class Child(

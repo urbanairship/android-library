@@ -125,6 +125,30 @@ public class MediaSizingTest {
         assertEquals("height", BOX_HEIGHT, media.measuredHeight)
     }
 
+    /** A fit that never crops stops each axis of a stated box at what the whole image needs. */
+    @Test
+    public fun testAutoInAStatedBoxFitsAWholeImage() {
+        val tall = stack(
+            itemSize = """{"width": "100%", "height": ${PAGE * 2}}""",
+            media = WHOLE
+        )
+        measure(tall, PAGE, exactly = true)
+
+        val inTall = requireNotNull(findMedia(tall))
+        assertEquals("width", PAGE, inTall.measuredWidth)
+        assertEquals("height", PAGE * MEDIA_HEIGHT / MEDIA_WIDTH, inTall.measuredHeight)
+
+        val wide = stack(
+            itemSize = """{"width": "100%", "height": $BOX_HEIGHT}""",
+            media = WHOLE
+        )
+        measure(wide, PAGE, exactly = true)
+
+        val inWide = requireNotNull(findMedia(wide))
+        assertEquals("width", BOX_HEIGHT * MEDIA_WIDTH / MEDIA_HEIGHT, inWide.measuredWidth)
+        assertEquals("height", BOX_HEIGHT, inWide.measuredHeight)
+    }
+
     /**
      * A maximum an auto-sized parent measured its way to is the siblings' extent handed back, not
      * a box: the image takes its own shape at the width it was offered, rather than a crop.
@@ -203,13 +227,9 @@ public class MediaSizingTest {
         assertEquals("height", PAGE * MEDIA_HEIGHT / MEDIA_WIDTH, media.measuredHeight)
     }
 
-    /**
-     * `center_inside` never crops, so a box cut down to a ceiling is wider than the image painted
-     * inside it. That slack is the only room left for the item to be positioned in, so it is the
-     * item's own position that decides where in the box the image lands.
-     */
+    /** `center_inside` centres the image in a box wider than it, whatever position the item asked for. */
     @Test
-    public fun testWholeImageIsAnchoredWhereTheItemAsked() {
+    public fun testWholeImageIsCentredWhateverTheItemAsked() {
         val container = container(mediaItemSize = FULL_WIDTH, itemPosition = START, media = WHOLE)
         container.measure(
             spec(PAGE, View.MeasureSpec.EXACTLY),
@@ -219,7 +239,7 @@ public class MediaSizingTest {
 
         val painted = paintedBounds(requireNotNull(findImage(container)))
         assertEquals("width", BOX_HEIGHT * MEDIA_WIDTH / MEDIA_HEIGHT.toFloat(), painted.width(), 1f)
-        assertEquals("left", 0f, painted.left, 1f)
+        assertEquals("left", (PAGE - painted.width()) / 2, painted.left, 1f)
     }
 
     /**
@@ -276,9 +296,8 @@ public class MediaSizingTest {
 
     private fun spec(size: Int, mode: Int) = View.MeasureSpec.makeMeasureSpec(size, mode)
 
-    /** Where in its view the image is painted, for a view painting through its image matrix. */
+    /** Where in its view the image is painted, from the matrix it draws through. */
     private fun paintedBounds(image: CropImageView): RectF {
-        assertEquals("scale type", ScaleType.MATRIX, image.scaleType)
         return RectF(0f, 0f, MEDIA_WIDTH.toFloat(), MEDIA_HEIGHT.toFloat())
             .apply { image.imageMatrix.mapRect(this) }
     }
@@ -300,7 +319,11 @@ public class MediaSizingTest {
     }
 
     /** A vertical stack holding one item, which holds the media. */
-    private fun stack(itemSize: String, mediaItemSize: String = AUTO): ViewGroup = build(
+    private fun stack(
+        itemSize: String,
+        mediaItemSize: String = AUTO,
+        media: String = MEDIA
+    ): ViewGroup = build(
         """
         {
           "type": "linear_layout",
@@ -311,7 +334,7 @@ public class MediaSizingTest {
               "view": {
                 "type": "linear_layout",
                 "direction": "vertical",
-                "items": [{"size": $mediaItemSize, "view": $MEDIA}]
+                "items": [{"size": $mediaItemSize, "view": $media}]
               }
             }
           ]
