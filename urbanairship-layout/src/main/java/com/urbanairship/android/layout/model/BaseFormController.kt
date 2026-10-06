@@ -100,8 +100,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                     )
                 }
                 .distinctUntilChanged().collect { (event, formResult) ->
-                    formResult?.let { (result, _) ->
-                        val submitted = formState.formUpdates.value
+                    formResult?.let { (result, _, submitted) ->
                         val children = submitted.filteredFields.values.toSet()
                         parentFormState.updateFormInput(
                             value = buildFormData(

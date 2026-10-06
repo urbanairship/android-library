@@ -539,12 +539,7 @@ internal sealed class State(val type: Type): JsonSerializable {
 
             filteredFields
                 .values
-                .mapNotNull { value ->
-                    when(val method = value.fieldType) {
-                        is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
-                        is ThomasFormField.FieldType.Instant -> method.result
-                    }?.attributes
-                }
+                .mapNotNull { it.result?.attributes }
                 .forEach { map.putAll(it) }
 
             return map.toMap()
@@ -561,32 +556,47 @@ internal sealed class State(val type: Type): JsonSerializable {
         internal fun channels(
             registrationOverrides: ThomasFormRegistrationOverrides? = null,
             state: JsonValue = JsonValue.NULL
-        ): List<ThomasChannelRegistration> {
-            return filteredFields.values.flatMap { field ->
-                val result = when (val method = field.fieldType) {
-                    is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
-                    is ThomasFormField.FieldType.Instant -> method.result
-                } ?: return@flatMap emptyList()
-
-                val channels = result.channels.orEmpty()
-                val isEmailInput = (field as? ThomasFormField.TextInput)?.textInput == FormInputType.EMAIL
-                if (registrationOverrides?.email.isNullOrEmpty() || !isEmailInput) {
-                    return@flatMap channels
-                }
-
-                // The input's own options may be absent, so the address comes from the result.
-                val address = result.value as? String
-                if (address.isNullOrEmpty()) {
-                    return@flatMap channels
-                }
-
-                val options = channels.filterIsInstance<ThomasChannelRegistration.Email>()
-                    .firstOrNull()?.options
-                val resolved = registrationOverrides?.resolveEmail(field.identifier, options, state)
-                    ?.let { ThomasChannelRegistration.Email(address, it) }
-
-                channels.filterNot { it is ThomasChannelRegistration.Email } + listOfNotNull(resolved)
+        ): List<ThomasChannelRegistration> =
+            withRegistrationOverrides(registrationOverrides, state).filteredFields.values.flatMap { field ->
+                field.result?.channels.orEmpty()
             }
+
+        /**
+         * Returns this form with [registrationOverrides] applied to its email inputs' channels, so
+         * each input carries the options it registers with.
+         *
+         * @param registrationOverrides The form's overrides.
+         * @param state The form's state, the root override predicates and values read from.
+         * @return This form, or a copy whose overridden email inputs have resolved results.
+         */
+        internal fun withRegistrationOverrides(
+            registrationOverrides: ThomasFormRegistrationOverrides?,
+            state: JsonValue = JsonValue.NULL
+        ): Form {
+            if (registrationOverrides?.email.isNullOrEmpty()) return this
+            return copy(
+                children = children.mapValues { (_, child) ->
+                    child.copy(field = child.field.withEmailOverrides(registrationOverrides, state))
+                }
+            )
+        }
+
+        private fun ThomasFormField<*>.withEmailOverrides(
+            registrationOverrides: ThomasFormRegistrationOverrides?,
+            state: JsonValue
+        ): ThomasFormField<*> {
+            if (this !is ThomasFormField.TextInput || textInput != FormInputType.EMAIL) return this
+            val result = result ?: return this
+            if (result.value.isEmpty()) return this
+
+            val channels = result.channels.orEmpty()
+            val options = channels.filterIsInstance<ThomasChannelRegistration.Email>().firstOrNull()?.options
+            // The input's own options may be absent, so the address comes from the result.
+            val resolved = registrationOverrides?.resolveEmail(identifier, options, state)
+                ?.let { ThomasChannelRegistration.Email(result.value, it) }
+
+            val resolvedChannels = channels.filterNot { it is ThomasChannelRegistration.Email } + listOfNotNull(resolved)
+            return copy(fieldType = ThomasFormField.FieldType.Instant(result.copy(channels = resolvedChannels)))
         }
 
         internal data class Child(

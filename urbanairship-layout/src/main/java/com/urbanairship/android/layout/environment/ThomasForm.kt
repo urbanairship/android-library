@@ -120,12 +120,12 @@ internal class ThomasForm(
      * channels.
      * @param thomasState The layout state override predicates and values read from; its form is
      * replaced with the submitted one.
-     * @return The form result and reporting context, or `null` if the form isn't valid.
+     * @return The submission, or `null` if the form isn't valid.
      */
     suspend fun prepareSubmit(
         registrationOverrides: ThomasFormRegistrationOverrides? = null,
         thomasState: StateFlow<ThomasState>? = null
-    ): Pair<ReportingEvent.FormResult, FormInfo>? {
+    ): Submission? {
         if (!validate()) {
             return null
         }
@@ -133,23 +133,37 @@ internal class ThomasForm(
         val result = suspendCoroutine { cont ->
             feed.update {
                 val submitted = it.copy(status = ThomasFormStatus.SUBMITTED)
-                val event = ReportingEvent.FormResult(
-                    data = submitted.formResult(),
-                    context = LayoutData.EMPTY, //will be set later
-                    attributes = submitted.attributes(),
-                    channels = submitted.channels(
-                        registrationOverrides = registrationOverrides,
-                        state = thomasState?.value?.copy(form = submitted)?.toJsonValue()
-                            ?: JsonValue.NULL
-                    )
+                val registered = submitted.withRegistrationOverrides(
+                    registrationOverrides = registrationOverrides,
+                    state = thomasState?.value?.copy(form = submitted)?.toJsonValue() ?: JsonValue.NULL
                 )
-                cont.resume(Pair(event, submitted.reportingContext()))
+                val event = ReportingEvent.FormResult(
+                    data = registered.formResult(),
+                    context = LayoutData.EMPTY, //will be set later
+                    attributes = registered.attributes(),
+                    channels = registered.channels()
+                )
+                cont.resume(Submission(event, submitted.reportingContext(), registered))
                 submitted
             }
         }
 
         return result
     }
+
+    /**
+     * A submitted form's result.
+     *
+     * @property event The form result event, without its layout context.
+     * @property context The form's reporting context.
+     * @property form The submitted form, each input carrying the channels it registers after the
+     * form's registration overrides.
+     */
+    data class Submission(
+        val event: ReportingEvent.FormResult,
+        val context: FormInfo,
+        val form: State.Form
+    )
 
     @OptIn(DelicateLayoutApi::class)
     internal fun <T : ThomasFormField<*>> inputData(identifier: String): T? {

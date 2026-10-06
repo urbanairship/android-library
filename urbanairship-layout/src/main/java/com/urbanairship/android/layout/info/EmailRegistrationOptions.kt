@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 
@@ -30,6 +31,19 @@ public sealed class ThomasEmailRegistrationOptions {
     public abstract val openTrackingOptedIn: Boolean?
     /** `true` opts in to click tracking, `false` opts out, `null` sends neither. */
     public abstract val clickTrackingOptedIn: Boolean?
+
+    /** Returns these options in the layout's `email_registration` shape. */
+    internal fun toJsonValue(): JsonValue = jsonMapOf(
+        "type" to when (type) {
+            DOUBLE_OPT_IN -> "double_opt_in"
+            COMMERCIAL -> "commercial"
+            TRANSACTIONAL -> "transactional"
+        },
+        "commercial_opted_in" to (this as? Commercial)?.optedIn,
+        "open_tracking_opted_in" to openTrackingOptedIn,
+        "click_tracking_opted_in" to clickTrackingOptedIn,
+        "properties" to properties
+    ).toJsonValue()
 
     public data class Commercial(
         override val properties: JsonMap?,
