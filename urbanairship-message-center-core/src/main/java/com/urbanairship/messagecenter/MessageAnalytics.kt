@@ -52,7 +52,7 @@ internal class MessageAnalytics(
             campaigns = null
         ),
         productId = message.productId ?: DEFAULT_PRODUCT_ID,
-        reportingContext = message.reporting,
+        reportingContext = reportingContext(message.reporting),
         eventRecorder = eventRecorder,
         displayHistoryStore = displayHistoryStore,
         eventSource = LayoutEventSource.AIRSHIP,
@@ -163,8 +163,18 @@ internal class MessageAnalytics(
         return (clock.now() - lastImpression.date) >= IMPRESSION_SESSION_LENGTH
     }
 
-    private companion object {
-        val IMPRESSION_SESSION_LENGTH = 30.minutes
-        const val DEFAULT_PRODUCT_ID = "default_native_mc"
+    internal companion object {
+        private val IMPRESSION_SESSION_LENGTH = 30.minutes
+        private const val DEFAULT_PRODUCT_ID = "default_native_mc"
+
+        /**
+         * Returns the reporting context a native message's events carry: `message_reporting.reporting_context`
+         * where it has one, else the whole `message_reporting`.
+         *
+         * @param messageReporting the message's `message_reporting`.
+         * @return the reporting context, or `null` when the message has no reporting.
+         */
+        fun reportingContext(messageReporting: JsonValue?): JsonValue? =
+            messageReporting?.optMap()?.get("reporting_context") ?: messageReporting
     }
 }

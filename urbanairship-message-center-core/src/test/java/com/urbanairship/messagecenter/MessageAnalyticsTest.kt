@@ -32,6 +32,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -390,6 +391,54 @@ public class MessageAnalyticsTest {
         val impressionSlot = slot<MeteredUsageEventEntity>()
         coVerify { eventRecorder.recordImpressionEvent(capture(impressionSlot)) }
         assertEquals("default_native_mc", impressionSlot.captured.product)
+    }
+
+    @Test
+    fun `reporting_context is pulled out of message_reporting, falling back to the whole object`() {
+        val context = JsonValue.parseString("""{"content_types": ["scene"], "experiment_id": ""}""")
+        val withContext = JsonValue.parseString(
+            """{"message_id": "xzlgYcEbEfGkBAAAChrOWw", "reporting_context": $context, "campaign_categories": []}"""
+        )
+        val withoutContext = JsonValue.parseString("""{"message_id": "xzlgYcEbEfGkBAAAChrOWw"}""")
+
+        assertEquals(context, MessageAnalytics.reportingContext(withContext))
+        assertEquals(withoutContext, MessageAnalytics.reportingContext(withoutContext))
+        assertEquals(JsonValue.wrap("reporting"), MessageAnalytics.reportingContext(JsonValue.wrap("reporting")))
+        assertNull(MessageAnalytics.reportingContext(null))
+    }
+
+    @Test
+    fun `a message's events and impression carry its reporting_context`() = testScope.runTest {
+        val context = JsonValue.parseString("""{"content_types": ["scene"]}""")
+        val message = Message(
+            id = "message-id",
+            title = "title",
+            bodyUrl = "test://url",
+            sentDate = Instant.now(),
+            expirationDate = null,
+            isUnread = true,
+            extras = null,
+            contentType = Message.ContentType.Native(version = 1),
+            messageUrl = "test://url.message",
+            reporting = JsonValue.parseString("""{"message_id": "message-id", "reporting_context": $context}"""),
+            rawMessageJson = JsonValue.NULL,
+            isDeletedClient = false,
+            associatedData = null
+        )
+        coEvery { historyStore.get("message-id") } returns MessageDisplayHistory()
+
+        val analytics = MessageAnalytics(message, eventRecorder, historyStore, dispatcher = testDispatcher, clock = clock)
+        testDispatcher.scheduler.advanceUntilIdle()
+        analytics.recordEvent(InAppDisplayEvent(), null)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val eventSlot = slot<LayoutEventData>()
+        verify { eventRecorder.recordEvent(capture(eventSlot)) }
+        assertEquals(context, eventSlot.captured.context?.reportingContext)
+
+        val impressionSlot = slot<MeteredUsageEventEntity>()
+        coVerify { eventRecorder.recordImpressionEvent(capture(impressionSlot)) }
+        assertEquals(context, impressionSlot.captured.reportingContext)
     }
 
     private fun createAnalytics(sessionId: String = this.sessionId): MessageAnalytics {
