@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 21.0.3 - October 5, 2026
+
+Patch release that fixes several issues. Apps that use Compose Message Center or legacy banners, or that depend on Firebase Performance Monitoring should update to this version or later.
+
+### Changes
+- Fixed a black frame and web view error handling in the Compose Message Center message screen
+- Fixed legacy banner slide animations and display durations
+- Fixed a crash when Firebase Performance Monitoring throws while Airship closes a network connection
+
 ## Version 21.0.2 - September 18, 2026
 
 Patch release with additional Scene layout fixes and an asset cache hardening fix. Apps that use Scenes should update to this version or later.
