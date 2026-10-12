@@ -33,6 +33,7 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.WindowPixels
 import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
+import com.urbanairship.android.layout.widget.FocusRing
 
 internal class ModalView(
     context: Context,
@@ -142,6 +143,7 @@ internal class ModalView(
 
         applyConstraints()
         EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged() }
+        FocusRing.install(this)
 
         if (viewEnvironment.isIgnoringSafeAreas) {
             setOnApplyWindowInsetsListener(modalFrame) { _: View, insets: WindowInsetsCompat ->

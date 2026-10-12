@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.shape.Shape
+import com.urbanairship.android.layout.shape.ShapeType
 import com.urbanairship.android.layout.util.LayoutUtils
 
 internal class ScoreItemView(
@@ -67,6 +68,7 @@ internal class ScoreItemView(
 
     private fun rebuildBackground() {
         background = Shape.buildStateListDrawable(context, bindings.selected.shapes, bindings.unselected.shapes, null, null)
+        setTag(R.id.ua_focus_ring_oval, bindings.unselected.shapes.firstOrNull()?.type == ShapeType.ELLIPSE)
     }
 
     private fun updateTextState() {

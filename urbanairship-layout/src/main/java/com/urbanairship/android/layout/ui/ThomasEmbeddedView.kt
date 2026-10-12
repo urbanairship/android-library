@@ -24,6 +24,7 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.WindowPixels
 import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
+import com.urbanairship.android.layout.widget.FocusRing
 
 internal class ThomasEmbeddedView(
     context: Context,
@@ -82,6 +83,7 @@ internal class ThomasEmbeddedView(
         contentView = model.createView(context, environment, null)
         configure(placement)
         EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged() }
+        FocusRing.install(this)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.shape.Shape
+import com.urbanairship.android.layout.shape.ShapeType
 import com.urbanairship.android.layout.util.LayoutUtils.applyTextAppearance
 
 public open class ShapeButton @JvmOverloads public constructor(
@@ -50,6 +51,7 @@ public open class ShapeButton @JvmOverloads public constructor(
         background = Shape.Companion.buildStateListDrawable(
             context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon
         )
+        setTag(R.id.ua_focus_ring_oval, uncheckedShapes.firstOrNull()?.type == ShapeType.ELLIPSE)
     }
 
     override fun setChecked(checked: Boolean) {
