@@ -1,6 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import android.content.Context
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -149,9 +154,43 @@ public class RadioInputControllerTest {
         }
     }
 
+    @Test
+    public fun testContainerGivesKeyFocusToItsOptions() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val options = List(3) { View(context).apply { isFocusable = true } }
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            options.forEach { addView(it, 100, 100) }
+            measure(
+                View.MeasureSpec.makeMeasureSpec(100, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(300, View.MeasureSpec.EXACTLY)
+            )
+            layout(0, 0, 100, 300)
+        }
+
+        initRadioInputController(attachedView = container)
+
+        // The group's accessibility node is the same as when the container took focus itself...
+        assertTrue(container.isFocusable)
+        val node = container.createAccessibilityNodeInfo()
+        container.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
+        val nodeTakingFocus = container.createAccessibilityNodeInfo()
+        container.descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+        assertEquals(nodeTakingFocus.isFocusable, node.isFocusable)
+        assertEquals(nodeTakingFocus.className, node.className)
+        assertEquals(nodeTakingFocus.contentDescription, node.contentDescription)
+        assertEquals(nodeTakingFocus.actionList, node.actionList)
+
+        // ...but keyboard and D-pad focus go straight to the options.
+        assertFalse(container.getFocusables(View.FOCUS_DOWN).contains(container))
+        assertTrue(container.requestFocus())
+        assertTrue(options.first().isFocused)
+    }
+
     private fun initRadioInputController(
         isRequired: Boolean = false,
-        attributeName: AttributeName? = null
+        attributeName: AttributeName? = null,
+        attachedView: View = mockk(relaxed = true)
     ) {
         controller = RadioInputController(
             view = mockView,
@@ -166,7 +205,7 @@ public class RadioInputControllerTest {
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
         ).apply {
-            onViewAttached(mockk(relaxed = true))
+            onViewAttached(attachedView)
         }
 
         testScope.runCurrent()
