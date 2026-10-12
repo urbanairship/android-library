@@ -3,10 +3,11 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.Canvas
-import android.os.SystemClock
+import android.view.FocusFinder
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
@@ -45,7 +46,7 @@ internal class PagerView(
     context: Context,
     val model: PagerModel,
     viewEnvironment: ViewEnvironment
-) : FrameLayout(context), BaseView, Clippable, KeyEvent.Callback {
+) : FrameLayout(context), BaseView, Clippable {
 
     fun interface OnScrollListener {
         fun onScrollTo(position: Int, isInternalScroll: Boolean)
@@ -111,6 +112,7 @@ internal class PagerView(
 
     private var gestureDetector: PagerGestureDetector? = null
     private var suppressGesture = false
+    private val handledDirectionalKeys = mutableSetOf<Int>()
     private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? = null
 
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
@@ -299,26 +301,51 @@ internal class PagerView(
         return result
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        return when (keyCode) {
-            // Recreate tap events to navigate pages with keyboard
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                gestureDetector?.let { detector ->
-                    detector.onTouchEvent(generateMotionEvent(MotionEvent.ACTION_DOWN, 45f))
-                    detector.onTouchEvent(generateMotionEvent(MotionEvent.ACTION_UP, 45f))
-
-                }
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                gestureDetector?.let { detector ->
-                    detector.onTouchEvent(generateMotionEvent(MotionEvent.ACTION_DOWN, 975f))
-                    detector.onTouchEvent(generateMotionEvent(MotionEvent.ACTION_UP, 975f))
-                }
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val isRight = when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_RIGHT -> true
+            KeyEvent.KEYCODE_DPAD_LEFT -> false
+            else -> return super.dispatchKeyEvent(event)
         }
+
+        // Swallow the repeats and the release of a press that turned the page, so a held key
+        // turns one page and focus doesn't then move on the release.
+        if (event.action == KeyEvent.ACTION_UP && handledDirectionalKeys.remove(event.keyCode)) return true
+        if (event.repeatCount > 0 && event.keyCode in handledDirectionalKeys) return true
+
+        if (super.dispatchKeyEvent(event)) return true
+        if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0 || !canPageFromKey(isRight)) {
+            return false
+        }
+
+        if (isScrolling.value) return true
+        val handled = model.onDirectionalKey(isRight, layoutDirection == LAYOUT_DIRECTION_RTL)
+        if (handled) handledDirectionalKeys.add(event.keyCode)
+        return handled
+    }
+
+    /**
+     * Left/Right only reach the pager when focus can't move that way within the page showing:
+     * buttons in a row, score items and text fields keep their own horizontal navigation.
+     */
+    private fun canPageFromKey(isRight: Boolean): Boolean {
+        val focused = findFocus() ?: return true
+        if (focused.onCheckIsTextEditor()) return false
+
+        val page = view.getDisplayedPageView() as? ViewGroup ?: return true
+        if (!page.isAncestorOf(focused)) return true
+
+        val direction = if (isRight) View.FOCUS_RIGHT else View.FOCUS_LEFT
+        return FocusFinder.getInstance().findNextFocus(page, focused, direction) == null
+    }
+
+    private fun View.isAncestorOf(view: View): Boolean {
+        var parent = view.parent
+        while (parent != null) {
+            if (parent === this) return true
+            parent = parent.parent
+        }
+        return false
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
@@ -381,15 +408,6 @@ internal class PagerView(
             accessibilityManager.removeTouchExplorationStateChangeListener(listener)
         }
         accessibilityListener = null
-    }
-
-    private fun generateMotionEvent(action: Int, xCoordinate: Float): MotionEvent {
-        return MotionEvent.obtain(SystemClock.uptimeMillis(),
-            SystemClock.uptimeMillis(),
-            action,
-            xCoordinate,
-            1500f,
-            0)
     }
 
     private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =

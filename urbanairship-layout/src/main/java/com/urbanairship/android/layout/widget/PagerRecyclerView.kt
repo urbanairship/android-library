@@ -80,6 +80,8 @@ internal class PagerRecyclerView(
             ?: NO_POSITION
     }
 
+    fun getDisplayedPageView(): View? = layoutManager?.let { snapHelper.findSnapView(it) }
+
     fun scrollTo(position: Int, animate: Boolean = true) {
         val displayed = getDisplayedItemPosition()
         UALog.v { "ThomasPager RecyclerView scrollTo($position) displayed=$displayed isInternalScroll=$isInternalScroll animate=$animate" }
