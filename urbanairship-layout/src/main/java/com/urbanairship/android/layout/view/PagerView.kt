@@ -177,8 +177,6 @@ internal class PagerView(
     init {
         backgroundsPainter.setParallaxBackgrounds(model.viewInfo.backgrounds, Direction.HORIZONTAL)
         backgroundsPainter.attachedViewBackgrounds = videoBackgrounds.paintedByView
-        isFocusable = true
-        isFocusedByDefault = true
         videoBackgrounds.addTo(this)
         addView(view, MATCH_PARENT, MATCH_PARENT)
         model.listener = modelListener

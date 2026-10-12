@@ -31,6 +31,7 @@ internal class PagerRecyclerView(
 
     private var isInternalScroll = false
     private var isSettling = false
+    private var hadFocusDuringScroll = false
 
     private var listener: PagerView.OnScrollListener? = null
 
@@ -93,6 +94,8 @@ internal class PagerRecyclerView(
         if (displayed != NO_POSITION) {
             isInternalScroll = true
         }
+
+        hadFocusDuringScroll = hadFocusDuringScroll || hasFocus()
 
         if (animate) {
             smoothScrollToPosition(position)
@@ -181,6 +184,10 @@ internal class PagerRecyclerView(
 
             listener?.onScrollStateChanged(state != SCROLL_STATE_IDLE)
 
+            if (state != SCROLL_STATE_IDLE) {
+                hadFocusDuringScroll = hadFocusDuringScroll || hasFocus()
+            }
+
             // Re-stated on settle, in case the snap was instant enough that onScrolled never ran
             // for its final frame -- a page's resting offset is a real position like any other,
             // not a return to zero.
@@ -209,8 +216,36 @@ internal class PagerRecyclerView(
                 }
                 isInternalScroll = false
                 isSettling = false
+
+                if (hadFocusDuringScroll) {
+                    hadFocusDuringScroll = false
+                    moveFocusIntoPage(position)
+                }
             }
         }
+    }
+
+    /**
+     * Recycling the outgoing page drops input focus back onto this full-size view, where
+     * directional navigation can't find anything beyond its edges.
+     */
+    private fun moveFocusIntoPage(position: Int) {
+        if (isInTouchMode || position == NO_POSITION) return
+        val page = layoutManager?.findViewByPosition(position) ?: return
+        val focused = rootView.findFocus()
+        if (focused != null && focused !== this) {
+            if (page.isAncestorOf(focused) || !isAncestorOf(focused)) return
+        }
+        page.requestFocus(View.FOCUS_DOWN)
+    }
+
+    private fun View.isAncestorOf(view: View): Boolean {
+        var parent = view.parent
+        while (parent != null) {
+            if (parent === this) return true
+            parent = parent.parent
+        }
+        return false
     }
 
     init {
@@ -256,6 +291,15 @@ internal class PagerRecyclerView(
             }
             return super.requestChildRectangleOnScreen(parent, child, rect, immediate, focusedChildVisible)
         }
+
+        // Pages only change through the pager model, so directional focus never lays out and
+        // scrolls to a neighbouring page on its own.
+        override fun onFocusSearchFailed(
+            focused: View,
+            direction: Int,
+            recycler: Recycler,
+            state: State
+        ): View? = null
 
         override fun generateDefaultLayoutParams(): LayoutParams {
             return LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
