@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
@@ -38,6 +39,7 @@ import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.view.ModalView
+import com.urbanairship.android.layout.widget.TouchAwareAirshipWebView
 import com.urbanairship.util.parcelableExtra
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.Flow
@@ -99,6 +101,8 @@ public class ModalActivity : AppCompatActivity() {
             disableBackButton = presentation.disableBackButton
 
             onBackPressedDispatcher.addCallback(this) {
+                if (moveFocusOutOfWebView()) return@addCallback
+
                 if (!disableBackButton) {
                     reportDismissFromOutside()
                     finishAfterTransition()
@@ -219,10 +223,26 @@ public class ModalActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Steps D-pad or keyboard focus out of a web page and onto the next view in the scene, so
+     * Back leaves the page before it leaves the scene. A page can hold the arrows for a long
+     * time, and dismissing the whole scene is a lot to lose for wanting out of it.
+     *
+     * @return `true` if focus moved.
+     */
+    private fun moveFocusOutOfWebView(): Boolean {
+        val webView = currentFocus as? TouchAwareAirshipWebView ?: return false
+        if (webView.isInTouchMode) return false
+
+        val target = webView.focusSearch(View.FOCUS_FORWARD)?.takeIf { it !== webView } ?: return false
+        return target.requestFocus(View.FOCUS_FORWARD)
+    }
+
     /** Override to optionally disable the back button. */
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         // If the back button is pressed, and it's disabled, we ignore it.
         if (keyCode == KeyEvent.KEYCODE_BACK && disableBackButton) {
+            if (event?.repeatCount == 0 && moveFocusOutOfWebView()) return true
             UALog.v("Ignored back button press. Back button is disabled for this Scene.")
             return true
         }
