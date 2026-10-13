@@ -81,9 +81,10 @@ internal class FocusRing private constructor(private val root: ViewGroup) :
         return false
     }
 
-    // Views that scroll their content or draw their own focus, where a ring around the whole
-    // view says nothing about what's focused.
-    private fun View.wantsRing(): Boolean = this !is WebView && !scrollsItsContent()
+    // A web page draws its own focus, and a pager holding focus itself has nothing to show; a ring
+    // around either says nothing about what's focused. A scroll view only takes focus when it has
+    // content to scroll, so the ring shows what the arrows are moving.
+    private fun View.wantsRing(): Boolean = this !is WebView && this !is RecyclerView
 
     companion object {
 
