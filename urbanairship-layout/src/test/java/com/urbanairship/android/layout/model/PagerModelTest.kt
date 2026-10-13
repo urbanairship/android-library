@@ -442,6 +442,34 @@ public class PagerModelTest {
     }
 
     @Test
+    public fun testHandlesDirectionalKeys() {
+        assertTrue(pagerModel.handlesDirectionalKeys)
+
+        every { mockViewInfo.isSwipeDisabled } returns true
+        assertFalse(pagerModel.handlesDirectionalKeys)
+
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "start-tap",
+                reportingMetadata = null,
+                location = GestureLocation.START,
+                outcomes = emptyList()
+            )
+        )
+        assertTrue(pagerModel.handlesDirectionalKeys)
+
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "any-tap",
+                reportingMetadata = null,
+                location = GestureLocation.ANY,
+                outcomes = emptyList()
+            )
+        )
+        assertTrue(pagerModel.handlesDirectionalKeys)
+    }
+
+    @Test
     public fun testPageViewIds() {
         val id0 = pagerModel.getPageViewId(0)
         val id1 = pagerModel.getPageViewId(1)

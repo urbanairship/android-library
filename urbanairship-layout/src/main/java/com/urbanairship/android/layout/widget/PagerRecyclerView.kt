@@ -241,6 +241,24 @@ internal class PagerRecyclerView(
         page.requestFocus(View.FOCUS_DOWN)
     }
 
+    private val takesKeyFocus: Boolean
+        get() = isInTouchMode || model.handlesDirectionalKeys
+
+    override fun addFocusables(views: ArrayList<View>, direction: Int, focusableMode: Int) {
+        if (takesKeyFocus) {
+            super.addFocusables(views, direction, focusableMode)
+        } else {
+            addDescendantFocusables(views, direction, focusableMode)
+        }
+    }
+
+    override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean =
+        if (takesKeyFocus) {
+            super.requestFocus(direction, previouslyFocusedRect)
+        } else {
+            onRequestFocusInDescendants(direction, previouslyFocusedRect)
+        }
+
     private fun View.isAncestorOf(view: View): Boolean {
         var parent = view.parent
         while (parent != null) {

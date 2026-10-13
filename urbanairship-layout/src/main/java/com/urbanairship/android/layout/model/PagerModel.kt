@@ -661,6 +661,16 @@ internal class PagerModel(
     }
 
     /**
+     * Whether Left/Right can ever do anything on this pager, as handled by [onDirectionalKey].
+     * When they can't, a page with nothing focusable has nothing for a D-pad or keyboard to do
+     * either.
+     */
+    val handlesDirectionalKeys: Boolean
+        get() = viewInfo.gestures.orEmpty().filterIsInstance<PagerGesture.Tap>().any {
+            it.location in KEY_TAP_LOCATIONS
+        } || !(isSinglePage || viewInfo.isSwipeDisabled)
+
+    /**
      * Handles a Left/Right key press that couldn't move focus within the current page.
      *
      * Behaves like a tap on that edge if the pager has tap gestures there, otherwise like a swipe
@@ -820,6 +830,11 @@ internal enum class PagerNextFallback {
     DISMISS,
     FIRST
 }
+
+private val KEY_TAP_LOCATIONS = setOf(
+    GestureLocation.LEFT, GestureLocation.RIGHT, GestureLocation.START, GestureLocation.END,
+    GestureLocation.ANY
+)
 
 internal enum class PageRequest {
     NEXT,
