@@ -624,6 +624,17 @@ internal fun AutomationSchedule.updateOrCreate(data: AutomationScheduleData?, ti
     return data
 }
 
+/**
+ * The shared ledger group IDs this schedule records under, in canonical form.
+ * Stamped onto every ledger event at record time. Empty when the schedule has
+ * no shared group.
+ *
+ * A plain read: [LedgerConfig] canonicalizes on construction, so re-sorting
+ * here would imply that guarantee is not one.
+ */
+internal val AutomationSchedule.ledgerSharedIds: List<String>
+    get() = ledgerConfig?.sharedIds ?: emptyList()
+
 internal fun AutomationSchedule.isInAppMessageType(): Boolean {
     return when(data) {
         is AutomationSchedule.ScheduleData.Actions -> false

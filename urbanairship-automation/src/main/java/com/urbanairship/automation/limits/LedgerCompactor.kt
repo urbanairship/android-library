@@ -50,7 +50,12 @@ internal object LedgerCompactor {
     internal data class Key(
         val type: LedgerEventType,
         val scheduleId: String,
-        val sharedId: String?,
+        /**
+         * Canonical (sorted, de-duplicated), so two events belonging to the
+         * same set of groups hash and compare equal regardless of the order
+         * their IDs arrived in.
+         */
+        val sharedIds: List<String>,
         val triggerId: String?,
         val result: LedgerExecutionResult?,
         val cancel: Boolean?
@@ -89,7 +94,7 @@ internal object LedgerCompactor {
         is LedgerEvent.Triggered -> Key(
             type = event.type,
             scheduleId = event.scheduleId,
-            sharedId = event.sharedId,
+            sharedIds = LedgerSharedIds.canonical(event.sharedIds),
             triggerId = event.triggerId,
             result = null,
             cancel = null
@@ -98,7 +103,7 @@ internal object LedgerCompactor {
         is LedgerEvent.Execution -> Key(
             type = event.type,
             scheduleId = event.scheduleId,
-            sharedId = event.sharedId,
+            sharedIds = LedgerSharedIds.canonical(event.sharedIds),
             triggerId = event.triggerId,
             result = event.result,
             cancel = event.cancel
@@ -245,13 +250,26 @@ internal object LedgerCompactor {
      * down the mergeable-key fields so the result never depends on fetch or
      * iteration order — two events equal on every field here would have merged.
      */
-    private val ORDERING: Comparator<LedgerEvent> = compareBy(
-        { it.timestamp },
-        { it.scheduleId },
-        { it.sharedId ?: "" },
-        { it.type.json },
-        { it.triggerId ?: "" },
-        { (it as? LedgerEvent.Execution)?.result?.json ?: "" },
-        { (it as? LedgerEvent.Execution)?.cancel?.toString() ?: "" }
-    )
+    private val ORDERING: Comparator<LedgerEvent> = compareBy<LedgerEvent> { it.timestamp }
+        .thenBy { it.scheduleId }
+        .thenComparator { left, right ->
+            compareSharedIdLists(left.effectiveSharedIds, right.effectiveSharedIds)
+        }
+        .thenBy { it.type.json }
+        .thenBy { it.triggerId ?: "" }
+        .thenBy { (it as? LedgerEvent.Execution)?.result?.json ?: "" }
+        .thenBy { (it as? LedgerEvent.Execution)?.cancel?.toString() ?: "" }
+
+    /** Lexicographic comparison, the way Swift's `lexicographicallyPrecedes` orders two arrays. */
+    private fun compareSharedIdLists(left: List<String>, right: List<String>): Int {
+        val leftIterator = left.iterator()
+        val rightIterator = right.iterator()
+        while (leftIterator.hasNext() && rightIterator.hasNext()) {
+            val comparison = leftIterator.next().compareTo(rightIterator.next())
+            if (comparison != 0) {
+                return comparison
+            }
+        }
+        return left.size.compareTo(right.size)
+    }
 }

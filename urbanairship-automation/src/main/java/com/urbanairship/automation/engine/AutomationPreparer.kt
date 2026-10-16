@@ -14,6 +14,7 @@ import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
 import com.urbanairship.automation.AutomationAiSuppression
 import com.urbanairship.automation.isInAppMessageType
+import com.urbanairship.automation.ledgerSharedIds
 import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.FrequencyLimitManager
@@ -189,7 +190,7 @@ internal class AutomationPreparer internal constructor(
                 additionalAudienceCheckResult = additionalAudienceCheckResult,
                 priority = schedule.priority ?: 0,
                 sendMetadata = schedule.sendMetadata,
-                ledgerSharedId = schedule.ledgerConfig?.sharedId,
+                ledgerSharedIds = schedule.ledgerSharedIds,
                 triggerId = triggerId,
                 aiSuppression = aiSuppression
             )
@@ -356,7 +357,7 @@ internal class AutomationPreparer internal constructor(
     ) {
         ledger.recordExecution(
             scheduleId = schedule.identifier,
-            sharedId = schedule.ledgerConfig?.sharedId,
+            sharedIds = schedule.ledgerSharedIds,
             triggerId = triggerId,
             result = LedgerExecutionResult.AUDIENCE_MISS,
             cancel = cancel

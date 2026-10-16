@@ -194,7 +194,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = preparedInfo.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.SUCCEEDED,
                     cancel = false
@@ -241,7 +241,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = info.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.HOLDOUT,
                     cancel = false
@@ -286,7 +286,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = info.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.HOLDOUT,
                     cancel = false
@@ -322,7 +322,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = info.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.HOLDOUT,
                     cancel = false
@@ -356,7 +356,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = info.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.VARIANT_MISS,
                     cancel = false
@@ -397,7 +397,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = info.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.VARIANT_MISS,
                     cancel = false
@@ -427,7 +427,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = info.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.SUCCEEDED,
                     cancel = false
@@ -506,7 +506,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = preparedInfo.scheduleId,
-                    sharedId = preparedInfo.ledgerSharedId,
+                    sharedIds = preparedInfo.ledgerSharedIds,
                     triggerId = preparedInfo.triggerId,
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = false
@@ -562,7 +562,7 @@ public class InAppMessageAutomationExecutorTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = preparedInfo.scheduleId,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = null,
                     result = LedgerExecutionResult.SUCCEEDED,
                     cancel = false

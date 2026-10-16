@@ -24,14 +24,14 @@ internal interface AutomationLedgerInterface {
      */
     suspend fun recordTriggered(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?
     )
 
     /** Records the single outcome `execution` event for an attempt. */
     suspend fun recordExecution(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean
@@ -47,7 +47,7 @@ internal interface AutomationLedgerInterface {
      */
     suspend fun recordExecutionIfNoneSince(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean,
@@ -79,13 +79,13 @@ internal class AutomationLedger(
 
     override suspend fun recordTriggered(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?
     ) {
         record(
             LedgerEvent.Triggered(
                 scheduleId = scheduleId,
-                sharedId = sharedId,
+                sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds),
                 triggerId = triggerId,
                 timestamp = clock.now()
             )
@@ -94,7 +94,7 @@ internal class AutomationLedger(
 
     override suspend fun recordExecution(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean
@@ -102,7 +102,7 @@ internal class AutomationLedger(
         record(
             LedgerEvent.Execution(
                 scheduleId = scheduleId,
-                sharedId = sharedId,
+                sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds),
                 triggerId = triggerId,
                 timestamp = clock.now(),
                 result = result,
@@ -113,7 +113,7 @@ internal class AutomationLedger(
 
     override suspend fun recordExecutionIfNoneSince(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean,
@@ -121,7 +121,7 @@ internal class AutomationLedger(
     ) {
         val event = LedgerEvent.Execution(
             scheduleId = scheduleId,
-            sharedId = sharedId,
+            sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds),
             triggerId = triggerId,
             timestamp = clock.now(),
             result = result,
@@ -131,7 +131,7 @@ internal class AutomationLedger(
         try {
             // Checked and appended in one critical section, so a concurrent
             // recorder cannot slip between the two and let both write.
-            val recorded = store.recordEventsUnless(scheduleId, sharedId, listOf(event)) {
+            val recorded = store.recordEventsUnless(scheduleId, listOf(event)) {
                 it.isRealExecutionBy(scheduleId, since)
             }
 

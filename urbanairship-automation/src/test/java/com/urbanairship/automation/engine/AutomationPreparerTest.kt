@@ -20,6 +20,7 @@ import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolv
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
 import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.TestAutomationLedger
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
@@ -272,6 +273,96 @@ public class AutomationPreparerTest {
         coVerify { audienceSelector.evaluate(any(), any(), any()) }
     }
 
+    /**
+     * The origin of the whole pooled-budget feature: the groups a schedule
+     * belongs to are read here, once, and stamped onto the prepared info. Every
+     * event the execution later records carries them from there, so if this
+     * line stops stamping, nothing pools — each variant of an experiment spends
+     * its own full budget and they all display.
+     */
+    @Test
+    public fun testPrepareStampsTheSchedulesSharedGroups(): TestResult = runTest {
+        assertEquals(
+            // Canonical, and every group — not just the first.
+            listOf("experiment", "promo"),
+            prepareAndGetInfo(LedgerConfig(sharedIds = listOf("promo", "experiment")))
+                .ledgerSharedIds
+        )
+    }
+
+    @Test
+    public fun testPrepareStampsNoGroupsForAnUnpooledSchedule(): TestResult = runTest {
+        assertEquals(emptyList<String>(), prepareAndGetInfo(ledgerConfig = null).ledgerSharedIds)
+    }
+
+    /** Drives a plain successful action prepare and hands back the stamped info. */
+    private suspend fun prepareAndGetInfo(ledgerConfig: LedgerConfig?): PreparedScheduleInfo {
+        val schedule = makeSchedule(
+            data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("action payload")),
+            ledgerConfig = ledgerConfig
+        )
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns
+                StableContactInfo("contact id", null)
+        mockExperimentsManager()
+        coEvery { actionPreparer.prepare(any(), any()) } answers {
+            Result.success(DelegatePreparerResult.Prepared(firstArg()))
+        }
+
+        val result = preparer.prepare(
+            schedule,
+            triggerContext,
+            triggerSessionId = UUID.randomUUID().toString()
+        )
+        assertTrue(result is SchedulePrepareResult.Prepared)
+        return (result as SchedulePrepareResult.Prepared).schedule.info
+    }
+
+    /**
+     * A penalized attempt spends the pooled budget, so it has to be recorded
+     * under the schedule's groups rather than against the schedule alone.
+     */
+    @Test
+    public fun testPenalizeRecordsUnderTheSchedulesSharedGroups(): TestResult = runTest {
+        val schedule = makeSchedule(
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = AutomationAudience.MissBehavior.PENALIZE
+            ),
+            ledgerConfig = LedgerConfig(sharedIds = listOf("promo", "experiment"))
+        )
+
+        coEvery { remoteDataAccess.contactIdFor(any()) } returns null
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns
+                AirshipDeviceAudienceResult.miss
+
+        assertEquals(
+            SchedulePrepareResult.Penalize,
+            preparer.prepare(
+                schedule,
+                triggerContext,
+                triggerSessionId = UUID.randomUUID().toString(),
+                triggerId = "trigger-1"
+            )
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = schedule.identifier,
+                    sharedIds = listOf("experiment", "promo"),
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
     @Test
     public fun testAudienceMismatchPenalize(): TestResult = runTest {
         val schedule = makeSchedule(
@@ -304,7 +395,7 @@ public class AutomationPreparerTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = schedule.identifier,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = false
@@ -419,7 +510,7 @@ public class AutomationPreparerTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = schedule.identifier,
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = "trigger-cancel",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = true
@@ -517,7 +608,7 @@ public class AutomationPreparerTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = "test-schedule",
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = false
@@ -537,7 +628,7 @@ public class AutomationPreparerTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = "test-schedule",
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = true
@@ -880,7 +971,7 @@ public class AutomationPreparerTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = "test-schedule",
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = true
@@ -914,7 +1005,7 @@ public class AutomationPreparerTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = "test-schedule",
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = false
@@ -936,7 +1027,7 @@ public class AutomationPreparerTest {
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = "test-schedule",
-                    sharedId = null,
+                    sharedIds = emptyList(),
                     triggerId = "trigger-1",
                     result = LedgerExecutionResult.AUDIENCE_MISS,
                     cancel = false
@@ -1246,7 +1337,8 @@ public class AutomationPreparerTest {
         messageType: String? = null,
         bypassHoldoutGroup: Boolean? = null,
         sendMetadata: String? = null,
-        variantAudience: VariantAudience? = null
+        variantAudience: VariantAudience? = null,
+        ledgerConfig: LedgerConfig? = null
     ): AutomationSchedule {
         val content = displayContent ?: InAppMessageDisplayContent.CustomContent(Custom(JsonValue.NULL))
         val scheduleData = data ?: AutomationSchedule.ScheduleData.InAppMessageData(
@@ -1268,7 +1360,8 @@ public class AutomationPreparerTest {
             messageType = messageType,
             bypassHoldoutGroups = bypassHoldoutGroup,
             sendMetadata = sendMetadata,
-            variantAudience = variantAudience
+            variantAudience = variantAudience,
+            ledgerConfig = ledgerConfig
         )
     }
 

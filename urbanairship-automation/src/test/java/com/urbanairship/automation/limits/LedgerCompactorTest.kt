@@ -19,13 +19,13 @@ public class LedgerCompactorTest {
 
     private fun triggered(
         scheduleId: String = "schedule-1",
-        sharedId: String? = null,
+        sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
         timestamp: Instant,
         count: Int? = null
     ): LedgerEvent = LedgerEvent.Triggered(
         scheduleId = scheduleId,
-        sharedId = sharedId,
+        sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
         timestamp = timestamp,
         count = count
@@ -33,7 +33,7 @@ public class LedgerCompactorTest {
 
     private fun execution(
         scheduleId: String = "schedule-1",
-        sharedId: String? = null,
+        sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
         timestamp: Instant,
         count: Int? = null,
@@ -41,7 +41,7 @@ public class LedgerCompactorTest {
         cancel: Boolean? = null
     ): LedgerEvent = LedgerEvent.Execution(
         scheduleId = scheduleId,
-        sharedId = sharedId,
+        sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
         timestamp = timestamp,
         count = count,
@@ -146,9 +146,9 @@ public class LedgerCompactorTest {
                 execution(scheduleId = "schedule-1", timestamp = old),
                 execution(scheduleId = "schedule-2", timestamp = newer)
             ),
-            "sharedId" to listOf(
-                execution(timestamp = old, sharedId = "group-1"),
-                execution(timestamp = newer, sharedId = "group-2")
+            "sharedIds" to listOf(
+                execution(timestamp = old, sharedIds = listOf("group-1")),
+                execution(timestamp = newer, sharedIds = listOf("group-2"))
             ),
             "type" to listOf(
                 triggered(timestamp = old),
@@ -158,6 +158,50 @@ public class LedgerCompactorTest {
 
         cases.forEach { (field, events) ->
             assertEquals(field, 2, LedgerCompactor.compact(events, now).size)
+        }
+    }
+
+    /**
+     * Overlapping is not the same as equal. Merging on an intersection — or on
+     * any single ID out of the set — would fold an execution recorded under
+     * `{promo}` into one recorded under `{promo, holiday}`, and the survivor
+     * carries whichever set the merge happened to keep: either `holiday`'s
+     * tally jumps by a count it never earned, or `promo`'s history disappears
+     * from `holiday` entirely.
+     */
+    @Test
+    public fun testNeverMergesASubsetIntoItsSuperset() {
+        val old = date(2017, 3, 5)
+        val newer = date(2017, 9, 20)
+
+        // The overlapping ID is placed first in canonical order in one case and
+        // last in the other, so keying on any single member of the set — not
+        // just on an intersection — shows up here.
+        val cases = mapOf(
+            "subset" to listOf(
+                execution(timestamp = old, sharedIds = listOf("promo")),
+                execution(timestamp = newer, sharedIds = listOf("promo", "holiday"))
+            ),
+            "partial overlap" to listOf(
+                execution(timestamp = old, sharedIds = listOf("promo", "spring")),
+                execution(timestamp = newer, sharedIds = listOf("promo", "holiday"))
+            ),
+            "shares the first ID" to listOf(
+                execution(timestamp = old, sharedIds = listOf("holiday", "promo")),
+                execution(timestamp = newer, sharedIds = listOf("holiday", "spring"))
+            ),
+            "shares the last ID" to listOf(
+                execution(timestamp = old, sharedIds = listOf("holiday", "zulu")),
+                execution(timestamp = newer, sharedIds = listOf("promo", "zulu"))
+            ),
+            "no groups vs one" to listOf(
+                execution(timestamp = old, sharedIds = emptyList()),
+                execution(timestamp = newer, sharedIds = listOf("promo"))
+            )
+        )
+
+        cases.forEach { (case, events) ->
+            assertEquals(case, 2, LedgerCompactor.compact(events, now).size)
         }
     }
 
@@ -215,7 +259,7 @@ public class LedgerCompactorTest {
         val events = listOf(
             execution(
                 scheduleId = "schedule-1",
-                sharedId = "group-1",
+                sharedIds = listOf("group-1"),
                 triggerId = "trigger-1",
                 timestamp = date(2017, 3, 5),
                 result = LedgerExecutionResult.HOLDOUT,
@@ -223,7 +267,7 @@ public class LedgerCompactorTest {
             ),
             execution(
                 scheduleId = "schedule-1",
-                sharedId = "group-1",
+                sharedIds = listOf("group-1"),
                 triggerId = "trigger-1",
                 timestamp = date(2017, 9, 20),
                 result = LedgerExecutionResult.HOLDOUT,
@@ -235,7 +279,7 @@ public class LedgerCompactorTest {
         assertEquals(
             LedgerEvent.Execution(
                 scheduleId = "schedule-1",
-                sharedId = "group-1",
+                sharedIds = listOf("group-1"),
                 triggerId = "trigger-1",
                 timestamp = date(2017, 9, 20),
                 count = 2,
@@ -244,6 +288,25 @@ public class LedgerCompactorTest {
             ),
             merged
         )
+    }
+
+    /**
+     * [LedgerCompactor.Key] canonicalizes `sharedIds` rather than trusting its
+     * caller, so two events belonging to the same set of groups merge
+     * regardless of the order the IDs happened to arrive in.
+     */
+    @Test
+    public fun testMergesEventsWithSameGroupsRegardlessOfOrder() {
+        val events = listOf(
+            execution(sharedIds = listOf("g1", "g2"), timestamp = date(2017, 3, 5)),
+            execution(sharedIds = listOf("g2", "g1"), timestamp = date(2017, 9, 20))
+        )
+
+        val merged = LedgerCompactor.compact(events, now).single()
+        assertEquals(2, merged.effectiveCount)
+        // The survivor carries the canonical set, not whichever arrival order
+        // the merge happened to keep.
+        assertEquals(listOf("g1", "g2"), merged.sharedIds)
     }
 
     @Test

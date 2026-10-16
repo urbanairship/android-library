@@ -3,6 +3,7 @@
 package com.urbanairship.automation.limits
 
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.UALog
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +15,8 @@ import kotlinx.coroutines.withContext
 /**
  * Serializes the executions that share a ledger group.
  *
- * Schedules that pool a budget through `ledger_config.shared_id` are limited by
- * counting `execution` events, but those events are only written once an
+ * Schedules that pool a budget through `ledger_config.shared_ids` are limited
+ * by counting `execution` events, but those events are only written once an
  * execution finishes — a message records nothing while it is still on screen.
  * Between the limit check and that write, a sibling in the same group reads a
  * stale tally and displays too.
@@ -32,10 +33,21 @@ import kotlinx.coroutines.withContext
  *
  * Either way a sibling waits rather than skipping, which matters because the
  * one ahead of it may still fail without spending the budget, and then the
- * waiter should run. Only [withGroup] waits fairly, though: [Mutex] hands off
- * to the longest-waiting caller, while callers woken from
- * [awaitInFlightClear] race for the group afresh and can be barged by a new
- * arrival.
+ * waiter should run.
+ *
+ * Two fairness caveats, both worse for a schedule in several groups. Callers
+ * woken from [awaitInFlightClear] race for the group afresh and can be barged,
+ * where [withGroup] waiters are handed the lock in arrival order; a schedule
+ * needing N groups must win N of those races at once. And [withGroup] holds
+ * the locks it has while waiting for the rest, so a long hold in one group can
+ * stall schedules in another — see [withGroup] for why that is preferred to
+ * the alternative. Belonging to several groups amplifies that unfairness rather than
+ * adding a new kind: a waiter needs every one of its groups unmarked at the
+ * same moment, and marks in groups that do not overlap each other are free to
+ * interleave, so in principle a schedule pooling two busy groups can lose the
+ * race indefinitely. Accepted rather than fixed — the alternative is holding
+ * something while waiting, which is exactly the unbounded stall the in-flight
+ * mark exists to avoid, and a mark only lasts one display.
  *
  * In-process only, and deliberately not persisted: it guards concurrent
  * execution on a single device, which is the whole of the gap. Anything that
@@ -63,8 +75,15 @@ internal class LedgerGroupReservations {
         private val _inFlight = MutableStateFlow(0)
         val inFlight: StateFlow<Int> get() = _inFlight
 
+        /**
+         * Floored at zero, so the three places that read this count cannot
+         * disagree. An unpaired clear would otherwise drive it negative, which
+         * [inFlight]'s `> 0` reads as clear while [awaitInFlightClear]'s wait
+         * for zero never sees — and the group would leak, since [isIdle] never
+         * becomes true either.
+         */
         fun addInFlight(delta: Int) {
-            _inFlight.value += delta
+            _inFlight.value = (_inFlight.value + delta).coerceAtLeast(0)
         }
 
         /** Nothing claims the group, so it can be dropped. */
@@ -94,66 +113,179 @@ internal class LedgerGroupReservations {
     }
 
     /**
-     * Runs [block] holding [sharedId], suspending until any current holder is
-     * done.
+     * Runs [block] holding every group in [sharedIds], suspending until each is
+     * free.
      *
-     * [Mutex] hands the lock to the longest-waiting caller, so a waiter here
-     * cannot be barged repeatedly — which matters when a reservation is held
-     * for a whole display, since a barged waiter is one that never shows.
-     * Waiting on [awaitInFlightClear] carries no such guarantee.
+     * Every group has to be held for the execution, or a sibling in any one of
+     * them reads a stale tally. They are taken one at a time in canonical
+     * sorted order, which is what makes this deadlock-free: two schedules
+     * overlapping on `[a, b]` both take `a` first, so neither holds `b` while
+     * waiting for `a`. Sorting here rather than trusting callers keeps that
+     * guarantee local.
      *
-     * Releasing is structural: a block that throws or is cancelled still hands
-     * the group on rather than wedging it.
+     * Locks already taken are held while waiting for the next, so a long hold
+     * in one group stalls schedules in another. Not separable from the
+     * guarantee: something has to hold `a` to stop a stream of `a`-only
+     * schedules starving a waiter on `[a, b]`, which would then fail by never
+     * showing rather than by waiting.
+     *
+     * [release] hands every group back whether the block returns, throws or is
+     * cancelled, and never replaces what the block did with a failure of its
+     * own.
      */
-    suspend fun <T> withGroup(sharedId: String, block: suspend () -> T): T {
-        val group = claim(sharedId) { it.users += 1 }
+    suspend fun <T> withGroup(sharedIds: List<String>, block: suspend () -> T): T {
+        val ids = LedgerSharedIds.canonical(sharedIds)
+        val claimed = mutableListOf<String>()
+        val locked = mutableListOf<Group>()
+        // Tracked the way `use` tracks it, so `release` can tell a cleanup
+        // failure that should be attached to something already propagating
+        // from one that would otherwise become the caller's only news.
+        var primary: Throwable? = null
         try {
-            return group.mutex.withLock { block() }
+            for (sharedId in ids) {
+                val group = claim(sharedId) { it.users += 1 }
+                claimed.add(sharedId)
+                group.mutex.lock()
+                locked.add(group)
+            }
+            return block()
+        } catch (e: Throwable) {
+            primary = e
+            throw e
         } finally {
-            dropClaim(sharedId) { it.users -= 1 }
+            release(locked, claimed, primary)
         }
     }
 
     /**
-     * Marks an execution in flight for [sharedId], for a schedule that cannot
-     * hold the group across its own display.
+     * Hands back everything [withGroup] took, in reverse acquisition order.
+     *
+     * Each group is released in its own try/catch, so one unexpected throw
+     * cannot abandon the rest and leak every other group still held. A failure
+     * is attached to [primary] when the block is already failing, and logged
+     * otherwise — throwing would report a finished execution as failed.
+     *
+     * Non-cancellable: this usually runs while a cancellation is unwinding,
+     * and stopping part way would leave a [Mutex] locked by a coroutine that
+     * is going away, which no caller could ever take again.
+     *
+     * @param primary The block's own failure, if it had one.
+     */
+    private suspend fun release(
+        locked: List<Group>,
+        claimed: List<String>,
+        primary: Throwable?
+    ) = withContext(NonCancellable) {
+        val failures = mutableListOf<Throwable>()
+        for (group in locked.asReversed()) {
+            try {
+                group.mutex.unlock()
+            } catch (e: Throwable) {
+                failures.add(e)
+            }
+        }
+        for (sharedId in claimed.asReversed()) {
+            try {
+                dropClaim(sharedId) { it.users -= 1 }
+            } catch (e: Throwable) {
+                failures.add(e)
+            }
+        }
+        for (failure in failures) {
+            if (primary != null) {
+                primary.addSuppressed(failure)
+            } else {
+                UALog.e(failure) { "Failed to release a ledger group." }
+            }
+        }
+    }
+
+    /**
+     * Marks an execution in flight for every group in [sharedIds], for a
+     * schedule that cannot hold the groups across its own display.
      *
      * Deliberately not a scope function: the mark has to be taken while the
-     * caller still holds the group, so a sibling taking it next can see this
-     * execution, and released only once that execution ends — which is after
-     * the group has been let go. Pair it with [exitInFlight] in a `finally`.
+     * caller still holds the groups, so a sibling taking one of them next can
+     * see this execution, and released only once that execution ends — which
+     * is after the groups have been let go. Pair it with [exitInFlight] in a
+     * `finally`.
+     *
+     * Non-cancellable, because [claim] takes [guard] through a cancellable
+     * `withLock`: under contention a schedule marking several groups could
+     * otherwise stop part way. The caller's `finally` only guards the pairing
+     * once this returns, so a half-applied mark has nothing to clear it and
+     * would wedge those groups' siblings in [awaitInFlightClear] for good.
      */
-    suspend fun enterInFlight(sharedId: String) {
-        claim(sharedId) { it.addInFlight(1) }
-    }
-
-    /** Clears a mark taken by [enterInFlight]. */
-    suspend fun exitInFlight(sharedId: String) {
-        dropClaim(sharedId) { it.addInFlight(-1) }
+    suspend fun enterInFlight(sharedIds: List<String>) {
+        withContext(NonCancellable) {
+            markEachGroup(sharedIds) { sharedId -> claim(sharedId) { it.addInFlight(1) } }
+        }
     }
 
     /**
-     * Executions in the group that have started but not recorded yet.
+     * Clears the marks taken by [enterInFlight].
+     *
+     * Non-cancellable as a whole, not just per [dropClaim]. This runs from a
+     * `finally` unwinding an already-cancelled coroutine, and a schedule that
+     * cleared the first mark and then stopped would leave the rest marked with
+     * nothing left to clear them.
+     */
+    suspend fun exitInFlight(sharedIds: List<String>) {
+        withContext(NonCancellable) {
+            markEachGroup(sharedIds) { sharedId -> dropClaim(sharedId) { it.addInFlight(-1) } }
+        }
+    }
+
+    /**
+     * Applies [change] to every distinct ID, isolating each so one failure
+     * cannot skip the rest.
+     *
+     * [claim] and [dropClaim] only mutate a map under [guard] and have no
+     * realistic way to throw today. The isolation is here because the cost of
+     * being wrong later is unbounded: a mark left behind by a skipped
+     * iteration wedges that group's siblings for the life of the process, and
+     * the caller cannot clear it — its `finally` is only armed once the whole
+     * call returns.
+     */
+    private suspend fun markEachGroup(sharedIds: List<String>, change: suspend (String) -> Unit) {
+        var failure: Throwable? = null
+        for (sharedId in sharedIds.distinct()) {
+            try {
+                change(sharedId)
+            } catch (e: Throwable) {
+                failure?.addSuppressed(e) ?: run { failure = e }
+            }
+        }
+        failure?.let { throw it }
+    }
+
+    /**
+     * Executions across [sharedIds] that have started but not recorded yet.
      *
      * A pending spend the ledger cannot answer for: counting it keeps a sibling
-     * from reading a tally that is about to change.
+     * from reading a tally that is about to change. A schedule in several
+     * groups is affected by an in-flight execution in any one of them, so the
+     * counts are summed — callers only ever compare the result against zero.
      */
-    suspend fun inFlight(sharedId: String): Int =
-        guard.withLock { groups[sharedId]?.inFlight?.value ?: 0 }
+    suspend fun inFlight(sharedIds: List<String>): Int =
+        sharedIds.distinct().sumOf { sharedId -> guard.withLock { groups[sharedId]?.inFlight?.value ?: 0 } }
 
     /**
-     * Suspends until [sharedId] has no execution in flight, or returns at once
-     * if it already has none.
+     * Suspends until every group in [sharedIds] has no execution in flight, or
+     * returns at once if none currently have one.
      *
-     * Never holds [sharedId]'s mutex or the group map's own lock while
-     * suspended: an in-flight mark exists so a caller that cannot hold the
-     * mutex for its own unbounded display still excludes siblings, and waiting
-     * on it while holding anything would reintroduce exactly that unbounded
-     * stall one level up.
+     * Never holds a group's mutex or the group map's own lock while suspended:
+     * an in-flight mark exists so a caller that cannot hold the mutex for its
+     * own unbounded display still excludes siblings, and waiting on it while
+     * holding anything would reintroduce exactly that unbounded stall one
+     * level up. Groups are awaited one at a time rather than concurrently,
+     * which is only a latency detail — none of them block each other.
      */
-    suspend fun awaitInFlightClear(sharedId: String) {
-        val inFlight = guard.withLock { groups[sharedId]?.inFlight } ?: return
-        inFlight.first { it == 0 }
+    suspend fun awaitInFlightClear(sharedIds: List<String>) {
+        for (sharedId in sharedIds.distinct()) {
+            val inFlight = guard.withLock { groups[sharedId]?.inFlight } ?: continue
+            inFlight.first { it == 0 }
+        }
     }
 
     /**

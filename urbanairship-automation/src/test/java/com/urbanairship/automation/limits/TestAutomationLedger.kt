@@ -14,13 +14,13 @@ internal class TestAutomationLedger : AutomationLedgerInterface {
     sealed class Recorded {
         data class Triggered(
             val scheduleId: String,
-            val sharedId: String?,
+            val sharedIds: List<String>,
             val triggerId: String?
         ) : Recorded()
 
         data class Execution(
             val scheduleId: String,
-            val sharedId: String?,
+            val sharedIds: List<String>,
             val triggerId: String?,
             val result: LedgerExecutionResult,
             val cancel: Boolean
@@ -33,7 +33,7 @@ internal class TestAutomationLedger : AutomationLedgerInterface {
          */
         data class ExecutionIfNoneSince(
             val scheduleId: String,
-            val sharedId: String?,
+            val sharedIds: List<String>,
             val triggerId: String?,
             val result: LedgerExecutionResult,
             val cancel: Boolean,
@@ -55,20 +55,20 @@ internal class TestAutomationLedger : AutomationLedgerInterface {
 
     override suspend fun recordTriggered(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?
     ) {
-        recorded.add(Recorded.Triggered(scheduleId, sharedId, triggerId))
+        recorded.add(Recorded.Triggered(scheduleId, sharedIds, triggerId))
     }
 
     override suspend fun recordExecution(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean
     ) {
-        recorded.add(Recorded.Execution(scheduleId, sharedId, triggerId, result, cancel))
+        recorded.add(Recorded.Execution(scheduleId, sharedIds, triggerId, result, cancel))
     }
 
     override suspend fun reconcile(liveScheduleIds: Set<String>, liveSharedIds: Set<String>) {
@@ -77,7 +77,7 @@ internal class TestAutomationLedger : AutomationLedgerInterface {
 
     override suspend fun recordExecutionIfNoneSince(
         scheduleId: String,
-        sharedId: String?,
+        sharedIds: List<String>,
         triggerId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean,
@@ -85,7 +85,7 @@ internal class TestAutomationLedger : AutomationLedgerInterface {
     ) {
         recorded.add(
             Recorded.ExecutionIfNoneSince(
-                scheduleId, sharedId, triggerId, result, cancel, since
+                scheduleId, sharedIds, triggerId, result, cancel, since
             )
         )
     }
