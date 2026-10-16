@@ -29,8 +29,9 @@ import com.urbanairship.json.optionalField
  * and invalidating a prepared execution. The primary constructor is private
  * so this holds for every path; construct through the companion's `invoke`.
  *
- * iOS canonicalizes later, in its derived accessor, so the same payload can
- * invalidate there and not here.
+ * Order matters here because this engine detects a changed schedule by
+ * comparing the definition itself. iOS compares a modification timestamp that
+ * every upsert bumps, so canonical order makes no difference there.
  */
 internal data class LedgerConfig private constructor(
     val sharedIds: List<String>? = null

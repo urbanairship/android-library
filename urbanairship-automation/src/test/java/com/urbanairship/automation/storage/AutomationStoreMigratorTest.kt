@@ -899,7 +899,6 @@ public class AutomationStoreMigratorTest {
 
         override suspend fun recordEventsUnless(
             scheduleId: String,
-            sharedIds: List<String>,
             events: List<LedgerEvent>,
             alreadyRecorded: (LedgerEvent) -> Boolean
         ): Boolean {

@@ -131,13 +131,7 @@ internal class AutomationLedger(
         try {
             // Checked and appended in one critical section, so a concurrent
             // recorder cannot slip between the two and let both write.
-            //
-            // Read with no shared IDs on purpose: the predicate below only
-            // accepts this schedule's own executions, so widening the read
-            // across the pool can only return rows it rejects — and that read
-            // decodes every row it fetches, on the serial queue, which on a
-            // large pooled group is the whole group's history for nothing.
-            val recorded = store.recordEventsUnless(scheduleId, emptyList(), listOf(event)) {
+            val recorded = store.recordEventsUnless(scheduleId, listOf(event)) {
                 it.isRealExecutionBy(scheduleId, since)
             }
 

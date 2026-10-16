@@ -268,7 +268,6 @@ public class AutomationLedgerTest {
 
             override suspend fun recordEventsUnless(
                 scheduleId: String,
-                sharedIds: List<String>,
                 events: List<LedgerEvent>,
                 alreadyRecorded: (LedgerEvent) -> Boolean
             ): Boolean = throw CancellationException("shutting down")
@@ -316,7 +315,6 @@ public class AutomationLedgerTest {
 
         override suspend fun recordEventsUnless(
             scheduleId: String,
-            sharedIds: List<String>,
             events: List<LedgerEvent>,
             alreadyRecorded: (LedgerEvent) -> Boolean
         ): Boolean = true

@@ -293,7 +293,6 @@ public class LedgerLimitEvaluatorTest {
             override suspend fun recordEvents(events: List<LedgerEvent>): Unit = Unit
             override suspend fun recordEventsUnless(
                 scheduleId: String,
-                sharedIds: List<String>,
                 events: List<LedgerEvent>,
                 alreadyRecorded: (LedgerEvent) -> Boolean
             ): Boolean = true

@@ -36,18 +36,21 @@ internal interface LedgerStoreInterface {
     suspend fun recordEvents(events: List<LedgerEvent>)
 
     /**
-     * Appends [events] unless one of the schedule's eligible events already
+     * Appends [events] unless one of the schedule's own events already
      * satisfies [alreadyRecorded].
      *
      * The read and the append are one critical section, so two callers cannot
-     * both find nothing and both write. [alreadyRecorded] is tested against the
-     * same event set [events] would join.
+     * both find nothing and both write. The read is never widened across a
+     * shared group, so [alreadyRecorded] only ever sees events recorded under
+     * [scheduleId].
      *
+     * @param scheduleId The recording schedule's ID.
+     * @param events The events to append.
+     * @param alreadyRecorded Predicate over the schedule's existing events.
      * @return true when the events were appended.
      */
     suspend fun recordEventsUnless(
         scheduleId: String,
-        sharedIds: List<String>,
         events: List<LedgerEvent>,
         alreadyRecorded: (LedgerEvent) -> Boolean
     ): Boolean
@@ -133,11 +136,10 @@ internal class LedgerStore(
 
     override suspend fun recordEventsUnless(
         scheduleId: String,
-        sharedIds: List<String>,
         events: List<LedgerEvent>,
         alreadyRecorded: (LedgerEvent) -> Boolean
     ): Boolean = queue.run {
-        val existing = dao.getEvents(scheduleId, sharedIds).mapNotNull(::decode)
+        val existing = dao.getEvents(scheduleId, emptyList()).mapNotNull(::decode)
         if (existing.any(alreadyRecorded)) {
             return@run false
         }

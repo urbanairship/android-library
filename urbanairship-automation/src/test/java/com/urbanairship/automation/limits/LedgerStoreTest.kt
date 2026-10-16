@@ -907,7 +907,6 @@ public class LedgerStoreTest {
 
         val appended = store.recordEventsUnless(
             scheduleId = "schedule-1",
-            sharedIds = emptyList(),
             events = listOf(execution("schedule-1"))
         ) { it is LedgerEvent.Execution }
 
@@ -921,7 +920,6 @@ public class LedgerStoreTest {
 
         val appended = store.recordEventsUnless(
             scheduleId = "schedule-1",
-            sharedIds = emptyList(),
             events = listOf(execution("schedule-1"))
         ) { it is LedgerEvent.Execution }
 
@@ -930,17 +928,16 @@ public class LedgerStoreTest {
     }
 
     @Test
-    public fun testRecordEventsUnlessJudgesTheSharedGroupToo(): TestResult = runTest {
-        // Recorded by a sibling under the shared group, so it is part of the
-        // set the predicate has to see.
+    public fun testRecordEventsUnlessIgnoresTheSharedGroup(): TestResult = runTest {
+        // A sibling's execution under the same group is not one of this
+        // schedule's own, so it cannot block the append.
         store.recordEvents(listOf(execution("schedule-2", sharedIds = listOf("group-1"))))
 
         val appended = store.recordEventsUnless(
             scheduleId = "schedule-1",
-            sharedIds = listOf("group-1"),
             events = listOf(execution("schedule-1", sharedIds = listOf("group-1")))
         ) { it is LedgerEvent.Execution }
 
-        assertFalse(appended)
+        assertTrue(appended)
     }
 }
