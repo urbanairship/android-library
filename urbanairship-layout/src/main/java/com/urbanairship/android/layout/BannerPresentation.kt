@@ -7,7 +7,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.property.BannerPlacement
 import com.urbanairship.android.layout.property.BannerPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
-import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -29,23 +29,20 @@ public class BannerPresentation public constructor(
     public val placementSelectors: List<BannerPlacementSelector>?
 ) : BasePresentation(PresentationType.BANNER) {
 
-    public fun getResolvedPlacement(context: Context): BannerPlacement {
-        if (placementSelectors == null || placementSelectors.isEmpty()) {
-            return defaultPlacement
-        }
+    /** Returns the first placement whose selector [context]'s environment matches, else the default. */
+    public fun getResolvedPlacement(context: Context): BannerPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context))
 
-        val orientation = ResourceUtils.getOrientation(context)
-        val windowSize = ResourceUtils.getWindowSize(context)
+    /**
+     * Returns the first placement whose selector matches [context]'s environment and the layout's
+     * environment [conditions], else the default. A root view's own context sits above the one its
+     * views carry conditions in, so it passes them.
+     */
+    internal fun getResolvedPlacement(context: Context, conditions: JsonMap): BannerPlacement =
+        getResolvedPlacement(SelectorEnvironment.from(context).copy(conditions = conditions))
 
-        // Try to find a matching placement selector.
-        return placementSelectors.firstOrNull {
-                (it.windowSize == null || it.windowSize == windowSize) &&
-                (it.orientation == null || it.orientation == orientation)
-            }
-            ?.placement
-        // Otherwise, return the default placement.
-            ?: defaultPlacement
-    }
+    private fun getResolvedPlacement(environment: SelectorEnvironment): BannerPlacement =
+        placementSelectors?.firstOrNull { it.conditions.matches(environment) }?.placement ?: defaultPlacement
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

@@ -23,7 +23,7 @@ import kotlin.time.Duration
 internal class StoryIndicatorView(
     context: Context,
     private val model: StoryIndicatorModel
-) : LinearLayout(context), BaseView {
+) : LinearLayout(context), BaseView, EnvironmentConditionsSensitive {
 
     private var progressIndicators: MutableList<ProgressBar> = ArrayList()
     private var lastProgress: Int = 0
@@ -75,6 +75,14 @@ internal class StoryIndicatorView(
             override fun setBackground(old: Background?, new: Background) {
                 LayoutUtils.updateBackground(this@StoryIndicatorView, old, new)
             }
+        }
+    }
+
+    override fun onEnvironmentConditionsChanged() {
+        val style = model.viewInfo.style as? StoryIndicatorStyle.LinearProgress ?: return
+        progressIndicators.filterIsInstance<LinearProgressIndicator>().forEach {
+            it.setIndicatorColor(style.progressColor.resolve(context))
+            it.trackColor = style.trackColor.resolve(context)
         }
     }
 

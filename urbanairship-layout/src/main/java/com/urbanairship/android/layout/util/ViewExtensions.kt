@@ -42,6 +42,7 @@ import com.urbanairship.android.layout.view.ScoreView
 import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.CheckableViewAdapter
+import com.urbanairship.android.layout.widget.ItemWrapper
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
@@ -231,10 +232,20 @@ internal val View.isLayoutRtl: Boolean
 internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
     findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
 
-/** Returns true if this event's raw coordinates fall within [view]'s visible bounds. */
+/**
+ * Returns true if this event's raw coordinates fall within [view]'s visible bounds.
+ *
+ * Raw coordinates are relative to the display, but [View.getGlobalVisibleRect] is relative to the
+ * window, so the touch is moved into the window first. The two only agree for a window at the
+ * display's origin, which a freeform or split-screen window isn't.
+ *
+ * @param view the view to test against.
+ * @return whether the event lands on the visible part of [view].
+ */
 internal fun MotionEvent.isWithinBounds(view: View): Boolean {
     val rect = Rect().apply { view.getGlobalVisibleRect(this) }
-    return rect.contains(rawX.toInt(), rawY.toInt())
+    val window = IntArray(2).also { view.rootView.getLocationOnScreen(it) }
+    return rect.contains(rawX.toInt() - window[0], rawY.toInt() - window[1])
 }
 
 /**
@@ -430,12 +441,22 @@ internal fun View.hasAutoSizedAncestor(horizontal: Boolean): Boolean {
  * arrived at its own.
  */
 internal fun View.hasContentSizedAncestor(horizontal: Boolean): Boolean {
+    // The frame a container puts around this very item declares the item's own length, so an
+    // `auto` on it is this view restating what it already knows from its `ItemProperties` -- not an
+    // ancestor that measured this view as part of its own content. From anywhere deeper it reads
+    // like any other ancestor, so only the item's own frame is skipped.
     var node = parent
+    if (node is ItemWrapper) node = (node as View).parent
+
     while (node is View) {
         val lp = node.layoutParams
         val declared = if (horizontal) lp?.width else lp?.height
         if (declared == ViewGroup.LayoutParams.WRAP_CONTENT) return true
-        if (node is AutoSizeProvider) return node.isAutoSized(horizontal)
+        // A node holding a share of its parent settles nothing: keep walking, and let whatever it
+        // is a share of answer. Stopping here reads `100%` of a content-sized parent as a length.
+        if (node is AutoSizeProvider && !node.inheritsLength(horizontal)) {
+            return node.isAutoSized(horizontal)
+        }
         node = node.parent
     }
     return false

@@ -55,9 +55,32 @@ public class ScoreViewTest {
     }
 
     @Test
+    public fun testAFewItemsAreAsBigAsTheirText() {
+        val items = scoreRow(start = 1, end = 3, rowHeight = null).children()
+
+        items.forEach { assertEquals(44, it.width) }
+        items.forEach { assertEquals(44, it.height) }
+    }
+
+    @Test
+    public fun testLargeTextStopsAtTheMaximumSide() {
+        val items = scoreRow(start = 1, end = 3, rowHeight = null, fontSize = 40).children()
+
+        items.forEach { assertEquals(66, it.width) }
+    }
+
+    @Test
+    public fun testManyItemsShrinkToTheirShare() {
+        val items = scoreRow(start = 0, end = 10, rowHeight = null).children()
+
+        // 300 wide, less ten gaps of 8, over eleven.
+        items.forEach { assertEquals(20, it.width) }
+    }
+
+    @Test
     public fun testWrappedItemsGrowWithTheirText() {
-        val small = wrappedScore(fontSize = 14).children().first()
-        val large = wrappedScore(fontSize = 40).children().first()
+        val small = wrappedScore(selectedFontSize = 14).children().first()
+        val large = wrappedScore(selectedFontSize = 40).children().first()
 
         // The tappable minimum covers a small font; a large one has to be given room of its own.
         assertEquals(44, small.measuredWidth)
@@ -69,8 +92,34 @@ public class ScoreViewTest {
         )
     }
 
+    @Test
+    public fun testSelectingAnItemDoesNotResizeIt() {
+        val view = wrappedScoreView(selectedFontSize = 40, unselectedFontSize = 14)
+        val item = (view.getChildAt(0) as WrappingViewGroup).getChildAt(0)
+        val widthBeforeSelection = item.measuredWidth
+
+        view.setSelectedScore(0)
+        shadowOf(Looper.getMainLooper()).idle()
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(rowWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+
+        assertEquals(widthBeforeSelection, item.measuredWidth)
+    }
+
     /** The items of a wrapping score, which size themselves rather than sharing out a row. */
-    private fun wrappedScore(fontSize: Int): WrappingViewGroup {
+    private fun wrappedScore(
+        selectedFontSize: Int,
+        unselectedFontSize: Int = selectedFontSize
+    ): WrappingViewGroup =
+        wrappedScoreView(selectedFontSize, unselectedFontSize).getChildAt(0) as WrappingViewGroup
+
+    private fun wrappedScoreView(
+        selectedFontSize: Int,
+        unselectedFontSize: Int = selectedFontSize
+    ): ScoreView {
         val style = ScoreStyle.WrappingNumberRange.fromJson(
             jsonMapOf(
                 "type" to "number_range",
@@ -78,7 +127,7 @@ public class ScoreViewTest {
                 "end" to 10,
                 "spacing" to spacing,
                 "wrapping" to jsonMapOf("max_items_per_line" to 6, "line_spacing" to 8),
-                "bindings" to bindings(fontSize)
+                "bindings" to bindings(selectedFontSize, unselectedFontSize)
             )
         ) as ScoreStyle.WrappingNumberRange
 
@@ -93,20 +142,25 @@ public class ScoreViewTest {
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )
         view.layout(0, 0, view.measuredWidth, view.measuredHeight)
-        return view.getChildAt(0) as WrappingViewGroup
+        return view
     }
 
     private fun WrappingViewGroup.children(): List<View> =
         (0 until childCount).map { getChildAt(it) }
 
-    private fun scoreRow(start: Int, end: Int): ScoreView {
+    private fun scoreRow(
+        start: Int,
+        end: Int,
+        rowHeight: Int? = this.rowHeight,
+        fontSize: Int = 14
+    ): ScoreView {
         val style = ScoreStyle.NumberRange.fromJson(
             jsonMapOf(
                 "type" to "number_range",
                 "start" to start,
                 "end" to end,
                 "spacing" to spacing,
-                "bindings" to bindings()
+                "bindings" to bindings(fontSize)
             )
         )
 
@@ -118,22 +172,23 @@ public class ScoreViewTest {
         shadowOf(Looper.getMainLooper()).idle()
         view.measure(
             View.MeasureSpec.makeMeasureSpec(rowWidth, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(rowHeight, View.MeasureSpec.EXACTLY)
+            rowHeight?.let { View.MeasureSpec.makeMeasureSpec(it, View.MeasureSpec.EXACTLY) }
+                ?: View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )
         view.layout(0, 0, view.measuredWidth, view.measuredHeight)
         return view
     }
 
     /** A filled square either way round, which is the simplest thing a score item can be. */
-    private fun bindings(fontSize: Int = 14): JsonValue {
-        val textAppearance = jsonMapOf(
+    private fun bindings(selectedFontSize: Int = 14, unselectedFontSize: Int = selectedFontSize): JsonValue {
+        fun textAppearance(fontSize: Int) = jsonMapOf(
             "font_size" to fontSize,
             "alignment" to "center",
             "color" to jsonMapOf("default" to jsonMapOf("hex" to "#000000", "alpha" to 1.0))
         )
 
-        fun binding(hex: String) = jsonMapOf(
-            "text_appearance" to textAppearance,
+        fun binding(hex: String, fontSize: Int) = jsonMapOf(
+            "text_appearance" to textAppearance(fontSize),
             "shapes" to jsonListOf(
                 jsonMapOf(
                     "type" to "rectangle",
@@ -144,8 +199,8 @@ public class ScoreViewTest {
         )
 
         return jsonMapOf(
-            "selected" to binding("#5588ff"),
-            "unselected" to binding("#ffffff")
+            "selected" to binding("#5588ff", selectedFontSize),
+            "unselected" to binding("#ffffff", unselectedFontSize)
         ).toJsonValue()
     }
 

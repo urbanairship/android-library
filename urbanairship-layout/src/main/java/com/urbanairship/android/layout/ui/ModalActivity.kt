@@ -1,6 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ui
 
+import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.environment.EnvironmentFrame
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -31,13 +34,13 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.view.ModalView
 import com.urbanairship.util.parcelableExtra
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -59,6 +62,8 @@ public class ModalActivity : AppCompatActivity() {
     private lateinit var reporter: Reporter
     private lateinit var displayTimer: DisplayTimer
     private lateinit var modelEnvironment: ModelEnvironment
+    private lateinit var presentation: ModalPresentation
+    private lateinit var placement: ModalPlacement
 
     private var disableBackButton = false
     private var dismissReported = false
@@ -85,7 +90,7 @@ public class ModalActivity : AppCompatActivity() {
             externalListener = args.listener
             reporter = ExternalReporter(externalListener)
 
-            val presentation = (args.payload.presentation as? ModalPresentation) ?: run {
+            presentation = (args.payload.presentation as? ModalPresentation) ?: run {
                 UALog.e("Not a modal presentation")
                 finish()
                 return@onCreate
@@ -100,21 +105,27 @@ public class ModalActivity : AppCompatActivity() {
                 }
             }
 
-            val placement = presentation.getResolvedPlacement(this)
-
-            handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
-
             modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = args.actionRunner,
                 displayTimer = displayTimer,
-                aiInference = DefaultThomasAIInference.create(args.ai)
+                aiInference = DefaultThomasAIInference.create(args.ai),
+                shuffleSeed = args.randomSeed,
+                environmentConditions = args.payload.environmentConditions,
+                selectsOnEnvironmentConditions = args.payload.selectsOnEnvironmentConditions
             )
+
+            // Seeded here rather than by the view, with the frame the view will fill, so the
+            // placement the window is built around is chosen with the conditions it will see.
+            modelEnvironment.seedEnvironment(window.decorView, modalFrame())
+            placement = presentation.getResolvedPlacement(this, modelEnvironment.environmentConditionValues)
+
+            handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
 
             val model = viewModel.getOrCreateModel(args.payload.view, modelEnvironment)
 
             observeLayoutEvents(modelEnvironment.layoutEvents)
-            reportStateChange(modelEnvironment.layoutEvents)
+            modelEnvironment.stateScopes.reportTo(externalListener, lifecycleScope)
 
             val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
                 this,
@@ -128,6 +139,8 @@ public class ModalActivity : AppCompatActivity() {
             val view = ModalView(this, model, presentation, viewEnvironment).apply {
                 id = viewModel.rootViewId
                 layoutParams = ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                // The placement is built into the window and views, so another one recreates.
+                onPlacementSuperseded = { recreate() }
 
                 if (presentation.dismissOnTouchOutside) {
                     setOnClickOutsideListener {
@@ -216,6 +229,18 @@ public class ModalActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
+    /**
+     * Keeps the activity through a resize or rotation, unless the new configuration selects a
+     * different placement; the placement is built into the window and views, so that recreates.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!::placement.isInitialized) return
+        if (presentation.getResolvedPlacement(this, modelEnvironment.environmentConditionValues) !== placement) {
+            recreate()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         if (isFinishing && ::loader.isInitialized) {
@@ -234,15 +259,6 @@ public class ModalActivity : AppCompatActivity() {
             .collect { finishAfterTransition() }
     }
 
-    private fun reportStateChange(events: Flow<LayoutEvent>) = lifecycleScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.StateUpdate>()
-            .distinctUntilChanged()
-            .collect {
-                externalListener.onStateChanged(it.state)
-            }
-    }
-
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.EMPTY) {
         if (dismissReported) {
             UALog.e { "Dismissed already called! not reporting dismiss again." }
@@ -257,6 +273,20 @@ public class ModalActivity : AppCompatActivity() {
             )
         )
         dismissReported = true
+    }
+
+    /**
+     * Returns the frame the modal view will be laid out at: the whole window, which it fills edge to
+     * edge, or below API 28, where the platform keeps the content inside the system bars, the safe
+     * window.
+     */
+    private fun modalFrame(): EnvironmentFrame {
+        val window = ResourceUtils.getWindowPixels(this, this.window.decorView)
+        return if (isAtLeastApi28) {
+            EnvironmentFrame(window.width, window.height)
+        } else {
+            EnvironmentFrame(window.safeWidth, window.safeHeight)
+        }
     }
 
     private fun handleIgnoreSafeAreas(shouldIgnoreSafeArea: Boolean) {

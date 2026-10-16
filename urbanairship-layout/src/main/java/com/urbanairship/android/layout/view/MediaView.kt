@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -49,6 +50,7 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -64,10 +66,10 @@ import com.urbanairship.android.layout.util.isLayoutRtl
  */
 internal class MediaView(
     context: Context,
-    model: MediaModel,
+    private val model: MediaModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-) : FrameLayout(context, null), BaseView, TappableView, ShrinkableView {
+) : FrameLayout(context, null), BaseView, TappableView, ShrinkableView, ButtonDescriptionSource {
 
     private val activityListener = object : SimpleActivityListener() {
         override fun onActivityPaused(activity: Activity) {
@@ -113,7 +115,7 @@ internal class MediaView(
     private val mediaFit: MediaFit = model.viewInfo.mediaFit
 
     val isNonInteractiveVideo: Boolean =
-        model.viewInfo.mediaType.isPlayable &&
+        model.viewInfo.mediaType == MediaType.VIDEO &&
                 !model.viewInfo.eventHandlers.hasTapHandler() &&
                 !(model.viewInfo.video ?: Video.defaultVideo()).showControls
 
@@ -212,8 +214,7 @@ internal class MediaView(
 
             override fun onStateUpdated(state: ThomasState) {
                 currentState = state
-                val isDarkMode = ResourceUtils.isUiModeNight(context)
-                val newUrl = model.resolveUrl(state, isDarkMode)
+                val newUrl = model.resolveUrl(state, SelectorEnvironment.from(context))
                 if (newUrl == lastMediaUrl) return
                 lastMediaUrl = newUrl
                 val cached = viewEnvironment.imageCache()?.get(newUrl)
@@ -256,6 +257,16 @@ internal class MediaView(
      * has it deprecated, so there is nothing here to align it to.
      */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        // An item that declares a ratio has both its axes worked out by the parent, so the specs
+        // are the box to crop into; taking the image's own shape leaves the ratio with no effect.
+        if (itemProperties?.size?.aspectRatio != null &&
+            MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY &&
+            MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY
+        ) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            return
+        }
+
         val drawable = imageView?.drawable
         val mediaWidth = drawable?.intrinsicWidth ?: 0
         val mediaHeight = drawable?.intrinsicHeight ?: 0
@@ -281,6 +292,13 @@ internal class MediaView(
                 // has nothing to take, and follows the ratio.
                 width = ceilingWidth?.toFloat() ?: (ceilingHeight!! * ratio)
                 height = ceilingHeight?.toFloat() ?: (width / ratio)
+
+                // A fit that never crops has nothing to fill the box with, so each axis stops at
+                // what the image needs across the other, as iOS's `fittedLength` does.
+                if (mediaFit == MediaFit.CENTER_INSIDE) {
+                    width = min(width, height * ratio)
+                    height = min(height, width / ratio)
+                }
             } else {
                 // No box, so the image's own shape at the width it was offered. Scaling up to that
                 // width is the point: `center_inside` promises never to crop, not never to grow.
@@ -305,7 +323,16 @@ internal class MediaView(
             val ceilingOnAuto =
                 if (statedWidth != null) ceiling(heightMeasureSpec, horizontal = false)
                 else ceiling(widthMeasureSpec, horizontal = true)
-            val autoLength = ceilingOnAuto?.toFloat()?.takeIf { it < fromRatio } ?: fromRatio
+            var autoLength = ceilingOnAuto?.toFloat()?.takeIf { it < fromRatio } ?: fromRatio
+
+            // The allowance on the `auto` axis is not a box to crop into, but it is still all the
+            // room there is: a parent that rationed what it had lays out what it gave, so drawing
+            // past it cuts the image off rather than keeping it whole. Smaller is what an over-full
+            // parent costs; cropped is not. The same bargain the branch above makes.
+            val offeredOnAuto = if (statedWidth != null) offeredHeight else offeredWidth
+            if (offeredOnAuto != null && autoLength > offeredOnAuto) {
+                autoLength = offeredOnAuto.toFloat()
+            }
 
             width = statedWidth?.toFloat() ?: autoLength
             height = statedHeight?.toFloat() ?: autoLength
@@ -343,7 +370,7 @@ internal class MediaView(
         offered(spec)?.takeIf { !hasContentSizedAncestor(horizontal) }
 
     private fun configureImageView(model: MediaModel) {
-        val resolvedUrl = model.resolveUrl(currentState, ResourceUtils.isUiModeNight(context))
+        val resolvedUrl = model.resolveUrl(currentState, SelectorEnvironment.from(context))
         lastMediaUrl = resolvedUrl
         val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
         val url = cached?.path ?: resolvedUrl
@@ -441,7 +468,9 @@ internal class MediaView(
         wv.addJavascriptInterface(wv.getJavascriptInterface(), "VideoListenerInterface")
         val frameLayout = when (model.viewInfo.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
-            MediaType.VIDEO -> FixedAspectRatioFrameLayout(context).apply {
+            MediaType.VIDEO,
+            MediaType.YOUTUBE,
+            MediaType.VIMEO -> FixedAspectRatioFrameLayout(context).apply {
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                     gravity = Gravity.CENTER
                 }
@@ -451,28 +480,17 @@ internal class MediaView(
                     val isWrapWidth = params.width == WRAP_CONTENT
                     val isWrapHeight = params.height == WRAP_CONTENT
 
-                    if (isWrapWidth || isWrapHeight) {
-                        // If either dimension is wrap_content, the aspect ratio will be adjusted
-                        // based on the video's aspect ratio.
-                        model.viewInfo.video?.aspectRatio?.let {
-                            aspectRatio = it.toFloat()
-                        }
-                        shouldEnforceAspectRatio = true
-                    } else {
-                        // If the width and height are known, we don't need to fix to the aspect
-                        // ratio of the video.
-                        aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: 1.77f
-                        shouldEnforceAspectRatio = false
-                    }
-                }
-            }
-            MediaType.YOUTUBE,
-            MediaType.VIMEO -> FixedAspectRatioFrameLayout(context).apply {
-                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
-                    gravity = Gravity.CENTER
-                }
-                model.viewInfo.video?.aspectRatio?.let {
-                    aspectRatio = it.toFloat()
+                    aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: aspectRatio
+
+                    // Keep the media's own shape while either dimension is still being decided by
+                    // it. Once both are fixed the layout has already chosen the box, and a `video`
+                    // fills it -- as does any `backgrounds` layer, which exists to fill its host.
+                    // An in-flow youtube/vimeo embed keeps its aspect either way: its player
+                    // letterboxes inside whatever box it is given, so stretching the view only
+                    // moves the bars.
+                    val fillsItsBox = !isWrapWidth && !isWrapHeight &&
+                        (model.viewInfo.mediaType == MediaType.VIDEO || model.isBackgroundLayer)
+                    shouldEnforceAspectRatio = !fillsItsBox
                 }
             }
             // SVG images fall back to loading in a WebView, where we don't want to adjust the
@@ -516,7 +534,7 @@ internal class MediaView(
         val webViewWeakReference = WeakReference(wv)
         val load = Runnable {
             webViewWeakReference.get()?.let { weakWebView ->
-                val resolvedUrl = model.resolveUrl(currentState, ResourceUtils.isUiModeNight(context))
+                val resolvedUrl = model.resolveUrl(currentState, SelectorEnvironment.from(context))
                 lastMediaUrl = resolvedUrl
                 when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> {
@@ -598,7 +616,7 @@ internal class MediaView(
         }
 
         wv.visibility = INVISIBLE
-        wv.webViewClient = object : MediaWebViewClient(load) {
+        wv.webViewClient = object : MediaWebViewClient(load, { model.setMediaLoading(false) }) {
             override fun onPageFinished(webView: WebView) {
                 webView.visibility = VISIBLE
                 progressBar.visibility = GONE
@@ -619,6 +637,11 @@ internal class MediaView(
                 wv.postDelayed(load, delay)
             } else {
                 UALog.w { "MediaView[${model.videoId}] video failed to load after $MAX_VIDEO_ERROR_RETRIES retries: code=$errorCode, description=$description" }
+                // A video that has given up will never report ready, and only ready releases the
+                // hold this view took on a story's automated advance. Left held, a story with an
+                // unreachable video sits on its first page forever, and no later resume can free
+                // it -- `PagerModel.resumeStory` defers precisely while media is still loading.
+                model.setMediaLoading(false)
             }
         }
 
@@ -649,17 +672,30 @@ internal class MediaView(
             }
         }
 
-    private abstract class MediaWebViewClient(private val onRetry: Runnable) : WebViewClient() {
+    private abstract class MediaWebViewClient(
+        private val onRetry: Runnable,
+        private val onGaveUp: Runnable
+    ) : WebViewClient() {
 
         var error = false
         var retryDelay = START_RETRY_DELAY
+        private var retries = 0
 
         override fun onPageFinished(view: WebView, url: String) {
             super.onPageFinished(view, url)
             if (error) {
-                UALog.v { "MediaWebViewClient onPageFinished with error, retrying in ${retryDelay}ms: url=$url" }
-                view.postDelayed(onRetry, retryDelay)
-                retryDelay *= 2
+                if (retries < MAX_PAGE_RETRIES) {
+                    retries++
+                    UALog.v { "MediaWebViewClient onPageFinished with error, retrying in ${retryDelay}ms: url=$url" }
+                    view.postDelayed(onRetry, retryDelay)
+                    retryDelay *= 2
+                } else {
+                    // Only the plain `video` page reports errors through its own JS callback;
+                    // a youtube/vimeo embed has none, so without a last attempt this retried
+                    // forever. A page that will never load has to stop holding up a story.
+                    UALog.w { "MediaWebViewClient giving up after $MAX_PAGE_RETRIES retries: url=$url" }
+                    onGaveUp.run()
+                }
             } else {
                 onPageFinished(view)
             }
@@ -685,6 +721,7 @@ internal class MediaView(
 
         companion object {
             private const val START_RETRY_DELAY: Long = 1000
+            private const val MAX_PAGE_RETRIES = 3
         }
     }
 
@@ -909,4 +946,6 @@ internal class MediaView(
         """.trimIndent()
 
     }
+
+    override fun buttonDescription(): String? = model.contentDescription(context)
 }

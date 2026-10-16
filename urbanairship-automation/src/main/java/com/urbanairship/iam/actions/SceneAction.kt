@@ -5,6 +5,7 @@ import com.urbanairship.Airship
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
+import com.urbanairship.actions.SuspendingAction
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.inAppAutomation
@@ -21,7 +22,6 @@ import com.urbanairship.util.base64Decoded
 import com.urbanairship.util.rawDeflateInflate
 import java.nio.charset.StandardCharsets
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
 
 /**
  * Scene action that creates and schedules an in-app message with Airship layout content.
@@ -42,7 +42,7 @@ internal class SceneAction(
         Airship.inAppAutomation.upsertSchedules(listOf(it))
     },
     private val clock: Clock = Clock.DEFAULT_CLOCK
-) : Action() {
+) : SuspendingAction() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when(arguments.situation) {
@@ -55,7 +55,7 @@ internal class SceneAction(
         }
     }
 
-    override fun perform(arguments: ActionArguments): ActionResult {
+    override suspend fun performSuspending(arguments: ActionArguments): ActionResult {
         val pushMessage = BundleCompat.getParcelable(
             arguments.metadata,
             ActionArguments.PUSH_MESSAGE_METADATA,
@@ -87,23 +87,28 @@ internal class SceneAction(
             productId = PRODUCT_ID,
             queue = QUEUE,
             created = clock.now(),
-            sendMetadata = pushMessage?.metadata
+            sendMetadata = pushMessage?.metadata,
+            reportingContext = args.reportingContext
         )
 
-        runBlocking { scheduler(schedule) }
+        scheduler(schedule)
 
         return ActionResult.newEmptyResult()
     }
 
     private data class Arguments(
-        val scene: AirshipLayout
+        val scene: AirshipLayout,
+        val reportingContext: JsonValue?
     ) {
         companion object {
             private const val KEY_DSL = "dsl"
+            private const val KEY_REPORTING_CONTEXT = "reporting_context"
 
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): Arguments {
-                val sceneJson = value.requireMap()
+                val map = value.requireMap()
+
+                val sceneJson = map
                     .requireField<String>(KEY_DSL)
                     .base64Decoded()
                     ?.rawDeflateInflate()
@@ -111,7 +116,7 @@ internal class SceneAction(
                     ?: throw JsonException("Invalid scene payload")
 
                 val scene = AirshipLayout(JsonValue.parseString(sceneJson))
-                return Arguments(scene)
+                return Arguments(scene, map[KEY_REPORTING_CONTEXT])
             }
         }
     }

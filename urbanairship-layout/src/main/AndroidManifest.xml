@@ -7,6 +7,7 @@
         <activity android:name="com.urbanairship.android.layout.ui.ModalActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.Layout.ModalActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:windowSoftInputMode="stateHidden|adjustResize">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"

@@ -33,6 +33,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation"
             android:windowSoftInputMode="adjustPan"
             android:launchMode="singleTop"
             android:exported="true">

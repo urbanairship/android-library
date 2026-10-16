@@ -53,7 +53,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -104,6 +103,7 @@ public class BannerLayout(
     private val imageCache: ImageCache? = args.imageCache
     private val actionRunner: ThomasActionRunner = args.actionRunner
     private val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(args.ai)
+    private val randomSeed: String? = args.randomSeed
 
     private val reporter: Reporter = ExternalReporter(externalListener)
 
@@ -120,10 +120,21 @@ public class BannerLayout(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun getPresentation(): BannerPresentation = presentation
 
+    private val _placement = MutableStateFlow(presentation.getResolvedPlacement(context))
+
+    /**
+     * The placement shown, for a host's edge, swipe and transitions. Until the view exists it's the
+     * one the configuration selects; the view then reports the one its environment conditions
+     * select, and every later change. A host collects this rather than reading [getPlacement] once.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val placementUpdates: StateFlow<BannerPlacement> = _placement.asStateFlow()
+
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun getPlacement(): BannerPlacement =
-        presentation.getResolvedPlacement(context)
+    public fun getPlacement(): BannerPlacement = placementUpdates.value
 
     /**
      * Creates the banner view, notifying the optional [frameBoundsChangedListener] when the
@@ -176,16 +187,6 @@ public class BannerLayout(
             }
         }.also(activityMonitor::addApplicationListener)
 
-        val placement = presentation.getResolvedPlacement(activity)
-        val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
-            activity,
-            activityMonitor,
-            webViewClientFactory,
-            imageCache,
-            placement.shouldIgnoreSafeArea(),
-            payload.version
-        )
-
         val viewModelProvider = ViewModelProvider(BannerViewModelStores.owner(viewInstanceId))
         val viewModel = viewModelProvider[viewInstanceId, LayoutViewModel::class.java]
 
@@ -196,7 +197,23 @@ public class BannerLayout(
                 reporter = reporter,
                 actionRunner = actionRunner,
                 displayTimer = timer,
-                aiInference = aiInference
+                aiInference = aiInference,
+                shuffleSeed = randomSeed,
+                environmentConditions = payload.environmentConditions,
+                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions
+            )
+
+            // Seeded before the placement is read, so its safe-area handling is chosen with the
+            // environment conditions the banner will see.
+            modelEnvironment.seedEnvironment(activity.window.decorView)
+            val placement = presentation.getResolvedPlacement(activity, modelEnvironment.environmentConditionValues)
+            val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
+                activity,
+                activityMonitor,
+                webViewClientFactory,
+                imageCache,
+                placement.shouldIgnoreSafeArea(),
+                payload.version
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,
@@ -236,8 +253,10 @@ public class BannerLayout(
             layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)
 
             stateUpdateReportJob?.cancel()
-            stateUpdateReportJob = reportStateChange(modelEnvironment.layoutEvents)
+            stateUpdateReportJob = modelEnvironment.stateScopes.reportTo(externalListener, layoutScope)
 
+            bannerView.onPlacementChanged = { _placement.value = it }
+            _placement.value = bannerView.resolvedPlacement()
             currentView = WeakReference(bannerView)
             return bannerView
         } catch (e: ModelFactoryException) {
@@ -313,15 +332,6 @@ public class BannerLayout(
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = layoutScope.launch {
         events.filterIsInstance<LayoutEvent.Finish>()
             .collect { dismiss() }
-    }
-
-    private fun reportStateChange(events: Flow<LayoutEvent>) = layoutScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.StateUpdate>()
-            .distinctUntilChanged()
-            .collect {
-                externalListener.onStateChanged(it.state)
-            }
     }
 
     private fun reportDismissFromOutside(data: ReportingEvent.DismissData) {

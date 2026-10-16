@@ -4,6 +4,7 @@ import android.content.Context
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.iam.InAppMessagePreview
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -62,25 +63,41 @@ internal class ThomasLayout {
             throw IllegalArgumentException("Unsupported file type: $assetsPath")
         }
 
+        /**
+         * The layout JSON, unwrapped from the full in-app message payload if needed.
+         */
+        @Throws(IllegalStateException::class)
+        private fun layoutJson(map: JsonMap): JsonMap {
+            return if (map.containsKey("presentation")) {
+                // DevApp layout, without the full in-app message wrapper
+                map
+            } else {
+                // Full API payload, from Flight Deck, etc.
+                map.optionalMap("in_app_message")
+                    ?.optionalMap("message")
+                    ?.optionalMap("display")
+                    ?.optionalMap("layout")
+                    ?: throw IllegalStateException("Malformed layout file: $assetsPath")
+            }
+        }
+
+        /**
+         * Reads the file as an [AirshipLayout], for hosts that render a layout inline rather
+         * than displaying it themselves.
+         */
+        @Throws(IllegalArgumentException::class, IllegalStateException::class, JsonException::class)
+        fun readAirshipLayout(context: Context): AirshipLayout =
+            AirshipLayout.fromJson(
+                jsonMapOf("layout" to layoutJson(readFile(context))).toJsonValue()
+            )
+
         @Throws(IllegalArgumentException::class, IllegalStateException::class, JsonException::class)
         fun display(context: Context) {
             val map = readFile(context)
 
             when(type) {
                 Type.SCENE_BANNERS, Type.SCENE_EMBEDDED, Type.SCENE_MODALS -> {
-                    val payload = if (map.containsKey("presentation")) {
-                        // DevApp layout, without the full in-app message wrapper
-                        LayoutInfo(map)
-                    } else {
-                        // Full API payload, from Flight Deck, etc.
-                        val layoutInfo = map.optionalMap("in_app_message")
-                            ?.optionalMap("message")
-                            ?.optionalMap("display")
-                            ?.optionalMap("layout")
-                            ?: throw IllegalStateException("Malformed layout file: $assetsPath")
-
-                        LayoutInfo(layoutInfo)
-                    }
+                    val payload = LayoutInfo(layoutJson(map))
 
                     DefaultThomasLayoutDisplay.shared.display(
                         context = context,

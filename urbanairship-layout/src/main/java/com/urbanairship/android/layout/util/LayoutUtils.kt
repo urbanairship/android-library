@@ -77,20 +77,38 @@ internal object LayoutUtils {
         view: View,
         baseBackground: Drawable?,
         oldBackground: Background?,
-        newBackground: Background
+        newBackground: Background,
+        fillInsideStroke: Boolean = false
     ) {
         val borderPadding = oldBackground?.border?.strokeWidth?.let { dpToPx(view.context, it) }
         borderPadding?.let { removePadding(view, it) }
 
-        applyBorderAndBackground(view, baseBackground, newBackground.border, newBackground.color)
+        applyBorderAndBackground(
+            view, baseBackground, newBackground.border, newBackground.color, fillInsideStroke
+        )
     }
 
-    fun updateBackground(view: View, oldBackground: Background?, newBackground: Background) {
-        updateBackground(view, null, oldBackground, newBackground)
+    fun updateBackground(
+        view: View,
+        oldBackground: Background?,
+        newBackground: Background,
+        fillInsideStroke: Boolean = false
+    ) {
+        updateBackground(view, null, oldBackground, newBackground, fillInsideStroke)
     }
 
+    /**
+     * Sets [view]'s background to [backgroundColor] inside [border], and pads the view by the stroke.
+     *
+     * @param fillInsideStroke stops the fill at the stroke's inner edge, so a translucent stroke is
+     * drawn over what is behind the view rather than over the fill.
+     */
     fun applyBorderAndBackground(
-        view: View, baseBackground: Drawable?, border: Border?, backgroundColor: Color?
+        view: View,
+        baseBackground: Drawable?,
+        border: Border?,
+        backgroundColor: Color?,
+        fillInsideStroke: Boolean = false
     ) {
         val context = view.context
 
@@ -126,12 +144,26 @@ internal object LayoutUtils {
         }
 
         @ColorInt val fillColor = backgroundColor?.resolve(context) ?: Color.TRANSPARENT
-        shapeDrawable.fillColor = ColorStateListBuilder()
+        val fillColors = ColorStateListBuilder()
             .add(generateDisabledColor(fillColor), -AndroidR.attr.state_enabled)
             .add(fillColor)
             .build()
 
-        applyBackgrounds(view, baseBackground, shapeDrawable)
+        if (fillInsideStroke && borderPadding != null && borderPadding > 0) {
+            // Each corner of the fill is the stroke's curve less the stroke, as a CSS padding box's is.
+            val innerShape = ShapeAppearanceModel.builder()
+            border.applyToShape(innerShape) { (dpToPx(context, it) - borderPadding).coerceAtLeast(0) }
+            val fill = MaterialShapeDrawable(innerShape.build())
+            fill.fillColor = fillColors
+            shapeDrawable.fillColor = ColorStateList.valueOf(Color.TRANSPARENT)
+            val layers = LayerDrawable(arrayOf(fill, shapeDrawable)).apply {
+                setLayerInset(0, borderPadding, borderPadding, borderPadding, borderPadding)
+            }
+            applyBackgrounds(view, baseBackground, layers)
+        } else {
+            shapeDrawable.fillColor = fillColors
+            applyBackgrounds(view, baseBackground, shapeDrawable)
+        }
 
         borderPadding?.let { addPadding(view, it) }
     }
@@ -356,6 +388,17 @@ internal object LayoutUtils {
         }
     }
 
+    /** Sets [textView]'s text color from [textAppearance], dimmed while disabled. */
+    fun applyTextColor(textView: TextView, textAppearance: TextAppearance) {
+        val textColor = textAppearance.color.resolve(textView.context)
+        textView.setTextColor(
+            ColorStateListBuilder()
+                .add(generateDisabledColor(Color.TRANSPARENT, textColor), -AndroidR.attr.state_enabled)
+                .add(textColor)
+                .build()
+        )
+    }
+
     @JvmStatic
     fun applyTextAppearance(textView: TextView, textAppearance: TextAppearance) {
         val context = textView.context
@@ -363,15 +406,7 @@ internal object LayoutUtils {
         textView.textSize = textAppearance.fontSize.toFloat()
         textView.includeFontPadding = false
 
-        val textColor = textAppearance.color.resolve(context)
-        val disabledTextColor = generateDisabledColor(Color.TRANSPARENT, textColor)
-
-        textView.setTextColor(
-            ColorStateListBuilder()
-                .add(disabledTextColor, -AndroidR.attr.state_enabled)
-                .add(textColor)
-                .build()
-        )
+        applyTextColor(textView, textAppearance)
 
         var fontWeight = 0
         var italic = false

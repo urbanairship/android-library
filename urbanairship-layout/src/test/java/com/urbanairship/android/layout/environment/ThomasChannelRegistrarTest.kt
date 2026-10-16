@@ -94,5 +94,25 @@ public class ThomasChannelRegistrarTest {
         }
     }
 
+    @Test
+    public fun testRegisterEmailMapsTrackingFlagsToConsent() {
+        val options = ThomasEmailRegistrationOptions.DoubleOptIn(
+            properties = properties,
+            openTrackingOptedIn = true,
+            clickTrackingOptedIn = false
+        )
 
+        val expectedOptions = EmailRegistrationOptions.options(
+            properties = properties,
+            doubleOptIn = true,
+            openTracking = EmailRegistrationOptions.TrackingConsent.OptedIn(testClock.currentTime),
+            clickTracking = EmailRegistrationOptions.TrackingConsent.OptedOut(testClock.currentTime)
+        )
+
+        registrar.register(listOf(ThomasChannelRegistration.Email(address, options)))
+
+        verify {
+            mockEmailRegistration(address, expectedOptions)
+        }
+    }
 }

@@ -91,10 +91,6 @@ public class AirshipEmbeddedViewState(
         EmbeddedViewManager.dismissAll(embeddedId)
     }
 
-    internal val placementSize: ConstrainedSize? by derivedStateOf {
-        currentLayout?.getPlacement()?.size
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

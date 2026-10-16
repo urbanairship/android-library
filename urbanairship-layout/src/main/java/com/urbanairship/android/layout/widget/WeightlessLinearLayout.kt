@@ -190,6 +190,34 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         if (horizontal) isAutoWidth else isAutoHeight
 
     /**
+     * Whether any child states a length on [horizontal]. See [LengthBasisProvider.statesLength].
+     *
+     * The same walk as [establishesLength] with the leaf answer inverted: a child we cannot ask
+     * has content rather than a length, so it settles nothing here.
+     */
+    override fun statesLength(horizontal: Boolean): Boolean {
+        for (i in 0..<childCount) {
+            val child = stackChildAt(i) ?: continue
+            if (child.visibility == GONE) continue
+
+            val lp = child.layoutParams as? LayoutParams ?: continue
+            val declared = if (horizontal) lp.width else lp.height
+            val percent = if (horizontal) lp.maxWidthPercent else lp.maxHeightPercent
+
+            val states = when {
+                declared == 0 && percent > 0f -> false
+                declared == ViewGroup.LayoutParams.MATCH_PARENT -> false
+                declared == ViewGroup.LayoutParams.WRAP_CONTENT -> child.statesLength(horizontal)
+                else -> true
+            }
+
+            if (states) return true
+        }
+
+        return false
+    }
+
+    /**
      * Whether any child gives [horizontal] a length of its own, rather than a share of ours.
      *
      * Auto defers to the content, so the question passes down: a stack of percentages is no more
@@ -197,7 +225,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      */
     override fun establishesLength(horizontal: Boolean): Boolean {
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             val lp = child.layoutParams as? LayoutParams ?: return true
@@ -239,7 +267,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         if (this !is ShrinkableView || !isShrinkable()) return false
 
         return this !is WeightlessLinearLayout ||
-                (0..<childCount).any { getChildAt(it)?.givesOnShrink(horizontal) == true }
+                (0..<childCount).any { stackChildAt(it)?.givesOnShrink(horizontal) == true }
     }
 
     /**
@@ -255,7 +283,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      */
     private fun hasFullPercentChild(horizontal: Boolean): Boolean {
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             val lp = child.layoutParams as? LayoutParams ?: continue
@@ -266,6 +294,20 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         }
         return false
     }
+
+    /**
+     * The child at [index] if this layout stacks it, or `null` if the child positions itself.
+     *
+     * A `backgrounds` layer rendered as a real view is a child of its host but never part of the
+     * stack: it fills the host's own box, so it must not take a slot, add to the measured length,
+     * or shift the items after it. A host that excludes a child this way is responsible for
+     * measuring and positioning it -- see `LinearLayoutView`.
+     */
+    protected fun stackChildAt(index: Int): View? =
+        getChildAt(index)?.takeUnless(::isExcludedFromStack)
+
+    /** Whether [child] positions itself rather than taking a place in the stack. */
+    protected open fun isExcludedFromStack(child: View): Boolean = false
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // Recorded before any child is measured, since that's when they ask. Anything short of
@@ -323,7 +365,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // Lazy because answering walks the subtree, and only a stack that actually has a cross-axis
         // percent child ever asks. Unsynchronized: measurement is the main thread's.
         val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
-            widthMode == MeasureSpec.EXACTLY || establishesLength(horizontal = true)
+            widthMode == MeasureSpec.EXACTLY || statesLength(horizontal = true)
         }
 
         // A child at exactly 100% is a third case, between the two above. It supplies no width, so
@@ -342,6 +384,11 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // What the children that can't give have taken, which is what the rest have to share.
         var fixedLength = 0
 
+        // What the children that can bend are allowed when a percent sibling wants the same room.
+        // Settled once the children that can't give are measured, and null when nothing needs
+        // rationing.
+        var shares: Shares? = null
+
         // See how tall everyone is. Also remember max width.
         //
         // Children that can give are measured after the ones that can't, and all against the same
@@ -349,10 +396,20 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // in order, the first to ask takes as much as it likes and anything after it — another
         // image, or the paragraph under them both — is measured against nothing and disappears.
         for (pass in 0..1) {
-            if (pass == 1) fixedLength = totalLength
+            if (pass == 1) {
+                fixedLength = totalLength
+                if (percentTotal > 0f) {
+                    shares = sharesWithPercentChildren(
+                        vertical = true,
+                        fixedLength = fixedLength,
+                        mainMeasureSpec = heightMeasureSpec,
+                        crossMeasureSpec = widthMeasureSpec
+                    )
+                }
+            }
 
         for (i in 0..<count) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
 
             if (child.visibility == GONE) {
                 continue
@@ -425,19 +482,20 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 // what its siblings left: what it asks for is what the shrink below divides
                 // between them. Against the leftovers the first to ask takes the room and the
                 // last is handed what remains, however little that is.
+                val share = shares?.perChild?.get(i) ?: -1
                 val heightUsed = when {
+                    // Withhold all but the share, pinning the child to exactly that height. A
+                    // percent sibling's claim has already been taken out of it.
+                    share >= 0 -> (MeasureSpec.getSize(heightMeasureSpec) - paddingTop
+                            - paddingBottom - lp.topMargin - lp.bottomMargin - share)
+                        .coerceAtLeast(0)
                     percentTotal != 0f -> 0
                     pass == 1 -> fixedLength
                     else -> totalLength
                 }
 
-                measureChildWithMargins(
-                    child,
-                    widthMeasureSpec,
-                    childHorizontalMargins,
-                    heightMeasureSpec,
-                    heightUsed
-                )
+                // No width used: `measureChildWithMargins` takes the margins off itself.
+                measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, heightUsed)
 
                 if (oldWidth != Int.MIN_VALUE) {
                     lp.width = oldWidth
@@ -543,7 +601,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             var totalShrinkableHeight = 0
 
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -557,6 +615,10 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 }
             }
 
+            // With no else: children that cannot cover the overflow between them keep the
+            // lengths they measured, and the stack runs off its own end for the last of them to be
+            // clipped. That is how iOS and web lay a stack out. Zeroing the children that hug
+            // their content instead dropped a label out of the scene whole.
             if (!shrinkableChildren.isEmpty() && totalShrinkableHeight >= abs(delta)) {
                 fun widthSpecFor(child: View): Int {
                     val lp = child.layoutParams as LayoutParams
@@ -623,7 +685,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 percentMaxWidth = 0
                 alternativeMaxWidth = 0
                 for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
+                    val child = stackChildAt(i) ?: continue
                     if (child.visibility == GONE) {
                         continue
                     }
@@ -650,29 +712,6 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
                 // Delta should now be close to zero
                 delta = height - totalLength
-            } else {
-                // Fixed children overflow the parent, and WRAP_CONTENT children can't absorb it;
-                // zero out all WRAP_CONTENT children to match iOS failure behavior.
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    if (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxHeightPercent == 0f) {
-                        val widthSpec = getChildMeasureSpec(
-                            widthMeasureSpec, lp.marginStart + lp.marginEnd, lp.width
-                        )
-                        child.measure(widthSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY))
-                    }
-                }
-                totalLength = 0
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    totalLength += child.measuredHeight + lp.topMargin + lp.bottomMargin
-                }
-                totalLength += paddingTop + paddingBottom
-                delta = height - totalLength
             }
         }
 
@@ -694,7 +733,10 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 val marginLp = it.layoutParams as LayoutParams
                 marginLp.topMargin + marginLp.bottomMargin
             }
-            var slotRemaining = delta + percentMargins
+            // Less what the ratio children are owed: they are measured after this, against what is
+            // left, so anything handed out here is taken from them.
+            var slotRemaining =
+                (delta + percentMargins - (shares?.ratioReserve ?: 0)).coerceAtLeast(0)
 
             val lastChildIndex = maxPercentCount - 1
             for (i in 0..<maxPercentCount) {
@@ -788,7 +830,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // about to be counted again — including the ones already in there.
             totalLength = 0
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -841,7 +883,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // slots they were given, so the ratio children were offered space already spoken for.
             var consumed = paddingTop + paddingBottom
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE || child in ratioFillChildren) continue
                 val lp = child.layoutParams as LayoutParams
                 consumed += child.measuredHeight + lp.topMargin + lp.bottomMargin
@@ -952,7 +994,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         ) {
             totalLength = paddingTop + paddingBottom
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) continue
                 val lp = child.layoutParams as LayoutParams
                 totalLength += child.measuredHeight + lp.topMargin + lp.bottomMargin
@@ -978,7 +1020,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         val uniformMeasureSpec =
             MeasureSpec.makeMeasureSpec(measuredWidth, MeasureSpec.EXACTLY)
         for (i in 0..<count) {
-            val child = getChildAt(i)
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) { continue }
 
             val lp = child.layoutParams as LayoutParams
@@ -1012,6 +1054,8 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         val count = childCount
         val childrenWithMaxPercent = mutableListOf<View>()
         val ratioFillChildren = mutableListOf<View>()
+        // Auto grids fill what they are offered, so they are offered what the rest leave: see the last pass.
+        val offeredWidthChildren = mutableListOf<View>()
         // Percent on our cross axis, deferred until we know how tall we ended up.
         val crossAxisPercentChildren = mutableListOf<View>()
 
@@ -1024,7 +1068,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // lone `height: 50%` child in an auto-height row collapses the same way a `width: 50%` one
         // did in an auto-width column. Same laziness, for the same reason.
         val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
-            heightMode == MeasureSpec.EXACTLY || establishesLength(horizontal = false)
+            heightMode == MeasureSpec.EXACTLY || statesLength(horizontal = false)
         }
 
         // As in `measureVertical`: a child at exactly the whole settles rather than walks, so it
@@ -1053,16 +1097,31 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // What the children that can't give have taken, which is what the rest have to share.
         var fixedLength = 0
 
+        // As in `measureVertical`: what the children that can bend are allowed when a percent
+        // sibling wants the same room. A row that divides equally never has one, so the two never
+        // meet.
+        var percentShares: Shares? = null
+
         // See how wide everyone is. Also remember max height.
         //
         // As in `measureVertical`: the children that can give are measured after the ones that
         // can't, and all against the same room, so a photo beside a caption divides what is left
         // with its siblings rather than taking the row and leaving them measured against nothing.
         for (pass in 0..1) {
-            if (pass == 1) fixedLength = totalLength
+            if (pass == 1) {
+                fixedLength = totalLength
+                if (percentTotal > 0f) {
+                    percentShares = sharesWithPercentChildren(
+                        vertical = false,
+                        fixedLength = fixedLength,
+                        mainMeasureSpec = widthMeasureSpec,
+                        crossMeasureSpec = heightMeasureSpec
+                    )
+                }
+            }
 
         for (i in 0..<count) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
 
             if (child.visibility == GONE) {
                 continue
@@ -1083,6 +1142,14 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 idealRatioLength +=
                     ratioMainExtent(lp, vertical = false, crossSpecSize = heightSize) +
                             lp.marginStart + lp.marginEnd
+                allFillParent = false
+                continue
+            }
+
+            if (child.fillsOfferedWidth
+                && lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxWidthPercent == 0f
+                && (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.AT_MOST)) {
+                offeredWidthChildren.add(child)
                 allFillParent = false
                 continue
             }
@@ -1127,33 +1194,24 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
                 // Width to withhold from the child, so it measures against:
                 // (row width - padding - margins - width used)
-                //
-                // Three cases:
-                //   shares:
-                //   normal:
-                //   percent present:
-                val widthUsed = if (shares != null) {
-                    //  withhold all but shares[i], pinning the child to exactly that width
-                    (MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd
-                            - lp.marginStart - lp.marginEnd - shares[i]).coerceAtLeast(0)
-                } else if (percentTotal == 0f) {
+                val share = shares?.get(i) ?: percentShares?.perChild?.get(i) ?: -1
+                val widthUsed = when {
+                    // withhold all but the share, pinning the child to exactly that width
+                    // (an equal one, or one a percent sibling's claim is already out of)
+                    share >= 0 ->
+                        (MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd
+                                - lp.marginStart - lp.marginEnd - share).coerceAtLeast(0)
                     // withhold what the children that can't give took, so the ones that can are
                     // all measured against the same room
-                    if (pass == 1) fixedLength else totalLength
-                } else {
+                    percentTotal == 0f -> if (pass == 1) fixedLength else totalLength
                     // withhold nothing. totalLength keeps moving until percent children are
                     // sized in the distribution pass below, so using it here would measure
                     // against a stale value.
-                    0
+                    else -> 0
                 }
 
-                measureChildWithMargins(
-                    child,
-                    widthMeasureSpec,
-                    widthUsed,
-                    heightMeasureSpec,
-                    childVerticalMargins
-                )
+                // No height used: `measureChildWithMargins` takes the margins off itself.
+                measureChildWithMargins(child, widthMeasureSpec, widthUsed, heightMeasureSpec, 0)
 
                 if (oldHeight != Int.MIN_VALUE) {
                     lp.height = oldHeight
@@ -1225,12 +1283,14 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // Only asked when we're about to solve — it walks the subtree.
             hasLengthBasis = percentTotal <= 0f || establishesLength(horizontal = true)
         )
-        var width = solvedWidth ?: totalLength
+        // A child filling what it's offered takes the rest of the row, so the row takes all of its own.
+        val fillsRow = offeredWidthChildren.isNotEmpty()
+        var width = if (fillsRow) MeasureSpec.getSize(widthMeasureSpec) else solvedWidth ?: totalLength
 
         // Whether there's a length for percent children to be a fraction of. An EXACTLY spec is one
         // without needing a solve; otherwise it's whatever we solved for, and nothing means the
         // percent children measure at their content instead.
-        val hasResolvedWidth = widthMode == MeasureSpec.EXACTLY || solvedWidth != null
+        val hasResolvedWidth = widthMode == MeasureSpec.EXACTLY || solvedWidth != null || fillsRow
         width = max(width, suggestedMinimumWidth)
 
         // Reconcile our calculated size with the widthMeasureSpec
@@ -1260,7 +1320,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             var totalShrinkableWidth = 0
 
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -1274,6 +1334,8 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 }
             }
 
+            // No else here for the same reason as the height pass above: a stack that cannot
+            // ration the overflow runs off its own end rather than collapsing what hugs it.
             if (!shrinkableChildren.isEmpty() && totalShrinkableWidth >= abs(delta)) {
                 fun heightSpecFor(child: View): Int {
                     val lp = child.layoutParams as LayoutParams
@@ -1334,7 +1396,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 percentMaxHeight = 0
                 alternativeMaxHeight = 0
                 for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
+                    val child = stackChildAt(i) ?: continue
                     if (child.visibility == GONE) {
                         continue
                     }
@@ -1361,29 +1423,6 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
                 // Delta should now be close to zero
                 delta = width - totalLength
-            } else {
-                // Fixed children overflow the parent, and WRAP_CONTENT children can't absorb it;
-                // zero out all WRAP_CONTENT children to match iOS failure behavior.
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    if (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxWidthPercent == 0f) {
-                        val heightSpec = getChildMeasureSpec(
-                            heightMeasureSpec, lp.topMargin + lp.bottomMargin, lp.height
-                        )
-                        child.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), heightSpec)
-                    }
-                }
-                totalLength = 0
-                for (i in 0..<count) {
-                    val child = getChildAt(i) ?: continue
-                    if (child.visibility == GONE) continue
-                    val lp = child.layoutParams as LayoutParams
-                    totalLength += child.measuredWidth + lp.marginStart + lp.marginEnd
-                }
-                totalLength += paddingStart + paddingEnd
-                delta = width - totalLength
             }
         }
 
@@ -1405,7 +1444,10 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                 val marginLp = it.layoutParams as LayoutParams
                 marginLp.marginStart + marginLp.marginEnd
             }
-            var slotRemaining = delta + percentMargins
+            // As in `measureVertical`: less what the ratio children are owed, since they are
+            // measured after this against what is left.
+            var slotRemaining =
+                (delta + percentMargins - (percentShares?.ratioReserve ?: 0)).coerceAtLeast(0)
 
             val lastChildIndex = maxPercentCount - 1
             for (i in 0..<maxPercentCount) {
@@ -1498,7 +1540,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // about to be counted again — including the ones already in there.
             totalLength = 0
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) {
                     continue
                 }
@@ -1546,8 +1588,8 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // slots they were given, so the ratio children were offered space already spoken for.
             var consumed = paddingStart + paddingEnd
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
-                if (child.visibility == GONE || child in ratioFillChildren) continue
+                val child = stackChildAt(i) ?: continue
+                if (child.visibility == GONE || child in ratioFillChildren || child in offeredWidthChildren) continue
                 val lp = child.layoutParams as LayoutParams
                 consumed += child.measuredWidth + lp.marginStart + lp.marginEnd
             }
@@ -1594,6 +1636,52 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             }
         }
 
+        // Last: the children filling what they're offered split what everyone else left.
+        if (fillsRow) {
+            var consumed = paddingStart + paddingEnd
+            for (i in 0..<count) {
+                val child = stackChildAt(i) ?: continue
+                if (child.visibility == GONE || child in offeredWidthChildren) continue
+                val lp = child.layoutParams as LayoutParams
+                consumed += child.measuredWidth + lp.marginStart + lp.marginEnd
+            }
+            var widthLeft = (width - consumed).coerceAtLeast(0)
+            var slotsLeft = offeredWidthChildren.size
+            for (child in offeredWidthChildren) {
+                val lp = child.layoutParams as LayoutParams
+                val mainMargin = lp.marginStart + lp.marginEnd
+                val slot = (widthLeft / slotsLeft - mainMargin).coerceAtLeast(0)
+                val height = if (lp.height == 0 && lp.maxHeightPercent > 0) {
+                    if (heightMode == MeasureSpec.EXACTLY) {
+                        ((heightSize * lp.maxHeightPercent).toInt() - lp.topMargin - lp.bottomMargin)
+                            .coerceAtLeast(0)
+                    } else {
+                        // Its share comes from the cross-axis pass once our height is known.
+                        crossAxisPercentChildren.add(child)
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    }
+                } else {
+                    lp.height
+                }
+                child.measure(
+                    MeasureSpec.makeMeasureSpec(slot, MeasureSpec.EXACTLY),
+                    getChildMeasureSpec(
+                        heightMeasureSpec, paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin, height
+                    )
+                )
+                childState = combineMeasuredStates(childState, child.measuredState)
+                widthLeft -= slot + mainMargin
+                slotsLeft -= 1
+
+                // As for any child: a fraction of our height doesn't get a say in what it is.
+                if (child !in crossAxisPercentChildren || !crossAxisHasBasis) {
+                    val measuredHeight = child.measuredHeight + lp.topMargin + lp.bottomMargin
+                    maxHeight = max(maxHeight, measuredHeight)
+                    alternativeMaxHeight = max(alternativeMaxHeight, measuredHeight)
+                }
+            }
+        }
+
         if (!allFillParent && heightMode != MeasureSpec.EXACTLY) {
             maxHeight = alternativeMaxHeight
         }
@@ -1622,7 +1710,9 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
                     .coerceAtLeast(0)
 
                 val hasSlot = lp.width == 0 && lp.maxWidthPercent > 0
-                val widthSpec = if (hasSlot || widthsWereRationed) {
+                // A row holding a child that fills what it's offered has already paid it what the
+                // rest took, so their widths are settled too.
+                val widthSpec = if (hasSlot || widthsWereRationed || fillsRow) {
                     MeasureSpec.makeMeasureSpec(child.measuredWidth, MeasureSpec.EXACTLY)
                 } else {
                     getChildMeasureSpec(
@@ -1648,7 +1738,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         ) {
             totalLength = paddingStart + paddingEnd
             for (i in 0..<count) {
-                val child = getChildAt(i) ?: continue
+                val child = stackChildAt(i) ?: continue
                 if (child.visibility == GONE) continue
                 val lp = child.layoutParams as LayoutParams
                 totalLength += child.measuredWidth + lp.marginStart + lp.marginEnd
@@ -1685,7 +1775,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
         var sharers = 0
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
 
             // Only an all-auto row, as on web. A child with a length of its own is a demand rather
@@ -1710,6 +1800,10 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      * fits inside its share settles at its content and hands the surplus back, so only the ones that
      * can't fit divide what's left: a CTA keeps its whole line while the paragraph beside it wraps,
      * and an over-long CTA truncates inside its share instead of taking the row.
+     *
+     * A [FillsOfferedWidth] child doesn't share here: `measureHorizontal` pays it last, from what
+     * the rest take, so they share the row as though it weren't there and a label beside an auto
+     * grid keeps its whole line.
      */
     private fun equalRowShares(widthMeasureSpec: Int, heightMeasureSpec: Int): IntArray {
         val count = childCount
@@ -1719,9 +1813,12 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // What each child would take with nothing holding it back. Measured against an unbounded
         // width, which is what asks a label for its whole line rather than for a wrapped one.
         for (i in 0..<count) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
             val lp = child.layoutParams as LayoutParams
+
+            // Paid last in `measureHorizontal`, from what the rest take, so not sharing here.
+            if (child.fillsOfferedWidth) continue
 
             child.measure(
                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
@@ -1758,6 +1855,150 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         return shares
     }
 
+    /**
+     * What the children that can bend are allowed on the stack axis when a percent sibling wants
+     * the same room: a cap for each child that can give, and the total the deferred ratio children
+     * are to be left.
+     */
+    private class Shares(val perChild: IntArray, val ratioReserve: Int)
+
+    /**
+     * How a stack divides itself between the children that can bend to it. Null when nothing has
+     * to give; `-1` in [Shares.perChild] for a child that isn't sharing.
+     *
+     * A percent child is sized from what its siblings left, so it is paid last: a child that can
+     * give is asked for its content first, and a ratio child isn't measured until later still.
+     * Whoever goes first takes what it likes, and at 100% the percent child leaves nothing for
+     * anyone. Every claim is a demand like any other, so they all join the same greedy fair share
+     * the ratio passes use — smallest demand first, each capped at its share of what is left. A
+     * full-length box beside an auto image, or beside a square, ends up with half the stack, as on
+     * iOS. A ratio child bends with the rest: cut on the stack axis, it takes the other axis with
+     * it rather than holding a length the percentage was supposed to divide with it.
+     *
+     * @param fixedLength what the children that can't give have taken, margins included.
+     * @param mainMeasureSpec the spec for the stack axis.
+     * @param crossMeasureSpec the spec for the other axis.
+     * @return the shares, or null if the stack has room for every demand.
+     */
+    private fun sharesWithPercentChildren(
+        vertical: Boolean,
+        fixedLength: Int,
+        mainMeasureSpec: Int,
+        crossMeasureSpec: Int
+    ): Shares? {
+        val mode = MeasureSpec.getMode(mainMeasureSpec)
+        // An unbounded stack is as long as its children turn out to be, and with no basis a percent
+        // child stands on its content: either way there's nothing being divided.
+        if (mode == MeasureSpec.UNSPECIFIED) return null
+        if (mode != MeasureSpec.EXACTLY && !establishesLength(horizontal = !vertical)) return null
+
+        val count = childCount
+        val base = MeasureSpec.getSize(mainMeasureSpec)
+        val crossSize = MeasureSpec.getSize(crossMeasureSpec)
+
+        // Demand to child index, with -1 for a percent child: its claim competes, but the
+        // distribution pass is what hands it out.
+        val queue = mutableListOf<Pair<Int, Int>>()
+        val margins = IntArray(count)
+        val isRatio = BooleanArray(count)
+        var percentMargins = 0
+        var bending = 0
+
+        for (i in 0..<count) {
+            val child = stackChildAt(i) ?: continue
+            if (child.visibility == GONE) continue
+
+            val lp = child.layoutParams as LayoutParams
+            margins[i] =
+                if (vertical) lp.topMargin + lp.bottomMargin else lp.marginStart + lp.marginEnd
+            val declared = if (vertical) lp.height else lp.width
+            val percent = if (vertical) lp.maxHeightPercent else lp.maxWidthPercent
+
+            when {
+                declared == 0 && percent > 0f -> {
+                    queue.add((base * percent).toInt().coerceAtLeast(0) to -1)
+                    percentMargins += margins[i]
+                }
+
+                // The same child the deferred ratio pass will take: its length comes from the
+                // other axis, which is settled, so what it wants is known without measuring it.
+                lp.aspectRatio > 0f && declared == ViewGroup.LayoutParams.WRAP_CONTENT
+                        && percent == 0f -> {
+                    isRatio[i] = true
+                    queue.add(ratioMainExtent(lp, vertical, crossSize) + margins[i] to i)
+                    bending++
+                }
+
+                child.givesOnShrink(horizontal = !vertical) -> {
+                    queue.add(contentLength(child, vertical, crossMeasureSpec) + margins[i] to i)
+                    bending++
+                }
+            }
+        }
+
+        // Nobody to take it from, or nobody asking them to.
+        if (bending == 0 || bending == queue.size) return null
+
+        val padding = if (vertical) paddingTop + paddingBottom else paddingStart + paddingEnd
+        // A percent child's margins come out of its own slot, here as in the distribution pass, so
+        // they're part of what's being divided rather than fixed content.
+        var room = base - padding - (fixedLength - percentMargins)
+
+        // Room for every demand, so nothing has to give and everyone is measured as they asked.
+        if (room <= 0 || queue.sumOf { it.first } <= room) return null
+
+        val shares = IntArray(count) { -1 }
+        var ratioReserve = 0
+        var slotsLeft = queue.size
+        // Smallest demand first, so a child that fits inside its share settles at its content and
+        // hands the surplus to the rest.
+        for ((demand, index) in queue.sortedBy { it.first }) {
+            val take = min(demand, room / slotsLeft)
+            if (index >= 0) {
+                // A ratio child is measured by its own pass, off what the percent children leave,
+                // so its share is held back rather than handed over.
+                if (isRatio[index]) ratioReserve += take
+                else shares[index] = (take - margins[index]).coerceAtLeast(0)
+            }
+            room -= take
+            slotsLeft -= 1
+        }
+
+        return Shares(shares, ratioReserve)
+    }
+
+    /** What [child] takes on the stack axis with nothing holding it back. */
+    private fun contentLength(child: View, vertical: Boolean, crossMeasureSpec: Int): Int {
+        val lp = child.layoutParams as LayoutParams
+        val crossMargins =
+            if (vertical) lp.marginStart + lp.marginEnd else lp.topMargin + lp.bottomMargin
+        val crossPadding =
+            if (vertical) paddingStart + paddingEnd else paddingTop + paddingBottom
+        val declared = if (vertical) lp.width else lp.height
+        val percent = if (vertical) lp.maxWidthPercent else lp.maxHeightPercent
+        val isCrossPercent = declared == 0 && percent > 0f
+
+        val crossMode = MeasureSpec.getMode(crossMeasureSpec)
+        val crossSpec = if (isCrossPercent && crossMode == MeasureSpec.EXACTLY) {
+            // Our cross length is settled; resolve against it directly.
+            val size = ((MeasureSpec.getSize(crossMeasureSpec) * percent).toInt() - crossMargins)
+                .coerceAtLeast(0)
+            MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY)
+        } else {
+            // Unsettled, a percent child stands on its content until the cross-axis pass gives it
+            // its share — the same bargain the measure loop makes.
+            getChildMeasureSpec(
+                crossMeasureSpec,
+                crossPadding + crossMargins,
+                if (isCrossPercent) ViewGroup.LayoutParams.WRAP_CONTENT else declared
+            )
+        }
+
+        val unbounded = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        if (vertical) child.measure(crossSpec, unbounded) else child.measure(unbounded, crossSpec)
+        return if (vertical) child.measuredHeight else child.measuredWidth
+    }
+
     private fun forceUniformHeight(count: Int, widthMeasureSpec: Int) {
         // Pretend that the linear layout has an exact size. This is the measured height of
         // ourselves. The measured height should be the max height of the children, changed
@@ -1765,7 +2006,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         val uniformMeasureSpec =
             MeasureSpec.makeMeasureSpec(measuredHeight, MeasureSpec.EXACTLY)
         for (i in 0..<count) {
-            val child = getChildAt(i)
+            val child = stackChildAt(i) ?: continue
             if (child.visibility != GONE) {
                 val lp = child.layoutParams as LayoutParams
 
@@ -1816,7 +2057,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         }
 
         for (i in 0..<count) {
-            val child = getChildAt(i)
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) {
                 continue
             }
@@ -1888,7 +2129,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
         for (i in 0..<count) {
             val childIndex = start + dir * i
-            val child = getChildAt(childIndex)
+            val child = stackChildAt(childIndex) ?: continue
 
             if (child.visibility == GONE) {
                 continue
@@ -2005,7 +2246,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
     private fun mainAxisPercentTotal(vertical: Boolean): Float {
         var total = 0f
         for (i in 0..<childCount) {
-            val child = getChildAt(i) ?: continue
+            val child = stackChildAt(i) ?: continue
             if (child.visibility == GONE) continue
             val lp = child.layoutParams as LayoutParams
             total += if (vertical) lp.maxHeightPercent else lp.maxWidthPercent

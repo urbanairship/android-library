@@ -80,6 +80,7 @@ public class SceneActionTest {
                 assertEquals(schedule.triggers[0].goal, 1.0)
                 assertEquals(schedule.created, Instant.ofEpochMilli(9_876_543_210))
                 assertEquals(schedule.sendMetadata, null)
+                assertEquals(schedule.reportingContext, null)
 
                 val message = (schedule.data as AutomationSchedule.ScheduleData.InAppMessageData).message
                 assertEquals(
@@ -165,6 +166,35 @@ public class SceneActionTest {
             metadata,
         )
         action.perform(args)
+        scheduleJob.join()
+    }
+
+    @Test
+    public fun testPerform_reportingContextFromPayload(): TestResult = runTest {
+        val scheduleJob = Job()
+        val reportingContext = jsonMapOf(
+            "campaign" to "fall-sale",
+            "variant" to 2,
+        ).toJsonValue()
+
+        val action = SceneAction(
+            scheduler = { schedule: AutomationSchedule ->
+                assertEquals(reportingContext, schedule.reportingContext)
+                scheduleJob.complete()
+            },
+        )
+
+        val args = ActionArguments(
+            Action.Situation.MANUAL_INVOCATION,
+            ActionValue.wrap(
+                jsonMapOf(
+                    "dsl" to rawDeflateBase64(MINIMAL_LAYOUT_JSON),
+                    "reporting_context" to reportingContext,
+                )
+            ),
+            Bundle(),
+        )
+        assertEquals(ActionResult.Status.COMPLETED, action.perform(args).status)
         scheduleJob.join()
     }
 

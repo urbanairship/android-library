@@ -5,6 +5,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.time.Instant
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -78,5 +79,32 @@ public class EmailRegistrationOptionsTest {
 
         assertNull(restored.transactionalOptedIn)
         assertNull(restored.commercialOptedIn)
+    }
+
+    @Test
+    public fun testTrackingConsentRoundTrip() {
+        val options = EmailRegistrationOptions.options(
+            doubleOptIn = true,
+            openTracking = EmailRegistrationOptions.TrackingConsent.OptedIn(Instant.ofEpochMilli(3000)),
+            clickTracking = EmailRegistrationOptions.TrackingConsent.OptedOut(Instant.ofEpochMilli(4000))
+        )
+
+        val json = options.toJsonValue().optMap()
+        assertEquals(3000L, json.opt("open_tracking_opted_in").getLong(0))
+        assertEquals(4000L, json.opt("click_tracking_opted_out").getLong(0))
+        assertFalse(json.containsKey("open_tracking_opted_out"))
+        assertFalse(json.containsKey("click_tracking_opted_in"))
+
+        assertEquals(options, EmailRegistrationOptions.fromJson(options.toJsonValue()))
+    }
+
+    @Test
+    public fun testUnsetTrackingReadsAsNull() {
+        val restored = EmailRegistrationOptions.fromJson(
+            EmailRegistrationOptions.commercialOptions().toJsonValue()
+        )
+
+        assertNull(restored.openTracking)
+        assertNull(restored.clickTracking)
     }
 }

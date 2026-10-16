@@ -18,10 +18,10 @@ import com.urbanairship.android.layout.util.LayoutUtils.applyTextAppearance
 
 public open class ShapeButton @JvmOverloads public constructor(
     context: Context,
-    checkedShapes: List<Shape>,
-    uncheckedShapes: List<Shape>,
-    checkedIcon: Image.Icon? = null,
-    uncheckedIcon: Image.Icon? = null,
+    private val checkedShapes: List<Shape>,
+    private val uncheckedShapes: List<Shape>,
+    private val checkedIcon: Image.Icon? = null,
+    private val uncheckedIcon: Image.Icon? = null,
     private val text: String? = null,
     private val checkedTextAppearance: TextAppearance? = null,
     private val uncheckedTextAppearance: TextAppearance? = null
@@ -35,10 +35,7 @@ public open class ShapeButton @JvmOverloads public constructor(
 
     init {
 
-        val background = Shape.Companion.buildStateListDrawable(
-            context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon
-        )
-        setBackground(background)
+        rebuildBackground()
 
         foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
 
@@ -46,6 +43,13 @@ public open class ShapeButton @JvmOverloads public constructor(
 
         setPadding(0, 0, 0, 0)
         gravity = Gravity.CENTER
+    }
+
+    /** Builds its checked and unchecked shapes again, resolving their colors against the context now. */
+    internal fun rebuildBackground() {
+        background = Shape.Companion.buildStateListDrawable(
+            context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon
+        )
     }
 
     override fun setChecked(checked: Boolean) {

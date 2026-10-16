@@ -794,4 +794,26 @@ public class ContactApiClientTest {
         )
         assertEquals(expectedUpdateRequest, requestSession.requests[0])
     }
+
+    @Test
+    public fun testRegisterEmailSendsTrackingConsent(): TestResult = runTest {
+        requestSession.addResponse(200, "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}")
+        requestSession.addResponse(200)
+
+        val options = EmailRegistrationOptions.options(
+            doubleOptIn = true,
+            openTracking = EmailRegistrationOptions.TrackingConsent.OptedIn(clock.now()),
+            clickTracking = EmailRegistrationOptions.TrackingConsent.OptedOut(clock.now())
+        )
+
+        client.registerEmail(fakeContactId, fakeEmail, options, LocaleCompat.of("en", "US"))
+
+        val channel = (requestSession.requests[0].body as RequestBody.Json)
+            .json.optMap().opt("channel").optMap()
+        val timestamp = DateUtils.createIso8601TimeStamp(clock.now())
+        assertEquals(timestamp, channel.opt("open_tracking_opted_in").optString())
+        assertEquals(timestamp, channel.opt("click_tracking_opted_out").optString())
+        assertFalse(channel.containsKey("open_tracking_opted_out"))
+        assertFalse(channel.containsKey("click_tracking_opted_in"))
+    }
 }

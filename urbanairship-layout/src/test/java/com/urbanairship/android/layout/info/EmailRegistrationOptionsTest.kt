@@ -125,4 +125,22 @@ public class EmailRegistrationOptionsTest {
         assertEquals(fromJson,  expected)
     }
 
+
+    @Test
+    @Throws(JsonException::class)
+    public fun testOpenTrackingOptedInFromJson() {
+        val json = """
+        {
+           "type": "double_opt_in",
+           "open_tracking_opted_in": true
+        }
+        """
+
+        val fromJson = ThomasEmailRegistrationOptions.fromJson(JsonValue.parseString(json))
+        val expected = ThomasEmailRegistrationOptions.DoubleOptIn(
+            properties = null,
+            openTrackingOptedIn = true
+        )
+        assertEquals(expected, fromJson)
+    }
 }

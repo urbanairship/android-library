@@ -1,11 +1,13 @@
 package com.urbanairship.android.layout.info
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.AutomatedAction
+import com.urbanairship.android.layout.property.Background
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
@@ -16,7 +18,13 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.property.GridItemConfig
+import com.urbanairship.android.layout.property.GridLayoutConfig
+import com.urbanairship.android.layout.property.Conditions
+import com.urbanairship.android.layout.property.GridConditionSelector
 import com.urbanairship.android.layout.property.Image
+import com.urbanairship.android.layout.property.conditionsIn
+import com.urbanairship.android.layout.property.LinearLayoutItemConfig
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
@@ -26,8 +34,10 @@ import com.urbanairship.android.layout.property.OutcomeResolver
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.PagerGesture
+import com.urbanairship.android.layout.property.ParallaxBackground
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
+import com.urbanairship.android.layout.property.SelectorEnvironment
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.property.StateAction
@@ -48,6 +58,7 @@ import com.urbanairship.android.layout.property.ViewType.CONTAINER
 import com.urbanairship.android.layout.property.ViewType.CUSTOM_VIEW
 import com.urbanairship.android.layout.property.ViewType.EMPTY_VIEW
 import com.urbanairship.android.layout.property.ViewType.FORM_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.GRID_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.ICON_VIEW
 import com.urbanairship.android.layout.property.ViewType.IMAGE_BUTTON
 import com.urbanairship.android.layout.property.ViewType.LABEL
@@ -107,6 +118,7 @@ public sealed class ViewInfo : View {
             return when (ViewType.from(type)) {
                 CONTAINER -> ContainerLayoutInfo(json)
                 LINEAR_LAYOUT -> LinearLayoutInfo(json)
+                GRID_LAYOUT -> GridLayoutInfo(json)
                 SCROLL_LAYOUT -> ScrollLayoutInfo(json)
                 EMPTY_VIEW -> EmptyInfo(json)
                 WEB_VIEW -> WebViewInfo(json)
@@ -233,6 +245,34 @@ internal class BaseViewInfo(json: JsonMap) : View {
 }
 
 private fun view(json: JsonMap): View = BaseViewInfo(json)
+
+/**
+ * A view whose `backgrounds` array is painted behind its own content.
+ *
+ * A layer never affects this view's own resolved size -- the view sizes itself first, using its
+ * normal rules, and only afterward are these laid into the resulting box.
+ */
+internal interface HasBackgrounds {
+    val backgrounds: List<Background>?
+}
+
+private fun hasBackgrounds(json: JsonMap): HasBackgrounds = object : HasBackgrounds {
+    override val backgrounds: List<Background>? =
+        json.optionalList("backgrounds")?.let(Background::fromJsonList)
+}
+
+/**
+ * Like [HasBackgrounds], but each layer may also declare `parallax` -- only `pager` and
+ * `scroll_layout` have a scroll or drag position for it to read.
+ */
+internal interface HasParallaxBackgrounds {
+    val backgrounds: List<ParallaxBackground>?
+}
+
+private fun hasParallaxBackgrounds(json: JsonMap): HasParallaxBackgrounds = object : HasParallaxBackgrounds {
+    override val backgrounds: List<ParallaxBackground>? =
+        json.optionalList("backgrounds")?.let(ParallaxBackground::fromJsonList)
+}
 
 internal interface Accessible {
     val contentDescription: String?
@@ -371,6 +411,8 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(),
         json.optionalMap("validation_mode")?.let {
             FormValidationMode.from(it.requireField("type"))
         } ?: FormValidationMode.IMMEDIATE
+    val registrationOverrides: ThomasFormRegistrationOverrides? =
+        json["registration_overrides"]?.let(ThomasFormRegistrationOverrides::fromJson)
 }
 
 internal interface Button : View, Accessible, Identifiable {
@@ -397,7 +439,9 @@ internal open class ButtonInfo(
 }
 
 /** ButtonLayout is a bit special because it's both a ViewGroup and a Button. */
-internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Button by ButtonInfo(json), Accessible by accessible(json) {
+internal class ButtonLayoutInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), Button by ButtonInfo(json), Accessible by accessible(json), HasBackgrounds by hasBackgrounds(json) {
     val view = viewInfoFromJson(json.requireField("view"))
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
@@ -474,11 +518,13 @@ internal open class CheckableInfo(
 
 // ------ Components ------
 
-internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json) {
-    private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
+internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
+    /** Tells a `randomize_children` shuffle apart from others of the same item count. */
+    val identifier: String? = json.optionalField("identifier")
+    val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.require("direction"))
+    /** In list order; the model shuffles them. */
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
-        .let { if (randomizeChildren) it.shuffled() else it }
 
     override val children: List<LinearLayoutItemInfo> = items
 
@@ -509,7 +555,23 @@ internal class LinearLayoutItemInfo(
 
     val position: Position? = json["position"]?.let(Position::fromJson)
 
+    /** Where the item falls among its siblings. */
+    val config: LinearLayoutItemConfig =
+        json.optionalMap("config")?.let(LinearLayoutItemConfig::fromJson) ?: LinearLayoutItemConfig()
+
+    /**
+     * Changes to the item's properties with state, as a view's `view_overrides` change the view's:
+     * per property, the first match replaces it whole.
+     */
+    val overrides: Overrides? = json.optionalMap("overrides")?.let { Overrides(it) }
+
     val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class Overrides(json: JsonMap) {
+        val config = json.optionalList("config")?.map {
+            ViewPropertyOverride(it) { value -> LinearLayoutItemConfig.fromJson(value.requireMap()) }
+        }
+    }
 
     internal class AccessibilityRole(json: JsonMap) {
         val type: Type = Type.fromJson(json.requireField("type"))
@@ -527,9 +589,106 @@ internal class LinearLayoutItemInfo(
     }
 }
 
+/**
+ * Rows of equal-width cells.
+ *
+ * The grid's own width sets the columns; its items never do. A width of `auto` fills the room the
+ * parent offers rather than hugging the items.
+ *
+ * `view_overrides.config` changes the config with state, as any view override does. Its
+ * `grid_state.conditions`, chosen from its width, are at `$grids.current.conditions` for the grid
+ * itself, its items' `overrides` and everything inside it, until a nested grid takes over.
+ */
+internal class GridLayoutInfo(json: JsonMap) : ViewGroupInfo<ItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
+    val identifier: String = json.requireField("identifier")
+    val config: GridLayoutConfig = GridLayoutConfig.fromJson(json.requireField("config"))
+    /** Breakpoints on the grid's content width, chosen at `$grids.current.conditions`. */
+    val gridConditions: Conditions<GridConditionSelector> = json.conditionsIn("grid_state", GridConditionSelector::fromJson)
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    /** Every config the grid could lay out with: its own, then each override's. */
+    val allConfigs: List<GridLayoutConfig> =
+        listOf(config) + viewOverrides?.config.orEmpty().mapNotNull { it.value }
+
+    val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
+    /** In list order; the model shuffles them. */
+    val items = json.requireField<JsonList>("items").map { GridLayoutItemInfo(it.requireMap()) }
+
+    /** A view above the cells, as wide as the block of columns. */
+    val header: GridLayoutEdgeInfo? = json.optionalMap("header")?.let(::GridLayoutEdgeInfo)
+
+    /** A view below the cells, as wide as the block of columns. */
+    val footer: GridLayoutEdgeInfo? = json.optionalMap("footer")?.let(::GridLayoutEdgeInfo)
+
+    override val children: List<ItemInfo> = listOfNotNull(header) + items + listOfNotNull(footer)
+
+    /** Announced as a list of its visible items when set, as a linear layout's `list_view` is. */
+    val isListView: Boolean = json.optionalMap("accessibility_role")?.let {
+        LinearLayoutInfo.AccessibilityRole.Type.fromJson(it.requireField("type"))
+    } == LinearLayoutInfo.AccessibilityRole.Type.LIST_VIEW
+
+    internal class ViewOverrides(json: JsonMap) {
+        val config = json.optionalList("config")?.map {
+            ViewPropertyOverride(it) { value -> GridLayoutConfig.fromJson(value.requireMap()) }
+        }
+    }
+}
+
+/** How a grid lays out the view in one of its cells, or in its header or footer. */
+internal interface GridCellInfo {
+    /** Resolves against the cell, so `100%` wide is the cell's width. */
+    val size: Size
+    val margin: Margin?
+    /** Where the view sits in its cell when it is smaller than the cell. */
+    val position: Position
+}
+
+/** The size a grid cell's view takes when it states none. */
+private val DEFAULT_GRID_CELL_SIZE = Size(width = "100%", height = "auto")
+
+/** One cell of a grid. */
+internal class GridLayoutItemInfo(
+    json: JsonMap
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))), GridCellInfo {
+    val identifier: String? = json.optionalField("identifier")
+    override val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_GRID_CELL_SIZE
+    /** Where the item sits among the grid's columns. */
+    val config: GridItemConfig = json.optionalMap("config")?.let(GridItemConfig::fromJson) ?: GridItemConfig()
+    /**
+     * Changes to the item's properties with state, as a view's `view_overrides` change the view's:
+     * per property, the first match replaces it whole. Items aren't views, so `view_overrides`
+     * can't reach them.
+     */
+    val overrides: Overrides? = json.optionalMap("overrides")?.let { Overrides(it) }
+    override val margin: Margin? = json["margin"]?.let(Margin::fromJson)
+    override val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
+
+    internal class Overrides(json: JsonMap) {
+        val config = json.optionalList("config")?.map {
+            ViewPropertyOverride(it) { value -> GridItemConfig.fromJson(value.requireMap()) }
+        }
+    }
+}
+
+/**
+ * A view above or below a grid's cells, exactly as wide as the block of columns.
+ *
+ * Placed with the block by `content_position`, so it lines up with the cells' edges at any column
+ * count, and separated from them by `row_spacing`. It takes no part in placement and isn't an item
+ * of the list `list_view` announces.
+ */
+internal class GridLayoutEdgeInfo(
+    json: JsonMap
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))), GridCellInfo {
+    val identifier: String? = json.optionalField("identifier")
+    override val size: Size = json["size"]?.let(Size::fromJson) ?: DEFAULT_GRID_CELL_SIZE
+    override val margin: Margin? = json["margin"]?.let(Margin::fromJson)
+    override val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
+}
+
 internal class ContainerLayoutInfo(
     json: JsonMap
-) : ViewGroupInfo<ContainerLayoutItemInfo>(), View by view(json) {
+) : ViewGroupInfo<ContainerLayoutItemInfo>(), View by view(json), HasBackgrounds by hasBackgrounds(json) {
     val items = json.requireField<JsonList>("items").map { ContainerLayoutItemInfo(it.requireMap()) }
 
     override val children: List<ContainerLayoutItemInfo> = items
@@ -543,7 +702,9 @@ internal class ContainerLayoutItemInfo(
     val margin: Margin? = json["margin"]?.let(Margin::fromJson)
 }
 
-internal class ScrollLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
+internal class ScrollLayoutInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), View by view(json), HasParallaxBackgrounds by hasParallaxBackgrounds(json) {
     val view = viewInfoFromJson(json.requireField("view"))
     val direction: Direction = Direction.from(json.require("direction"))
 
@@ -564,8 +725,26 @@ internal class MediaInfo(
     val video: Video? = json.optionalMap("video")?.let { Video.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
-    fun resolveUrl(isDarkMode: Boolean): String =
-        MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
+    /**
+     * The url to show for [state]: the `view_overrides` this state selects, then the
+     * `url_selectors` the environment matches.
+     *
+     * @param state the scene's current state, or `null` before any has arrived, which resolves to
+     *   the declared url.
+     * @param environment what the `url_selectors` match against.
+     * @return the url to load.
+     */
+    fun resolveUrl(state: ThomasState?, environment: SelectorEnvironment): String {
+        val resolvedUrl = state?.resolveRequired(
+            overrides = viewOverrides?.url,
+            default = url
+        ) ?: url
+        val resolvedSelectors = state?.resolveOptional(
+            overrides = viewOverrides?.urlSelectors,
+            default = urlSelectors
+        ) ?: urlSelectors
+        return MediaUrlSelector.resolve(resolvedUrl, resolvedSelectors, environment)
+    }
 
     internal class ViewOverrides(json: JsonMap) {
         val url = json.optionalList("url")?.map {
@@ -791,8 +970,8 @@ internal sealed interface StackItemInfo {
         val cropPosition: Position,
         val urlSelectors: List<MediaUrlSelector> = emptyList(),
     ) : StackItemInfo {
-        fun resolveUrl(isDarkMode: Boolean): String =
-            MediaUrlSelector.resolve(imageUrl, urlSelectors, isDarkMode)
+        fun resolveUrl(environment: SelectorEnvironment): String =
+            MediaUrlSelector.resolve(imageUrl, urlSelectors, environment)
     }
 
     companion object {
@@ -931,7 +1110,9 @@ internal class WebViewInfo(json: JsonMap) : ViewInfo(), View by view(json) {
     val url: String = json.requireField("url")
 }
 
-internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View by view(json) {
+internal class PagerInfo(
+    json: JsonMap
+) : ViewGroupInfo<PagerItemInfo>(), View by view(json), HasParallaxBackgrounds by hasParallaxBackgrounds(json) {
     val items = json.requireField<JsonList>("items").map { PagerItemInfo(it.requireMap()) }
     val isSwipeDisabled = json.optionalField("disable_swipe") ?: false
     val gestures = json.optionalList("gestures")?.let { PagerGesture.fromList(it) }
@@ -1225,7 +1406,9 @@ internal class AsyncViewControllerInfo(json: JsonMap) : ViewInfo(), View by view
     }
 }
 
-internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json), Accessible by accessible(json) {
+internal open class BaseToggleLayoutInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json), Accessible by accessible(json), HasBackgrounds by hasBackgrounds(json) {
     val onToggleOn: ToggleActions = ToggleActions(
         stateActions = json.requireMap("on_toggle_on")
             .optionalList("state_actions")

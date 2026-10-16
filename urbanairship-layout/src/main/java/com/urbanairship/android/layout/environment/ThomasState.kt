@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.info.ViewPropertyOverride
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonSerializable
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.toJsonMap
@@ -22,15 +23,24 @@ internal data class ThomasState(
     val pager: State.Pager?,
     val video: State.Video?,
     val asyncView: State.AsyncView?,
-    val capabilities: ThomasCapabilities
+    val capabilities: ThomasCapabilities,
+    val grid: GridState? = null
 ): JsonSerializable {
 
-    override fun toJsonValue(): JsonValue {
+    private val json: JsonValue by lazy { buildJson() }
+
+    override fun toJsonValue(): JsonValue = json
+
+    private fun buildJson(): JsonValue {
         val layout = layout ?: return JsonValue.NULL
 
         return layout.state
             .toMutableMap()
             .apply {
+                // Read-only: a value a set_state action wrote there, or one restored, never shows.
+                remove(ENVIRONMENT)
+                capabilities.environment?.let { put(ENVIRONMENT, it.toJsonValue()) }
+
                 form?.let { form ->
                     val formState = when (form.formType) {
                         FormType.Form -> ThomasFormField.Form(
@@ -77,6 +87,12 @@ internal data class ThomasState(
                     ).toJsonValue())
                 }
 
+                grid?.let { grid ->
+                    put(GRIDS, jsonMapOf(
+                        CURRENT to grid
+                    ).toJsonValue())
+                }
+
                 capabilities.ai?.let { status ->
                     put(AI, jsonMapOf(
                         CURRENT to status
@@ -91,10 +107,10 @@ internal data class ThomasState(
         overrides: List<ViewPropertyOverride<T>>?,
         default: T? = null
     ): T? {
-        val json = toJsonValue()
+        if (overrides.isNullOrEmpty()) return default
 
         return overrides
-            ?.firstOrNull { it.whenStateMatcher?.apply(json) ?: true }
+            .firstOrNull { it.whenStateMatcher?.apply(json) ?: true }
             ?.value
             ?: default
     }
@@ -117,6 +133,8 @@ internal data class ThomasState(
         const val VIDEO = "\$video"
         const val ASYNC_VIEW = "\$asyncView"
         const val AI = "\$ai"
+        const val ENVIRONMENT = "\$environment"
+        const val GRIDS = "\$grids"
     }
 }
 
@@ -132,12 +150,32 @@ internal data class ThomasState(
  * New controller state belongs in [State]. New runtime capabilities belong here.
  *
  * @param ai Which AI models the layout can reach, or `null` until one reports.
+ * @param environment The platform, window and frame, or `null` until the root view reads them.
  */
 internal data class ThomasCapabilities(
-    val ai: ThomasAIStatus? = null
+    val ai: ThomasAIStatus? = null,
+    val environment: PredicateEnvironment? = null
 ) {
     companion object {
         val NONE = ThomasCapabilities()
+    }
+}
+
+/**
+ * The nearest enclosing grid, at `$grids.current`: the grid itself in its own overrides and its
+ * items', and the grid a view sits in for anything inside it, until a nested grid takes over.
+ *
+ * Not persisted: the conditions are chosen from a measured width, so restored ones would be stale.
+ *
+ * @param identifier The grid's `identifier`.
+ * @param conditions The grid's `grid_state.conditions`, as chosen from its content width; one no
+ * selector matched is left out.
+ */
+internal data class GridState(val identifier: String, val conditions: JsonMap) : JsonSerializable {
+    override fun toJsonValue(): JsonValue = jsonMapOf(CONDITIONS to conditions).toJsonValue()
+
+    private companion object {
+        const val CONDITIONS = "conditions"
     }
 }
 
@@ -148,7 +186,8 @@ internal fun makeThomasState(
     videoState: SharedState<State.Video>?,
     asyncView: SharedState<State.AsyncView>?,
     capabilities: StateFlow<ThomasCapabilities> =
-        MutableStateFlow(ThomasCapabilities.NONE).asStateFlow()
+        MutableStateFlow(ThomasCapabilities.NONE).asStateFlow(),
+    grid: SharedState<GridState>? = null
 ): StateFlow<ThomasState> {
 
     val layout = layoutState
@@ -162,7 +201,14 @@ internal fun makeThomasState(
         flow3 = pagerState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow4 = videoState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow5 = asyncView?.changes ?: MutableStateFlow(null).asStateFlow(),
-        flow6 = capabilities,
-        transform = ::ThomasState
+        // combineStates stops at six flows, so the grid rides along with the capabilities.
+        flow6 = combineStates(
+            flow1 = capabilities,
+            flow2 = grid?.changes ?: MutableStateFlow(null).asStateFlow(),
+            transform = ::Pair
+        ),
+        transform = { layout, form, pager, video, async, (capabilities, grid) ->
+            ThomasState(layout, form, pager, video, async, capabilities, grid)
+        }
     )
 }

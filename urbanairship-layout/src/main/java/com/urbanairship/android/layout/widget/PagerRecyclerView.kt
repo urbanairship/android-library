@@ -108,8 +108,67 @@ internal class PagerRecyclerView(
         this.listener = listener
     }
 
+    /** The last page a drag/settle came to rest on. */
+    private var previousPosition = 0
+
+    /**
+     * The track's own absolute position, from page 0 -- not a per-page figure that re-zeroes on
+     * each page.
+     *
+     * A `parallax` background is meant to have drifted once you're on a later page, and to stay
+     * drifted while you sit there: that permanent translate *is* the effect. Reporting each page's
+     * own relative offset instead cancels it out, so the background wobbles during a drag and
+     * lands back exactly where it started, with no net movement across the pager at all. iOS
+     * (`Pager.pagerContentOffset`, `-(width * pageIndex) + drag`) and web
+     * (`--parallax-x-offset`, `currentIndex * -100%`) are both absolute for this reason.
+     */
+    private fun contentOffset(): Float {
+        if (width == 0) return 0f
+
+        // The lowest-numbered page still on screen, and how far it has been pushed out of the
+        // viewport: whole pages from its index, the fraction of a page from its own edge.
+        //
+        // Read from the pages rather than from `computeHorizontalScrollOffset`, which
+        // `RecyclerView` answers `0` for whenever its `LayoutManager` reports it cannot scroll
+        // -- which is exactly what a `disable_swipe` pager's does, leaving a layer pinned at
+        // rest however many pages the buttons had stepped through.
+        var position = NO_POSITION
+        var page: View? = null
+        for (index in 0 until childCount) {
+            val child = getChildAt(index) ?: continue
+            val childPosition = getChildAdapterPosition(child)
+            if (childPosition != NO_POSITION && (position == NO_POSITION || childPosition < position)) {
+                position = childPosition
+                page = child
+            }
+        }
+        val firstPage = page ?: return 0f
+
+        // A page slides the way its own direction advances, so the sign of the fraction follows
+        // the layout direction; the index never does. What a layer follows is how far the pager
+        // has come from its first page, which is the same journey whichever way the pages run --
+        // iOS derives it from the page index (`-(width * pageIndex)`) for the same reason.
+        val pushedOut = if (layoutDirection == LAYOUT_DIRECTION_RTL) firstPage.left else -firstPage.left
+        return (position * width + pushedOut).toFloat()
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        // A parallax background reads this before the first scroll, not just after: a pager
+        // sitting on page one, never swiped, still has a resting offset to be placed against.
+        listener?.onContentOffsetChanged(contentOffset())
+    }
+
     private val recyclerScrollListener: OnScrollListener = object : OnScrollListener() {
-        private var previousPosition = 0
+
+        override fun onScrolled(v: RecyclerView, dx: Int, dy: Int) {
+            // Read straight off the live scroll on every frame, drag and settle alike -- the same
+            // reason iOS hands its modern track a `nil` animation and web writes
+            // `--parallax-x-offset` directly: this already *is* the real position, so replaying it
+            // through a second animation of our own could only lag behind whatever curve the
+            // RecyclerView's own snap actually used.
+            listener?.onContentOffsetChanged(contentOffset())
+        }
 
         override fun onScrollStateChanged(v: RecyclerView, state: Int) {
             val stateName = when (state) {
@@ -121,6 +180,13 @@ internal class PagerRecyclerView(
             UALog.v { "ThomasPager RecyclerView onScrollStateChanged=$stateName isInternalScroll=$isInternalScroll" }
 
             listener?.onScrollStateChanged(state != SCROLL_STATE_IDLE)
+
+            // Re-stated on settle, in case the snap was instant enough that onScrolled never ran
+            // for its final frame -- a page's resting offset is a real position like any other,
+            // not a return to zero.
+            if (state == SCROLL_STATE_IDLE) {
+                listener?.onContentOffsetChanged(contentOffset())
+            }
 
             // Block new user swipes while the snap animation is playing so that
             // rapid swipes can't accumulate multiple page jumps before IDLE.
@@ -248,7 +314,7 @@ internal class PagerRecyclerView(
         }
 
         companion object {
-            private const val MILLISECONDS_PER_INCH = 65f
+            const val MILLISECONDS_PER_INCH = 65f
         }
     }
 

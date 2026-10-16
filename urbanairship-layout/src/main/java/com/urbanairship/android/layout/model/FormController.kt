@@ -37,10 +37,13 @@ internal class FormController(
         itemProperties: ItemProperties?
     ) = view.createView(context, viewEnvironment, itemProperties)
 
-    override fun buildFormData(state: State.Form) =
-        ThomasFormField.Form(
-            identifier = viewInfo.identifier,
-            responseType = viewInfo.responseType,
-            children = state.filteredFields.values.toSet(),
-            fieldType = ThomasFormField.FieldType.just(emptySet()))
+    override fun buildFormData(
+        state: State.Form,
+        fieldType: ThomasFormField.FieldType<Set<ThomasFormField<*>>>
+    ) = ThomasFormField.Form(
+        identifier = viewInfo.identifier,
+        responseType = viewInfo.responseType,
+        children = state.filteredFields.values.toSet(),
+        fieldType = fieldType
+    )
 }

@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -83,6 +82,7 @@ public class EmbeddedLayout(
     private val imageCache: ImageCache? = args.imageCache
     private val actionRunner: ThomasActionRunner = args.actionRunner
     private val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(args.ai)
+    private val randomSeed: String? = args.randomSeed
 
 
     private val reporter: Reporter = ExternalReporter(externalListener)
@@ -94,12 +94,21 @@ public class EmbeddedLayout(
 
     private val isVisible: StateFlow<Boolean> = _isVisible.asStateFlow()
 
+    private val _placement = MutableStateFlow((payload.presentation as? EmbeddedPresentation)?.getResolvedPlacement(context))
+
+    /**
+     * The placement shown, for a host to size itself by. Until the view exists it's the one the
+     * configuration selects; the view then reports the one its environment conditions select, and
+     * every later change. A host collects this rather than reading [getPlacement] once.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val placementUpdates: StateFlow<EmbeddedPlacement?> = _placement.asStateFlow()
+
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun getPlacement(): EmbeddedPlacement? {
-        val presentation = (payload.presentation as? EmbeddedPresentation)
-        return presentation?.getResolvedPlacement(context)
-    }
+    public fun getPlacement(): EmbeddedPlacement? = placementUpdates.value
 
     public fun getOrCreateView(
         fillWidth: Boolean = false,
@@ -170,7 +179,10 @@ public class EmbeddedLayout(
                 reporter = reporter,
                 actionRunner = actionRunner,
                 displayTimer = timer,
-                aiInference = aiInference
+                aiInference = aiInference,
+                shuffleSeed = randomSeed,
+                environmentConditions = payload.environmentConditions,
+                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,
@@ -206,7 +218,7 @@ public class EmbeddedLayout(
             layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)
 
             stateUpdateReportJob?.cancel()
-            stateUpdateReportJob = reportStateChange(modelEnvironment.layoutEvents)
+            stateUpdateReportJob = modelEnvironment.stateScopes.reportTo(externalListener, layoutScope)
 
             embeddedView.listener = object : ThomasEmbeddedView.Listener {
                 override fun onDismissed() {
@@ -215,6 +227,8 @@ public class EmbeddedLayout(
                 }
             }
 
+            embeddedView.onPlacementChanged = { _placement.value = it }
+            _placement.value = embeddedView.placement
             currentView = WeakReference(embeddedView)
             return embeddedView
         } catch (e: ModelFactoryException) {
@@ -246,15 +260,6 @@ public class EmbeddedLayout(
                 } else {
                     dismiss()
                 }
-            }
-    }
-
-    private fun reportStateChange(events: Flow<LayoutEvent>) = layoutScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.StateUpdate>()
-            .distinctUntilChanged()
-            .collect {
-                externalListener.onStateChanged(it.state)
             }
     }
 

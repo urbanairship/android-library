@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.util
 
 import android.content.Context
+import android.view.View
 import androidx.annotation.IdRes
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.graphics.Insets
@@ -16,6 +17,7 @@ import kotlin.math.roundToInt
 
 public class ConstraintSetBuilder private constructor(
     private val context: Context,
+    private val windowView: View?,
     public val constraints: ConstraintSet = ConstraintSet()
 ) {
 
@@ -331,7 +333,7 @@ public class ConstraintSetBuilder private constructor(
                     ConstrainedDimensionType.PERCENT -> {
                         val minPixelsWidth =
                             minWidth.getFloat() * ResourceUtils.getWindowWidthPixels(
-                                context, ignoreSafeArea
+                                context, ignoreSafeArea, windowView
                             )
                         constraints.constrainMinWidth(viewId, minPixelsWidth.toInt())
                     }
@@ -347,7 +349,7 @@ public class ConstraintSetBuilder private constructor(
                     ConstrainedDimensionType.PERCENT -> {
                         val maxPixelsWidth =
                             maxWidth.getFloat() * ResourceUtils.getWindowWidthPixels(
-                                context, ignoreSafeArea
+                                context, ignoreSafeArea, windowView
                             )
                         constraints.constrainMaxWidth(viewId, maxPixelsWidth.toInt())
                     }
@@ -374,7 +376,7 @@ public class ConstraintSetBuilder private constructor(
                 val marginPx = margin?.let {
                     ResourceUtils.dpToPx(context, it.start + it.end).toInt()
                 } ?: 0
-                val base = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
+                val base = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea, windowView)
                 constraints.constrainWidth(
                     viewId,
                     (base * width.getFloat() - marginPx).toInt().coerceAtLeast(0)
@@ -411,7 +413,7 @@ public class ConstraintSetBuilder private constructor(
                     ConstrainedDimensionType.PERCENT -> {
                         val minPixelsHeight =
                             minHeight.getFloat() * ResourceUtils.getWindowHeightPixels(
-                                context, ignoreSafeArea
+                                context, ignoreSafeArea, windowView
                             )
                         constraints.constrainMinHeight(viewId, minPixelsHeight.toInt())
                     }
@@ -427,7 +429,7 @@ public class ConstraintSetBuilder private constructor(
                     ConstrainedDimensionType.PERCENT -> {
                         val maxPixelsHeight =
                             maxHeight.getFloat() * ResourceUtils.getWindowHeightPixels(
-                                context, ignoreSafeArea
+                                context, ignoreSafeArea, windowView
                             )
                         constraints.constrainMaxHeight(viewId, maxPixelsHeight.toInt())
                     }
@@ -454,7 +456,7 @@ public class ConstraintSetBuilder private constructor(
                 val marginPx = margin?.let {
                     ResourceUtils.dpToPx(context, it.top + it.bottom).toInt()
                 } ?: 0
-                val base = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
+                val base = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea, windowView)
                 constraints.constrainHeight(
                     viewId,
                     (base * height.getFloat() - marginPx).toInt().coerceAtLeast(0)
@@ -559,8 +561,17 @@ public class ConstraintSetBuilder private constructor(
     internal data class AspectRatioFit(val widthPx: Int, val heightPx: Int)
 
     public companion object {
-        public fun newBuilder(context: Context): ConstraintSetBuilder {
-            return ConstraintSetBuilder(context)
+        /**
+         * Returns a builder whose percent and window-bound sizes resolve against [context]'s window.
+         *
+         * @param context a context of the activity whose window the sizes are relative to.
+         * @param windowView a view in that window; below API 30 the window is read through it,
+         * see [ResourceUtils.getWindowPixels].
+         * @return a new builder.
+         */
+        @JvmOverloads
+        public fun newBuilder(context: Context, windowView: View? = null): ConstraintSetBuilder {
+            return ConstraintSetBuilder(context, windowView)
         }
 
         /**

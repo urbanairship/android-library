@@ -132,6 +132,7 @@ internal abstract class LedgerDatabase : RoomDatabase() {
             )
                 .addMigrations(MIGRATION_1_2)
                 .fallbackToDestructiveMigrationOnDowngrade(true)
+                .fallbackToDestructiveMigration(true)
                 .build()
         }
 

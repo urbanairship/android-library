@@ -2,6 +2,9 @@
 package com.urbanairship.actions
 
 import com.urbanairship.UALog
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 /**
  * The base action class that describes an operation to perform.
@@ -39,6 +42,11 @@ import com.urbanairship.UALog
  * run the action if executed asynchronously. If an action involves a UI interaction, this
  * method should be overridden to return true so that the action definitely runs before the
  * app state changes.
+ *
+ *
+ * An action whose work is naturally asynchronous should implement [performSuspending], or
+ * extend [SuspendingAction], instead of blocking a thread with `runBlocking`. The framework
+ * awaits it internally, so existing callers see no behavior change.
  */
 public abstract class Action public constructor() {
 
@@ -83,18 +91,16 @@ public abstract class Action public constructor() {
      * Performs the action, with pre/post execution calls,
      * if it accepts the provided arguments.
      *
+     * Blocks the calling thread until [perform] returns. If the action is a [SuspendingAction],
+     * the suspending work is bridged via `runBlocking`; don't call this from the main thread in
+     * that case, prefer [runSuspending] from a coroutine on an appropriate dispatcher.
+     *
      * @param arguments The action arguments.
      * @return The result of the action.
      */
     public fun run(arguments: ActionArguments): ActionResult {
         try {
-            if (!acceptsArguments(arguments)) {
-                UALog.d("Action $this is unable to accept arguments: $arguments}")
-                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS)
-            }
-
-            UALog.i("Running action: $this arguments: $arguments")
-            onStart(arguments)
+            rejectedResultOrNull(arguments)?.let { return it }
 
             val result = perform(arguments)
 
@@ -104,6 +110,51 @@ public abstract class Action public constructor() {
             UALog.e(e, "Failed to run action $this")
             return ActionResult.newErrorResult(e)
         }
+    }
+
+    /**
+     * Performs the action, with pre/post execution calls, if it accepts the provided
+     * arguments, suspending until the action completes.
+     *
+     * @param arguments The action arguments.
+     * @return The result of the action.
+     */
+    public suspend fun runSuspending(arguments: ActionArguments): ActionResult {
+        try {
+            rejectedResultOrNull(arguments)?.let { return it }
+
+            val result = performSuspending(arguments)
+
+            onFinish(arguments, result)
+            return result
+        } catch (e: Exception) {
+            if (e is CancellationException) {
+                // Rethrow only if this coroutine is truly canceled. A CancellationException can
+                // also mean something unrelated (an inner withTimeout, or a plain
+                // java.util.concurrent.CancellationException, which is the same class on the
+                // JVM), and that should be reported like any other exception instead.
+                currentCoroutineContext().ensureActive()
+            }
+            UALog.e(e, "Failed to run action $this")
+            return ActionResult.newErrorResult(e)
+        }
+    }
+
+    /**
+     * Shared pre-execution step for [run] and [runSuspending]: rejects unaccepted arguments,
+     * otherwise logs and calls [onStart].
+     *
+     * @return A rejected [ActionResult], or `null` to proceed to [perform]/[performSuspending].
+     */
+    private fun rejectedResultOrNull(arguments: ActionArguments): ActionResult? {
+        if (!acceptsArguments(arguments)) {
+            UALog.d("Action $this is unable to accept arguments: $arguments}")
+            return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS)
+        }
+
+        UALog.i("Running action: $this arguments: $arguments")
+        onStart(arguments)
+        return null
     }
 
     /**
@@ -128,10 +179,26 @@ public abstract class Action public constructor() {
     /**
      * Performs the action.
      *
+     * Implement this for synchronous work. For naturally asynchronous work, implement
+     * [performSuspending] instead (see [SuspendingAction]), which provides this method for you.
+     *
      * @param arguments The action arguments.
      * @return The result of the action.
      */
     public abstract fun perform(arguments: ActionArguments): ActionResult
+
+    /**
+     * Performs the action, suspending until it completes.
+     *
+     * Defaults to the blocking [perform], so existing actions need no changes. Override (or
+     * extend [SuspendingAction]) for an action that suspends instead of blocking.
+     *
+     * @param arguments The action arguments.
+     * @return The result of the action.
+     */
+    public open suspend fun performSuspending(arguments: ActionArguments): ActionResult {
+        return perform(arguments)
+    }
 
     /**
      * Called after the action performs.

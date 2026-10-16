@@ -51,18 +51,8 @@ internal class CropImageDelegate(view: ImageView) {
 
         view.setScaleType(ScaleType.MATRIX)
 
-        offsetHorizontal = when (position?.horizontal) {
-            HorizontalPosition.START -> 0f
-            HorizontalPosition.CENTER -> 0.5f
-            HorizontalPosition.END -> 1f
-            null -> DEFAULT_OFFSET
-        }
-        offsetVertical = when (position?.vertical) {
-            VerticalPosition.TOP -> 0f
-            VerticalPosition.CENTER -> 0.5f
-            VerticalPosition.BOTTOM -> 1f
-            null -> DEFAULT_OFFSET
-        }
+        offsetHorizontal = position.offsetHorizontal()
+        offsetVertical = position.offsetVertical()
         applyCropOffset()
     }
 
@@ -75,6 +65,7 @@ internal class CropImageDelegate(view: ImageView) {
 
         val drawableWidth = drawable.intrinsicWidth
         val drawableHeight = drawable.intrinsicHeight
+        if (drawableWidth <= 0 || drawableHeight <= 0) return
         val viewWidth: Int = with(view) { width - paddingLeft - paddingRight }
         val viewHeight: Int = with(view) { height - paddingTop - paddingBottom }
 
@@ -109,6 +100,20 @@ internal class CropImageDelegate(view: ImageView) {
         }
 
         view.setImageMatrix(matrix)
+    }
+
+    private fun Position?.offsetHorizontal(): Float = when (this?.horizontal) {
+        HorizontalPosition.START -> 0f
+        HorizontalPosition.CENTER -> 0.5f
+        HorizontalPosition.END -> 1f
+        null -> DEFAULT_OFFSET
+    }
+
+    private fun Position?.offsetVertical(): Float = when (this?.vertical) {
+        VerticalPosition.TOP -> 0f
+        VerticalPosition.CENTER -> 0.5f
+        VerticalPosition.BOTTOM -> 1f
+        null -> DEFAULT_OFFSET
     }
 
     companion object {

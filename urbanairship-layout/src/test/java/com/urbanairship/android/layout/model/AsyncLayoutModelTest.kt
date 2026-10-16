@@ -13,7 +13,9 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasStateScopes
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.environment.makeThomasState
 import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.util.DelicateLayoutApi
@@ -103,7 +105,7 @@ public class AsyncLayoutModelTest {
     private fun newModel(info: AsyncViewControllerInfo): AsyncLayoutModel {
         asyncState = SharedState(State.AsyncView.Idle(identifier = info.identifier))
         createCallIndex = 0
-        every { factory.create(any(), any(), any()) } answers {
+        every { factory.create(any(), any(), any(), any()) } answers {
             when (createCallIndex++) {
                 0 -> placeholderModel
                 else -> loadedModel
@@ -146,6 +148,95 @@ public class AsyncLayoutModelTest {
 
         assertEquals("GET", session.lastRequest.method)
         assertEquals("https://example.com/layout.json", session.lastRequest.url.toString())
+    }
+
+    @Test
+    public fun loadedContent_releasesThePlaceholdersScopes(): TestResult = runTest(testDispatcher) {
+        val info = parseAsyncInfo(asyncControllerJson())
+        session.addResponse(200, body = """{"type":"empty_view"}""")
+        val model = newModel(info)
+        val placeholderScope = makeThomasState(null, SharedState(State.Layout(identifier = "placeholder")), null, null, null)
+        val loadedScope = makeThomasState(null, SharedState(State.Layout(identifier = "loaded")), null, null, null)
+        every { factory.create(any(), any(), any(), any()) } answers {
+            val owner = arg<ThomasStateScopes.Owner?>(3)
+            if (createCallIndex++ == 0) {
+                mockEnv.stateScopes.add(placeholderScope, owner)
+                placeholderModel
+            } else {
+                mockEnv.stateScopes.add(loadedScope, owner)
+                loadedModel
+            }
+        }
+
+        model.createView(RuntimeEnvironment.getApplication(), viewEnvironment, itemProperties = null)
+        advanceUntilIdle()
+
+        assertFalse(placeholderScope in mockEnv.stateScopes)
+        assertTrue(loadedScope in mockEnv.stateScopes)
+    }
+
+    @Test
+    public fun failedInflate_keepsTheDisplayedContentsScopes(): TestResult = runTest(testDispatcher) {
+        val info = parseAsyncInfo(asyncControllerJson())
+        session.addResponse(200, body = """{"type":"empty_view"}""")
+        val placeholderScope = makeThomasState(null, SharedState(State.Layout(identifier = "placeholder")), null, null, null)
+        val failedScope = makeThomasState(null, SharedState(State.Layout(identifier = "failed")), null, null, null)
+        createCallIndex = 0
+        every { factory.create(any(), any(), any(), any()) } answers {
+            val owner = arg<ThomasStateScopes.Owner?>(3)
+            if (createCallIndex++ == 0) {
+                mockEnv.stateScopes.add(placeholderScope, owner)
+                placeholderModel
+            } else {
+                mockEnv.stateScopes.add(failedScope, owner)
+                throw ModelFactoryException("inflate failed")
+            }
+        }
+        val model = AsyncLayoutModel(
+            viewInfo = info,
+            asyncState = SharedState(State.AsyncView.Idle(info.identifier)),
+            environment = mockEnv,
+            properties = ModelProperties(pagerPageId = null),
+            factory = factory,
+            requestSession = session,
+            contactIdFetcher = { "contact-id" },
+            channelIdFetcher = { "channel-id" }
+        )
+
+        model.createView(RuntimeEnvironment.getApplication(), viewEnvironment, itemProperties = null)
+        advanceUntilIdle()
+
+        assertTrue(placeholderScope in mockEnv.stateScopes)
+        assertFalse(failedScope in mockEnv.stateScopes)
+    }
+
+    @Test
+    public fun failedInflate_keepsAScopeItReusedFromTheDisplayedContent(): TestResult = runTest(testDispatcher) {
+        val info = parseAsyncInfo(asyncControllerJson())
+        session.addResponse(200, body = """{"type":"empty_view"}""")
+        // With a LayoutStateStorage, the rebuild gets the displayed content's states back, so its
+        // nodes are in the same scope before it fails.
+        val sharedScope = makeThomasState(null, SharedState(State.Layout(identifier = "stored")), null, null, null)
+        createCallIndex = 0
+        every { factory.create(any(), any(), any(), any()) } answers {
+            mockEnv.stateScopes.add(sharedScope, arg<ThomasStateScopes.Owner?>(3))
+            if (createCallIndex++ == 0) placeholderModel else throw ModelFactoryException("inflate failed")
+        }
+        val model = AsyncLayoutModel(
+            viewInfo = info,
+            asyncState = SharedState(State.AsyncView.Idle(info.identifier)),
+            environment = mockEnv,
+            properties = ModelProperties(pagerPageId = null),
+            factory = factory,
+            requestSession = session,
+            contactIdFetcher = { "contact-id" },
+            channelIdFetcher = { "channel-id" }
+        )
+
+        model.createView(RuntimeEnvironment.getApplication(), viewEnvironment, itemProperties = null)
+        advanceUntilIdle()
+
+        assertTrue(sharedScope in mockEnv.stateScopes)
     }
 
     @Test
@@ -192,7 +283,7 @@ public class AsyncLayoutModelTest {
         val info = parseAsyncInfo(asyncControllerJson())
         session.addResponse(200, body = """{"type":"empty_view"}""")
         createCallIndex = 0
-        every { factory.create(any(), any(), any()) } answers {
+        every { factory.create(any(), any(), any(), any()) } answers {
             if (createCallIndex++ == 0) {
                 placeholderModel
             } else {
@@ -224,7 +315,7 @@ public class AsyncLayoutModelTest {
             State.AsyncView.Error.ErrorData.Client,
             (failureAsyncState.value as State.AsyncView.Error).data
         )
-        verify(exactly = 2) { factory.create(any(), any(), any()) }
+        verify(exactly = 2) { factory.create(any(), any(), any(), any()) }
     }
 
     @Test
@@ -243,7 +334,7 @@ public class AsyncLayoutModelTest {
             }
         """.trimIndent()
         val info = parseAsyncInfo(json)
-        every { factory.create(any(), any(), any()) } returns placeholderModel
+        every { factory.create(any(), any(), any(), any()) } returns placeholderModel
         val channelAsyncState = SharedState<State.AsyncView>(State.AsyncView.Idle(info.identifier))
         val model = AsyncLayoutModel(
             viewInfo = info,

@@ -5,16 +5,14 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 
-public class ModalPlacementSelector public constructor(
+public class ModalPlacementSelector(
     @JvmField public val placement: ModalPlacement,
-    @JvmField public val windowSize: WindowSize?,
-    @JvmField public val orientation: Orientation?
+    /** What the environment has to match for [placement] to apply. */
+    @JvmField public val conditions: SelectorConditions
 ) {
 
     public companion object {
         private const val KEY_PLACEMENT = "placement"
-        private const val KEY_WINDOW_SIZE = "window_size"
-        private const val KEY_ORIENTATION = "orientation"
 
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): ModalPlacementSelector {
@@ -22,8 +20,7 @@ public class ModalPlacementSelector public constructor(
 
             return ModalPlacementSelector(
                 placement = ModalPlacement.fromJson(content.require(KEY_PLACEMENT)),
-                windowSize = content[KEY_WINDOW_SIZE]?.let(WindowSize::from),
-                orientation = content[KEY_ORIENTATION]?.let(Orientation::from)
+                conditions = SelectorConditions.fromJson(content)
             )
         }
 

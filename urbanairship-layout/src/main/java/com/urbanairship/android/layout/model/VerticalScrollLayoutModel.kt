@@ -19,6 +19,15 @@ internal class VerticalScrollLayoutModel(
     properties = properties
 ) {
 
+    /** See [videoBackgroundModels] -- a playable layer is a real child view, not painted. */
+    val videoBackgroundModels = videoBackgroundModels(
+        layers = viewInfo.backgrounds?.map { it.background },
+        pagerState = environment.layoutState.pager,
+        environment = environment,
+        properties = properties
+    )
+
+
     /** Wraps a view without resizing it, so what it wraps answers for it. */
     override fun establishesLength(direction: Direction): Boolean =
         view.establishesLength(direction)

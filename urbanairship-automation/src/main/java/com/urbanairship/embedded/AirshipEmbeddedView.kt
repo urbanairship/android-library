@@ -330,7 +330,11 @@ public class AirshipEmbeddedView private constructor(
         }
     }
 
+    /** Keeps the shown view sized to its layout's placement, which its environment conditions can change. */
+    private var placementJob: Job? = null
+
     private fun onUpdate(request: EmbeddedDisplayRequest?) {
+        placementJob?.cancel()
         val displayArgs = request?.displayArgsProvider?.invoke()
         val layout = displayArgs?.let { args -> EmbeddedLayout(context, id, request.viewInstanceId, args, manager) }
 
@@ -357,6 +361,14 @@ public class AirshipEmbeddedView private constructor(
             } ?: return
 
             addView(view)
+            placementJob = viewScope.launch {
+                layout.placementUpdates.collect { placement ->
+                    val size = placement?.size?.toEmbeddedSize(parentWidthProvider, parentHeightProvider) ?: return@collect
+                    view.layoutParams = LayoutParams(size.width.spec, size.height.spec).apply {
+                        gravity = Gravity.CENTER
+                    }
+                }
+            }
             // After the view is up, not when it was selected: the two returns above can drop a
             // selected instance without ever showing it.
             manager.recordDisplayed(embeddedViewId = id, viewInstanceId = request.viewInstanceId)

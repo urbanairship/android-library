@@ -6,7 +6,9 @@ public sealed class RequestAuth() {
     public object BasicAppAuth : RequestAuth()
 
     // / Basic auth with provided key:secret
-    public data class BasicAuth(val user: String, val password: String) : RequestAuth()
+    public data class BasicAuth(val user: String, val password: String) : RequestAuth() {
+        override fun toString(): String = "BasicAuth(user=$user, password=$REDACTED)"
+    }
 
     // / Client generated app token - app secret signed token of key, nonce, timestamp
     public object GeneratedAppToken : RequestAuth()
@@ -21,5 +23,9 @@ public sealed class RequestAuth() {
     public data class ContactTokenAuth(val contactId: String) : RequestAuth()
 
     // / Bearer token
-    public data class BearerToken(val token: String) : RequestAuth()
+    public data class BearerToken(val token: String) : RequestAuth() {
+        override fun toString(): String = "BearerToken(token=$REDACTED)"
+    }
 }
+
+private const val REDACTED = "<redacted>"

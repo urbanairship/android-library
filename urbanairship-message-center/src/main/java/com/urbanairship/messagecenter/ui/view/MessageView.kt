@@ -65,6 +65,7 @@ public class MessageView @JvmOverloads constructor(
     internal var analyticsFactory: ((onDismissed: () -> Unit) -> ThomasListenerInterface?)? = null
     internal var storageFactory: (() -> LayoutDataStorage?)? = null
     internal var aiProvider: (() -> InternalAirshipAi?)? = null
+    internal var randomSeedProvider: (() -> String?)? = null
 
     /** Tracks the collector job from the most recent `bind()` call, so a rebind can cancel it. */
     internal var activeBindingJob: Job? = null
@@ -116,7 +117,8 @@ public class MessageView @JvmOverloads constructor(
                 DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
             },
             stateStorage = storageFactory?.invoke(),
-            ai = aiProvider?.invoke()
+            ai = aiProvider?.invoke(),
+            randomSeed = randomSeedProvider?.invoke()
         )
     }
 

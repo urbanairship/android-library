@@ -21,6 +21,15 @@ internal class ContainerLayoutModel(
     properties = properties
 ) {
 
+    /** See [videoBackgroundModels] -- a playable layer is a real child view, not painted. */
+    val videoBackgroundModels = videoBackgroundModels(
+        layers = viewInfo.backgrounds,
+        pagerState = environment.layoutState.pager,
+        environment = environment,
+        properties = properties
+    )
+
+
     /** Container layouts may be shrunk if they contain any media views. */
     override var isShrinkable: Boolean = items.any { it.model.isShrinkable }
 
@@ -46,7 +55,7 @@ internal class ContainerLayoutModel(
     }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
-        ContainerLayoutView(context, this, viewEnvironment).apply {
+        ContainerLayoutView(context, this, viewEnvironment, itemProperties).apply {
             id = viewId
         }
 }
