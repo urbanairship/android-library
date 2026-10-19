@@ -46,7 +46,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         val credentials = user.userCredentials
         return if (credentials == null) {
             createUser(channelId)
-        } else if (user.registeredChannelId != channelId || lastUpdateTime > now || lastUpdateTime + USER_UPDATE_INTERVAL_MS > now) {
+        } else if (user.registeredChannelId != channelId || lastUpdateTime > now || lastUpdateTime + USER_UPDATE_INTERVAL_MS < now) {
             updateUser(credentials, channelId)
         } else {
             credentials

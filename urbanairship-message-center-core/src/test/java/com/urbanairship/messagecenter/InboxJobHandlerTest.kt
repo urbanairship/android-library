@@ -559,6 +559,38 @@ public class InboxJobHandlerTest {
         assertNull(jobHandler.getOrCreateUserCredentials("channelId"))
     }
 
+    @Test
+    public fun testUserNotUpdatedWithinInterval(): TestResult = runTest {
+        every { user.userCredentials } returns userCredentials
+        every { user.registeredChannelId } returns "channelId"
+        dataStore.put(InboxJobHandler.LAST_UPDATE_TIME, System.currentTimeMillis())
+
+        assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), userCredentials)
+        coVerify(exactly = 0) { mockInboxApiClient.updateUser(any(), any()) }
+    }
+
+    @Test
+    public fun testUserUpdatedAfterInterval(): TestResult = runTest {
+        every { user.userCredentials } returns userCredentials
+        every { user.registeredChannelId } returns "channelId"
+        dataStore.put(
+            InboxJobHandler.LAST_UPDATE_TIME,
+            System.currentTimeMillis() - InboxJobHandler.USER_UPDATE_INTERVAL_MS - 1
+        )
+
+        coEvery {
+            mockInboxApiClient.updateUser(userCredentials, "channelId")
+        } returns RequestResult(
+            status = HTTP_OK,
+            value = Unit,
+            body = "{ \"ok\" }",
+            headers = null
+        )
+
+        assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), userCredentials)
+        coVerify(exactly = 1) { mockInboxApiClient.updateUser(userCredentials, "channelId") }
+    }
+
     /**
      * Test user is recreated on unauthorized response from update.
      */
