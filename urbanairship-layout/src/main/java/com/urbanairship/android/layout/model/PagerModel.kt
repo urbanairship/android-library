@@ -415,18 +415,16 @@ internal class PagerModel(
 
     override fun onViewAttached(view: PagerView) {
         // Collect page index changes from state and tell the view to scroll to the current page.
-        // The first emission after each attach skips the scroll animation, so a restored
-        // pageIndex (or one re-applied after the view is detached and reattached, e.g. on a
-        // tab switch) snaps directly to its saved page instead of animating page-by-page.
+        // Only a page change already pending at attach (restored state) skips the animation.
         viewScope.launch {
-            var isFirstScroll = true
+            var isRestoringPage = pagerState.changes.value.let { it.pageIndex != it.lastPageIndex }
             pagerState.changes
                 .map { it.pageIndex to it.lastPageIndex }
                 .filter { (pageIndex, lastPageIndex) -> pageIndex != lastPageIndex }
                 .distinctUntilChanged()
                 .collect { (pageIndex, _) ->
-                    val animate = !isFirstScroll
-                    isFirstScroll = false
+                    val animate = !isRestoringPage
+                    isRestoringPage = false
                     withContext(Dispatchers.Main) {
                         listener?.scrollTo(pageIndex, animate)
                     }
