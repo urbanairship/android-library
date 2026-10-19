@@ -11,6 +11,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
+import com.urbanairship.util.Clock
 import java.net.HttpURLConnection
 import kotlin.time.Duration.Companion.hours
 
@@ -20,6 +21,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     private val dataStore: PreferenceStore,
     private val messageDao: MessageDao,
     private val inboxApiClient: InboxApiClient,
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
 ) {
     internal constructor(
         user: User,
@@ -37,20 +39,41 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     internal suspend fun removeStoredData() {
         dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
         dataStore.remove(LAST_UPDATE_TIME)
+        dataStore.remove(USER_REQUIRES_UPDATE)
+    }
+
+    /** Forces a user update on the next sync, regardless of [USER_UPDATE_INTERVAL_MS]. */
+    internal suspend fun requireUserUpdate() {
+        dataStore.put(USER_REQUIRES_UPDATE, true)
     }
 
     suspend fun getOrCreateUserCredentials(channelId: String): UserCredentials? {
-        val lastUpdateTime = dataStore.get(LAST_UPDATE_TIME) ?: 0L
-        val now = System.currentTimeMillis()
-
         val credentials = user.userCredentials
         return if (credentials == null) {
             createUser(channelId)
-        } else if (user.registeredChannelId != channelId || lastUpdateTime > now || lastUpdateTime + USER_UPDATE_INTERVAL_MS < now) {
+        } else if (isUserUpdateDue(channelId)) {
             updateUser(credentials, channelId)
         } else {
             credentials
         }
+    }
+
+    /**
+     * Returns `true` if the user must be re-sent: the channel changed, an update was required,
+     * or more than [USER_UPDATE_INTERVAL_MS] has passed since the last one.
+     *
+     * A last update time in the future means the clock moved backwards, so it counts as due.
+     *
+     * @param channelId The current channel ID.
+     * @return `true` if [updateUser] should run before syncing.
+     */
+    private suspend fun isUserUpdateDue(channelId: String): Boolean {
+        if (user.registeredChannelId != channelId) return true
+        if (dataStore.get(USER_REQUIRES_UPDATE) == true) return true
+
+        val lastUpdateTime = dataStore.get(LAST_UPDATE_TIME) ?: 0L
+        val now = clock.now().toEpochMilli()
+        return lastUpdateTime > now || now - lastUpdateTime > USER_UPDATE_INTERVAL_MS
     }
 
     suspend fun syncMessageList(
@@ -213,12 +236,15 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
 
         return if (response.isSuccessful && userCredentials != null) {
             UALog.i { "InboxJobHandler - Created Rich Push user: ${userCredentials.username }" }
-            dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
+            dataStore.put(LAST_UPDATE_TIME, clock.now().toEpochMilli())
+            dataStore.remove(USER_REQUIRES_UPDATE)
             dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
             user.onCreated(userCredentials, channelId)
+            user.onUserUpdated(true)
             userCredentials
         } else {
             UALog.d { "Rich Push user creation failed: $response" }
+            user.onUserUpdated(false)
             null
         }
     }
@@ -232,8 +258,10 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         return when (response.status) {
             HttpURLConnection.HTTP_OK -> {
                 UALog.i { "Rich Push user updated." }
-                dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
+                dataStore.put(LAST_UPDATE_TIME, clock.now().toEpochMilli())
+                dataStore.remove(USER_REQUIRES_UPDATE)
                 user.onUpdated(channelId)
+                user.onUserUpdated(true)
                 userCredentials
             }
             HttpURLConnection.HTTP_UNAUTHORIZED -> {
@@ -242,8 +270,10 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
                 createUser(channelId)
             }
             else -> {
+                // The stored credentials still work for the message sync; the update retries next sync.
                 dataStore.put(LAST_UPDATE_TIME, 0L)
-                null
+                user.onUserUpdated(false)
+                userCredentials
             }
         }
     }
@@ -254,6 +284,8 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         internal val LAST_MESSAGE_REFRESH_TIME = AsyncPrefKey.string("com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME")
 
         internal val LAST_UPDATE_TIME = AsyncPrefKey.long("com.urbanairship.user.LAST_UPDATE_TIME")
+
+        internal val USER_REQUIRES_UPDATE = AsyncPrefKey.boolean("com.urbanairship.user.REQUIRES_UPDATE")
 
         internal val USER_UPDATE_INTERVAL_MS = 24.hours.inWholeMilliseconds
     }

@@ -145,7 +145,7 @@ public class InboxTest {
     }
 
     @Test
-    public fun testUrlConfigUpdateCallback() {
+    public fun testUrlConfigUpdateCallback(): TestResult = runTest {
         val remoteConfig = RemoteConfig(
             RemoteAirshipConfig(
                 "https://remote-data",
@@ -156,7 +156,9 @@ public class InboxTest {
             )
         )
         runtimeConfig.updateRemoteConfig(remoteConfig)
+        advanceUntilIdle()
 
+        assertEquals(true, dataStore.get(InboxJobHandler.USER_REQUIRES_UPDATE))
         verify { mockScheduler(Inbox.UpdateType.REQUIRED) }
     }
 
@@ -188,9 +190,27 @@ public class InboxTest {
     @Test
     public fun testChannelCreateUpdatesUser(): TestResult = runTest {
         val flow = MutableStateFlow<String?>(null)
-
         every { mockChannel.channelIdFlow } returns flow
         every { mockChannel.id } returns null
+
+        inbox.tearDown()
+        clearMocks(mockScheduler, answers = false)
+        inbox = Inbox(
+            dataStore = dataStore,
+            user = mockUser,
+            messageDao = spyMessageDao,
+            activityMonitor = spyActivityMonitor,
+            airshipChannel = mockChannel,
+            config = runtimeConfig,
+            taskSleeper = taskSleeper,
+            clock = clock,
+            dispatcher = testDispatcher,
+            updateScheduler = mockScheduler,
+            analytics = mockk(),
+            meteredUsage = mockk()
+        )
+        advanceUntilIdle()
+        verify(exactly = 0) { mockScheduler(Inbox.UpdateType.REQUIRED) }
 
         flow.emit("some-channel")
         advanceUntilIdle()

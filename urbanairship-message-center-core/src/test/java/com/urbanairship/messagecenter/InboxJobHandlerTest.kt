@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.Platform
+import com.urbanairship.TestClock
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
 import com.urbanairship.iam.content.AirshipLayout
@@ -15,6 +16,8 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_MESSAGE_REFRESH_TIME
+import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_UPDATE_TIME
+import com.urbanairship.messagecenter.InboxJobHandler.Companion.USER_UPDATE_INTERVAL_MS
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import java.net.HttpURLConnection.HTTP_CREATED
@@ -25,6 +28,7 @@ import java.net.HttpURLConnection.HTTP_UNAUTHORIZED
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
+import java.time.Instant
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -78,8 +82,10 @@ public class InboxJobHandlerTest {
         )
     )
 
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(1_000_000_000L) }
+
     private val jobHandler: InboxJobHandler =
-        InboxJobHandler(user, dataStore, mockMessageDao, mockInboxApiClient)
+        InboxJobHandler(user, dataStore, mockMessageDao, mockInboxApiClient, clock)
 
     @Before
     public fun setup() {
@@ -443,6 +449,7 @@ public class InboxJobHandlerTest {
 
         assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), newCredentials)
         verify { user.onCreated(newCredentials, "channelId") }
+        coVerify { user.onUserUpdated(true) }
     }
 
     /**
@@ -468,6 +475,7 @@ public class InboxJobHandlerTest {
 
         assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), newCredentials)
         verify { user.onCreated(newCredentials, "channelId") }
+        coVerify { user.onUserUpdated(true) }
     }
 
     /**
@@ -483,6 +491,7 @@ public class InboxJobHandlerTest {
         } returns RequestResult(RequestException("Failed to create user"))
 
         assertNull(jobHandler.getOrCreateUserCredentials("channelId"))
+        coVerify { user.onUserUpdated(false) }
     }
 
     /**
@@ -492,6 +501,7 @@ public class InboxJobHandlerTest {
     @Throws(RequestException::class)
     public fun testUpdateUserAmazon(): TestResult = runTest {
         every { user.userCredentials } returns userCredentials
+        every { user.registeredChannelId } returns "otherChannelId"
 
         runtimeConfig.setPlatform(Platform.AMAZON)
 
@@ -517,6 +527,7 @@ public class InboxJobHandlerTest {
     @Throws(RequestException::class)
     public fun testUpdateUserAndroid(): TestResult = runTest {
         every { user.userCredentials } returns userCredentials
+        every { user.registeredChannelId } returns "otherChannelId"
 
         runtimeConfig.setPlatform(Platform.ANDROID)
 
@@ -545,6 +556,7 @@ public class InboxJobHandlerTest {
     @Throws(RequestException::class)
     public fun testUpdateUserRequestFail(): TestResult = runTest {
         every { user.userCredentials } returns userCredentials
+        every { user.registeredChannelId } returns "otherChannelId"
 
         // Set a error response
         coEvery {
@@ -556,14 +568,15 @@ public class InboxJobHandlerTest {
             headers = null
         )
 
-        assertNull(jobHandler.getOrCreateUserCredentials("channelId"))
+        // The stored credentials still sync messages; the update retries next time.
+        assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), userCredentials)
+        assertEquals(0L, dataStore.get(LAST_UPDATE_TIME))
+        coVerify { user.onUserUpdated(false) }
     }
 
     @Test
-    public fun testUserNotUpdatedWithinInterval(): TestResult = runTest {
-        every { user.userCredentials } returns userCredentials
-        every { user.registeredChannelId } returns "channelId"
-        dataStore.put(InboxJobHandler.LAST_UPDATE_TIME, System.currentTimeMillis())
+    public fun testUserNotUpdatedAtInterval(): TestResult = runTest {
+        stubCurrentUser(lastUpdateTime = clock.currentTime.toEpochMilli() - USER_UPDATE_INTERVAL_MS)
 
         assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), userCredentials)
         coVerify(exactly = 0) { mockInboxApiClient.updateUser(any(), any()) }
@@ -571,24 +584,60 @@ public class InboxJobHandlerTest {
 
     @Test
     public fun testUserUpdatedAfterInterval(): TestResult = runTest {
-        every { user.userCredentials } returns userCredentials
-        every { user.registeredChannelId } returns "channelId"
-        dataStore.put(
-            InboxJobHandler.LAST_UPDATE_TIME,
-            System.currentTimeMillis() - InboxJobHandler.USER_UPDATE_INTERVAL_MS - 1
-        )
-
-        coEvery {
-            mockInboxApiClient.updateUser(userCredentials, "channelId")
-        } returns RequestResult(
-            status = HTTP_OK,
-            value = Unit,
-            body = "{ \"ok\" }",
-            headers = null
-        )
+        stubCurrentUser(lastUpdateTime = clock.currentTime.toEpochMilli() - USER_UPDATE_INTERVAL_MS - 1)
+        stubUpdateUser(HTTP_OK)
 
         assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), userCredentials)
         coVerify(exactly = 1) { mockInboxApiClient.updateUser(userCredentials, "channelId") }
+        assertEquals(clock.currentTime.toEpochMilli(), dataStore.get(LAST_UPDATE_TIME))
+        coVerify { user.onUserUpdated(true) }
+    }
+
+    @Test
+    public fun testUserUpdatedWhenClockMovedBackwards(): TestResult = runTest {
+        stubCurrentUser(lastUpdateTime = clock.currentTime.toEpochMilli() + 1)
+        stubUpdateUser(HTTP_OK)
+
+        assertEquals(jobHandler.getOrCreateUserCredentials("channelId"), userCredentials)
+        coVerify(exactly = 1) { mockInboxApiClient.updateUser(userCredentials, "channelId") }
+    }
+
+    @Test
+    public fun testRequireUserUpdateBypassesInterval(): TestResult = runTest {
+        stubCurrentUser(lastUpdateTime = clock.currentTime.toEpochMilli())
+        stubUpdateUser(HTTP_OK)
+
+        jobHandler.requireUserUpdate()
+        jobHandler.getOrCreateUserCredentials("channelId")
+        coVerify(exactly = 1) { mockInboxApiClient.updateUser(userCredentials, "channelId") }
+
+        // Cleared by the successful update.
+        jobHandler.getOrCreateUserCredentials("channelId")
+        coVerify(exactly = 1) { mockInboxApiClient.updateUser(userCredentials, "channelId") }
+    }
+
+    @Test
+    public fun testRequireUserUpdateKeptWhenUpdateFails(): TestResult = runTest {
+        stubCurrentUser(lastUpdateTime = clock.currentTime.toEpochMilli())
+        stubUpdateUser(HTTP_INTERNAL_ERROR)
+
+        jobHandler.requireUserUpdate()
+        jobHandler.getOrCreateUserCredentials("channelId")
+        jobHandler.getOrCreateUserCredentials("channelId")
+
+        coVerify(exactly = 2) { mockInboxApiClient.updateUser(userCredentials, "channelId") }
+    }
+
+    private suspend fun stubCurrentUser(lastUpdateTime: Long) {
+        every { user.userCredentials } returns userCredentials
+        every { user.registeredChannelId } returns "channelId"
+        dataStore.put(LAST_UPDATE_TIME, lastUpdateTime)
+    }
+
+    private fun stubUpdateUser(status: Int) {
+        coEvery {
+            mockInboxApiClient.updateUser(userCredentials, "channelId")
+        } returns RequestResult(status = status, value = Unit, body = null, headers = null)
     }
 
     /**
@@ -598,6 +647,7 @@ public class InboxJobHandlerTest {
     @Throws(RequestException::class)
     public fun testUpdateUserRequestUnauthorizedRecreatesUser(): TestResult = runTest {
         every { user.userCredentials } returns userCredentials
+        every { user.registeredChannelId } returns "otherChannelId"
 
         val recreatedUserId = "recreatedUserId"
         val recreatedToken = "recreatedToken"
