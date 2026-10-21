@@ -309,6 +309,34 @@ public class PagerModelTest {
     }
 
     @Test
+    public fun testFirstNavigationAfterAttachAnimates(): TestResult = runTest {
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        pagerState.update { it.copyWithPageIndex(1) }
+        advanceUntilIdle()
+
+        verify(exactly = 1) { mockViewListener.scrollTo(1, true) }
+        verify(exactly = 0) { mockViewListener.scrollTo(any(), false) }
+    }
+
+    @Test
+    public fun testRestoredPageSnapsThenNavigationAnimates(): TestResult = runTest {
+        pagerState.update { it.copyWithPageIndex(1) }
+        advanceUntilIdle()
+
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        verify(exactly = 1) { mockViewListener.scrollTo(1, false) }
+
+        pagerState.update { it.copyWithPageIndex(2) }
+        advanceUntilIdle()
+
+        verify(exactly = 1) { mockViewListener.scrollTo(2, true) }
+    }
+
+    @Test
     public fun testPageViewIds() {
         val id0 = pagerModel.getPageViewId(0)
         val id1 = pagerModel.getPageViewId(1)
