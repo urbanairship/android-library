@@ -3,11 +3,14 @@ package com.urbanairship.webkit
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.WebView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.AirshipLogHandler
+import com.urbanairship.UALog
 import com.urbanairship.UrlAllowList
 import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.javascript.JavaScriptExecutor
@@ -63,6 +66,60 @@ public class AirshipWebViewClientTest {
         webViewUrl = null
         Assert.assertFalse(client.shouldOverrideUrlLoading(webView, url))
         verify { nativeBridge wasNot Called }
+    }
+
+    /**
+     * Test a custom scheme is not handled and logs a warning pointing to the uairship deep link form.
+     */
+    @Test
+    public fun testUnsupportedSchemeLogsWarning() {
+        val url = "myapp://play/123"
+        every { nativeBridge.onHandleCommand(url, any(), any(), any()) } returns false
+
+        val warnings = captureWarnings {
+            Assert.assertFalse(client.shouldOverrideUrlLoading(webView, url))
+        }
+
+        Assert.assertEquals(1, warnings.size)
+        Assert.assertTrue(warnings[0].contains(url))
+        Assert.assertTrue(warnings[0].contains("uairship://run-basic-actions?deep_link_action="))
+    }
+
+    /**
+     * Test schemes the web view can load, or that Airship handles, do not log a warning.
+     */
+    @Test
+    public fun testSupportedSchemesDoNotLogWarning() {
+        every { nativeBridge.onHandleCommand(any(), any(), any(), any()) } returns false
+
+        val warnings = captureWarnings {
+            listOf(
+                "https://example.com", "HTTP://example.com", "uairship://close", "about:blank",
+                "data:text/html,hi", "file:///android_asset/page.html"
+            ).forEach { client.shouldOverrideUrlLoading(webView, it) }
+        }
+
+        Assert.assertTrue(warnings.isEmpty())
+    }
+
+    private fun captureWarnings(block: () -> Unit): List<String> {
+        val warnings = mutableListOf<String>()
+        val previousHandler = UALog.logHandler
+        val previousLevel = UALog.logLevel
+        UALog.logLevel = Log.WARN
+        UALog.logHandler = AirshipLogHandler { _, logLevel, _, message ->
+            if (logLevel == Log.WARN) {
+                warnings.add(message())
+            }
+        }
+
+        try {
+            block()
+        } finally {
+            UALog.logHandler = previousHandler
+            UALog.logLevel = previousLevel
+        }
+        return warnings
     }
 
     /**
