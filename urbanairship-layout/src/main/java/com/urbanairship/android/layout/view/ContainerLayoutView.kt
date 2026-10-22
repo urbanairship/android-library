@@ -59,6 +59,9 @@ internal class ContainerLayoutView(
     // other percent items; onMeasure derives the height from it here rather than leaving it to the
     // constraint set's dimension ratio, which resolves against the container height instead.
     private val frameHeightRatios = SparseArray<Double>()
+    // frameId -> aspectRatio for width-auto + percent-height items. The constraint set's
+    // `"W,ratio:1"` wins over `constrainedWidth`, so onMeasure caps a derived width wider than us.
+    private val frameWidthRatios = SparseArray<Double>()
     // frameId -> percent, for items sized as a percent of us on that axis. Only consulted when our
     // own size isn't fixed by our parent; otherwise ConstraintLayout resolves them natively.
     private val framePercentWidths = SparseArray<Float>()
@@ -188,6 +191,9 @@ internal class ContainerLayoutView(
         val size = info.size
         if (size.aspectRatio != null && size.height.isAuto && size.width.isPercent) {
             frameHeightRatios.put(frameId, size.aspectRatio)
+        }
+        if (size.aspectRatio != null && size.width.isAuto && size.height.isPercent) {
+            frameWidthRatios.put(frameId, size.aspectRatio)
         }
         if (size.width.isPercent) framePercentWidths.put(frameId, size.width.getFloat())
         if (size.height.isPercent) framePercentHeights.put(frameId, size.height.getFloat())
@@ -346,9 +352,15 @@ internal class ContainerLayoutView(
                         establishesLength(horizontal = false) ||
                         (heightMode == MeasureSpec.AT_MOST && hasFullPercentItem(horizontal = false)))
 
-        if (frameHeightRatios.size() == 0 && !autoWidths && !autoHeights) {
+        if (frameHeightRatios.size() == 0 && frameWidthRatios.size() == 0 && !autoWidths && !autoHeights) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
             return
+        }
+
+        // Back to the constraint set's ratio, so a width capped on an earlier pass can grow again.
+        for (i in 0 until frameWidthRatios.size()) {
+            val frame = findViewById<View>(frameWidthRatios.keyAt(i)) ?: continue
+            frame.applyParams { it.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT }
         }
 
         // First pass: measure percent items as auto. They can't resolve against a size we don't
@@ -413,7 +425,42 @@ internal class ContainerLayoutView(
             }
         }
 
+        if (widthMode == MeasureSpec.EXACTLY) {
+            val containerW = MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
+            needsRemeasure = fitWidthRatioFrames(containerW) || needsRemeasure
+        }
+
         if (needsRemeasure) super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    /**
+     * Shrinks each width-auto ratio item whose derived width overflows [containerW] to the largest
+     * box of its ratio that fits, matching iOS's `.aspectRatio(.fit)`.
+     *
+     * The width is derived from the height the percent solve gave the item, so an item that already
+     * fits keeps the constraint set's ratio untouched. Only a fixed container width is a bound; an
+     * auto one grows to fit the item instead.
+     *
+     * @param containerW our width less padding, in pixels.
+     * @return true if any item's layout params changed.
+     */
+    private fun fitWidthRatioFrames(containerW: Int): Boolean {
+        var changed = false
+        for (i in 0 until frameWidthRatios.size()) {
+            val frame = findViewById<View>(frameWidthRatios.keyAt(i)) ?: continue
+            val ratio = frameWidthRatios.valueAt(i)
+            frame.applyParams { lp ->
+                // The resolved percent when there was one, otherwise what the item measured to.
+                val naturalH = lp.height.takeIf { it > 0 } ?: frame.measuredHeight
+                val availW = (containerW - lp.leftMargin - lp.rightMargin).coerceAtLeast(0)
+                if ((naturalH * ratio).roundToInt() > availW) {
+                    lp.width = availW
+                    lp.height = (availW / ratio).roundToInt()
+                    changed = true
+                }
+            }
+        }
+        return changed
     }
 
     /**

@@ -175,6 +175,42 @@ public class ContainerLayoutRatioTest {
         assertFrame(ratio, 0, plain.getChildAt(0).measuredWidth, plain.getChildAt(0).measuredWidth)
     }
 
+    // ---- Width derived from a percent height ------------------------------------------------
+
+    /** A derived width wider than the container fits the largest box of the ratio instead. */
+    @Test
+    public fun testPercentHeightRatioItemFitsANarrowerContainer() {
+        val view = measure(item("auto", "100%", ratio = 1.0), 100, EXACTLY, 200, EXACTLY)
+        assertFrame(view, 0, 100, 100)
+    }
+
+    /** The fit takes the item's margins out of the width it has to fit in. */
+    @Test
+    public fun testPercentHeightRatioItemFitsInsideItsMargins() {
+        val view = measure(
+            item("auto", "100%", ratio = 2.0, margin = 10), 120, EXACTLY, 200, EXACTLY
+        )
+        assertFrame(view, 0, 100, 50)
+    }
+
+    /** A derived width that already fits is left to the constraint set's ratio. */
+    @Test
+    public fun testPercentHeightRatioItemThatFitsIsUnchanged() {
+        val view = measure(item("auto", "50%", ratio = 1.0), 300, EXACTLY, 200, EXACTLY)
+        assertFrame(view, 0, 100, 100)
+    }
+
+    /** A pass that no longer overflows lets the width grow back to the ratio. */
+    @Test
+    public fun testPercentHeightRatioItemGrowsBackWhenTheContainerWidens() {
+        val view = measure(item("auto", "100%", ratio = 1.0), 100, EXACTLY, 200, EXACTLY)
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(300, EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(200, EXACTLY)
+        )
+        assertFrame(view, 0, 200, 200)
+    }
+
     // ---- harness ------------------------------------------------------------------------------
 
 
