@@ -4,6 +4,23 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 21.1.0 - October 22, 2026
+
+Minor release that adds suspending actions, email open and click tracking consent, along with security hardening, Scene layout fixes, and reporting improvements.
+
+### Changes
+- Added `SuspendingAction`, a base class for actions implemented as suspend functions, along with `Action.runSuspending`. `CancelSchedulesAction`, `LandingPageAction`, and `ScheduleAction` now extend it.
+- Added open and click tracking consent to `EmailRegistrationOptions` via `TrackingConsent`, and the matching opt-in and opt-out dates on `ContactChannel.Email.RegistrationInfo.Registered`.
+- Added AI Debug screens for in-app message suppression and Scene text input.
+- Fixed several Scene layout, sizing, and placement issues, including modal margins, banner and embedded sizing, decimal and large percentage sizes, and smoother pager page transitions.
+- Fixed the first page change in a Scene pager skipping its animation, which could leave the Next button disabled while a text input had focus.
+- Fixed Scenes displayed from a push not including the Scene's reporting context in their in-app events.
+- Native Message Center Scene events now report the message's reporting context, including its message ID and campaign categories.
+- Scene form result events now include the registration options used for email and SMS inputs that registered a channel.
+- Message Center user tokens are now stored in the Android Keystore.
+- Credentials and request bodies are no longer written to the log.
+- Added a warning log when a link in an Airship web view uses a URL scheme the web view can't open.
+
 ## Version 21.0.3 - October 5, 2026
 
 Patch release that fixes several issues. Apps that use Compose Message Center or legacy banners, or that depend on Firebase Performance Monitoring should update to this version or later.
