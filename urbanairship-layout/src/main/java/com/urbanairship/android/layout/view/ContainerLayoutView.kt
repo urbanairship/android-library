@@ -55,11 +55,11 @@ internal class ContainerLayoutView(
 
     private val frameShouldIgnoreSafeArea = SparseBooleanArray()
     private val frameMargins = SparseArray<Margin>()
-    // frameId -> aspectRatio for height-auto + percent-width items. Their width is solved with the
-    // other percent items; onMeasure derives the height from it here rather than leaving it to the
-    // constraint set's dimension ratio, which resolves against the container height instead.
+    // frameId -> aspectRatio for height-auto items with a declared width. A percent width is solved
+    // with the other percent items; onMeasure derives the height from it here rather than leaving it
+    // to the constraint set's dimension ratio, which resolves against the container height instead.
     private val frameHeightRatios = SparseArray<Double>()
-    // frameId -> aspectRatio for width-auto + percent-height items. The constraint set's
+    // frameId -> aspectRatio for width-auto items with a declared height. The constraint set's
     // `"W,ratio:1"` wins over `constrainedWidth`, so onMeasure caps a derived width wider than us.
     private val frameWidthRatios = SparseArray<Double>()
     // frameId -> percent, for items sized as a percent of us on that axis. Only consulted when our
@@ -185,14 +185,14 @@ internal class ContainerLayoutView(
         frameMargins.put(frameId, info.margin ?: Margin.NONE)
         itemDeclarations.add(info.size to itemView)
 
-        // Track items that need the 2-pass height fix (percent width + auto height + ratio). Their
-        // width is still a percentage of us like any other, so they also go through the percent
-        // solve below — only the height is ours to derive.
+        // Track items that need the 2-pass height fix (declared width + auto height + ratio). A
+        // percent width is still a percentage of us like any other, so it also goes through the
+        // percent solve below — only the height is ours to derive.
         val size = info.size
-        if (size.aspectRatio != null && size.height.isAuto && size.width.isPercent) {
+        if (size.aspectRatio != null && size.height.isAuto && !size.width.isAuto) {
             frameHeightRatios.put(frameId, size.aspectRatio)
         }
-        if (size.aspectRatio != null && size.width.isAuto && size.height.isPercent) {
+        if (size.aspectRatio != null && size.width.isAuto && !size.height.isAuto) {
             frameWidthRatios.put(frameId, size.aspectRatio)
         }
         if (size.width.isPercent) framePercentWidths.put(frameId, size.width.getFloat())
@@ -437,7 +437,7 @@ internal class ContainerLayoutView(
      * Shrinks each width-auto ratio item whose derived width overflows [containerW] to the largest
      * box of its ratio that fits, matching iOS's `.aspectRatio(.fit)`.
      *
-     * The width is derived from the height the percent solve gave the item, so an item that already
+     * The width is derived from the item's declared or solved height, so an item that already
      * fits keeps the constraint set's ratio untouched. Only a fixed container width is a bound; an
      * auto one grows to fit the item instead.
      *
@@ -450,7 +450,7 @@ internal class ContainerLayoutView(
             val frame = findViewById<View>(frameWidthRatios.keyAt(i)) ?: continue
             val ratio = frameWidthRatios.valueAt(i)
             frame.applyParams { lp ->
-                // The resolved percent when there was one, otherwise what the item measured to.
+                // The declared or solved height when there is one, otherwise what the item measured to.
                 val naturalH = lp.height.takeIf { it > 0 } ?: frame.measuredHeight
                 val availW = (containerW - lp.leftMargin - lp.rightMargin).coerceAtLeast(0)
                 if ((naturalH * ratio).roundToInt() > availW) {

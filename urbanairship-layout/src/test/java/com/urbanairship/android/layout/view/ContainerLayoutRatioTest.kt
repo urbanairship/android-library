@@ -211,6 +211,22 @@ public class ContainerLayoutRatioTest {
         assertFrame(view, 0, 200, 200)
     }
 
+    // ---- A points length ----------------------------------------------------------------------
+
+    /** A width derived from a points height fits the container the same way a percent one does. */
+    @Test
+    public fun testPointsHeightRatioItemFitsANarrowerContainer() {
+        val view = measure(item("auto", "200", ratio = 1.0), 100, EXACTLY, 200, EXACTLY)
+        assertFrame(view, 0, 100, 100)
+    }
+
+    /** A height derived from a points width fits a shorter container. */
+    @Test
+    public fun testPointsWidthRatioItemFitsAShorterContainer() {
+        val view = measure(item("200", "auto", ratio = 1.0), 200, EXACTLY, 100, EXACTLY)
+        assertFrame(view, 0, 100, 100)
+    }
+
     // ---- harness ------------------------------------------------------------------------------
 
 
