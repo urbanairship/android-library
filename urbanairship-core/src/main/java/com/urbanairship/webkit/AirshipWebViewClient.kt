@@ -172,6 +172,15 @@ internal constructor(
             return true
         }
 
+        val scheme = url?.let { Uri.parse(it).scheme }
+        if (scheme != null && WEB_VIEW_SCHEMES.none { it.equals(scheme, ignoreCase = true) }) {
+            UALog.w {
+                "The web view can't open $url. To trigger a deep link from a web page, use " +
+                        "\"${NativeBridge.UA_ACTION_SCHEME}://run-basic-actions?deep_link_action=<url-encoded deep link>\". " +
+                        "The page must be allowed by the JavaScript interface URL allow list (urlAllowListScopeJavaScriptInterface)."
+            }
+        }
+
         @Suppress("DEPRECATION")
         return super.shouldOverrideUrlLoading(webView, url)
     }
@@ -390,4 +399,11 @@ internal constructor(
      * Credentials model class.
      */
     private data class Credentials(val username: String?, val password: String?)
+
+    private companion object {
+        // Any other scheme fails with ERR_UNKNOWN_URL_SCHEME.
+        val WEB_VIEW_SCHEMES = listOf(
+            "http", "https", NativeBridge.UA_ACTION_SCHEME, "about", "data", "file", "content", "javascript", "blob"
+        )
+    }
 }
