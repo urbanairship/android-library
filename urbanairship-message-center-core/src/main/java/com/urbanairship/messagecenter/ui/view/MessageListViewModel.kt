@@ -108,23 +108,32 @@ public class MessageListViewModel(
             UALog.d { "Refreshing messages..." }
             inbox.fetchMessages()
 
-            getMessages()
-            UALog.d { "Messages refreshed!" }
-            onRefreshed()
+            getMessages {
+                UALog.d { "Messages refreshed!" }
+                onRefreshed()
+            }
         }
     }
 
-    private fun getMessages() {
+    private fun getMessages(onLoaded: () -> Unit = {}) {
+        var pendingOnLoaded: (() -> Unit)? = onLoaded
+        fun notifyLoaded() {
+            pendingOnLoaded?.invoke()
+            pendingOnLoaded = null
+        }
+
         getMessagesJob?.cancel()
         getMessagesJob = inbox.getMessagesFlow(predicate)
             .onEach { messages ->
                 _states.value = (_states.value as? MessageListState.Content)
                     ?.copy(messages = messages)
                     ?: MessageListState.Content(messages, isRefreshing = false)
+                notifyLoaded()
             }
             .catch {
                 UALog.e(it) { "Error fetching messages" }
                 _states.value = MessageListState.Error
+                notifyLoaded()
             }
             .launchIn(viewModelScope)
     }

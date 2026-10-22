@@ -148,7 +148,7 @@ internal class DefaultMessageCenterListViewModel(
             is Action.DeleteSelectedMessages -> deleteSelectedMessages()
             is Action.MarkMessagesRead -> markMessagesRead(action.messageIds)
             is Action.MarkSelectedMessagesRead -> markSelectedMessagesRead()
-            is Action.Refresh -> refreshInbox()
+            is Action.Refresh -> refreshInbox(action.onRefreshed)
             is Action.SelectAll -> selectAll()
             is Action.SelectNone -> selectNone()
             is Action.SetEditing -> setEditing(action.isEditing)
@@ -258,15 +258,23 @@ internal class DefaultMessageCenterListViewModel(
             UALog.v { "Refreshing messages..." }
             inbox.fetchMessages()
 
-            getMessages(previouslyHighlightedMessageId)
-            UALog.v { "Messages refreshed!" }
-            onRefreshed()
+            getMessages(previouslyHighlightedMessageId) {
+                UALog.v { "Messages refreshed!" }
+                onRefreshed()
+            }
         }
     }
 
     private fun getMessages(
-        previouslyHighlightedMessageId: String? = null
+        previouslyHighlightedMessageId: String? = null,
+        onLoaded: () -> Unit = {}
     ) {
+        var pendingOnLoaded: (() -> Unit)? = onLoaded
+        fun notifyLoaded() {
+            pendingOnLoaded?.invoke()
+            pendingOnLoaded = null
+        }
+
         getMessagesJob?.cancel()
         getMessagesJob = inbox.getMessagesFlow(predicate).onEach { messages ->
                 _states.update {
@@ -285,9 +293,11 @@ internal class DefaultMessageCenterListViewModel(
                         highlightedMessageId = previouslyHighlightedMessageId
                     )
                 }
+                notifyLoaded()
             }.catch {
                 UALog.e(it) { "Error fetching messages" }
                 _states.value = State.Error
+                notifyLoaded()
             }.launchIn(viewModelScope)
     }
 

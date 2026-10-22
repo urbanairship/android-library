@@ -53,7 +53,25 @@ public final class com/urbanairship/messagecenter/compose/ui/MessageCenterListSc
 
 public final class com/urbanairship/messagecenter/compose/ui/MessageCenterListState {
 	public static final field $stable I
+	public final fun delete (Ljava/util/Set;)V
+	public final fun deleteSelected ()V
+	public final fun getAreAllMessagesSelected ()Z
+	public final fun getHighlightedMessageId ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/List;
+	public final fun getSelectedMessageIds ()Ljava/util/Set;
 	public final fun isEditing ()Z
+	public final fun isError ()Z
+	public final fun isLoading ()Z
+	public final fun isRefreshing ()Z
+	public final fun markRead (Ljava/util/Set;)V
+	public final fun markSelectedRead ()V
+	public final fun refresh (Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun refresh$default (Lcom/urbanairship/messagecenter/compose/ui/MessageCenterListState;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public final fun selectAll ()V
+	public final fun selectNone ()V
+	public final fun setEditing (Z)V
+	public final fun setHighlighted (Ljava/lang/String;)V
+	public final fun setSelected (Ljava/lang/String;Z)V
 }
 
 public final class com/urbanairship/messagecenter/compose/ui/MessageCenterListStateKt {
