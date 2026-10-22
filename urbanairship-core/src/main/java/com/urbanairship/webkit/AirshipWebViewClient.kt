@@ -176,7 +176,8 @@ internal constructor(
         if (scheme != null && WEB_VIEW_SCHEMES.none { it.equals(scheme, ignoreCase = true) }) {
             UALog.w {
                 "The web view can't open $url. To trigger a deep link from a web page, use " +
-                        "\"${NativeBridge.UA_ACTION_SCHEME}://run-basic-actions?deep_link_action=<url-encoded deep link>\"."
+                        "\"${NativeBridge.UA_ACTION_SCHEME}://run-basic-actions?deep_link_action=<url-encoded deep link>\". " +
+                        "The page must be allowed by the JavaScript interface URL allow list (urlAllowListScopeJavaScriptInterface)."
             }
         }
 

@@ -83,6 +83,7 @@ public class AirshipWebViewClientTest {
         Assert.assertEquals(1, warnings.size)
         Assert.assertTrue(warnings[0].contains(url))
         Assert.assertTrue(warnings[0].contains("uairship://run-basic-actions?deep_link_action="))
+        Assert.assertTrue(warnings[0].contains("urlAllowListScopeJavaScriptInterface"))
     }
 
     /**
