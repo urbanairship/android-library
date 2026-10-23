@@ -54,6 +54,7 @@ androidx-test-junit = '1.3.0'
 androidx-test-rules = '1.7.0'
 androidx-test-runner = '1.7.0'
 androidx-test-truth = '1.7.0'
+androidx-tv-material = '1.0.1'
 androidx-vectordrawable = '1.2.0'
 androidx-webkit = '1.14.0'
 androidx-work = '2.11.0'
@@ -193,6 +194,7 @@ androidx-test-ext-junitktx = { module = "androidx.test.ext:junit-ktx", version.r
 androidx-test-ext-truth = { module = "androidx.test.ext:truth", version.ref = "androidx-test-truth" }
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-test-rules" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
+androidx-tv-material = { module = "androidx.tv:tv-material", version.ref = "androidx-tv-material" }
 androidx-vectordrawable = { module = "androidx.vectordrawable:vectordrawable", version.ref = "androidx-vectordrawable" }
 androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "androidx-webkit" }
 androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "androidx-work" }

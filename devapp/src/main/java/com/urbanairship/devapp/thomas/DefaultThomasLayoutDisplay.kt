@@ -23,13 +23,18 @@ import com.urbanairship.json.jsonMapOf
 
 internal class DefaultThomasLayoutDisplay private constructor() {
 
-    fun display(context: Context, info: LayoutInfo, priority: Int = 0) {
+    fun display(
+        context: Context,
+        info: LayoutInfo,
+        priority: Int = 0,
+        listener: ThomasListenerInterface? = null
+    ) {
         Thomas.prepareDisplay(
             payload = info,
             priority = priority,
             extras = emptyJsonMap(),
             activityMonitor = GlobalActivityMonitor.shared(context),
-            listener = thomasListener,
+            listener = listener ?: loggingListener,
             actionRunner = actionRunner,
             imageCache = TestLayoutPlaceholder.imageCache(context),
             embeddedViewManager = EmbeddedViewManager,
@@ -47,7 +52,7 @@ internal class DefaultThomasLayoutDisplay private constructor() {
         DefaultActionRunner.runSuspending(actions, Action.Situation.AUTOMATION)
     }
 
-    private val thomasListener = object : ThomasListenerInterface {
+    private val loggingListener = object : ThomasListenerInterface {
         private val events = mutableListOf<String>()
 
         override fun onStateChanged(state: JsonSerializable) { }

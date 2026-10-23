@@ -105,6 +105,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation libs.compose.materialicons.extended
     implementation libs.androidx.navigation.compose
+    implementation(libs.androidx.tv.material)
 
     // Jetpack Glance
     implementation(libs.glance.appwidget)

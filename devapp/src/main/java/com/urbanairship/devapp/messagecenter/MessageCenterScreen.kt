@@ -16,7 +16,13 @@ import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 fun MessageCenterScreen(
     state: MessageCenterState = rememberMessageCenterState(),
 ) {
+    DevappMessageCenterTheme {
+        MessageCenterScreen(state = state)
+    }
+}
 
+@Composable
+fun DevappMessageCenterTheme(content: @Composable () -> Unit) {
     val lightColors = MessageCenterColors.lightDefaults(
         background = MaterialTheme.colorScheme.surfaceContainer,
         surface = MaterialTheme.colorScheme.surface,
@@ -40,8 +46,7 @@ fun MessageCenterScreen(
 
     MessageCenterTheme(
         colors = if (isSystemInDarkTheme()) darkColors else lightColors,
-        options = options
-    ) {
-        MessageCenterScreen(state = state)
-    }
+        options = options,
+        content = content
+    )
 }

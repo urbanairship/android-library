@@ -1,5 +1,6 @@
 package com.urbanairship.devapp
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
@@ -182,6 +183,23 @@ class AppRouterViewModel(
         data object Settings: TopLevelDestination("settings")
 
         override fun serialize(): String  = this.value
+
+        val title: String
+            get() = when (this) {
+                Home -> "Home"
+                is Message -> "Messages"
+                PreferenceCenter -> "Preferences"
+                Settings -> "Settings"
+            }
+
+        @get:DrawableRes
+        val icon: Int
+            get() = when (this) {
+                Home -> R.drawable.ic_home
+                is Message -> R.drawable.ic_inbox
+                PreferenceCenter -> R.drawable.ic_pref_center
+                Settings -> R.drawable.ic_settings
+            }
 
         override fun navigationEntry(
             onNavigate: (Destination) -> Unit,

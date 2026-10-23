@@ -10,7 +10,10 @@ import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PreferenceCenterScreen(identifier: String) {
+fun PreferenceCenterScreen(
+    identifier: String,
+    topBar: @Composable ((title: String, onNavigateUp: () -> Unit) -> Unit)? = null,
+) {
 
     val lightColors = PreferenceCenterColors.lightDefaults(
         background = MaterialTheme.colorScheme.surfaceContainer,
@@ -31,6 +34,9 @@ fun PreferenceCenterScreen(identifier: String) {
     PreferenceCenterTheme(
         colors = if (isSystemInDarkTheme()) darkColors else lightColors
     ) {
-        PreferenceCenterScreen(identifier = identifier)
+        PreferenceCenterScreen(
+            identifier = identifier,
+            topBar = topBar
+        )
     }
 }

@@ -14,20 +14,17 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.core.util.Consumer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.urbanairship.automation.compose.AirshipBannerHost
 import com.urbanairship.devapp.AppRouterViewModel.TopLevelDestination
+import com.urbanairship.devapp.tv.TvMainActivity
+import com.urbanairship.devapp.tv.isTelevision
 import com.urbanairship.google.PlayServicesUtils.handleAnyPlayServicesError
 import com.urbanairship.google.PlayServicesUtils.isGooglePlayStoreAvailable
 import AirshipTheme
@@ -37,22 +34,18 @@ import AirshipTheme
  */
 class MainActivity : AppCompatActivity() {
 
-    fun TopLevelDestination.title(): String = when(this) {
-        TopLevelDestination.Home -> "Home"
-        is TopLevelDestination.Message -> "Messages"
-        TopLevelDestination.PreferenceCenter -> "Preferences"
-        TopLevelDestination.Settings -> "Settings"
-    }
-
-    @Composable
-    fun TopLevelDestination.icon(): Int = when(this) {
-        TopLevelDestination.Home -> R.drawable.ic_home
-        is TopLevelDestination.Message -> R.drawable.ic_inbox
-        TopLevelDestination.PreferenceCenter -> R.drawable.ic_pref_center
-        TopLevelDestination.Settings -> R.drawable.ic_settings
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (isTelevision()) {
+            super.onCreate(savedInstanceState)
+            startActivity(
+                Intent(intent)
+                    .setClass(this, TvMainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            )
+            finish()
+            return
+        }
+
         this.enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
@@ -61,8 +54,6 @@ class MainActivity : AppCompatActivity() {
                 modelClass = AppRouterViewModel::class.java,
                 factory = AppRouterViewModel.factory()
             )
-
-            DeeplinkManager.shared.setAppRouter(appRouter)
 
             val backstack = appRouter.activeBackStack.collectAsState().value
             val selectedTopLevel = appRouter.selectedTopLevel.collectAsState().value
@@ -75,8 +66,8 @@ class MainActivity : AppCompatActivity() {
                                 NavigationBarItem(
                                     selected = selectedTopLevel == item,
                                     onClick = { appRouter.navigate(item) },
-                                    label = { Text(text = item.title()) },
-                                    icon = { Icon(painter = painterResource(item.icon()), contentDescription = null) },
+                                    label = { Text(text = item.title) },
+                                    icon = { Icon(painter = painterResource(item.icon), contentDescription = null) },
                                     alwaysShowLabel = true,
                                 )
                             }
@@ -107,17 +98,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // Listen for new intents that may contain deep links
-            DisposableEffect(appRouter) {
-                DeeplinkManager.shared.handleDeeplink(intent)
-
-                val listener = Consumer<Intent> {
-                    DeeplinkManager.shared.handleDeeplink(it)
-                }
-
-                addOnNewIntentListener(listener)
-                onDispose { removeOnNewIntentListener(listener) }
-            }
+            DeeplinkEffect(this, appRouter)
         }
     }
 

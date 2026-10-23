@@ -1,8 +1,31 @@
 package com.urbanairship.devapp
 
 import android.content.Intent
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.util.Consumer
 import com.urbanairship.UALog
 import java.lang.ref.WeakReference
+
+/**
+ * Routes the activity's launch intent, and any new intents, through [DeeplinkManager.shared].
+ */
+@Composable
+internal fun DeeplinkEffect(activity: ComponentActivity, appRouter: AppRouterViewModel) {
+    DeeplinkManager.shared.setAppRouter(appRouter)
+
+    DisposableEffect(appRouter) {
+        DeeplinkManager.shared.handleDeeplink(activity.intent)
+
+        val listener = Consumer<Intent> {
+            DeeplinkManager.shared.handleDeeplink(it)
+        }
+
+        activity.addOnNewIntentListener(listener)
+        onDispose { activity.removeOnNewIntentListener(listener) }
+    }
+}
 
 internal class DeeplinkManager {
 

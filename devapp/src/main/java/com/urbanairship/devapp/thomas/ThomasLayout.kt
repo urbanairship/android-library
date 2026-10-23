@@ -13,9 +13,9 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
+import java.io.File
 import java.io.InputStream
 import java.util.Scanner
-import org.json.JSONException
 import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.SafeConstructor
@@ -31,7 +31,7 @@ internal class ThomasLayout {
         MESSAGE_MODAL("Messages/Modal");
 
         companion object {
-            @Throws(JSONException::class)
+            @Throws(JsonException::class)
             fun from(json: JsonValue): Type {
                 val content = json.requireString()
                 return entries.firstOrNull { it.directory == content }
@@ -42,16 +42,32 @@ internal class ThomasLayout {
         override fun toJsonValue(): JsonValue = JsonValue.wrap(directory)
     }
 
+    sealed interface Payload {
+        data class Scene(val info: LayoutInfo, val priority: Int) : Payload
+
+        data class Message(val json: JsonValue) : Payload
+
+        fun display(context: Context) {
+            when (this) {
+                is Scene -> DefaultThomasLayoutDisplay.shared.display(
+                    context = context,
+                    info = info,
+                    priority = priority
+                )
+                is Message -> InAppMessagePreview(json).display(context)
+            }
+        }
+    }
+
     data class LayoutFile(
         val assetsPath: String,
         val filename: String,
-        val type: Type
+        val type: Type? = null
     ): JsonSerializable {
 
         @Throws(IllegalArgumentException::class)
         fun readFile(context: Context): JsonMap {
-            val inputStream = context.assets.open(assetsPath)
-            val string = readStream(inputStream)
+            val string = readStream(openStream(context))
 
             if (assetsPath.endsWith(".json")) {
                 return JsonValue.parseString(string).optMap()
@@ -64,11 +80,35 @@ internal class ThomasLayout {
         }
 
         /**
-         * The layout JSON, unwrapped from the full in-app message payload if needed.
+         * A file pushed to the app's external files dir wins over the bundled asset of the same
+         * relative path, so a layout can be iterated on with `adb push` and no rebuild.
          */
-        @Throws(IllegalStateException::class)
-        private fun layoutJson(map: JsonMap): JsonMap {
-            return if (map.containsKey("presentation")) {
+        private fun openStream(context: Context): InputStream {
+            val pushed = pushedFile(context)
+
+            return pushed?.inputStream() ?: context.assets.open(assetsPath)
+        }
+
+        @Throws(IllegalArgumentException::class)
+        private fun pushedFile(context: Context): File? {
+            val root = File(context.getExternalFilesDir(null), PUSHED_LAYOUTS_FOLDER)
+            val relativePath = assetsPath.removePrefix("${ThomasLayoutLoader.LAYOUTS_ROOT_FOLDER}/")
+            val file = File(root, relativePath)
+
+            // The preview activity is exported, so the path is caller-supplied.
+            if (!file.canonicalPath.startsWith(root.canonicalPath + File.separator)) {
+                throw IllegalArgumentException("Layout path escapes $PUSHED_LAYOUTS_FOLDER: $relativePath")
+            }
+
+            return file.takeIf { it.isFile }
+        }
+
+        /**
+         * The layout JSON, unwrapped from the full in-app message payload if needed, or `null`
+         * if the file isn't a scene.
+         */
+        private fun layoutJson(map: JsonMap): JsonMap? {
+            return if (map.containsKey(KEY_PRESENTATION)) {
                 // DevApp layout, without the full in-app message wrapper
                 map
             } else {
@@ -77,7 +117,6 @@ internal class ThomasLayout {
                     ?.optionalMap("message")
                     ?.optionalMap("display")
                     ?.optionalMap("layout")
-                    ?: throw IllegalStateException("Malformed layout file: $assetsPath")
             }
         }
 
@@ -86,32 +125,36 @@ internal class ThomasLayout {
          * than displaying it themselves.
          */
         @Throws(IllegalArgumentException::class, IllegalStateException::class, JsonException::class)
-        fun readAirshipLayout(context: Context): AirshipLayout =
-            AirshipLayout.fromJson(
-                jsonMapOf("layout" to layoutJson(readFile(context))).toJsonValue()
-            )
+        fun readAirshipLayout(context: Context): AirshipLayout {
+            val layout = layoutJson(readFile(context))
+                ?: throw IllegalStateException("Malformed layout file: $assetsPath")
+
+            return AirshipLayout.fromJson(jsonMapOf("layout" to layout).toJsonValue())
+        }
+
+        @Throws(IllegalArgumentException::class, IllegalStateException::class, JsonException::class)
+        fun parse(context: Context): Payload {
+            val map = readFile(context)
+            val layout = layoutJson(map)
+
+            return when {
+                layout != null -> Payload.Scene(
+                    info = LayoutInfo(layout),
+                    // Devapp-only, and absent from every layout that doesn't care. The
+                    // preview path used to queue everything at 0, which left priority
+                    // ordering and any selection that reads it untestable from here.
+                    priority = map.optionalField<Int>(KEY_DEVAPP_PRIORITY) ?: 0
+                )
+                map.containsKey(KEY_DISPLAY_TYPE) -> Payload.Message(map.toJsonValue())
+                else -> throw IllegalStateException(
+                    "Malformed layout file, expected a '$KEY_PRESENTATION' or '$KEY_DISPLAY_TYPE' key: $assetsPath"
+                )
+            }
+        }
 
         @Throws(IllegalArgumentException::class, IllegalStateException::class, JsonException::class)
         fun display(context: Context) {
-            val map = readFile(context)
-
-            when(type) {
-                Type.SCENE_BANNERS, Type.SCENE_EMBEDDED, Type.SCENE_MODALS -> {
-                    val payload = LayoutInfo(layoutJson(map))
-
-                    DefaultThomasLayoutDisplay.shared.display(
-                        context = context,
-                        info = payload,
-                        // Devapp-only, and absent from every layout that doesn't care. The
-                        // preview path used to queue everything at 0, which left priority
-                        // ordering and any selection that reads it untestable from here.
-                        priority = map.optionalField<Int>(KEY_DEVAPP_PRIORITY) ?: 0
-                    )
-                }
-                Type.MESSAGE_BANNERS, Type.MESSAGE_FULLSCREEN, Type.MESSAGE_HTML, Type.MESSAGE_MODAL -> {
-                    InAppMessagePreview(map.toJsonValue()).display(context)
-                }
-            }
+            parse(context).display(context)
         }
 
         /**
@@ -130,9 +173,13 @@ internal class ThomasLayout {
         }
 
         companion object {
+            private const val PUSHED_LAYOUTS_FOLDER = "agent_layouts"
+
             private const val KEY_PATH = "asset_path"
             private const val KEY_NAME = "name"
             private const val KEY_TYPE = "type"
+            private const val KEY_PRESENTATION = "presentation"
+            private const val KEY_DISPLAY_TYPE = "display_type"
             private const val KEY_DEVAPP_PRIORITY = "devapp_priority"
             private const val MAX_YAML_ALIASES = 10_000
 
@@ -142,9 +189,9 @@ internal class ThomasLayout {
                     LayoutFile(
                         assetsPath = content.requireField(KEY_PATH),
                         filename = content.requireField(KEY_NAME),
-                        type = Type.from(content.require(KEY_TYPE))
+                        type = content.get(KEY_TYPE)?.takeUnless { it.isNull }?.let { Type.from(it) }
                     )
-                } catch (ex: JSONException) {
+                } catch (ex: JsonException) {
                     UALog.e(ex) { "Failed to restore layout file from JSON ${json.toString(true)}" }
                     null
                 }
@@ -154,7 +201,7 @@ internal class ThomasLayout {
         override fun toJsonValue(): JsonValue = jsonMapOf(
             KEY_PATH to assetsPath,
             KEY_NAME to filename,
-            KEY_TYPE to type.toJsonValue()
+            KEY_TYPE to type?.toJsonValue()
         ).toJsonValue()
     }
 }
