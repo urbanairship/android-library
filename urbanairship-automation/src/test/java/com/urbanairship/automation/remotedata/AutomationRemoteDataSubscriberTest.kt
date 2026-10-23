@@ -29,6 +29,7 @@ import io.mockk.runs
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -744,5 +745,134 @@ public class AutomationRemoteDataSubscriberTest {
 
         coVerify(timeout = 2000) { engine.upsertSchedules(secondSchedules) }
         coVerify(exactly = 2) { engine.reconcileLedger() }
+    }
+
+    /** A store error costs one update; the same subscription still processes the next one. */
+    @Test
+    public fun testSyncErrorDoesNotCancelSubscription(): TestResult = runTest {
+        coEvery { engine.upsertSchedules(any()) } just runs
+        coEvery { engine.getSchedules() } throws IllegalStateException("store failure")
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        val firstSchedules = makeSchedules(source = RemoteDataSource.APP)
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(firstSchedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { engine.upsertSchedules(any()) }
+
+        // The store recovers; the next emission on the same subscription must still be processed.
+        coEvery { engine.getSchedules() } returns emptyList()
+        clock.currentTime = clock.currentTime.plusMillis(1)
+        val secondSchedules = makeSchedules(source = RemoteDataSource.APP)
+
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(secondSchedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(timeout = 2000) { engine.upsertSchedules(secondSchedules) }
+    }
+
+    /** A constraint-store error also costs only one update. */
+    @Test
+    public fun testConstraintErrorDoesNotCancelSubscription(): TestResult = runTest {
+        coEvery { engine.upsertSchedules(any()) } just runs
+        coEvery { frequencyLimitManager.setConstraints(any()) } throws
+                IllegalStateException("constraint store failure")
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(listOf(), listOf(FrequencyConstraint("foo", 100.seconds, 10))),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { engine.upsertSchedules(any()) }
+
+        coEvery { frequencyLimitManager.setConstraints(any()) } returns Result.success(Unit)
+        clock.currentTime = clock.currentTime.plusMillis(1)
+        val schedules = makeSchedules(source = RemoteDataSource.APP)
+
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(schedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(timeout = 2000) { engine.upsertSchedules(schedules) }
+    }
+
+    /** Cancellation propagates out of the collector instead of being handled as a sync error. */
+    @Test
+    public fun testCancellationStillPropagatesOutOfTheCollector(): TestResult = runTest {
+        coEvery { engine.getSchedules() } throws CancellationException("boom")
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.tryEmit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(emptyList(), emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        // An otherwise healthy emission on the same subscription is never processed, since the
+        // collector job that would have picked it up is gone.
+        coEvery { engine.getSchedules() } returns emptyList()
+        coJustRun { engine.upsertSchedules(any()) }
+        clock.currentTime = clock.currentTime.plusMillis(1)
+        val schedules = makeSchedules(source = RemoteDataSource.APP)
+
+        updatesFlow.tryEmit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(schedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { engine.upsertSchedules(any()) }
     }
 }
