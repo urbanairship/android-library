@@ -253,4 +253,66 @@ public class StringExtensionsTest {
         assertEquals(expected, input.markdownToHtml())
     }
 
+    @Test
+    public fun markdownToHtmlColorSpans() {
+        val input = "[Sale]{color:brand} ends [today]{color:urgent}, so don't miss it"
+        val expected = """<span style="color: #000001;">Sale</span> ends <span style="color: #000002;">today</span>, so don&#39;t miss it"""
+        assertEquals(expected, input.markdownToHtml(listOf("brand", "urgent")))
+    }
+
+    @Test
+    public fun markdownToHtmlColorSpanWithUnknownNameKeepsText() {
+        assertEquals("Sale ends", "[Sale]{color:missing} ends".markdownToHtml(listOf("brand")))
+        assertEquals("Sale ends", "[Sale]{color:brand} ends".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlNestedColorSpans() {
+        val input = "[one [two]{color:inner} one]{color:outer}"
+        val expected = """<span style="color: #000001;">one <span style="color: #000002;">two</span> one</span>"""
+        assertEquals(expected, input.markdownToHtml(listOf("outer", "inner")))
+    }
+
+    @Test
+    public fun markdownToHtmlColorSpanAroundStylesAndLink() {
+        val input = "[**Sale** at the [store](https://example.com) ,{now},]{color:brand}"
+        val expected = """<span style="color: #000001;"><b>Sale</b> at the <a href="https://example.com">store</a> <sub>now</sub></span>"""
+        assertEquals(expected, input.markdownToHtml(listOf("brand")))
+    }
+
+    @Test
+    public fun markdownToHtmlColorSpanBeforeLink() {
+        val input = "[Sale]{color:brand} at the [store](https://example.com)"
+        val expected = """<span style="color: #000001;">Sale</span> at the <a href="https://example.com">store</a>"""
+        assertEquals(expected, input.markdownToHtml(listOf("brand")))
+    }
+
+    @Test
+    public fun markdownToHtmlColorSpanTextWithPercent() {
+        val expected = """<span style="color: #000001;">20% off</span>"""
+        assertEquals(expected, "[20% off]{color:brand}".markdownToHtml(listOf("brand")))
+    }
+
+    @Test
+    public fun markdownToHtmlLeavesNonColorSpansLiteral() {
+        listOf(
+            "[space] {color:brand}",
+            "[x]{color:}",
+            "[y]{color:two words}",
+            "[]{color:brand}",
+            "[open]{color:brand",
+            "[x]{colour:brand}",
+            "plain {color:brand}",
+        ).forEach { input ->
+            assertEquals(input, input.markdownToHtml(listOf("brand")))
+        }
+    }
+
+    @Test
+    public fun colorSpanIndexDecodesPlaceholders() {
+        assertEquals(0, colorSpanIndex(0xFF000001.toInt()))
+        assertEquals(41, colorSpanIndex(0xFF00002A.toInt()))
+        assertEquals(null, colorSpanIndex(0xFF000000.toInt()))
+    }
+
 }

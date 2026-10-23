@@ -45,6 +45,7 @@ import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.property.TextAlignment
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.property.TextStyle
+import com.urbanairship.android.layout.property.colorNames
 import com.urbanairship.android.layout.property.isEnabled
 import com.urbanairship.android.layout.widget.Clippable
 import java.util.Arrays
@@ -362,7 +363,10 @@ internal object LayoutUtils {
         val isMarkdownEnabled = markdownOptions.isEnabled
 
         if (isMarkdownEnabled) {
-            val html = HtmlCompat.fromHtml(text.markdownToHtml(), HtmlCompat.FROM_HTML_MODE_LEGACY)
+            val html = HtmlCompat.fromHtml(
+                text.markdownToHtml(markdownOptions.colorNames),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
             textView.setHtml(context, html, markdownOptions)
         } else {
             textView.text = text

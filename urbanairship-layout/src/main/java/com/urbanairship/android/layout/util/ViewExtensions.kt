@@ -13,6 +13,7 @@ import android.text.Spanned
 import android.text.TextPaint
 import android.text.TextWatcher
 import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
 import android.text.style.URLSpan
 import android.util.Patterns
 import android.view.KeyEvent
@@ -33,6 +34,7 @@ import androidx.core.view.descendants
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.MarkdownOptions
+import com.urbanairship.android.layout.property.resolveColors
 import com.urbanairship.android.layout.property.resolveHighlightColor
 import com.urbanairship.android.layout.property.resolveHighlightCornerRadius
 import com.urbanairship.android.layout.property.resolvedLinkColor
@@ -308,6 +310,8 @@ internal fun TextView.setHtml(
         val highlightCornerRadius = markdownOptions.resolveHighlightCornerRadius(context)
 
         html.toSpannable().apply {
+            // Before the links, so a link inside a color span keeps its own color.
+            convertColorSpans(markdownOptions.resolveColors(context))
             convertUrlSpans(underlineLinks, linkColor)
             // The highlight reads its geometry off the laid-out text, so we pass it via a
             // block so that RoundedBackgroundSpan can always operate on the current layout.
@@ -345,6 +349,28 @@ private fun Spannable.convertHighlightSpans(
         removeSpan(span)
         setSpan(bubbleSpan, start, end, flags)
     }
+}
+
+/**
+ * Replaces each color span's placeholder color with its resolved palette color.
+ *
+ * Spans are re-added outermost first so a nested span's color wins.
+ *
+ * @param colors the resolved palette, indexed the way [markdownToHtml] encoded it.
+ */
+private fun Spannable.convertColorSpans(colors: List<Int>) {
+    val spans = getSpans(0, length, ForegroundColorSpan::class.java) ?: emptyArray()
+    spans
+        .map { span -> Triple(span, getSpanStart(span), getSpanEnd(span)) }
+        .sortedByDescending { (_, start, end) -> end - start }
+        .forEach { (span, start, end) ->
+            val flags = getSpanFlags(span)
+            removeSpan(span)
+            val color = colorSpanIndex(span.foregroundColor)?.let { colors.getOrNull(it) }
+            if (color != null) {
+                setSpan(ForegroundColorSpan(color), start, end, flags)
+            }
+        }
 }
 
 /** Replaces URLSpans with ClickableSpans. */
