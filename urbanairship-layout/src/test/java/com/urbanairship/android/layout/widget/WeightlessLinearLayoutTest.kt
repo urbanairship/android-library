@@ -187,6 +187,87 @@ public class WeightlessLinearLayoutTest {
         assertEquals(0, percent.measuredHeight)
     }
 
+    @Test
+    public fun testVerticalPercentHeightRatioChildFitsTheLayoutWidth() {
+        val layout = WeightlessLinearLayout(context)
+        layout.setOrientation(WeightlessLinearLayout.OrientationMode.VERTICAL)
+        val child = View(context)
+        layout.addView(
+            child,
+            WeightlessLinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 0, 0f, 1f, 1f)
+        )
+
+        measureExactly(layout, 100, 200)
+
+        assertEquals(100, child.measuredWidth)
+        assertEquals(100, child.measuredHeight)
+    }
+
+    @Test
+    public fun testHorizontalPercentWidthRatioChildFitsTheLayoutHeight() {
+        val layout = WeightlessLinearLayout(context)
+        val child = View(context)
+        layout.addView(
+            child,
+            WeightlessLinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f, 0f, 1f)
+        )
+
+        measureExactly(layout, 200, 100)
+
+        assertEquals(100, child.measuredWidth)
+        assertEquals(100, child.measuredHeight)
+    }
+
+    @Test
+    public fun testHorizontalRatioChildFitsInsideItsCrossAxisMargins() {
+        val layout = WeightlessLinearLayout(context)
+        val child = View(context)
+        layout.addView(
+            child,
+            WeightlessLinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f, 0f, 1f)
+                .apply {
+                    topMargin = 10
+                    bottomMargin = 10
+                }
+        )
+
+        measureExactly(layout, 200, 100)
+
+        assertEquals(80, child.measuredWidth)
+        assertEquals(80, child.measuredHeight)
+    }
+
+    @Test
+    public fun testRatioChildThatFitsTheCrossAxisIsUnchanged() {
+        val vertical = WeightlessLinearLayout(context)
+        vertical.setOrientation(WeightlessLinearLayout.OrientationMode.VERTICAL)
+        val tall = View(context)
+        vertical.addView(
+            tall,
+            WeightlessLinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 0, 0f, 0.5f, 1f)
+        )
+        measureExactly(vertical, 300, 200)
+        assertEquals(100, tall.measuredWidth)
+        assertEquals(100, tall.measuredHeight)
+
+        val horizontal = WeightlessLinearLayout(context)
+        val wide = View(context)
+        horizontal.addView(
+            wide,
+            WeightlessLinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 0.25f, 0f, 2f)
+        )
+        measureExactly(horizontal, 200, 100)
+        assertEquals(50, wide.measuredWidth)
+        assertEquals(25, wide.measuredHeight)
+    }
+
+    private fun measureExactly(layout: WeightlessLinearLayout, width: Int, height: Int) {
+        layout.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+    }
+
     private fun percentWidthLayoutParams(
         percent: Float = 1f,
         marginStart: Int = 0,

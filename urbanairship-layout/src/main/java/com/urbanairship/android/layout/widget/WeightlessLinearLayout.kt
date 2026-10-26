@@ -2332,8 +2332,18 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         val measuredH = child.measuredHeight
 
         val (newW, newH) = when {
-            widthAuto && !heightAuto -> (measuredH * ratio).toInt() to measuredH
-            !widthAuto && heightAuto -> measuredW to (measuredW / ratio).toInt()
+            widthAuto && !heightAuto -> {
+                val derivedW = (measuredH * ratio).toInt()
+                val maxW = crossAxisRatioBound(lp, horizontal = true, widthMeasureSpec)
+                if (maxW != null && derivedW > maxW) maxW to (maxW / ratio).toInt()
+                else derivedW to measuredH
+            }
+            !widthAuto && heightAuto -> {
+                val derivedH = (measuredW / ratio).toInt()
+                val maxH = crossAxisRatioBound(lp, horizontal = false, heightMeasureSpec)
+                if (maxH != null && derivedH > maxH) (maxH * ratio).toInt() to maxH
+                else measuredW to derivedH
+            }
             else -> when (orientation) {
                 OrientationMode.VERTICAL -> {
                     val parentW = MeasureSpec.getSize(widthMeasureSpec)
@@ -2354,6 +2364,32 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             MeasureSpec.makeMeasureSpec(newW, MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(newH, MeasureSpec.EXACTLY)
         )
+    }
+
+    /**
+     * Returns the most a ratio child may take on [horizontal] when that axis is our cross axis.
+     *
+     * A length derived from the ratio is not bounded by the spec it was measured against, so a
+     * child whose declared length runs along the stack can derive a cross length wider than we are.
+     * Capping it here, with the declared length following, gives the largest box of that ratio that
+     * fits, matching iOS's `.aspectRatio(.fit)`. The main axis is left alone: a deferred ratio child
+     * is fitted to what its siblings leave by its own pass.
+     *
+     * @param lp the child's layout params, for its margins on [horizontal].
+     * @param horizontal the axis the ratio derives a length on.
+     * @param measureSpec our spec on [horizontal].
+     * @return the bound in pixels, or null when [horizontal] is our main axis or the spec is unbounded.
+     */
+    private fun crossAxisRatioBound(lp: LayoutParams, horizontal: Boolean, measureSpec: Int): Int? {
+        val isCrossAxis = horizontal == (orientation == OrientationMode.VERTICAL)
+        if (!isCrossAxis || MeasureSpec.getMode(measureSpec) == MeasureSpec.UNSPECIFIED) return null
+
+        val insets = if (horizontal) {
+            paddingStart + paddingEnd + lp.marginStart + lp.marginEnd
+        } else {
+            paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin
+        }
+        return (MeasureSpec.getSize(measureSpec) - insets).coerceAtLeast(0)
     }
 
     companion object {

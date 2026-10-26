@@ -634,6 +634,16 @@ internal class GridLayoutView(
                 return
             }
 
+            // Left to `specFor`, an auto width is the item's content, which is nothing for an empty view.
+            if (info.size.width.isAuto && aspectRatio != null && aspectRatio > 0) {
+                val declaredHeight = declaredHeightPx(rowHeight, margin.top + margin.bottom)
+                if (declaredHeight != null) {
+                    val width = min((declaredHeight * aspectRatio).roundToInt(), innerWidth)
+                    item.measure(exactly(width), exactly((width / aspectRatio).roundToInt()))
+                    return
+                }
+            }
+
             val heightSpec = when {
                 rowHeight == null -> when {
                     height.isAbsolute -> exactly(dpToPx(height.getInt()))
@@ -646,6 +656,26 @@ internal class GridLayoutView(
                 )
             }
             item.measure(widthSpec, heightSpec)
+        }
+
+        /**
+         * Returns the item's declared height in pixels, for a ratio to derive its width from.
+         *
+         * A percentage is a share of the row, capped at the whole of it, so it has no value while
+         * the row is still sizing to its items.
+         *
+         * @param rowHeight the row's height in pixels, or null while the row is sizing to its items.
+         * @param verticalMargins the item's top and bottom margins together, in pixels.
+         * @return the height, or null where the item declares none or it can't be resolved yet.
+         */
+        private fun declaredHeightPx(rowHeight: Int?, verticalMargins: Int): Int? {
+            val height = info.size.height
+            return when {
+                height.isAbsolute -> dpToPx(height.getInt())
+                height.isPercent && rowHeight != null ->
+                    (min(height.getFloat(), 1f) * (rowHeight - verticalMargins).coerceAtLeast(0)).roundToInt()
+                else -> null
+            }
         }
 
         /**
