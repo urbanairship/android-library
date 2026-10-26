@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.environment.ThomasStateScopes
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.ViewInfo
+import com.urbanairship.android.layout.property.NamedColors
 import com.urbanairship.android.layout.util.CachedImage
 import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.android.layout.util.NonExtendableImageCache
@@ -143,8 +144,11 @@ internal class AsyncLayoutModel(
                     null
                 } else {
                     try {
-                        val json = JsonValue.parseString(body)
-                        ViewInfo.viewInfoFromJson(json.requireMap())
+                        val json = JsonValue.parseString(body).requireMap()
+                        AsyncContent(
+                            info = ViewInfo.viewInfoFromJson(json),
+                            namedColors = environment.namedColors.scopedTo(json)
+                        )
                     } catch (ex: Exception) {
                         onError(State.AsyncView.Error.ErrorData.Client)
                         throw ex
@@ -165,13 +169,19 @@ internal class AsyncLayoutModel(
                 continue
             }
 
-            val layout = response.value ?: break
+            val content = response.value ?: break
             val imageCache = viewEnvironment.imageCache()
             if (imageCache != null) {
-                cacheAssets(layout)?.let(imageCache::tryAddChild)
+                cacheAssets(content.info)?.let(imageCache::tryAddChild)
             }
             reportLayoutLoaded()
-            pushViewToDisplay(layout, viewEnvironment, itemProperties)
+            pushViewToDisplay(
+                info = content.info,
+                viewEnvironment = viewEnvironment,
+                itemProperties = itemProperties,
+                // The content's views look a name up in its own colors before the scene's.
+                environment = environment.withNamedColors(content.namedColors)
+            )
             break
         }
     }
@@ -256,6 +266,7 @@ internal class AsyncLayoutModel(
         info: ViewInfo,
         viewEnvironment: ViewEnvironment,
         itemProperties: ItemProperties?,
+        environment: ModelEnvironment = this.environment
     ) {
         val scopeOwner = enclosingScopeOwner?.child() ?: environment.stateScopes.owner()
         val model = runCatching {
@@ -301,6 +312,9 @@ internal class AsyncLayoutModel(
             )
         }
     }
+
+    /** Fetched content, and the named colors in scope within it. */
+    private class AsyncContent(val info: ViewInfo, val namedColors: NamedColors)
 
     internal data class ContentToDisplay(
         val model: AnyModel,

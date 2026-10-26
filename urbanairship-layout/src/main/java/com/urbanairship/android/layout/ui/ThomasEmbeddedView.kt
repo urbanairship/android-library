@@ -2,6 +2,7 @@ package com.urbanairship.android.layout.ui
 
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.property.EnvironmentConditionsContext
+import com.urbanairship.android.layout.property.NamedColorsContext
 import android.content.Context
 import android.content.res.Configuration
 import android.view.View
@@ -55,8 +56,11 @@ internal class ThomasEmbeddedView(
         model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
-    /** What the placement's colors resolve against, so their selectors see the layout's environment conditions. */
-    private val conditionsContext = EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues }
+    /** What the placement's colors resolve against, so they see the layout's environment conditions and named colors. */
+    private val conditionsContext = NamedColorsContext.wrap(
+        EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues },
+        model.namedColors
+    )
 
     /** The placement shown, which the layout's environment conditions can select too. */
     internal lateinit var placement: EmbeddedPlacement

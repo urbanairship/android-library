@@ -200,7 +200,8 @@ public class BannerLayout(
                 aiInference = aiInference,
                 shuffleSeed = randomSeed,
                 environmentConditions = payload.environmentConditions,
-                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions
+                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions,
+                namedColors = payload.namedColors
             )
 
             // Seeded before the placement is read, so its safe-area handling is chosen with the

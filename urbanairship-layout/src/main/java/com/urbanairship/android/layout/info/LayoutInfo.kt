@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.Conditions
 import com.urbanairship.android.layout.property.EnvironmentConditionSelector
+import com.urbanairship.android.layout.property.NamedColors
 import com.urbanairship.android.layout.property.conditionsIn
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -26,7 +27,9 @@ public data class LayoutInfo(
     /** The scene's `environment_state.conditions`, chosen at `$environment.conditions`. */
     public val environmentConditions: Conditions<EnvironmentConditionSelector> = Conditions(emptyMap()),
     /** Whether a selector in [view] or [presentation] names `environment_conditions`. */
-    public val selectsOnEnvironmentConditions: Boolean = false
+    public val selectsOnEnvironmentConditions: Boolean = false,
+    /** The scene's `references.colors`, which a color reference in the layout looks up. */
+    public val namedColors: NamedColors = NamedColors.EMPTY
 ) {
     public constructor(json: JsonMap) : this(
         version = json.requireField("version"),
@@ -37,8 +40,10 @@ public data class LayoutInfo(
         contentDescription = json.optionalMap("content_description")
             ?.let(ThomasContentDescriptionInfo::fromJson),
         environmentConditions = json.conditionsIn("environment_state", EnvironmentConditionSelector::fromJson),
-        selectsOnEnvironmentConditions = json.opt("view").namesKey("environment_conditions") ||
-            json.opt("presentation").namesKey("environment_conditions")
+        // `references` too: a named color's selectors apply wherever the view refers to it.
+        selectsOnEnvironmentConditions = listOf("view", "presentation", "references")
+            .any { json.opt(it).namesKey("environment_conditions") },
+        namedColors = NamedColors.EMPTY.scopedTo(json)
     )
 
     public val isEmbedded: Boolean

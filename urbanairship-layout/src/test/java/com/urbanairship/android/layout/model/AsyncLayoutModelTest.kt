@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import android.graphics.Color
 import android.widget.FrameLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestRequestSession
@@ -18,6 +19,8 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.environment.makeThomasState
 import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.ViewInfo
+import com.urbanairship.android.layout.property.NamedColors
+import com.urbanairship.android.layout.property.NamedColorsContext
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.android.layout.util.ThomasViewIdResolver
@@ -45,6 +48,7 @@ import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -506,6 +510,59 @@ public class AsyncLayoutModelTest {
         } finally {
             unmockkStatic(FileUtils::class)
         }
+    }
+
+    @Test
+    public fun loadedContent_resolvesItsOwnNamedColorsThenTheScenes(): TestResult = runTest(testDispatcher) {
+        val sceneColors = NamedColors.EMPTY.scopedTo(
+            JsonValue.parseString(
+                """{ "references": { "colors": {
+                    "ink": { "default": { "type": "hex", "hex": "#111111" } },
+                    "brand": { "default": { "type": "hex", "hex": "#222222" } }
+                } } }"""
+            ).optMap()
+        )
+        session.addResponse(
+            200,
+            body = """
+                {
+                  "type": "container",
+                  "references": { "colors": { "brand": { "default": { "type": "hex", "hex": "#C8336C" } } } },
+                  "background_color": { "type": "color_reference", "name": "brand" },
+                  "border": { "stroke_color": { "type": "color_reference", "name": "ink" } },
+                  "items": []
+                }
+            """
+        )
+        val created = mutableListOf<Pair<ViewInfo, ModelEnvironment>>()
+        val info = parseAsyncInfo(asyncControllerJson())
+        asyncState = SharedState(State.AsyncView.Idle(identifier = info.identifier))
+        every { factory.create(any(), any(), any(), any()) } answers {
+            created += arg<ViewInfo>(0) to arg<ModelEnvironment>(1)
+            if (created.size == 1) placeholderModel else loadedModel
+        }
+        val model = AsyncLayoutModel(
+            viewInfo = info,
+            asyncState = asyncState,
+            environment = mockEnv.withNamedColors(sceneColors),
+            properties = ModelProperties(pagerPageId = null),
+            factory = factory,
+            requestSession = session
+        )
+        val context = RuntimeEnvironment.getApplication()
+
+        model.createView(context, viewEnvironment, itemProperties = null)
+        advanceUntilIdle()
+
+        // The content's views draw with its own colors first, then the scene's.
+        val (content, contentEnvironment) = created.last()
+        val contentContext = NamedColorsContext.wrap(context, contentEnvironment.namedColors)
+        assertEquals(Color.parseColor("#C8336C"), content.backgroundColor?.resolve(contentContext))
+        assertEquals(Color.parseColor("#111111"), content.border?.strokeColor?.resolve(contentContext))
+
+        // The placeholder keeps the scene's.
+        val (_, placeholderEnvironment) = created.first()
+        assertSame(sceneColors, placeholderEnvironment.namedColors)
     }
 
     private fun asyncControllerJson(
