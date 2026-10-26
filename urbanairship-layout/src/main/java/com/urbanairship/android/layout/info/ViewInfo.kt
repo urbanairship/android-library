@@ -523,6 +523,9 @@ internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemI
     val identifier: String? = json.optionalField("identifier")
     val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.require("direction"))
+    /** Gap in dp between adjacent items along [direction]; never negative. */
+    val spacing: Double = (json.optionalField<Double>("spacing") ?: 0.0).coerceAtLeast(0.0)
+
     /** In list order; the model shuffles them. */
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
 

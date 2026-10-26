@@ -40,6 +40,15 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
     internal var orientation = OrientationMode.HORIZONTAL
     internal var gravity = GravityCompat.START or Gravity.TOP
 
+    /** Gap in pixels between adjacent stacked children along the orientation axis. */
+    internal var spacing = 0
+        set(value) {
+            val px = value.coerceAtLeast(0)
+            if (field == px) return
+            field = px
+            requestLayout()
+        }
+
     private var totalLength = 0
 
     init {
@@ -315,9 +324,34 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         isAutoWidth = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY
         isAutoHeight = MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY
 
+        applySpacing()
+
         when(orientation) {
             OrientationMode.HORIZONTAL -> measureHorizontal(widthMeasureSpec, heightMeasureSpec)
             OrientationMode.VERTICAL -> measureVertical(widthMeasureSpec, heightMeasureSpec)
+        }
+    }
+
+    /**
+     * Folds [spacing] into the leading main-axis margin of every stacked child that has a
+     * displayed predecessor, so every pass that reads margins counts the gap exactly once.
+     *
+     * Children that are `GONE` take no gap and don't count as a predecessor.
+     */
+    private fun applySpacing() {
+        val vertical = orientation == OrientationMode.VERTICAL
+        var hasPredecessor = false
+        for (i in 0..<childCount) {
+            val child = stackChildAt(i) ?: continue
+            val lp = child.layoutParams as? LayoutParams ?: continue
+            val gap = if (hasPredecessor && child.visibility != GONE) spacing else 0
+            val delta = gap - lp.appliedSpacing
+            if (delta != 0) {
+                if (vertical) lp.topMargin += delta else lp.marginStart += delta
+                lp.appliedSpacing = gap
+                lp.resolveLayoutDirection(layoutDirection)
+            }
+            if (child.visibility != GONE) hasPredecessor = true
         }
     }
 
@@ -2177,6 +2211,9 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
          * @see Gravity
          */
         var gravity: Int = -1
+
+        /** The part of the leading main-axis margin that came from the layout's spacing. */
+        internal var appliedSpacing: Int = 0
 
         /**
          * {@inheritDoc}
