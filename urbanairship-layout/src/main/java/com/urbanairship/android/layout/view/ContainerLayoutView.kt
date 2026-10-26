@@ -28,6 +28,7 @@ import com.urbanairship.android.layout.property.Background as BackgroundLayer
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.BackgroundsPainter
@@ -62,6 +63,9 @@ internal class ContainerLayoutView(
     // frameId -> aspectRatio for width-auto items with a declared height. The constraint set's
     // `"W,ratio:1"` wins over `constrainedWidth`, so onMeasure caps a derived width wider than us.
     private val frameWidthRatios = SparseArray<Double>()
+    // frameId -> declared size, for the items in either ratio map. The fit overwrites a points
+    // length in the frame's params, so each pass restores it from here.
+    private val ratioFrameSizes = SparseArray<Size>()
     // frameId -> percent, for items sized as a percent of us on that axis. Only consulted when our
     // own size isn't fixed by our parent; otherwise ConstraintLayout resolves them natively.
     private val framePercentWidths = SparseArray<Float>()
@@ -191,9 +195,11 @@ internal class ContainerLayoutView(
         val size = info.size
         if (size.aspectRatio != null && size.height.isAuto && !size.width.isAuto) {
             frameHeightRatios.put(frameId, size.aspectRatio)
+            ratioFrameSizes.put(frameId, size)
         }
         if (size.aspectRatio != null && size.width.isAuto && !size.height.isAuto) {
             frameWidthRatios.put(frameId, size.aspectRatio)
+            ratioFrameSizes.put(frameId, size)
         }
         if (size.width.isPercent) framePercentWidths.put(frameId, size.width.getFloat())
         if (size.height.isPercent) framePercentHeights.put(frameId, size.height.getFloat())
@@ -357,11 +363,7 @@ internal class ContainerLayoutView(
             return
         }
 
-        // Back to the constraint set's ratio, so a width capped on an earlier pass can grow again.
-        for (i in 0 until frameWidthRatios.size()) {
-            val frame = findViewById<View>(frameWidthRatios.keyAt(i)) ?: continue
-            frame.applyParams { it.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT }
-        }
+        restoreRatioFrames()
 
         // First pass: measure percent items as auto. They can't resolve against a size we don't
         // have yet, and this clears any size left on them by an earlier pass.
@@ -396,9 +398,7 @@ internal class ContainerLayoutView(
                     needsRemeasure
         }
 
-        // Compute correct ratio dimensions. For EXACTLY parents apply .fit — if naturalHeight
-        // exceeds the container height, reduce width proportionally to maintain ratio within bounds.
-        val containerH = MeasureSpec.getSize(heightMeasureSpec)
+        // Derive each height from its width, then fit the box to us, as `.aspectRatio(.fit)` does.
         for (i in 0 until frameHeightRatios.size()) {
             val frameId = frameHeightRatios.keyAt(i)
             val ratio = frameHeightRatios.valueAt(i)
@@ -410,13 +410,9 @@ internal class ContainerLayoutView(
                 .takeIf { it != NO_RESOLVED_WIDTH } ?: frame.measuredWidth
             val naturalH = (naturalW / ratio).roundToInt()
 
-            val (correctW, correctH) = if (heightMode == MeasureSpec.EXACTLY && naturalH > containerH) {
-                (containerH * ratio).roundToInt() to containerH
-            } else {
-                naturalW to naturalH
-            }
-
             frame.applyParams { lp ->
+                val (correctW, correctH) =
+                    fitRatio(naturalW, naturalH, ratio, lp, widthMeasureSpec, heightMeasureSpec)
                 if (lp.width != correctW || lp.height != correctH) {
                     lp.width = correctW
                     lp.height = correctH
@@ -425,26 +421,44 @@ internal class ContainerLayoutView(
             }
         }
 
-        if (widthMode == MeasureSpec.EXACTLY) {
-            val containerW = MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
-            needsRemeasure = fitWidthRatioFrames(containerW) || needsRemeasure
-        }
+        needsRemeasure = fitWidthRatioFrames(widthMeasureSpec, heightMeasureSpec) || needsRemeasure
 
         if (needsRemeasure) super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     /**
-     * Shrinks each width-auto ratio item whose derived width overflows [containerW] to the largest
-     * box of its ratio that fits, matching iOS's `.aspectRatio(.fit)`.
+     * Puts each ratio item's params back to its declaration, so an item fitted on an earlier pass
+     * can grow again.
      *
-     * The width is derived from the item's declared or solved height, so an item that already
-     * fits keeps the constraint set's ratio untouched. Only a fixed container width is a bound; an
-     * auto one grows to fit the item instead.
+     * A width-auto item goes back to the constraint set's ratio, and a points length to its value.
+     * Percent lengths are left alone: the percent solve rewrites them every pass.
+     */
+    private fun restoreRatioFrames() {
+        for (i in 0 until ratioFrameSizes.size()) {
+            val frame = findViewById<View>(ratioFrameSizes.keyAt(i)) ?: continue
+            val size = ratioFrameSizes.valueAt(i)
+            frame.applyParams { lp ->
+                if (size.width.isAuto) lp.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+                if (size.width.isAbsolute) lp.width = pointsToPx(size.width)
+                if (size.height.isAbsolute) lp.height = pointsToPx(size.height)
+            }
+        }
+    }
+
+    private fun pointsToPx(dimension: Size.Dimension): Int =
+        ResourceUtils.dpToPx(context, dimension.getInt()).toInt()
+
+    /**
+     * Shrinks each width-auto ratio item that overflows us to the largest box of its ratio that
+     * fits. An item that already fits keeps the constraint set's ratio untouched.
      *
-     * @param containerW our width less padding, in pixels.
+     * The width is derived from the item's declared or solved height.
+     *
+     * @param widthMeasureSpec our width spec.
+     * @param heightMeasureSpec our height spec.
      * @return true if any item's layout params changed.
      */
-    private fun fitWidthRatioFrames(containerW: Int): Boolean {
+    private fun fitWidthRatioFrames(widthMeasureSpec: Int, heightMeasureSpec: Int): Boolean {
         var changed = false
         for (i in 0 until frameWidthRatios.size()) {
             val frame = findViewById<View>(frameWidthRatios.keyAt(i)) ?: continue
@@ -452,16 +466,70 @@ internal class ContainerLayoutView(
             frame.applyParams { lp ->
                 // The declared or solved height when there is one, otherwise what the item measured to.
                 val naturalH = lp.height.takeIf { it > 0 } ?: frame.measuredHeight
-                val availW = (containerW - lp.leftMargin - lp.rightMargin).coerceAtLeast(0)
-                if ((naturalH * ratio).roundToInt() > availW) {
-                    lp.width = availW
-                    lp.height = (availW / ratio).roundToInt()
+                val naturalW = (naturalH * ratio).roundToInt()
+                val (fitW, fitH) =
+                    fitRatio(naturalW, naturalH, ratio, lp, widthMeasureSpec, heightMeasureSpec)
+                if (fitW != naturalW || fitH != naturalH) {
+                    lp.width = fitW
+                    lp.height = fitH
                     changed = true
                 }
             }
         }
         return changed
     }
+
+    /**
+     * Returns the largest box of [ratio] that fits inside us, or [width] x [height] when that
+     * already fits, matching iOS's `.aspectRatio(.fit)`.
+     *
+     * Any spec but `UNSPECIFIED` is a bound, `AT_MOST` included: a container sized to its content
+     * still can't grow past what its parent offers. The item fits inside our padding and its own
+     * margins.
+     *
+     * @param width the item's unfitted width, in pixels.
+     * @param height the item's unfitted height, in pixels.
+     * @param ratio width over height.
+     * @param lp the item's params, for its margins.
+     * @param widthMeasureSpec our width spec.
+     * @param heightMeasureSpec our height spec.
+     * @return the fitted width and height, in pixels.
+     */
+    private fun fitRatio(
+        width: Int,
+        height: Int,
+        ratio: Double,
+        lp: ConstraintLayout.LayoutParams,
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ): Pair<Int, Int> {
+        val maxW = ratioBound(
+            widthMeasureSpec, paddingLeft + paddingRight + lp.leftMargin + lp.rightMargin
+        )
+        val maxH = ratioBound(
+            heightMeasureSpec, paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin
+        )
+
+        var fitW = width
+        var fitH = height
+        if (maxW != null && fitW > maxW) {
+            fitW = maxW
+            fitH = (maxW / ratio).roundToInt()
+        }
+        if (maxH != null && fitH > maxH) {
+            fitH = maxH
+            fitW = (maxH * ratio).roundToInt()
+        }
+        return fitW to fitH
+    }
+
+    /** Returns the room [spec] leaves after [insets], or null when the spec is unbounded. */
+    private fun ratioBound(spec: Int, insets: Int): Int? =
+        if (MeasureSpec.getMode(spec) == MeasureSpec.UNSPECIFIED) {
+            null
+        } else {
+            (MeasureSpec.getSize(spec) - insets).coerceAtLeast(0)
+        }
 
     /**
      * The size percent items resolve against on one axis: the viewport borrowed from a scroll

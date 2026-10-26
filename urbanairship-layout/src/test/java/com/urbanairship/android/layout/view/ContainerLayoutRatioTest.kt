@@ -227,6 +227,49 @@ public class ContainerLayoutRatioTest {
         assertFrame(view, 0, 100, 100)
     }
 
+    /** A height derived from a points width fits a narrower container on both axes. */
+    @Test
+    public fun testPointsWidthRatioItemFitsANarrowerContainer() {
+        val view = measure(item("200", "auto", ratio = 1.0), 100, EXACTLY, 300, EXACTLY)
+        assertFrame(view, 0, 100, 100)
+    }
+
+    /** A points height taller than the container fits its height, not only its width. */
+    @Test
+    public fun testPointsHeightRatioItemFitsAShorterContainer() {
+        val view = measure(item("auto", "200", ratio = 1.0), 300, EXACTLY, 100, EXACTLY)
+        assertFrame(view, 0, 100, 100)
+    }
+
+    /** An `AT_MOST` width is still a bound for a container sized to its content. */
+    @Test
+    public fun testPointsHeightRatioItemFitsAnAtMostWidth() {
+        val view = measure(item("auto", "200", ratio = 1.0), 100, AT_MOST, 300, EXACTLY)
+        assertFrame(view, 0, 100, 100)
+    }
+
+    /** A points height fitted on one pass grows back to its declaration on a wider one. */
+    @Test
+    public fun testPointsHeightRatioItemGrowsBackWhenTheContainerWidens() {
+        val view = measure(item("auto", "200", ratio = 1.0), 100, EXACTLY, 200, EXACTLY)
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(300, EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(200, EXACTLY)
+        )
+        assertFrame(view, 0, 200, 200)
+    }
+
+    /** A points width fitted on one pass grows back to its declaration on a taller one. */
+    @Test
+    public fun testPointsWidthRatioItemGrowsBackWhenTheContainerLengthens() {
+        val view = measure(item("200", "auto", ratio = 1.0), 200, EXACTLY, 100, EXACTLY)
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(200, EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(300, EXACTLY)
+        )
+        assertFrame(view, 0, 200, 200)
+    }
+
     // ---- harness ------------------------------------------------------------------------------
 
 
