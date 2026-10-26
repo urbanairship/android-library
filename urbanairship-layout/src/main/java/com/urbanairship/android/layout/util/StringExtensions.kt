@@ -23,6 +23,10 @@ internal fun String?.ifNotEmpty(block: (String) -> Unit) {
  * - Subscript: `,{subscript},`
  * - Color: `[text]{color:name}`, where `name` is one of [colorNames]
  *
+ * A backslash before ASCII punctuation draws that character literally, as in CommonMark:
+ * `\*not italic\*` draws `*not italic*`. An escaped bracket still opens or closes a color span,
+ * which is what iOS does.
+ *
  * All other markdown syntax will be ignored.
  *
  * @param colorNames the scene's named colors' names; a color span's placeholder color encodes its
@@ -39,12 +43,30 @@ internal fun String.markdownToHtml(colorNames: List<String> = emptyList()): Stri
  */
 internal fun colorSpanIndex(color: Int): Int? = ((color and 0xFFFFFF) - 1).takeIf { it >= 0 }
 
+/** Matches a backslash before ASCII punctuation, which draws that character literally. */
+private val backslashEscapeRegex = """\\([!-/:-@\[-`{-~])""".toRegex()
+
+/** Escaped characters stand in as these private-use characters until the markdown is converted. */
+private const val ESCAPE_OFFSET = 0xE000
+
+private fun escaped(char: Char): Char = (ESCAPE_OFFSET + char.code).toChar()
+
+private val escapedOpenBracket = escaped('[')
+private val escapedCloseBracket = escaped(']')
+
+/** Matches an escaped character's stand-in. */
+private val escapedCharRegex = "[${escaped('!')}-${escaped('~')}]".toRegex()
+
 /**
  * Matches `[text]{color:name}` whose text holds no brackets other than complete `[link](url)`s,
  * so nested spans match innermost first.
  */
-private val colorSpanRegex =
-    """\[((?:[^\[\]]|\[[^\[\]]*]\([^)]*\))+?)]\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
+private val colorSpanRegex = run {
+    val open = """[\[$escapedOpenBracket]"""
+    val close = """[\]$escapedCloseBracket]"""
+    val notBracket = """[^\[\]$escapedOpenBracket$escapedCloseBracket]"""
+    """$open((?:$notBracket|$open$notBracket*$close\([^)]*\))+?)$close\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
+}
 
 /** Matches `[link](url)` */
 private val linkRegex = """\[(.+?)]\((.+?)\)""".toRegex()
@@ -109,6 +131,8 @@ private fun String.replaceColorSpans(colorNames: List<String>): String {
 
 private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): String =
     markdown
+        // Swap escaped characters for stand-ins no markdown syntax matches
+        .replace(backslashEscapeRegex) { escaped(it.groupValues[1][0]).toString() }
         // Encode any HTML characters in the original input so that we don't lose
         // symbols like < or & after converting to HTML and rendering the text.
         // This must be done first, before any other formatting is applied.
@@ -138,3 +162,5 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         .replace(subscriptRegex, subscriptTag)
         // Replace ==highlight== with <span style="background-color: #4DFFFF00;">highlight</span>
         .replace(highlightRegex, highlightTag)
+        // Draw escaped characters as themselves
+        .replace(escapedCharRegex) { (it.value[0].code - ESCAPE_OFFSET).toChar().toString().htmlEncode() }

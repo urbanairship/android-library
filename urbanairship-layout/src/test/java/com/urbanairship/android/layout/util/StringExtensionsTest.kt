@@ -309,6 +309,32 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlBackslashEscapesDrawTheCharacter() {
+        assertEquals("*not italic*", """\*not italic\*""".markdownToHtml())
+        assertEquals("**not bold**", """\*\*not bold\*\*""".markdownToHtml())
+        assertEquals("[docs](https://example.com)", """\[docs](https://example.com)""".markdownToHtml())
+        assertEquals("&lt;b&gt; and a \\", """\<b\> and a \\""".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlBackslashBeforeAnythingElseIsLiteral() {
+        assertEquals("""C:\Users and \a""", """C:\Users and \a""".markdownToHtml())
+        assertEquals("Line 1<br>Line 2", "Line 1\\nLine 2".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlEscapedBracketStillOpensAColorSpan() {
+        val input = """[parens](color:brand) and \[escaped]{color:brand}"""
+        val expected = """<a href="color:brand">parens</a> and <span style="color: #000001;">escaped</span>"""
+        assertEquals(expected, input.markdownToHtml(listOf("brand")))
+    }
+
+    @Test
+    public fun markdownToHtmlEscapedBracketOutsideASpanIsLiteral() {
+        assertEquals("[not a span] here", """\[not a span\] here""".markdownToHtml(listOf("brand")))
+    }
+
+    @Test
     public fun colorSpanIndexDecodesPlaceholders() {
         assertEquals(0, colorSpanIndex(0xFF000001.toInt()))
         assertEquals(41, colorSpanIndex(0xFF00002A.toInt()))
