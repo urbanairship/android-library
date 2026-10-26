@@ -6,9 +6,11 @@ import android.text.style.CharacterStyle
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
 import android.widget.TextView
-import androidx.core.text.HtmlCompat
 import com.urbanairship.android.layout.property.MarkdownOptions
-import com.urbanairship.android.layout.property.colorNames
+import com.urbanairship.android.layout.property.NamedColors
+import com.urbanairship.android.layout.property.NamedColorsContext
+import com.urbanairship.android.layout.property.TextAppearance
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -20,13 +22,11 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 public class MarkdownColorSpansTest {
 
-    private val context = RuntimeEnvironment.getApplication()
-
-    private val options = MarkdownOptions(
+    private val colors = NamedColors.EMPTY.scopedTo(
         JsonValue.parseString(
             """
             {
-              "appearance": {
+              "references": {
                 "colors": {
                   "outer": { "default": { "type": "hex", "hex": "#0057FF", "alpha": 1 } },
                   "inner": { "default": { "type": "hex", "hex": "#D0021B", "alpha": 0.5 } }
@@ -37,16 +37,21 @@ public class MarkdownColorSpansTest {
         ).optMap()
     )
 
+    private val context = NamedColorsContext.wrap(RuntimeEnvironment.getApplication(), colors)
+
     private val outerColor = 0xFF0057FF.toInt()
     private val innerColor = 0x7FD0021B.toInt()
 
     private fun render(markdown: String): Spanned {
         val textView = TextView(context)
-        val html = HtmlCompat.fromHtml(
-            markdown.markdownToHtml(options.colorNames),
-            HtmlCompat.FROM_HTML_MODE_LEGACY
+        LayoutUtils.applyLabel(
+            textView = textView,
+            textAppearance = TextAppearance.fromJson(
+                JsonValue.parseString("""{ "font_size": 14, "color": { "default": { "type": "hex", "hex": "#000000" } } }""")
+            ),
+            markdownOptions = MarkdownOptions(JsonMap.EMPTY_MAP),
+            text = markdown
         )
-        textView.setHtml(context, html, options)
         return textView.text as Spanned
     }
 
@@ -54,7 +59,7 @@ public class MarkdownColorSpansTest {
         subSequence(getSpanStart(span), getSpanEnd(span)).toString()
 
     @Test
-    public fun colorSpansGetTheirPaletteColor() {
+    public fun colorSpansGetTheSceneColorTheyName() {
         val spanned = render("[Sale]{color:outer} ends [today]{color:inner}")
 
         assertEquals("Sale ends today", spanned.toString())

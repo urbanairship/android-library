@@ -25,14 +25,14 @@ internal fun String?.ifNotEmpty(block: (String) -> Unit) {
  *
  * All other markdown syntax will be ignored.
  *
- * @param colorNames the label's palette names; a color span's placeholder color encodes its
+ * @param colorNames the scene's named colors' names; a color span's placeholder color encodes its
  *   name's index here (see [colorSpanIndex]), and a span naming anything else keeps only its text.
  */
 internal fun String.markdownToHtml(colorNames: List<String> = emptyList()): String =
     basicMarkdownToHtml(this, colorNames)
 
 /**
- * Returns the palette index a color span's placeholder [color] encodes, or `null` if it isn't one.
+ * Returns the [markdownToHtml] name index a color span's placeholder [color] encodes, or `null` if it isn't one.
  *
  * Every foreground color in converted markdown comes from a color span, since the input is
  * HTML-encoded before any tags are added.

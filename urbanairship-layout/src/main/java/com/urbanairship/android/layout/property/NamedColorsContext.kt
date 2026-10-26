@@ -23,6 +23,9 @@ internal class NamedColorsContext(
         fun wrap(context: Context, colors: NamedColors): Context =
             if (find(context)?.colors === colors) context else NamedColorsContext(context, colors)
 
+        /** Returns the named colors in scope for [context], or none outside a layout. */
+        fun colorsOf(context: Context): NamedColors = find(context)?.colors ?: NamedColors.EMPTY
+
         /** Returns the color [name] names in [context]'s layout, or opaque black where it names none. */
         fun colorNamed(context: Context, name: String): Color =
             find(context)?.colors?.get(name) ?: run {

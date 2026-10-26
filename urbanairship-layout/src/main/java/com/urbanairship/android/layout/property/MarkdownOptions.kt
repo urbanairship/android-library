@@ -22,19 +22,6 @@ internal class MarkdownAppearance(json: JsonMap) {
     val links: LinkAppearance? = json.optionalMap("anchor")?.let { LinkAppearance(it) }
     val highlight: HighlightAppearance? = json.optionalMap("highlight")?.let { HighlightAppearance(it) }
 
-    /** Colors that `[text]{color:name}` spans refer to by name. */
-    val colors: Map<String, Color> = json.optionalMap("colors")
-        ?.mapNotNull { (name, value) ->
-            try {
-                name to Color.fromJson(value)
-            } catch (e: JsonException) {
-                UALog.w("Failed to parse markdown color '$name': ${e.message}")
-                null
-            }
-        }
-        ?.toMap()
-        ?: emptyMap()
-
     internal class LinkAppearance(json: JsonMap) {
 
         val color: Color? = Color.fromJsonField(json, "color")
@@ -78,14 +65,6 @@ internal val MarkdownOptions?.isEnabled: Boolean
 @ColorInt
 internal fun MarkdownOptions?.resolvedLinkColor(context: Context): Int? =
     this?.appearance?.links?.color?.resolve(context)
-
-/** Names of the palette colors, in the order [resolveColors] returns them. */
-internal val MarkdownOptions?.colorNames: List<String>
-    get() = this?.appearance?.colors?.keys?.toList() ?: emptyList()
-
-/** Resolves each palette color for [context], in [colorNames] order. */
-internal fun MarkdownOptions?.resolveColors(context: Context): List<Int> =
-    this?.appearance?.colors?.values?.map { it.resolve(context) } ?: emptyList()
 
 @ColorInt
 internal fun MarkdownOptions?.resolveHighlightCornerRadius(context: Context): Float =

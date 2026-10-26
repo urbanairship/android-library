@@ -34,7 +34,7 @@ import androidx.core.view.descendants
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.MarkdownOptions
-import com.urbanairship.android.layout.property.resolveColors
+import com.urbanairship.android.layout.property.NamedColorsContext
 import com.urbanairship.android.layout.property.resolveHighlightColor
 import com.urbanairship.android.layout.property.resolveHighlightCornerRadius
 import com.urbanairship.android.layout.property.resolvedLinkColor
@@ -311,7 +311,7 @@ internal fun TextView.setHtml(
 
         html.toSpannable().apply {
             // Before the links, so a link inside a color span keeps its own color.
-            convertColorSpans(markdownOptions.resolveColors(context))
+            convertColorSpans(NamedColorsContext.colorsOf(context).resolveAll(context))
             convertUrlSpans(underlineLinks, linkColor)
             // The highlight reads its geometry off the laid-out text, so we pass it via a
             // block so that RoundedBackgroundSpan can always operate on the current layout.
@@ -352,11 +352,11 @@ private fun Spannable.convertHighlightSpans(
 }
 
 /**
- * Replaces each color span's placeholder color with its resolved palette color.
+ * Replaces each color span's placeholder color with the named color it encodes.
  *
  * Spans are re-added outermost first so a nested span's color wins.
  *
- * @param colors the resolved palette, indexed the way [markdownToHtml] encoded it.
+ * @param colors the resolved named colors, indexed the way [markdownToHtml] encoded them.
  */
 private fun Spannable.convertColorSpans(colors: List<Int>) {
     val spans = getSpans(0, length, ForegroundColorSpan::class.java) ?: emptyArray()

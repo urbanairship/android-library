@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.property
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -16,6 +17,12 @@ public class NamedColors private constructor(private val colors: Map<String, Col
 
     /** Returns the color named [name], or null where these colors don't define it. */
     public operator fun get(name: String): Color? = colors[name]
+
+    /** The names these colors define, in the order [resolveAll] returns them. */
+    internal val names: List<String> get() = colors.keys.toList()
+
+    /** Resolves every named color for [context], in [names] order. */
+    internal fun resolveAll(context: Context): List<Int> = colors.values.map { it.resolve(context) }
 
     /**
      * Returns these colors with [content]'s own `references.colors` laid over them, so a name
