@@ -167,31 +167,90 @@ public class WeightlessLinearLayoutSpacingTest {
     }
 
     @Test
-    public fun percentChildrenPaySpacingOutOfTheirSlotsLikeMargins() {
+    public fun percentChildrenShareWhatTheGapsLeave() {
         val l = layout(WeightlessLinearLayout.OrientationMode.HORIZONTAL, 10)
         val a = View(context).addTo(l, percentWidth(0.5f))
         val b = View(context).addTo(l, percentWidth(0.5f))
 
         l.measureAndLayout(exactly(400), atMost)
 
-        // The gap is the second child's leading margin, so it comes out of that child's slot.
-        assertEquals(200, a.measuredWidth)
-        assertEquals(190, b.measuredWidth)
-        assertEquals(210, b.left)
+        assertEquals(195, a.measuredWidth)
+        assertEquals(195, b.measuredWidth)
+        assertEquals(205, b.left)
         assertEquals(400, b.right)
     }
 
     @Test
-    public fun verticalPercentChildrenPaySpacingOutOfTheirSlots() {
+    public fun verticalPercentChildrenShareWhatTheGapsLeave() {
         val l = layout(WeightlessLinearLayout.OrientationMode.VERTICAL, 10)
         val a = View(context).addTo(l, percentHeight(0.5f))
         val b = View(context).addTo(l, percentHeight(0.5f))
 
         l.measureAndLayout(atMost, exactly(400))
 
-        assertEquals(200, a.measuredHeight)
-        assertEquals(190, b.measuredHeight)
+        assertEquals(195, a.measuredHeight)
+        assertEquals(195, b.measuredHeight)
         assertEquals(400, b.bottom)
+    }
+
+    @Test
+    public fun twoHalvesWithWideSpacingAreSymmetric() {
+        val l = layout(WeightlessLinearLayout.OrientationMode.VERTICAL, 20)
+        val a = View(context).addTo(l, percentHeight(0.5f))
+        val b = View(context).addTo(l, percentHeight(0.5f))
+
+        l.measureAndLayout(atMost, exactly(200))
+
+        assertEquals(90, a.measuredHeight)
+        assertEquals(90, b.measuredHeight)
+        assertEquals(110, b.top)
+    }
+
+    @Test
+    public fun percentChildMarginStillComesOutOfItsOwnShare() {
+        val l = layout(WeightlessLinearLayout.OrientationMode.VERTICAL, 20)
+        val a = View(context).addTo(l, percentHeight(0.5f).apply { bottomMargin = 6 })
+        val b = View(context).addTo(l, percentHeight(0.5f))
+
+        l.measureAndLayout(atMost, exactly(200))
+
+        // Slots are 90 each after the gap; A's margin comes out of its slot.
+        assertEquals(84, a.measuredHeight)
+        assertEquals(90, b.measuredHeight)
+        assertEquals(110, b.top)
+    }
+
+    @Test
+    public fun quarterBesideFixedKeepsItsShareWhenNothingIsOversubscribed() {
+        val l = layout(WeightlessLinearLayout.OrientationMode.VERTICAL, 10)
+        val a = View(context).addTo(l, percentHeight(0.25f))
+        val b = View(context).addTo(l, fixed(50, 60))
+
+        l.measureAndLayout(atMost, exactly(200))
+
+        assertEquals(50, a.measuredHeight)
+        assertEquals(60, b.measuredHeight)
+        assertEquals(60, b.top)
+    }
+
+    @Test
+    public fun reorderingChildrenKeepsExactlyOneGapPerPair() {
+        val l = layout(WeightlessLinearLayout.OrientationMode.VERTICAL, 10)
+        val a = View(context).addTo(l, fixed(50, 40))
+        val b = View(context).addTo(l, fixed(50, 40))
+        val c = View(context).addTo(l, fixed(50, 40))
+        l.measureAndLayout(atMost, atMost)
+
+        // The layout params, and the gap already folded into them, travel with the views.
+        val views = listOf(c, a, b)
+        l.removeAllViews()
+        views.forEach { l.addView(it, it.layoutParams) }
+        l.measureAndLayout(atMost, atMost)
+
+        assertEquals(0, c.top)
+        assertEquals(50, a.top)
+        assertEquals(100, b.top)
+        assertEquals(140, l.measuredHeight)
     }
 
     @Test

@@ -585,8 +585,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // will take, less the percent children's margins, which the distribution pass takes out of
         // their own slots rather than up front.
         val percentMargins = childrenWithMaxPercent.sumOf {
-            val lp = it.layoutParams as LayoutParams
-            lp.topMargin + lp.bottomMargin
+            (it.layoutParams as LayoutParams).marginsOutsideSpacing(vertical = true)
         }
 
         // Check against our minimum height
@@ -764,8 +763,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // height. A margined child ends up shorter than its unmargined siblings, instead
             // of every percent child getting equal content while margins pile on top.
             val percentMargins = childrenWithMaxPercent.sumOf {
-                val marginLp = it.layoutParams as LayoutParams
-                marginLp.topMargin + marginLp.bottomMargin
+                (it.layoutParams as LayoutParams).marginsOutsideSpacing(vertical = true)
             }
             // Less what the ratio children are owed: they are measured after this, against what is
             // left, so anything handed out here is taken from them.
@@ -835,7 +833,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
                     slotRemaining -= slot
 
-                    val childMargin = lp.topMargin + lp.bottomMargin
+                    val childMargin = lp.marginsOutsideSpacing(vertical = true)
                     val childHeight = (slot - childMargin).coerceAtLeast(0)
 
                     val heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY)
@@ -1302,8 +1300,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         // will take, less the percent children's margins, which the distribution pass takes out of
         // their own slots rather than up front.
         val percentMargins = childrenWithMaxPercent.sumOf {
-            val lp = it.layoutParams as LayoutParams
-            lp.marginStart + lp.marginEnd
+            (it.layoutParams as LayoutParams).marginsOutsideSpacing(vertical = false)
         }
 
         // Check against our minimum width
@@ -1475,8 +1472,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             // width. A margined child ends up narrower than its unmargined siblings, instead
             // of every percent child getting equal content while margins pile on top.
             val percentMargins = childrenWithMaxPercent.sumOf {
-                val marginLp = it.layoutParams as LayoutParams
-                marginLp.marginStart + marginLp.marginEnd
+                (it.layoutParams as LayoutParams).marginsOutsideSpacing(vertical = false)
             }
             // As in `measureVertical`: less what the ratio children are owed, since they are
             // measured after this against what is left.
@@ -1546,7 +1542,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
                     slotRemaining -= slot
 
-                    val childMargin = lp.marginStart + lp.marginEnd
+                    val childMargin = lp.marginsOutsideSpacing(vertical = false)
                     val childWidth = (slot - childMargin).coerceAtLeast(0)
 
                     val widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY)
@@ -1951,6 +1947,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
             when {
                 declared == 0 && percent > 0f -> {
                     queue.add((base * percent).toInt().coerceAtLeast(0) to -1)
+                    margins[i] = lp.marginsOutsideSpacing(vertical)
                     percentMargins += margins[i]
                 }
 
@@ -2214,6 +2211,15 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
 
         /** The part of the leading main-axis margin that came from the layout's spacing. */
         internal var appliedSpacing: Int = 0
+
+        /**
+         * The main-axis margins excluding the layout's spacing.
+         *
+         * A percent child's own margins come out of its slot; the spacing stays fixed content so
+         * that percent siblings share what the gaps leave equally.
+         */
+        internal fun marginsOutsideSpacing(vertical: Boolean): Int =
+            (if (vertical) topMargin + bottomMargin else marginStart + marginEnd) - appliedSpacing
 
         /**
          * {@inheritDoc}
