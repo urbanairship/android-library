@@ -8,6 +8,7 @@ import androidx.core.graphics.toRegion
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.property.GestureDirection
 import com.urbanairship.android.layout.property.GestureLocation
+import com.urbanairship.android.layout.property.GestureLocation.ANY
 import com.urbanairship.android.layout.property.GestureLocation.BOTTOM
 import com.urbanairship.android.layout.property.GestureLocation.END
 import com.urbanairship.android.layout.property.GestureLocation.LEFT
@@ -43,12 +44,12 @@ internal class PagerGestureMapper(
         rightRegion = RightRegion(rect)
     }
 
-    fun mapTap(x: Float, y: Float): List<GestureLocation>? = when {
-        topRegion.contains(x.toInt(), y.toInt()) -> listOf(TOP)
-        bottomRegion.contains(x.toInt(), y.toInt()) -> listOf(BOTTOM)
-        leftRegion.contains(x.toInt(), y.toInt()) -> listOf(LEFT, if (isRtl) END else START)
-        rightRegion.contains(x.toInt(), y.toInt()) -> listOf(RIGHT, if (isRtl) START else END)
-        else -> null
+    fun mapTap(x: Float, y: Float): List<GestureLocation> = when {
+        topRegion.contains(x.toInt(), y.toInt()) -> listOf(TOP, ANY)
+        bottomRegion.contains(x.toInt(), y.toInt()) -> listOf(BOTTOM, ANY)
+        leftRegion.contains(x.toInt(), y.toInt()) -> listOf(LEFT, if (isRtl) END else START, ANY)
+        rightRegion.contains(x.toInt(), y.toInt()) -> listOf(RIGHT, if (isRtl) START else END, ANY)
+        else -> listOf(ANY)
     }
 
     fun mapSwipe(

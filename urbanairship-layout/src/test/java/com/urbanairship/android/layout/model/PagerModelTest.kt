@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
@@ -19,6 +20,7 @@ import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.json.JsonValue
 import com.urbanairship.android.layout.util.PagerScrollEvent
+import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import app.cash.turbine.test
@@ -59,6 +61,7 @@ public class PagerModelTest {
     private val testScope = TestScope(testDispatcher)
 
     private val scrollsFlow = MutableSharedFlow<PagerScrollEvent>()
+    private val gesturesFlow = MutableSharedFlow<PagerGestureEvent>()
     private val layoutEventsFlow = MutableSharedFlow<LayoutEvent>()
     private val isScrollingFlow = MutableStateFlow(false)
 
@@ -115,6 +118,7 @@ public class PagerModelTest {
 
         mockkStatic(PagerView::pagerScrolls)
         every { mockView.pagerScrolls() } returns scrollsFlow
+        every { mockView.pagerGestures() } returns gesturesFlow
         every { mockView.isScrolling } returns isScrollingFlow
     }
 
@@ -437,6 +441,28 @@ public class PagerModelTest {
         advanceUntilIdle()
 
         assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+    }
+
+    @Test
+    public fun testEdgeTapRunsATapAnywhereGestureOnce(): TestResult = runTest {
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "any-tap",
+                reportingMetadata = null,
+                location = GestureLocation.ANY,
+                outcomes = listOf(
+                    Outcome.PagerStepNavigation("next", Outcome.PagerStepNavigation.Direction.NEXT)
+                )
+            )
+        )
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        listOf(GestureLocation.RIGHT, GestureLocation.END, GestureLocation.ANY).forEach {
+            gesturesFlow.emit(PagerGestureEvent.Tap(it))
+        }
         advanceUntilIdle()
         assertEquals(1, pagerState.changes.value.pageIndex)
     }

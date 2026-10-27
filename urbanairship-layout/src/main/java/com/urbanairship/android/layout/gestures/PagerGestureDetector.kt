@@ -17,7 +17,7 @@ import com.urbanairship.android.layout.view.PagerView
  * Gesture detection helper for [PagerView].
  *
  * Detects the following gestures:
- * - Tap on top, bottom, left, or right
+ * - Tap on top, bottom, left, right, or anywhere
  * - Long press (hold) anywhere
  * - Swipe up or down
  */
@@ -40,10 +40,7 @@ internal class PagerGestureDetector(
     override fun onDown(e: MotionEvent): Boolean = true
 
     override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-        gestureMapper.mapTap(e.x, e.y)?.let { taps ->
-            taps.map { Tap(it) }
-                .forEach { onGestureDetected(it) }
-        }
+        gestureMapper.mapTap(e.x, e.y).forEach { onGestureDetected(Tap(it)) }
         return true
     }
 

@@ -639,7 +639,7 @@ internal class PagerModel(
         val triggeredGestures: List<Pair<PagerGesture, List<Outcome>?>> = when (event) {
             is PagerGestureEvent.Tap -> viewInfo.gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Tap>()
-                .filter { it.location == event.location || it.location == GestureLocation.ANY }
+                .filter { it.location == event.location }
                 .map { it to it.outcomes }
 
             is PagerGestureEvent.Swipe -> viewInfo.gestures.orEmpty()
@@ -680,14 +680,14 @@ internal class PagerModel(
      */
     fun onDirectionalKey(isRight: Boolean, isRtl: Boolean): Boolean {
         val locations = if (isRight) {
-            listOf(GestureLocation.RIGHT, if (isRtl) GestureLocation.START else GestureLocation.END)
+            listOf(GestureLocation.RIGHT, if (isRtl) GestureLocation.START else GestureLocation.END, GestureLocation.ANY)
         } else {
-            listOf(GestureLocation.LEFT, if (isRtl) GestureLocation.END else GestureLocation.START)
+            listOf(GestureLocation.LEFT, if (isRtl) GestureLocation.END else GestureLocation.START, GestureLocation.ANY)
         }
 
         val taps = viewInfo.gestures.orEmpty()
             .filterIsInstance<PagerGesture.Tap>()
-            .filter { it.location in locations || it.location == GestureLocation.ANY }
+            .filter { it.location in locations }
 
         if (taps.isNotEmpty()) {
             modelScope.launch {
