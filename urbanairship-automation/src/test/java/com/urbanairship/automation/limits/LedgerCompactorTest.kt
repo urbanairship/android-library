@@ -21,12 +21,14 @@ public class LedgerCompactorTest {
         scheduleId: String = "schedule-1",
         sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
+        variantAudienceId: String? = null,
         timestamp: Instant,
         count: Int? = null
     ): LedgerEvent = LedgerEvent.Triggered(
         scheduleId = scheduleId,
         sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
+        variantAudienceId = variantAudienceId,
         timestamp = timestamp,
         count = count
     )
@@ -35,6 +37,7 @@ public class LedgerCompactorTest {
         scheduleId: String = "schedule-1",
         sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
+        variantAudienceId: String? = null,
         timestamp: Instant,
         count: Int? = null,
         result: LedgerExecutionResult = LedgerExecutionResult.SUCCEEDED,
@@ -43,6 +46,7 @@ public class LedgerCompactorTest {
         scheduleId = scheduleId,
         sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
+        variantAudienceId = variantAudienceId,
         timestamp = timestamp,
         count = count,
         result = result,
@@ -142,6 +146,18 @@ public class LedgerCompactorTest {
                 execution(timestamp = old, triggerId = "trigger-1"),
                 execution(timestamp = newer, triggerId = "trigger-2")
             ),
+            "variantAudienceId" to listOf(
+                execution(timestamp = old, variantAudienceId = "iteration-1"),
+                execution(timestamp = newer, variantAudienceId = "iteration-2")
+            ),
+            "variantAudienceId present vs absent" to listOf(
+                execution(timestamp = old, variantAudienceId = "iteration-1"),
+                execution(timestamp = newer, variantAudienceId = null)
+            ),
+            "variantAudienceId on triggered" to listOf(
+                triggered(timestamp = old, variantAudienceId = "iteration-1"),
+                triggered(timestamp = newer, variantAudienceId = "iteration-2")
+            ),
             "scheduleId" to listOf(
                 execution(scheduleId = "schedule-1", timestamp = old),
                 execution(scheduleId = "schedule-2", timestamp = newer)
@@ -240,6 +256,20 @@ public class LedgerCompactorTest {
     }
 
     @Test
+    public fun testOrderingBreaksTiesOnVariantAudienceId() {
+        val events = listOf(
+            execution(variantAudienceId = "iteration-2", timestamp = now),
+            execution(variantAudienceId = "iteration-1", timestamp = now),
+            execution(variantAudienceId = null, timestamp = now)
+        )
+
+        assertEquals(
+            listOf(null, "iteration-1", "iteration-2"),
+            LedgerCompactor.compact(events, now).map { it.variantAudienceId }
+        )
+    }
+
+    @Test
     public fun testCompactIsOrderedByTimestamp() {
         val events = listOf(
             execution(timestamp = date(2019, 12, 25)),
@@ -261,6 +291,7 @@ public class LedgerCompactorTest {
                 scheduleId = "schedule-1",
                 sharedIds = listOf("group-1"),
                 triggerId = "trigger-1",
+                variantAudienceId = "iteration-1",
                 timestamp = date(2017, 3, 5),
                 result = LedgerExecutionResult.HOLDOUT,
                 cancel = true
@@ -269,6 +300,7 @@ public class LedgerCompactorTest {
                 scheduleId = "schedule-1",
                 sharedIds = listOf("group-1"),
                 triggerId = "trigger-1",
+                variantAudienceId = "iteration-1",
                 timestamp = date(2017, 9, 20),
                 result = LedgerExecutionResult.HOLDOUT,
                 cancel = true
@@ -281,6 +313,7 @@ public class LedgerCompactorTest {
                 scheduleId = "schedule-1",
                 sharedIds = listOf("group-1"),
                 triggerId = "trigger-1",
+                variantAudienceId = "iteration-1",
                 timestamp = date(2017, 9, 20),
                 count = 2,
                 result = LedgerExecutionResult.HOLDOUT,

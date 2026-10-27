@@ -5,6 +5,7 @@ package com.urbanairship.automation.limits
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.ledgerSharedIds
+import com.urbanairship.automation.ledgerVariantAudienceId
 
 /**
  * Evaluates whether a schedule has reached its execution limit by counting
@@ -75,7 +76,8 @@ internal class LedgerLimitEvaluator(
                 // The real current groups, not gated by the config variant:
                 // exclusion rules filtering the schedule's own already-fetched
                 // events (e.g. a `current` shared_group match) still need them.
-                currentSharedIds = currentSharedIds.toSet()
+                currentSharedIds = currentSharedIds.toSet(),
+                currentVariantAudienceId = schedule.ledgerVariantAudienceId
             ),
             exclude = exclude
         )

@@ -56,6 +56,11 @@ public data class PreparedScheduleInfo(
      */
     internal val ledgerSharedIds: List<String> = emptyList(),
     /**
+     * The schedule's `variant_audience.id` when prepared, stamped for the same reason as
+     * [ledgerSharedIds]. A schedule prepared before this field existed decodes as null.
+     */
+    internal val variantAudienceId: String? = null,
+    /**
      * ID of the execution-causing trigger, carried through for ledger event
      * attribution.
      */
@@ -82,6 +87,7 @@ public data class PreparedScheduleInfo(
         private const val LEDGER_SHARED_IDS = "ledger_shared_ids"
         /** Read-only: the single-ID key [LEDGER_SHARED_IDS] replaced. */
         private const val LEGACY_LEDGER_SHARED_ID = "ledger_shared_id"
+        private const val VARIANT_AUDIENCE_ID = "variant_audience_id"
         private const val TRIGGER_ID = "trigger_id"
         private const val AI_SUPPRESSION = "ai_suppression"
 
@@ -111,6 +117,7 @@ public data class PreparedScheduleInfo(
                         content, LEDGER_SHARED_IDS, LEGACY_LEDGER_SHARED_ID
                     )
                 ),
+                variantAudienceId = content.optionalField(VARIANT_AUDIENCE_ID),
                 triggerId = content.optionalField(TRIGGER_ID),
                 aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)
             )
@@ -138,6 +145,7 @@ public data class PreparedScheduleInfo(
         PRIORITY to priority,
         SEND_METADATA to sendMetadata,
         LEDGER_SHARED_IDS to ledgerSharedIds.ifEmpty { null },
+        VARIANT_AUDIENCE_ID to variantAudienceId,
         TRIGGER_ID to triggerId,
         AI_SUPPRESSION to aiSuppression
     ).toJsonValue()
@@ -192,6 +200,7 @@ internal suspend fun AutomationLedgerInterface.recordExecution(
         scheduleId = info.scheduleId,
         sharedIds = info.ledgerSharedIds,
         triggerId = info.triggerId,
+        variantAudienceId = info.variantAudienceId,
         result = result,
         cancel = cancel
     )

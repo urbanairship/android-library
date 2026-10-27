@@ -592,6 +592,7 @@ public class AutomationScheduleTests {
                    "foo": "bar"
                },
                "variant_audience": {
+                   "id": "iteration-1",
                    "audience_hash": {
                        "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
                        "num_hash_buckets": 16384,
@@ -624,6 +625,7 @@ public class AutomationScheduleTests {
                 JsonValue.parseString(
                     """
                     {
+                        "id": "iteration-1",
                         "audience_hash": {
                             "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
                             "num_hash_buckets": 16384,
@@ -653,6 +655,7 @@ public class AutomationScheduleTests {
                "type": "actions",
                "actions": { "foo": "bar" },
                "variant_audience": {
+                   "id": "iteration-1",
                    "audience_hash": {
                        "hash_prefix": "prefix:",
                        "num_hash_buckets": 16384,

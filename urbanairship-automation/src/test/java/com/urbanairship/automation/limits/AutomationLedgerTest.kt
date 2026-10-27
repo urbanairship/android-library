@@ -44,6 +44,7 @@ public class AutomationLedgerTest {
         scheduleId = "schedule-A",
         sharedIds = listOf("group-1"),
         triggerId = "trigger-1",
+        variantAudienceId = null,
         result = LedgerExecutionResult.SUCCEEDED,
         cancel = false,
         since = startedExecuting
@@ -67,7 +68,8 @@ public class AutomationLedgerTest {
         ledger.recordTriggered(
             scheduleId = "schedule-A",
             sharedIds = listOf("group-2", "group-1", "group-1"),
-            triggerId = "trigger-1"
+            triggerId = "trigger-1",
+            variantAudienceId = null
         )
 
         val stored = store.events("schedule-A", emptyList()).single() as LedgerEvent.Triggered
@@ -80,6 +82,7 @@ public class AutomationLedgerTest {
             scheduleId = "schedule-A",
             sharedIds = listOf("group-2", "group-1", "group-1"),
             triggerId = null,
+            variantAudienceId = null,
             result = LedgerExecutionResult.SUCCEEDED,
             cancel = false
         )
@@ -94,6 +97,7 @@ public class AutomationLedgerTest {
             scheduleId = "schedule-A",
             sharedIds = listOf("group-2", "group-1", "group-1"),
             triggerId = null,
+            variantAudienceId = null,
             result = LedgerExecutionResult.SUCCEEDED,
             cancel = false,
             since = Instant.EPOCH
@@ -101,6 +105,51 @@ public class AutomationLedgerTest {
 
         val stored = store.events("schedule-A", emptyList()).single() as LedgerEvent.Execution
         assertEquals(listOf("group-1", "group-2"), stored.sharedIds)
+    }
+
+    @Test
+    public fun testRecordsStampVariantAudienceId(): TestResult = runTest {
+        ledger.recordTriggered(
+            scheduleId = "schedule-A",
+            sharedIds = emptyList(),
+            triggerId = null,
+            variantAudienceId = "iteration-1"
+        )
+        ledger.recordExecution(
+            scheduleId = "schedule-A",
+            sharedIds = emptyList(),
+            triggerId = null,
+            variantAudienceId = "iteration-1",
+            result = LedgerExecutionResult.HOLDOUT,
+            cancel = false
+        )
+        ledger.recordExecutionIfNoneSince(
+            scheduleId = "schedule-B",
+            sharedIds = emptyList(),
+            triggerId = null,
+            variantAudienceId = "iteration-1",
+            result = LedgerExecutionResult.SUCCEEDED,
+            cancel = false,
+            since = Instant.EPOCH
+        )
+
+        val stored = store.events("schedule-A", listOf("schedule-B"))
+        assertEquals(3, stored.size)
+        assertTrue(stored.all { it.variantAudienceId == "iteration-1" })
+    }
+
+    @Test
+    public fun testRecordsNoVariantAudienceIdWhenNoneGiven(): TestResult = runTest {
+        ledger.recordExecution(
+            scheduleId = "schedule-A",
+            sharedIds = emptyList(),
+            triggerId = null,
+            variantAudienceId = null,
+            result = LedgerExecutionResult.SUCCEEDED,
+            cancel = false
+        )
+
+        assertEquals(null, store.events("schedule-A", emptyList()).single().variantAudienceId)
     }
 
     @Test
@@ -117,6 +166,7 @@ public class AutomationLedgerTest {
             scheduleId = "schedule-A",
             sharedIds = listOf("group-1"),
             triggerId = "trigger-1",
+            variantAudienceId = null,
             result = LedgerExecutionResult.SUCCEEDED,
             cancel = false
         )
@@ -193,7 +243,8 @@ public class AutomationLedgerTest {
         ledger.recordTriggered(
             scheduleId = "schedule-A",
             sharedIds = listOf("group-1"),
-            triggerId = "trigger-1"
+            triggerId = "trigger-1",
+            variantAudienceId = null
         )
 
         recordIfNoneSince()
@@ -280,6 +331,7 @@ public class AutomationLedgerTest {
                 scheduleId = "schedule-A",
                 sharedIds = emptyList(),
                 triggerId = null,
+                variantAudienceId = null,
                 result = LedgerExecutionResult.SUCCEEDED,
                 cancel = false
             )
@@ -294,6 +346,7 @@ public class AutomationLedgerTest {
                 scheduleId = "schedule-A",
                 sharedIds = emptyList(),
                 triggerId = null,
+                variantAudienceId = null,
                 result = LedgerExecutionResult.SUCCEEDED,
                 cancel = false,
                 since = Instant.EPOCH

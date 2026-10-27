@@ -5,6 +5,7 @@ import com.urbanairship.audience.VariantAudience
 import com.urbanairship.json.jsonMapOf
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -119,6 +120,34 @@ public class PreparedScheduleInfoTest {
 
         val roundTripped = PreparedScheduleInfo.fromJson(info.toJsonValue())
         assertEquals(listOf("group-1"), roundTripped.ledgerSharedIds)
+    }
+
+    @Test
+    public fun testVariantAudienceIdRoundTrips() {
+        val info = PreparedScheduleInfo(
+            scheduleId = "test-schedule",
+            triggerSessionId = "some-session",
+            variantAudienceId = "iteration-1"
+        )
+
+        assertEquals(
+            "iteration-1",
+            PreparedScheduleInfo.fromJson(info.toJsonValue()).variantAudienceId
+        )
+    }
+
+    /** Info persisted before the field existed decodes with no variant audience. */
+    @Test
+    public fun testMissingVariantAudienceIdDecodesToNull() {
+        val info = PreparedScheduleInfo.fromJson(
+            jsonMapOf(
+                "schedule_id" to "test-schedule",
+                "trigger_session_id" to "some-session"
+            ).toJsonValue()
+        )
+
+        assertNull(info.variantAudienceId)
+        assertFalse(info.toJsonValue().toString().contains("variant_audience_id"))
     }
 
     /**

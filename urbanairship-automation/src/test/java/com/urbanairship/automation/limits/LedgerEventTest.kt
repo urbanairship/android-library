@@ -206,4 +206,79 @@ public class LedgerEventTest {
     }
 
     // endregion
+    // region Variant audience ID
+
+    @Test
+    public fun testVariantAudienceIdDecodes() {
+        val execution = decode(
+            """
+            {
+              "type": "execution",
+              "schedule_id": "schedule-1",
+              "variant_audience_id": "iteration-1",
+              "timestamp": 1000,
+              "result": "succeeded"
+            }
+            """
+        )
+        val triggered = decode(
+            """
+            {
+              "type": "triggered",
+              "schedule_id": "schedule-1",
+              "variant_audience_id": "iteration-1",
+              "timestamp": 1000
+            }
+            """
+        )
+
+        assertEquals("iteration-1", execution.variantAudienceId)
+        assertEquals("iteration-1", triggered.variantAudienceId)
+    }
+
+    /** A body persisted before the key existed reads back as no variant audience. */
+    @Test
+    public fun testBodyWithoutVariantAudienceIdDecodesToNull() {
+        val event = decode(
+            """
+            {
+              "type": "execution",
+              "schedule_id": "schedule-1",
+              "trigger_id": "trigger-1",
+              "timestamp": 1000,
+              "result": "succeeded"
+            }
+            """
+        )
+
+        assertNull(event.variantAudienceId)
+    }
+
+    @Test
+    public fun testVariantAudienceIdJsonRoundTrip() {
+        val events = listOf(
+            LedgerEvent.Execution(
+                scheduleId = "schedule-1",
+                variantAudienceId = "iteration-1",
+                timestamp = Instant.ofEpochMilli(1000),
+                result = LedgerExecutionResult.HOLDOUT
+            ),
+            LedgerEvent.Triggered(
+                scheduleId = "schedule-1",
+                variantAudienceId = "iteration-1",
+                timestamp = Instant.ofEpochMilli(1000)
+            )
+        )
+
+        events.forEach { assertEquals(it, LedgerEvent.fromJson(it.toJsonValue())) }
+    }
+
+    @Test
+    public fun testVariantAudienceIdIsOmittedWhenNull() {
+        val event = LedgerEvent.Triggered(scheduleId = "schedule-1", timestamp = Instant.ofEpochMilli(1000))
+
+        assertTrue(event.toJsonValue().requireMap().get("variant_audience_id") == null)
+    }
+
+    // endregion
 }

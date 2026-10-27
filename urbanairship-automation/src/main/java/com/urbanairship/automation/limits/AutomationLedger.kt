@@ -25,7 +25,8 @@ internal interface AutomationLedgerInterface {
     suspend fun recordTriggered(
         scheduleId: String,
         sharedIds: List<String>,
-        triggerId: String?
+        triggerId: String?,
+        variantAudienceId: String?
     )
 
     /** Records the single outcome `execution` event for an attempt. */
@@ -33,6 +34,7 @@ internal interface AutomationLedgerInterface {
         scheduleId: String,
         sharedIds: List<String>,
         triggerId: String?,
+        variantAudienceId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean
     )
@@ -49,6 +51,7 @@ internal interface AutomationLedgerInterface {
         scheduleId: String,
         sharedIds: List<String>,
         triggerId: String?,
+        variantAudienceId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean,
         since: Instant
@@ -80,13 +83,15 @@ internal class AutomationLedger(
     override suspend fun recordTriggered(
         scheduleId: String,
         sharedIds: List<String>,
-        triggerId: String?
+        triggerId: String?,
+        variantAudienceId: String?
     ) {
         record(
             LedgerEvent.Triggered(
                 scheduleId = scheduleId,
                 sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds),
                 triggerId = triggerId,
+                variantAudienceId = variantAudienceId,
                 timestamp = clock.now()
             )
         )
@@ -96,6 +101,7 @@ internal class AutomationLedger(
         scheduleId: String,
         sharedIds: List<String>,
         triggerId: String?,
+        variantAudienceId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean
     ) {
@@ -104,6 +110,7 @@ internal class AutomationLedger(
                 scheduleId = scheduleId,
                 sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds),
                 triggerId = triggerId,
+                variantAudienceId = variantAudienceId,
                 timestamp = clock.now(),
                 result = result,
                 cancel = cancel
@@ -115,6 +122,7 @@ internal class AutomationLedger(
         scheduleId: String,
         sharedIds: List<String>,
         triggerId: String?,
+        variantAudienceId: String?,
         result: LedgerExecutionResult,
         cancel: Boolean,
         since: Instant
@@ -123,6 +131,7 @@ internal class AutomationLedger(
             scheduleId = scheduleId,
             sharedIds = LedgerSharedIds.canonicalOrNull(sharedIds),
             triggerId = triggerId,
+            variantAudienceId = variantAudienceId,
             timestamp = clock.now(),
             result = result,
             cancel = cancel

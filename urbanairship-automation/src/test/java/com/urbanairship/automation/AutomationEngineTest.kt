@@ -3,6 +3,7 @@ package com.urbanairship.automation
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.TestTaskSleeper
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.engine.AutomationDelayProcessor
 import com.urbanairship.automation.engine.AutomationEngine
 import com.urbanairship.automation.engine.AutomationEvent
@@ -361,7 +362,8 @@ public class AutomationEngineTest {
     private fun ledgerSchedule(
         sharedIds: List<String> = emptyList(),
         identifier: String = "test",
-        priority: Int? = null
+        priority: Int? = null,
+        variantAudienceId: String? = null
     ): AutomationSchedule = AutomationSchedule(
         identifier = identifier,
         priority = priority,
@@ -375,7 +377,25 @@ public class AutomationEngineTest {
             )
         ),
         created = clock.currentTime,
-        ledgerConfig = sharedIds.ifEmpty { null }?.let { LedgerConfig(sharedIds = it) }
+        ledgerConfig = sharedIds.ifEmpty { null }?.let { LedgerConfig(sharedIds = it) },
+        variantAudience = variantAudienceId?.let(::variantAudience)
+    )
+
+    private fun variantAudience(id: String): VariantAudience = VariantAudience.fromJson(
+        JsonValue.parseString(
+            """
+            {
+              "id": "$id",
+              "audience_hash": {
+                "hash_prefix": "prefix:",
+                "num_hash_buckets": 16384,
+                "hash_identifier": "contact",
+                "hash_algorithm": "farm_hash"
+              },
+              "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 100 }
+            }
+            """
+        ).requireMap()
     )
 
     private fun ledgerScheduleData(
@@ -443,6 +463,49 @@ public class AutomationEngineTest {
         )
     }
 
+    @Test
+    public fun testRecordsTriggeredLedgerEventWithVariantAudienceId(): TestResult = runTest {
+        val triggerInfo = TriggeringInfo(
+            context = null,
+            date = clock.currentTime,
+            triggerId = "trigger-1"
+        )
+        val sched = ledgerSchedule(variantAudienceId = "iteration-1")
+        val idleData = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+
+        every { triggerProcessor.getTriggerResults() } answers {
+            flowOf(
+                TriggerResult(
+                    scheduleId = "test",
+                    triggerExecutionType = TriggerExecutionType.EXECUTION,
+                    triggerInfo = triggerInfo
+                )
+            )
+        }
+        coEvery { store.getSchedules() } answers { emptyList() }
+        coEvery { store.updateSchedule(eq("test"), any()) } answers {
+            secondArg<(AutomationScheduleData) -> AutomationScheduleData>()(
+                ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+            )
+        }
+        coEvery { store.getSchedule(eq("test")) } answers { idleData }
+
+        engine.start()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Triggered(
+                    scheduleId = "test",
+                    sharedIds = emptyList(),
+                    triggerId = "trigger-1",
+                    variantAudienceId = "iteration-1"
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
     /**
      * A redundant trigger result for a schedule that is already TRIGGERED must
      * not record a `triggered` event: `triggered` no-ops, so this call did not
@@ -502,6 +565,7 @@ public class AutomationEngineTest {
                 triggerSessionId = UUID.randomUUID().toString(),
                 priority = 0,
                 ledgerSharedIds = listOf("group-1"),
+                variantAudienceId = "iteration-1",
                 triggerId = "trigger-1"
             )
         )
@@ -521,6 +585,7 @@ public class AutomationEngineTest {
                     scheduleId = "test",
                     sharedIds = listOf("group-1"),
                     triggerId = "trigger-1",
+                    variantAudienceId = "iteration-1",
                     result = LedgerExecutionResult.SUCCEEDED,
                     cancel = false,
                     since = executing.scheduleStateChangeDate

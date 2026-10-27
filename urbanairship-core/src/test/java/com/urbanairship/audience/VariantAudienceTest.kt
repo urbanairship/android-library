@@ -20,7 +20,8 @@ public class VariantAudienceTest {
     private fun variantAudience(
         audienceSubset: Pair<Int, Int>,
         holdoutSubset: Pair<Int, Int>? = null,
-        reportingContext: JsonMap? = null
+        reportingContext: JsonMap? = null,
+        id: String = "iteration-1"
     ): VariantAudience {
         val holdoutJson = holdoutSubset?.let {
             """, "holdout_subset": { "min_hash_bucket": ${it.first}, "max_hash_bucket": ${it.second} }"""
@@ -32,6 +33,7 @@ public class VariantAudienceTest {
 
         val json = """
             {
+                "id": "$id",
                 "audience_hash": {
                     "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
                     "num_hash_buckets": 16384,
@@ -98,6 +100,47 @@ public class VariantAudienceTest {
     }
 
     @Test
+    public fun testParsesId() {
+        assertEquals("iteration-7", variantAudience(audienceSubset = 0 to 1, id = "iteration-7").id)
+    }
+
+    @Test
+    public fun testIdSurvivesEncoding() {
+        val variantAudience = variantAudience(audienceSubset = 0 to 1, id = "iteration-7")
+        val decoded = VariantAudience.fromJson(variantAudience.toJsonValue().requireMap())
+
+        assertEquals("iteration-7", decoded.id)
+        assertEquals(variantAudience, decoded)
+    }
+
+    @Test
+    public fun testIdParticipatesInEquality() {
+        assertFalse(
+            variantAudience(audienceSubset = 0 to 1, id = "iteration-1") ==
+                variantAudience(audienceSubset = 0 to 1, id = "iteration-2")
+        )
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsAMissingId() {
+        VariantAudience.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                    "audience_hash": {
+                        "hash_prefix": "prefix:",
+                        "num_hash_buckets": 16384,
+                        "hash_identifier": "contact",
+                        "hash_algorithm": "farm_hash"
+                    },
+                    "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 1 }
+                }
+                """.trimIndent()
+            ).requireMap()
+        )
+    }
+
+    @Test
     public fun testReportingContextDefaultsToNull() {
         assertNull(variantAudience(audienceSubset = 9908 to 9908).reportingContext)
     }
@@ -140,6 +183,7 @@ public class VariantAudienceTest {
             JsonValue.parseString(
                 """
                 {
+                    "id": "iteration-1",
                     "audience_hash": {
                         "hash_prefix": "prefix:",
                         "num_hash_buckets": 16384,
@@ -159,6 +203,7 @@ public class VariantAudienceTest {
             JsonValue.parseString(
                 """
                 {
+                    "id": "iteration-1",
                     "audience_hash": {
                         "hash_prefix": "prefix:",
                         "num_hash_buckets": 16384,
@@ -177,6 +222,7 @@ public class VariantAudienceTest {
             JsonValue.parseString(
                 """
                 {
+                    "id": "iteration-1",
                     "audience_hash": {
                         "hash_prefix": "prefix:",
                         "num_hash_buckets": 16384,
