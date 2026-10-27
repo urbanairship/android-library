@@ -5,6 +5,7 @@ import com.urbanairship.android.layout.property.EnvironmentConditionsContext
 import com.urbanairship.android.layout.property.NamedColorsContext
 import android.content.Context
 import android.content.res.Configuration
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -24,6 +25,7 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.WindowPixels
 import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
+import com.urbanairship.android.layout.view.dispatchScenePagerKey
 import com.urbanairship.android.layout.widget.FocusRing
 
 internal class ThomasEmbeddedView(
@@ -90,6 +92,9 @@ internal class ThomasEmbeddedView(
         environmentFrame.onMeasure(widthMeasureSpec, heightMeasureSpec)
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        super.dispatchKeyEvent(event) || dispatchScenePagerKey(event)
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)

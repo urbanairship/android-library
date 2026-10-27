@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Build
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -151,6 +152,9 @@ internal class ModalView(
             }
         }
     }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        super.dispatchKeyEvent(event) || dispatchScenePagerKey(event)
 
     /** Sizes and positions the modal frame against the current window. */
     private fun applyConstraints() {

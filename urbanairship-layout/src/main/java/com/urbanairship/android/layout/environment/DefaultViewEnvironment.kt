@@ -23,7 +23,8 @@ public class DefaultViewEnvironment(
     webViewClientFactory: Factory<AirshipWebViewClient>?,
     imageCache: ImageCache?,
     override val isIgnoringSafeAreas: Boolean,
-    override val layoutVersion: Int
+    override val layoutVersion: Int,
+    override val receivesKeysWithoutFocus: Boolean = false
 ) : ViewEnvironment {
 
     private val webChromeClientFactory: Factory<WebChromeClient> =

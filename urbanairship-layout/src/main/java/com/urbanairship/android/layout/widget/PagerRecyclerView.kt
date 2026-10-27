@@ -301,10 +301,11 @@ internal class PagerRecyclerView(
     override fun focusSearch(direction: Int): View? =
         super.focusSearch(direction) ?: inOrderFallback(direction)?.let { super.focusSearch(it) }
 
-    // A pager left holding focus has to count as focusable, or a search in focus order from it
-    // finds nothing.
+    // A modal turns its pager from anywhere, so the pager only needs focus to get keys elsewhere.
+    // One left holding focus still counts, or a search in focus order from it finds nothing.
     private val takesKeyFocus: Boolean
-        get() = isInTouchMode || isHoldingFocus || isFocused || model.handlesDirectionalKeys
+        get() = isInTouchMode || isHoldingFocus || isFocused ||
+            (!viewEnvironment.receivesKeysWithoutFocus && model.handlesDirectionalKeys)
 
     // Neighbouring pages stay attached just off-screen, and focusing a control on one would move
     // focus out of sight without turning the page.

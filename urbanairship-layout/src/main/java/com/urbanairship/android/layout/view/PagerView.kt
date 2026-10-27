@@ -302,22 +302,38 @@ internal class PagerView(
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val isRight = when (event.keyCode) {
-            KeyEvent.KEYCODE_DPAD_RIGHT -> true
-            KeyEvent.KEYCODE_DPAD_LEFT -> false
-            else -> return super.dispatchKeyEvent(event)
-        }
-
-        // Swallow the repeats and the release of a press that turned the page, so a held key
-        // turns one page and focus doesn't then move on the release.
-        if (event.action == KeyEvent.ACTION_UP && handledDirectionalKeys.remove(event.keyCode)) return true
-        if (event.repeatCount > 0 && event.keyCode in handledDirectionalKeys) return true
-
+        val isRight = event.horizontalDirection() ?: return super.dispatchKeyEvent(event)
+        if (swallowsRestOfPress(event)) return true
         if (super.dispatchKeyEvent(event)) return true
-        if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0 || !canPageFromKey(isRight)) {
-            return false
+        if (event.action != KeyEvent.ACTION_DOWN || !canPageFromKey(isRight)) return false
+        return pageFromKey(event, isRight)
+    }
+
+    /**
+     * Turns the page for a Left/Right key from outside this pager, which never reaches
+     * [dispatchKeyEvent] because keys only travel to the focused view.
+     *
+     * The caller decides that focus has no use for the key.
+     *
+     * @param event The key event.
+     * @return `true` if the key was handled.
+     */
+    fun dispatchOutsideKey(event: KeyEvent): Boolean {
+        val isRight = event.horizontalDirection() ?: return false
+        if (swallowsRestOfPress(event)) return true
+        return pageFromKey(event, isRight)
+    }
+
+    // A held key turns one page, and focus doesn't then move on the release.
+    private fun swallowsRestOfPress(event: KeyEvent): Boolean =
+        if (event.action == KeyEvent.ACTION_UP) {
+            handledDirectionalKeys.remove(event.keyCode)
+        } else {
+            event.repeatCount > 0 && event.keyCode in handledDirectionalKeys
         }
 
+    private fun pageFromKey(event: KeyEvent, isRight: Boolean): Boolean {
+        if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0) return false
         if (isScrolling.value) return true
         val handled = model.onDirectionalKey(isRight, layoutDirection == LAYOUT_DIRECTION_RTL)
         if (handled) handledDirectionalKeys.add(event.keyCode)
