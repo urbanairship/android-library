@@ -71,7 +71,7 @@ public class TextInputInferenceEvaluationTest {
             )
         )
 
-        assertTrue(prompt.endsWith("User context:\n- Tier: gold\n- Orders: 4"))
+        assertTrue(prompt.endsWith("## User context\n- Tier: gold\n- Orders: 4"))
     }
 
     @Test

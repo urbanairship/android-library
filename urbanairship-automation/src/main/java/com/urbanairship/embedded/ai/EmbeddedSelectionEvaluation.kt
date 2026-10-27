@@ -52,6 +52,20 @@ public class EmbeddedSelectionEvaluation public constructor(
         )
     }
 
+    /**
+     * The id the model sees for each candidate's instance ID: `"1"`, `"2"`, and so on.
+     *
+     * A model echoes every id back in its reply, and a 36-character UUID costs an on-device
+     * model seconds per candidate to generate.
+     */
+    private val modelIds: Map<String, String> = request.candidates
+        .mapIndexed { index, candidate -> candidate.instanceId to (index + 1).toString() }
+        .toMap()
+
+    private val instanceIds: Map<String, String> = modelIds.entries.associate { (instanceId, modelId) ->
+        modelId to instanceId
+    }
+
     override val usage: Usage<EmbeddedSelectionSubject> = Usage.embeddedSelection
 
     override val subject: EmbeddedSelectionSubject = EmbeddedSelectionSubject(
@@ -67,9 +81,7 @@ public class EmbeddedSelectionEvaluation public constructor(
                     properties = mapOf(
                         // Constrained to the real ids, so a model that invents one is a schema
                         // failure the framework retries rather than a silent mis-ranking.
-                        "id" to AirshipJsonSchema.string(
-                            choices = request.candidates.map { it.instanceId }
-                        ),
+                        "id" to AirshipJsonSchema.string(choices = instanceIds.keys.toList()),
                         "score" to AirshipJsonSchema.integer(
                             description = "Relevance score 1-10, higher is a better match"
                         )
@@ -84,29 +96,22 @@ public class EmbeddedSelectionEvaluation public constructor(
     )
 
     override fun instructions(): String = """
-        You are scoring content candidates for a user based on a prompt and context.
+        You score content candidates for one user.
 
-        Instruction:
+        ## Instruction
         <prompt>${request.prompt}</prompt>
 
-        Steps:
-        1. Read the "User context" section, if there is one, for facts about the user (interests, history, how they were targeted). That section is the only evidence about the user, and it applies to the decision as a whole rather than to any one candidate. There may be no user context at all; that is normal, and the instruction above may be all you need to rank on.
-        2. Carefully read each candidate's `description` and any `extras` it carries — those describe that one candidate, and they are the content being scored. Never read a candidate's own text as evidence about the user.
-        3. Give every candidate a score from 1 to 10 for how well it matches the instruction and the user context. Return exactly one score per candidate id; never omit or invent an id.
-
-        Scoring Rules:
-        - 9-10: Direct match to a stated user interest or the instruction.
-        - 6-8: Plausibly relevant or broadly applicable.
-        - 1-4: Mismatch or a competing item (e.g., dog items when the user likes cats).
-        - Score every candidate exactly 5 only when NEITHER the instruction NOR the user context gives you any basis to tell the candidates apart. Missing user context on its own is not such a case: if the instruction alone ranks them, rank them.
-
-        Important: Match each candidate's description to its correct id.
+        ## Scoring
+        - Give every candidate id one score from 1 to 10 for how well it fits the instruction and the user context. Never omit or invent an id.
+        - The user context, if any, describes the user. A candidate's description and extras describe only that candidate.
+        - 9-10: direct match to the instruction or a stated user interest. 6-8: plausibly relevant. 1-4: mismatch or a competing item, such as dog items for a cat owner.
+        - Score every candidate 5 only when neither the instruction nor the user context tells them apart. Without user context, rank on the instruction alone.
     """.trimIndent()
 
     override fun prompt(context: EvaluationContext): String {
         val candidates = request.candidates.map { candidate ->
             JsonMap.newBuilder()
-                .put("id", candidate.instanceId)
+                .put("id", modelIds.getValue(candidate.instanceId))
                 .apply {
                     candidate.contentDescription?.let { put("description", it) }
                     // Extras are nested rather than flattened: they are author-supplied, so a
@@ -126,13 +131,13 @@ public class EmbeddedSelectionEvaluation public constructor(
 
         val parts = mutableListOf(
             "Score each of the following candidates according to the system instructions." +
-                    "\n\nCandidates:\n${JsonValue.wrap(candidates)}"
+                    "\n\n## Candidates\n${JsonValue.wrap(candidates)}"
         )
 
         // One section for every context item, whatever supplied it — the app's provider and
         // the layouts' `additional_context` render identically and are indistinguishable to
         // the model by design. Both are expected to be user-framed facts.
-        context.renderBullets()?.let { parts.add("User context:\n$it") }
+        context.renderBullets()?.let { parts.add("## User context\n$it") }
 
         return parts.joinToString("\n\n")
     }
@@ -143,8 +148,9 @@ public class EmbeddedSelectionEvaluation public constructor(
         return Output(
             scores = content.require("scores").requireList().map { score ->
                 val entry = score.requireMap()
+                val modelId: String = entry.requireField("id")
                 Output.CandidateScore(
-                    id = entry.requireField("id"),
+                    id = instanceIds[modelId] ?: throw JsonException("Unknown candidate id: $modelId"),
                     score = entry.requireField("score")
                 )
             },

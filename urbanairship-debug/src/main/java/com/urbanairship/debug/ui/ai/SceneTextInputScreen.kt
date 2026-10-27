@@ -2,6 +2,7 @@
 
 package com.urbanairship.debug.ui.ai
 
+import androidx.annotation.RestrictTo
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -518,22 +519,39 @@ private object DebugSchemaSuggestion {
     val usage: Usage<Unit> = Usage("debug_schema_suggestion")
 }
 
-private data class SchemaSuggestionField(
-    val name: String,
-    val type: String,
-    val choices: List<String>,
-    val description: String?,
-    val required: Boolean?
+/**
+ * One field of a suggested output schema.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class SchemaSuggestionField(
+    public val name: String,
+    public val type: String,
+    public val choices: List<String>,
+    public val description: String?,
+    public val required: Boolean?
 )
 
-private data class SchemaSuggestionOutput(val properties: List<SchemaSuggestionField>)
+/**
+ * A suggested output schema, as a flat list of fields.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class SchemaSuggestionOutput(public val properties: List<SchemaSuggestionField>)
 
 /**
  * Runs on the same on-device Airship AI stack as text-input inference, but asks the model to
  * design the *output shape* for an instruction rather than to classify text. Kept flat (a list
  * of leaf fields) so guided generation stays reliable — nesting is left to the manual builder.
+ *
+ * Public so the devapp's evaluation lab can run the same prompt.
+ *
+ * @hide
  */
-private class SchemaSuggestionEvaluation(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class SchemaSuggestionEvaluation(
     private val instruction: String
 ) : Evaluation<SchemaSuggestionOutput, Unit> {
 
@@ -566,14 +584,21 @@ private class SchemaSuggestionEvaluation(
     )
 
     override fun instructions(): String = """
-        You design the JSON output shape an on-device model should return for a form text-input task. Given the author's instruction, list the fields the output object should contain. Prefer a small, flat set.
+        You design the JSON output for an on-device model that reads a user's form input. Given the author's instruction, list a small, flat set of output fields.
 
-        When the instruction names a fixed set of categories or options (e.g. "categorize into happy, sad, or mad"), add a string field whose `enum` lists exactly those values — do not leave it as an unconstrained string. Always also include a short free-text field (e.g. "reason") explaining the result.
+        ## Field types
+        - boolean: a yes/no or true/false question.
+        - integer: a count, or a rating on a scale.
+        - number: a measurement that can have decimals.
+        - string: anything else.
+        - When the instruction names a fixed set of options, use a string field and list exactly those options in "enum".
+
+        Always add a short string field named "reason" explaining the result.
     """.trimIndent()
 
     override fun prompt(context: EvaluationContext): String {
-        val parts = mutableListOf("Instruction: $instruction")
-        context.renderBullets()?.let { parts.add("User context:\n$it") }
+        val parts = mutableListOf("## Instruction\n$instruction")
+        context.renderBullets()?.let { parts.add("## User context\n$it") }
         return parts.joinToString("\n\n")
     }
 

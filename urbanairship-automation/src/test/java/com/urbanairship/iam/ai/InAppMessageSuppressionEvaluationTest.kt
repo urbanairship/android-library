@@ -44,8 +44,8 @@ public class InAppMessageSuppressionEvaluationTest {
     public fun testPromptCarriesTheMessageButNotTheHints() {
         val prompt = evaluation.prompt(EvaluationContext.EMPTY)
 
-        assertTrue(prompt.contains("Message name: Spring promo"))
-        assertTrue(prompt.contains("Message priority: 3"))
+        assertTrue(prompt.contains("## Message\nName: Spring promo"))
+        assertTrue(prompt.contains("Priority: 3"))
         assertTrue(prompt.contains("\"campaign\":\"spring\""))
         // Hints are the context provider's input, not the model's.
         assertFalse(prompt.contains("surface"))
@@ -60,7 +60,7 @@ public class InAppMessageSuppressionEvaluationTest {
                 subject = InAppMessageSuppressionSubject(name = "Promo", extras = extras)
             ).prompt(EvaluationContext.EMPTY)
 
-            assertFalse("extras=$extras", prompt.contains("Message Extras"))
+            assertFalse("extras=$extras", prompt.contains("Extras"))
         }
     }
 
@@ -75,7 +75,7 @@ public class InAppMessageSuppressionEvaluationTest {
             )
         )
 
-        assertTrue(prompt.endsWith("User context:\n- Rented: 20ft (2024)\n- Interests: cats"))
+        assertTrue(prompt.endsWith("## User context\n- Rented: 20ft (2024)\n- Interests: cats"))
     }
 
     @Test

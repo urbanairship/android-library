@@ -61,8 +61,10 @@ public class InAppMessageSuppressionEvaluation public constructor(
     override fun instructions(): String = """
         You are a gate that decides whether to show a single in-app message to the current user. Show the message only when this condition holds for the user; otherwise do not show it:
 
+        ## Condition
         <condition>$condition</condition>
 
+        ## Rules
         Decide using only the user context and attributes given in the prompt, reasoning about what those signals imply rather than matching them literally. Set allow=true to show the message and allow=false to hide it.
 
         - Set allow=false only when the context contains a signal that clearly contradicts the condition (for example, the user's stated interests or behavior are directly at odds with it).
@@ -74,16 +76,16 @@ public class InAppMessageSuppressionEvaluation public constructor(
     override fun prompt(context: EvaluationContext): String {
         // The condition governs the decision and lives in instructions(), deliberately not
         // repeated here. `hints` are the provider's alone and are never rendered.
-        val parts = mutableListOf("Message name: ${subject.name}")
+        val parts = mutableListOf("## Message\nName: ${subject.name}")
 
         subject.extras
             ?.map
             ?.takeUnless { it.isEmpty }
-            ?.let { parts.add("Message Extras: $it") }
+            ?.let { parts.add("Extras: $it") }
 
-        parts.add("Message priority: ${subject.priority}")
+        parts.add("Priority: ${subject.priority}")
 
-        context.renderBullets()?.let { parts.add("User context:\n$it") }
+        context.renderBullets()?.let { parts.add("## User context\n$it") }
 
         return parts.joinToString("\n\n")
     }
