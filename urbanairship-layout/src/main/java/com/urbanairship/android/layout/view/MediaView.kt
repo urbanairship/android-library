@@ -683,6 +683,9 @@ internal class MediaView(
         }
 
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        if (!isVideoFocusable) {
+            wv.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
 
         model.contentDescription(context).ifNotEmpty {
             wv.contentDescription = it
