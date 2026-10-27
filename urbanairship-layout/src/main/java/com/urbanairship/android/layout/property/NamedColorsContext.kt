@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.property
 
 import android.content.Context
 import android.content.ContextWrapper
-import com.urbanairship.UALog
 
 /**
  * A context that carries the named colors in scope, so a color reference resolved from a view's
@@ -25,10 +24,7 @@ internal class NamedColorsContext(
 
         /** Returns the color [name] names in [context]'s layout, or opaque black where it names none. */
         fun colorNamed(context: Context, name: String): Color =
-            find(context)?.colors?.get(name) ?: run {
-                UALog.e { "Unknown color reference $name" }
-                Color.MISSING
-            }
+            (find(context)?.colors ?: NamedColors.EMPTY).colorNamed(name)
 
         private fun find(context: Context): NamedColorsContext? {
             var current: Context? = context
