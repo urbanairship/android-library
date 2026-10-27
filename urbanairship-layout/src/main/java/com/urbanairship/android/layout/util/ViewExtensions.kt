@@ -362,6 +362,8 @@ private fun Spannable.convertColorSpans(colors: List<Int>) {
     val spans = getSpans(0, length, ForegroundColorSpan::class.java) ?: emptyArray()
     spans
         .map { span -> Triple(span, getSpanStart(span), getSpanEnd(span)) }
+        // fromHtml adds inner spans first; reversed, spans covering the same text keep outer first.
+        .reversed()
         .sortedByDescending { (_, start, end) -> end - start }
         .forEach { (span, start, end) ->
             val flags = getSpanFlags(span)

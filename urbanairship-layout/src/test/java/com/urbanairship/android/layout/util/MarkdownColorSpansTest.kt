@@ -96,4 +96,11 @@ public class MarkdownColorSpansTest {
         assertEquals("docs", spanned.textOf(link))
         assertTrue(styles.indexOf(link) > styles.indexOf(color))
     }
+
+    @Test
+    public fun sameRangeNestedSpanDrawsOverItsParent() {
+        val spanned = render("[[x]{color:inner}]{color:outer}")
+        val spans = spanned.getSpans(0, spanned.length, ForegroundColorSpan::class.java)
+        assertEquals(innerColor, spans.last().foregroundColor)
+    }
 }
