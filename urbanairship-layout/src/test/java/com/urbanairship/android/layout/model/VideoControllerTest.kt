@@ -71,8 +71,8 @@ public class VideoControllerTest {
         val itemProperties = ItemProperties(size = null)
         controller.createView(context, viewEnv, itemProperties)
 
-        // Wrapped once, so the views below carry the layout's environment conditions.
-        verify { mockView.createView(match { (it as? ContextWrapper)?.baseContext === context }, eq(viewEnv), itemProperties) }
+        // Wrapped, so the views below carry the layout's environment conditions and named colors.
+        verify { mockView.createView(match { context in generateSequence(it) { c -> (c as? ContextWrapper)?.baseContext } }, eq(viewEnv), itemProperties) }
     }
 
     @Test

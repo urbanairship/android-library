@@ -14,6 +14,8 @@ import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.EnvironmentFrame
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.property.EnvironmentConditionsContext
+import com.urbanairship.android.layout.property.NamedColors
+import com.urbanairship.android.layout.property.NamedColorsContext
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
@@ -124,6 +126,9 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     /** See [ModelEnvironment.selectsOnEnvironmentConditions]. */
     val selectsOnEnvironmentConditions: Boolean get() = environment.selectsOnEnvironmentConditions
 
+    /** See [ModelEnvironment.namedColors]; read by the root view. */
+    val namedColors: NamedColors get() = environment.namedColors
+
     /** See [ModelEnvironment.seedEnvironment]; called on the root model by the root view. */
     fun seedEnvironment(rootView: AndroidView) {
         environment.seedEnvironment(rootView)
@@ -138,7 +143,10 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
         // Every view below the root shares this, so a selector resolved from any view's context
         // can match the layout's environment conditions.
-        val conditionsContext = EnvironmentConditionsContext.wrap(context) { environment.environmentConditionValues }
+        val conditionsContext = NamedColorsContext.wrap(
+            EnvironmentConditionsContext.wrap(context) { environment.environmentConditionValues },
+            environment.namedColors
+        )
         val view = onCreateView(conditionsContext, viewEnvironment, itemProperties)
         onViewCreated(view)
 
