@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.property.Conditions
 import com.urbanairship.android.layout.property.EnvironmentConditionSelector
+import com.urbanairship.android.layout.property.NamedColors
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.util.randomShuffleSeed
 import kotlinx.coroutines.cancel
@@ -36,7 +37,8 @@ internal class LayoutViewModel : ViewModel() {
         aiInference: ThomasAIInference? = null,
         shuffleSeed: String? = null,
         environmentConditions: Conditions<EnvironmentConditionSelector> = Conditions(emptyMap()),
-        selectsOnEnvironmentConditions: Boolean = false
+        selectsOnEnvironmentConditions: Boolean = false,
+        namedColors: NamedColors = NamedColors.EMPTY
     ): ModelEnvironment =
         environment ?: ModelEnvironment(
             layoutState = layoutState,
@@ -47,7 +49,8 @@ internal class LayoutViewModel : ViewModel() {
             aiInference = aiInference,
             shuffleSeed = shuffleSeed ?: randomShuffleSeed(),
             environmentConditions = environmentConditions,
-            selectsOnEnvironmentConditions = selectsOnEnvironmentConditions
+            selectsOnEnvironmentConditions = selectsOnEnvironmentConditions,
+            namedColors = namedColors
         ).also {
             environment = it
         }

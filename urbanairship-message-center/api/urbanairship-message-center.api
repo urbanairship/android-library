@@ -33,6 +33,7 @@ public class com/urbanairship/messagecenter/ui/MessageCenterFragment : androidx/
 	public final fun isTwoPane ()Z
 	public static final fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageCenterFragment;
 	public fun onConfigurationChanged (Landroid/content/res/Configuration;)V
+	public fun onDestroyView ()V
 	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
 	public final fun setListEditing (Z)V
 	public final fun setListPredicate (Lcom/urbanairship/Predicate;)V

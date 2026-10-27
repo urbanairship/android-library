@@ -182,7 +182,8 @@ public class EmbeddedLayout(
                 aiInference = aiInference,
                 shuffleSeed = randomSeed,
                 environmentConditions = payload.environmentConditions,
-                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions
+                selectsOnEnvironmentConditions = payload.selectsOnEnvironmentConditions,
+                namedColors = payload.namedColors
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,

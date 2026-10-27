@@ -48,6 +48,7 @@ public class MessageAnalyticsTest {
     private val messageId = LayoutEventMessageId.AirshipId("message-id", null)
     private val productId = "test-product"
     private val reportingContext = JsonValue.wrap("reporting")
+    private val eventReportingContext = JsonValue.wrap("event-reporting")
     private val sessionId = "test-session-id"
 
     @Test
@@ -68,7 +69,7 @@ public class MessageAnalyticsTest {
 
         val capturedData = eventDataSlot.captured
         assertEquals(event, capturedData.event)
-        assertEquals(reportingContext, capturedData.context?.reportingContext)
+        assertEquals(eventReportingContext, capturedData.context?.reportingContext)
         assertEquals(eventSource, capturedData.source)
         assertEquals(messageId, capturedData.messageId)
     }
@@ -98,6 +99,7 @@ public class MessageAnalyticsTest {
             messageId = messageId,
             productId = productId,
             reportingContext = reportingContext,
+            eventReportingContext = eventReportingContext,
             eventRecorder = eventRecorder,
             eventSource = LayoutEventSource.AIRSHIP,
             displayHistoryStore = historyStore,
@@ -115,7 +117,7 @@ public class MessageAnalyticsTest {
 
         val capturedData = eventDataSlot.captured
         assertEquals(event, capturedData.event)
-        assertEquals(message.reporting, capturedData.context?.reportingContext)
+        assertEquals(eventReportingContext, capturedData.context?.reportingContext)
         assertEquals(LayoutEventSource.AIRSHIP, capturedData.source)
         assertEquals(LayoutEventMessageId.AirshipId(message.id, null), capturedData.messageId)
     }
@@ -408,7 +410,37 @@ public class MessageAnalyticsTest {
     }
 
     @Test
-    fun `a message's events and impression carry its reporting_context`() = testScope.runTest {
+    fun `eventReportingContext flattens message_reporting into reporting_context`() {
+        val cases = listOf(
+            """{"message_id":"m","reporting_context":{"content_types":["scene"],"experiment_id":""},"campaign_categories":[]}""" to
+                """{"message_id":"m","campaign_categories":[],"content_types":["scene"],"experiment_id":""}""",
+            """{"message_id":"m","group_id":"g","reporting_context":{"message_id":"other","content_types":["scene"]}}""" to
+                """{"message_id":"m","group_id":"g","content_types":["scene"]}""",
+            """{"message_id":"m","group_id":"g"}""" to
+                """{"message_id":"m","group_id":"g"}""",
+            """{"message_id":"m","reporting_context":"text"}""" to
+                """{"message_id":"m","reporting_context":"text"}""",
+            """{"reporting_context":{"content_types":["scene"]}}""" to
+                """{"content_types":["scene"]}"""
+        )
+
+        cases.forEach { (input, expected) ->
+            assertEquals(
+                input,
+                JsonValue.parseString(expected),
+                MessageAnalytics.eventReportingContext(JsonValue.parseString(input))
+            )
+        }
+    }
+
+    @Test
+    fun `a message without message_reporting has no reporting context`() {
+        assertNull(MessageAnalytics.reportingContext(null))
+        assertNull(MessageAnalytics.eventReportingContext(null))
+    }
+
+    @Test
+    fun `a message's events carry the flattened reporting context and its impression only the inner one`() = testScope.runTest {
         val context = JsonValue.parseString("""{"content_types": ["scene"]}""")
         val message = Message(
             id = "message-id",
@@ -434,7 +466,10 @@ public class MessageAnalyticsTest {
 
         val eventSlot = slot<LayoutEventData>()
         verify { eventRecorder.recordEvent(capture(eventSlot)) }
-        assertEquals(context, eventSlot.captured.context?.reportingContext)
+        assertEquals(
+            JsonValue.parseString("""{"message_id": "message-id", "content_types": ["scene"]}"""),
+            eventSlot.captured.context?.reportingContext
+        )
 
         val impressionSlot = slot<MeteredUsageEventEntity>()
         coVerify { eventRecorder.recordImpressionEvent(capture(impressionSlot)) }
@@ -446,6 +481,7 @@ public class MessageAnalyticsTest {
             messageId = messageId,
             productId = productId,
             reportingContext = reportingContext,
+            eventReportingContext = eventReportingContext,
             eventRecorder = eventRecorder,
             eventSource = LayoutEventSource.AIRSHIP,
             displayHistoryStore = historyStore,

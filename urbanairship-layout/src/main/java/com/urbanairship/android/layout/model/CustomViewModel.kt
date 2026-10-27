@@ -2,7 +2,9 @@
 package com.urbanairship.android.layout.model
 
 import com.urbanairship.android.layout.property.EnvironmentConditionsContext
+import com.urbanairship.android.layout.property.NamedColorsContext
 import android.content.Context
+import android.content.ContextWrapper
 import android.view.View
 import com.urbanairship.android.layout.AirshipCustomViewArguments
 import com.urbanairship.android.layout.AirshipCustomViewArguments.SizeInfo
@@ -46,7 +48,7 @@ internal class CustomViewModel(
             )
         )
 
-        return handler?.onCreateView(EnvironmentConditionsContext.unwrap(context), args)
+        return handler?.onCreateView(hostContext(context), args)
     }
 
     override fun onCreateView(
@@ -60,4 +62,13 @@ internal class CustomViewModel(
             id = viewId
         }
     }
+}
+
+/** Returns [context] without the layout's own wrappers: what a host's custom view handler expects, an activity among them. */
+private fun hostContext(context: Context): Context {
+    var current = context
+    while (current is EnvironmentConditionsContext || current is NamedColorsContext) {
+        current = (current as ContextWrapper).baseContext
+    }
+    return current
 }

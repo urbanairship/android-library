@@ -41,22 +41,25 @@ internal class AutomationRemoteDataSubscriber (
             subscriptionState.collect {
                 if (it) {
                     subscription = scope.launch {
+                        // Reset on success and on resubscribe.
+                        var consecutiveSyncFailures = 0
+
                         remoteDataAccess.updatesFlow.collect { payloads ->
-                            UALog.v {
-                                val sourceInfo = payloads.payload.map {  payload ->
-                                    "${payload.value.remoteDataInfo?.source}: ${payload.value.remoteDataInfo?.lastModified}"
-                                }
-
-                                "Received automation payloads: $sourceInfo"
+                            val synced = try {
+                                sync(payloads)
+                            } catch (ex: CancellationException) {
+                                throw ex
+                            } catch (ex: Exception) {
+                                // Nothing relaunches this collector while subscribed, so a throw must not escape it.
+                                UALog.e(ex) { "Failed to sync automation remote data, retrying on the next remote-data update." }
+                                false
                             }
 
-                            if (!processConstraints(payloads)) {
-                                UALog.w { "Failed to process constraints, skipping update." }
-                                return@collect
+                            if (synced) {
+                                consecutiveSyncFailures = 0
+                            } else if (++consecutiveSyncFailures == 2) {
+                                UALog.e { "Automation remote data sync failed on consecutive updates; in-app automation may be out of date until it recovers." }
                             }
-
-                            processAutomations(payloads)
-                            UALog.v { "Subscriber finished update" }
                         }
                     }
                 } else {
@@ -64,6 +67,31 @@ internal class AutomationRemoteDataSubscriber (
                 }
             }
         }
+    }
+
+    /**
+     * Syncs constraints, then schedules, for one remote-data update.
+     *
+     * @param payloads The parsed in-app remote data.
+     * @return False when constraints couldn't be stored, so schedules weren't synced.
+     */
+    private suspend fun sync(payloads: InAppRemoteData): Boolean {
+        UALog.v {
+            val sourceInfo = payloads.payload.map {  payload ->
+                "${payload.value.remoteDataInfo?.source}: ${payload.value.remoteDataInfo?.lastModified}"
+            }
+
+            "Received automation payloads: $sourceInfo"
+        }
+
+        if (!processConstraints(payloads)) {
+            UALog.w { "Failed to process constraints, skipping update." }
+            return false
+        }
+
+        processAutomations(payloads)
+        UALog.v { "Subscriber finished update" }
+        return true
     }
 
     fun subscribe() {

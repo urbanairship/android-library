@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.property.Conditions
 import com.urbanairship.android.layout.property.EnvironmentConditions
+import com.urbanairship.android.layout.property.NamedColors
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.json.JsonMap
 import com.urbanairship.android.layout.util.ThomasViewIdResolver
@@ -60,6 +61,8 @@ internal class ModelEnvironment(
      * [com.urbanairship.android.layout.view.EnvironmentConditionsSensitive].
      */
     val selectsOnEnvironmentConditions: Boolean = false,
+    /** The named colors a color reference in this environment's views resolves against. */
+    val namedColors: NamedColors = NamedColors.EMPTY,
     /** The layout's `$environment`, shared by every copy [withState] makes. */
     private val environmentPublisher: ThomasEnvironmentPublisher = ThomasEnvironmentPublisher(environmentConditions),
     /**
@@ -79,9 +82,16 @@ internal class ModelEnvironment(
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
 
-    fun withState(state: LayoutState) =
+    fun withState(state: LayoutState) = copy(layoutState = state)
+
+    fun withNamedColors(colors: NamedColors) = copy(namedColors = colors)
+
+    private fun copy(
+        layoutState: LayoutState = this.layoutState,
+        namedColors: NamedColors = this.namedColors
+    ) =
         ModelEnvironment(
-            layoutState = state,
+            layoutState = layoutState,
             reporter = this.reporter,
             actionsRunner = this.actionsRunner,
             displayTimer = this.displayTimer,
@@ -95,6 +105,7 @@ internal class ModelEnvironment(
             aiInference = this.aiInference,
             shuffleSeed = this.shuffleSeed,
             selectsOnEnvironmentConditions = this.selectsOnEnvironmentConditions,
+            namedColors = namedColors,
             environmentPublisher = this.environmentPublisher,
             capabilities = this.capabilities
         )

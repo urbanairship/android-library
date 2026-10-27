@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.ui
 import android.view.ViewGroup
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.property.EnvironmentConditionsContext
+import com.urbanairship.android.layout.property.NamedColorsContext
 import com.urbanairship.android.layout.property.BannerPlacement
 import android.content.Context
 import android.graphics.Rect
@@ -71,8 +72,11 @@ public class ThomasBannerView internal constructor(
         model.publishEnvironment(this, frame, immediate = isFirst)
     }
 
-    /** What the placement's colors resolve against, so their selectors see the layout's environment conditions. */
-    private val conditionsContext = EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues }
+    /** What the placement's colors resolve against, so they see the layout's environment conditions and named colors. */
+    private val conditionsContext = NamedColorsContext.wrap(
+        EnvironmentConditionsContext.wrap(context) { model.environmentConditionValues },
+        model.namedColors
+    )
 
     init {
         id = model.viewId

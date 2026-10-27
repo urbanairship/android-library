@@ -40,7 +40,12 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
         }
         get() = listFragment?.predicate ?: field
 
-    /** Whether the message list and message view are being displayed side-by-side. */
+    /**
+     * Whether the message list and message view are being displayed side-by-side.
+     *
+     * @throws IllegalStateException if the fragment's view doesn't exist, e.g. before `onViewCreated` or after `onDestroyView`.
+     */
+    @get:Throws(IllegalStateException::class)
     public val isTwoPane: Boolean
         get() = !slidingPaneLayout.isSlideable
 
@@ -85,7 +90,12 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
     protected val messageFragment: MessageCenterMessageFragment?
         get() = childFragmentManager.findFragmentByTag("message_view") as? MessageCenterMessageFragment
 
-    /** The top-level `SlidingPaneLayout`. */
+    /**
+     * The top-level `SlidingPaneLayout`.
+     *
+     * @throws IllegalStateException if the fragment's view doesn't exist, e.g. before `onViewCreated` or after `onDestroyView`.
+     */
+    @get:Throws(IllegalStateException::class)
     protected val slidingPaneLayout: SlidingPaneLayout
         get() = try {
             requireView().findViewById(R.id.message_center_sliding_pane_layout)
@@ -98,9 +108,7 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
         get() = view?.findViewById(R.id.message_list_pane_container)
 
     /** The SlidingPaneLayout listener that handles back presses when the message pane is open. */
-    private val slidingPaneLayoutListener: SlidingPaneLayoutListener by lazy {
-        SlidingPaneLayoutListener(slidingPaneLayout)
-    }
+    private var slidingPaneLayoutListener: SlidingPaneLayoutListener? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -148,11 +156,23 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
             }
         }
 
-        // Register a callback to handle back presses when the message pane is open
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, slidingPaneLayoutListener)
+        // Register a callback to handle back presses when the message pane is open. Created fresh
+        // per view so it never outlives the SlidingPaneLayout it was attached to (see onDestroyView).
+        val listener = SlidingPaneLayoutListener(slidingPaneLayout)
+        slidingPaneLayoutListener = listener
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, listener)
 
         // Update the layout when the view is laid out
         view.doOnNextLayout { updateTwoPaneLayout() }
+    }
+
+    override fun onDestroyView() {
+        slidingPaneLayoutListener?.let {
+            it.remove()
+            slidingPaneLayout.removePanelSlideListener(it)
+        }
+        slidingPaneLayoutListener = null
+        super.onDestroyView()
     }
 
     private fun showListSnackbar(message: String) {
@@ -170,9 +190,15 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
     /** Displays the given [message] in the message pane. */
     public fun showMessage(message: Message): Unit = showMessage(message.id, message.title)
 
-    /** Displays the message with the given [messageId] in the message pane. */
+    /**
+     * Displays the message with the given [messageId] in the message pane.
+     *
+     * No-ops if called while the fragment's view doesn't exist, e.g. before `onViewCreated` or after `onDestroyView`.
+     */
     @JvmOverloads
     public fun showMessage(messageId: String, messageTitle: String? = null) {
+        if (view == null) return
+
         if (isTwoPane) {
             listFragment?.setHighlighted(messageId)
         }
@@ -188,8 +214,14 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
        }
     }
 
-    /** Closes the currently displayed message pane. */
+    /**
+     * Closes the currently displayed message pane.
+     *
+     * No-ops if called while the fragment's view doesn't exist, e.g. before `onViewCreated` or after `onDestroyView`.
+     */
     public fun closeMessage() {
+        if (view == null) return
+
         if (isTwoPane) {
             messageFragment?.setToolbarTitle(null)
             listFragment?.clearHighlighted()
@@ -202,13 +234,15 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
     }
 
     private fun updateTwoPaneLayout() {
+        if (view == null) return
+
         // Update the toolbar nav icon visibility when the configuration changes
         // We only want to show the nav icon in single pane mode
         messageFragment?.isToolbarNavIconVisible = !isTwoPane
 
         // Update the sliding pane layout listener so that we can intercept back presses if the
         // message pane is now open.
-        slidingPaneLayoutListener.isEnabled = with (slidingPaneLayout) { isSlideable && isOpen }
+        slidingPaneLayoutListener?.isEnabled = with (slidingPaneLayout) { isSlideable && isOpen }
 
         // Clear the highlighted message if we're in two-pane mode
         // This handles the case where we switch from 1- to 2-pane mode while a message is displayed
@@ -244,6 +278,11 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
         }
 
         override fun handleOnBackPressed() {
+            if (view == null) {
+                // The view is gone; nothing to close, and this callback is stale.
+                isEnabled = false
+                return
+            }
             // Close the message view pane on back press
             closeMessage()
         }

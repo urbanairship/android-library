@@ -112,7 +112,8 @@ public class ModalActivity : AppCompatActivity() {
                 aiInference = DefaultThomasAIInference.create(args.ai),
                 shuffleSeed = args.randomSeed,
                 environmentConditions = args.payload.environmentConditions,
-                selectsOnEnvironmentConditions = args.payload.selectsOnEnvironmentConditions
+                selectsOnEnvironmentConditions = args.payload.selectsOnEnvironmentConditions,
+                namedColors = args.payload.namedColors
             )
 
             // Seeded here rather than by the view, with the frame the view will fill, so the

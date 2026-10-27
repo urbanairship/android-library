@@ -420,6 +420,45 @@ public class GridLayoutViewTest {
     }
 
     @Test
+    public fun testAnAutoWidthRatioItemFitsItsCellAgainstTheRowsHeight() {
+        val ratioItem = box(size = """{"width": "auto", "height": "100%", "aspect_ratio": 1}""")
+        val sibling = box(size = """{"width": "100%", "height": 200}""")
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(ratioItem, sibling))
+        layout(grid, width = 200)
+
+        val item = items(grid)[0]
+        assertEquals("width", 100, item.width)
+        assertEquals("height", 100, item.height)
+    }
+
+    @Test
+    public fun testAnAutoWidthRatioItemFitsItsCellInAFixedRatioRow() {
+        val ratioItem = box(size = """{"width": "auto", "height": "100%", "aspect_ratio": 1}""")
+        val grid = grid(
+            config = """{"columns": {"type": "fixed", "count": 2}, "cell_aspect_ratio": 0.5}""",
+            items = listOf(ratioItem, box())
+        )
+        layout(grid, width = 200)
+
+        val item = items(grid)[0]
+        assertEquals("width", 100, item.width)
+        assertEquals("height", 100, item.height)
+    }
+
+    @Test
+    public fun testAPointsHeightRatioItemFitsItsCellAndSetsTheRowToTheFittedHeight() {
+        val ratioItem = box(size = """{"width": "auto", "height": 200, "aspect_ratio": 1}""")
+        val sibling = box(size = """{"width": "100%", "height": 50}""")
+        val grid = grid(config = """{"columns": {"type": "fixed", "count": 2}}""", items = listOf(ratioItem, sibling))
+        layout(grid, width = 200)
+
+        val item = items(grid)[0]
+        assertEquals("width", 100, item.width)
+        assertEquals("height", 100, item.height)
+        assertEquals("row", 100, cells(grid)[0].height)
+    }
+
+    @Test
     public fun testAHeaderAndFooterLineUpWithACappedBlockAndStayOutOfTheList() {
         val grid = grid(
             config = capped(max = 4, min = 44, maxWidth = 64, partial = "start", horizontal = "start"),

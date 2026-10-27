@@ -32,6 +32,7 @@ internal class MessageAnalytics(
     private val messageId: LayoutEventMessageId,
     private val productId: String,
     private val reportingContext: JsonValue?,
+    private val eventReportingContext: JsonValue?,
     private val eventRecorder: LayoutEventRecorderInterface,
     private val eventSource: LayoutEventSource,
     private val displayHistoryStore: MessageDisplayHistoryStoreInterface,
@@ -53,6 +54,7 @@ internal class MessageAnalytics(
         ),
         productId = message.productId ?: DEFAULT_PRODUCT_ID,
         reportingContext = reportingContext(message.reporting),
+        eventReportingContext = eventReportingContext(message.reporting),
         eventRecorder = eventRecorder,
         displayHistoryStore = displayHistoryStore,
         eventSource = LayoutEventSource.AIRSHIP,
@@ -123,7 +125,7 @@ internal class MessageAnalytics(
             val data = LayoutEventData(
                 event = event,
                 context = LayoutEventContext.makeContext(
-                    reportingContext = reportingContext,
+                    reportingContext = eventReportingContext,
                     experimentResult = null,
                     layoutContext = layoutContext,
                     displayContext = displayContext.value
@@ -168,7 +170,7 @@ internal class MessageAnalytics(
         private const val DEFAULT_PRODUCT_ID = "default_native_mc"
 
         /**
-         * Returns the reporting context a native message's events carry: `message_reporting.reporting_context`
+         * Returns the reporting context a native message's impression carries: `message_reporting.reporting_context`
          * where it has one, else the whole `message_reporting`.
          *
          * @param messageReporting the message's `message_reporting`.
@@ -176,5 +178,23 @@ internal class MessageAnalytics(
          */
         fun reportingContext(messageReporting: JsonValue?): JsonValue? =
             messageReporting?.optMap()?.get("reporting_context") ?: messageReporting
+
+        /**
+         * Returns the reporting context a native message's events carry: the other `message_reporting`
+         * keys merged into `message_reporting.reporting_context`, so the result is a single flat object.
+         * Outer keys win on a collision. Without an inner object, the whole `message_reporting`.
+         *
+         * @param messageReporting the message's `message_reporting`.
+         * @return the flattened reporting context, or `null` when the message has no reporting.
+         */
+        fun eventReportingContext(messageReporting: JsonValue?): JsonValue? {
+            val outer = messageReporting?.map ?: return messageReporting
+            val inner = outer.opt("reporting_context").map ?: return messageReporting
+            val merged = inner.map.toMutableMap()
+            outer.map.forEach { (key, value) ->
+                if (key != "reporting_context") merged[key] = value
+            }
+            return JsonValue.wrap(merged)
+        }
     }
 }
