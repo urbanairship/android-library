@@ -9,6 +9,7 @@ import android.view.Gravity.CENTER_VERTICAL
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ListView
+import kotlin.math.roundToInt
 import androidx.core.graphics.Insets
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
@@ -81,6 +82,7 @@ internal class LinearLayoutView(
         clipChildren = false
         orientation = if (model.viewInfo.direction == Direction.VERTICAL) OrientationMode.VERTICAL else OrientationMode.HORIZONTAL
         gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
+        spacing = (model.viewInfo.spacing * resources.displayMetrics.density).roundToInt()
         addItems(orderedItems)
 
         model.listener = object : BaseModel.Listener {
