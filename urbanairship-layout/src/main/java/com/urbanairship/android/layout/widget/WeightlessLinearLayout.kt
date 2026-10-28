@@ -336,7 +336,7 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      * Folds [spacing] into the leading main-axis margin of every stacked child that has a
      * displayed predecessor, so every pass that reads margins counts the gap exactly once.
      *
-     * Children that are `GONE` take no gap and don't count as a predecessor.
+     * Children that aren't displayed take no gap and don't count as a predecessor.
      */
     private fun applySpacing() {
         val vertical = orientation == OrientationMode.VERTICAL
@@ -344,14 +344,14 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         for (i in 0..<childCount) {
             val child = stackChildAt(i) ?: continue
             val lp = child.layoutParams as? LayoutParams ?: continue
-            val gap = if (hasPredecessor && child.visibility != GONE) spacing else 0
+            val gap = if (hasPredecessor && child.isDisplayed) spacing else 0
             val delta = gap - lp.appliedSpacing
             if (delta != 0) {
                 if (vertical) lp.topMargin += delta else lp.marginStart += delta
                 lp.appliedSpacing = gap
                 lp.resolveLayoutDirection(layoutDirection)
             }
-            if (child.visibility != GONE) hasPredecessor = true
+            if (child.isDisplayed) hasPredecessor = true
         }
     }
 

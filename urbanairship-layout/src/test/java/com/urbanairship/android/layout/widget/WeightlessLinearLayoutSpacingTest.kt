@@ -293,6 +293,23 @@ public class WeightlessLinearLayoutSpacingTest {
         assertEquals(80, b.top)
     }
 
+    @Test
+    public fun listItemFrameWithHiddenItemTakesNoGap() {
+        val l = layout(WeightlessLinearLayout.OrientationMode.VERTICAL, 10)
+        val a = View(context).addTo(l, fixed(50, 40))
+        val frame = ListItemFrame(context).addTo(
+            l,
+            fixed(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        )
+        frame.addView(View(context).also { it.visibility = View.GONE })
+        val c = View(context).addTo(l, fixed(50, 40))
+
+        l.measureAndLayout(atMost, atMost)
+
+        assertEquals(50, c.top)
+        assertEquals(90, l.measuredHeight)
+    }
+
     private class IntrinsicView(context: Context, val w: Int, val h: Int) : View(context) {
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             setMeasuredDimension(resolveSize(w, widthMeasureSpec), resolveSize(h, heightMeasureSpec))
