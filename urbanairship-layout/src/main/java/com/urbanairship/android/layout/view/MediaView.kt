@@ -297,7 +297,7 @@ internal class MediaView(
             else -> wv.focusSearch(View.FOCUS_BACKWARD)
         } ?: return false
 
-        if (event.action == KeyEvent.ACTION_DOWN) target.requestFocus(direction)
+        if (event.action == KeyEvent.ACTION_DOWN) return target.requestFocus(direction)
         return true
     }
 
