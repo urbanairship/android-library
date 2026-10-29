@@ -102,6 +102,11 @@ internal val View.fillsOfferedWidth: Boolean
     get() = this is FillsOfferedWidth ||
         (this is ListItemFrame && childCount == 1 && getChildAt(0).fillsOfferedWidth)
 
+/** Whether this view is shown, looking through a [ListItemFrame] to its item. */
+internal val View.isDisplayed: Boolean
+    get() = visibility != View.GONE &&
+        !(this is ListItemFrame && childCount == 1 && !getChildAt(0).isDisplayed)
+
 /**
  * A view that exists only to carry one item's declared size, holding that item at `MATCH_PARENT` on
  * both axes.
