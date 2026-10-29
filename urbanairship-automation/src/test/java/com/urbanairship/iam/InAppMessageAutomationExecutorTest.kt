@@ -277,6 +277,9 @@ public class InAppMessageAutomationExecutorTest {
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
 
+        verify(exactly = 1) { displayCoordinator.messageWillDisplay(any()) }
+        verify(exactly = 1) { displayCoordinator.messageFinishedDisplaying(any()) }
+
         assertEquals(
             listOf(LayoutResolutionEvent.control(experimentResult).data?.toJsonValue()),
             recordedEvents.map { it.data?.toJsonValue() }
@@ -310,6 +313,9 @@ public class InAppMessageAutomationExecutorTest {
         every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        verify(exactly = 0) { displayCoordinator.messageWillDisplay(any()) }
+        verify(exactly = 0) { displayCoordinator.messageFinishedDisplaying(any()) }
 
         assertEquals(
             listOf(LayoutResolutionEvent.variantControl().data?.toJsonValue()),
@@ -346,6 +352,9 @@ public class InAppMessageAutomationExecutorTest {
         every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        verify(exactly = 0) { displayCoordinator.messageWillDisplay(any()) }
+        verify(exactly = 0) { displayCoordinator.messageFinishedDisplaying(any()) }
 
         assertEquals(
             listOf(LayoutResolutionEvent.variantMiss().data?.toJsonValue()),
@@ -386,6 +395,9 @@ public class InAppMessageAutomationExecutorTest {
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
 
+        verify(exactly = 0) { displayCoordinator.messageWillDisplay(any()) }
+        verify(exactly = 0) { displayCoordinator.messageFinishedDisplaying(any()) }
+
         coVerify(exactly = 0) { displayAdapter.display(any(), any()) }
 
         assertEquals(
@@ -421,6 +433,9 @@ public class InAppMessageAutomationExecutorTest {
         coEvery { displayAdapter.display(any(), any()) } returns DisplayResult.FINISHED
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        verify(exactly = 1) { displayCoordinator.messageWillDisplay(any()) }
+        verify(exactly = 1) { displayCoordinator.messageFinishedDisplaying(any()) }
         coVerify { displayAdapter.display(any(), any()) }
 
         assertEquals(

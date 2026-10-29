@@ -149,6 +149,17 @@ public data class PreparedScheduleInfo(
         TRIGGER_ID to triggerId,
         AI_SUPPRESSION to aiSuppression
     ).toJsonValue()
+
+    /**
+     * Whether execution reaches a variant experiment's no-message outcome (control or miss). A
+     * failed additional audience check and a matching global holdout are both resolved ahead of
+     * the variant, so neither is one. Such a schedule neither takes the display lock nor spends
+     * frequency budget.
+     */
+    internal val resolvedToVariantNoMessage: Boolean
+        get() = additionalAudienceCheckResult &&
+                experimentResult?.isMatching != true &&
+                variantAudienceResult?.outcome?.isDisplaySkipped == true
 }
 
 /**
