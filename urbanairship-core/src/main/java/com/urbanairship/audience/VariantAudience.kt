@@ -8,7 +8,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.requireField
+import com.urbanairship.json.optionalField
 import java.util.Objects
 
 /**
@@ -27,9 +27,10 @@ public class VariantAudience internal constructor(
      * Identifies this iteration of the experiment, identical across every schedule in it.
      *
      * Recorded on ledger events so a limit can filter by iteration. It plays no part in
-     * resolving the bucket.
+     * resolving the bucket. Null if the payload carried none; events recorded without it never
+     * match a `variant_audience` limit filter.
      */
-    public val id: String,
+    public val id: String?,
     private val hash: AudienceHash,
     private val audienceSubset: BucketSubset,
     private val holdoutSubset: BucketSubset?,
@@ -119,7 +120,7 @@ public class VariantAudience internal constructor(
          */
         @Throws(JsonException::class)
         public fun fromJson(json: JsonMap): VariantAudience {
-            val id = json.requireField<String>(KEY_ID)
+            val id = json.optionalField<String>(KEY_ID)
 
             val hash = AudienceHash.fromJson(json.require(KEY_HASH).requireMap())
                 ?: throw JsonException("Invalid variant audience hash in $json")

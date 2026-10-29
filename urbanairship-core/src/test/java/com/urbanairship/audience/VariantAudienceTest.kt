@@ -21,7 +21,7 @@ public class VariantAudienceTest {
         audienceSubset: Pair<Int, Int>,
         holdoutSubset: Pair<Int, Int>? = null,
         reportingContext: JsonMap? = null,
-        id: String = "iteration-1"
+        id: String? = "iteration-1"
     ): VariantAudience {
         val holdoutJson = holdoutSubset?.let {
             """, "holdout_subset": { "min_hash_bucket": ${it.first}, "max_hash_bucket": ${it.second} }"""
@@ -31,9 +31,11 @@ public class VariantAudienceTest {
             """, "reporting_context": ${it.toJsonValue()}"""
         } ?: ""
 
+        val idJson = id?.let { """"id": "$it",""" } ?: ""
+
         val json = """
             {
-                "id": "$id",
+                $idJson
                 "audience_hash": {
                     "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
                     "num_hash_buckets": 16384,
@@ -121,23 +123,13 @@ public class VariantAudienceTest {
         )
     }
 
-    @Test(expected = JsonException::class)
-    public fun testParseRejectsAMissingId() {
-        VariantAudience.fromJson(
-            JsonValue.parseString(
-                """
-                {
-                    "audience_hash": {
-                        "hash_prefix": "prefix:",
-                        "num_hash_buckets": 16384,
-                        "hash_identifier": "contact",
-                        "hash_algorithm": "farm_hash"
-                    },
-                    "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 1 }
-                }
-                """.trimIndent()
-            ).requireMap()
-        )
+    @Test
+    public fun testIdIsOptional() {
+        val variantAudience = variantAudience(audienceSubset = 0 to 1, id = null)
+        assertNull(variantAudience.id)
+
+        val decoded = VariantAudience.fromJson(variantAudience.toJsonValue().requireMap())
+        assertEquals(variantAudience, decoded)
     }
 
     @Test

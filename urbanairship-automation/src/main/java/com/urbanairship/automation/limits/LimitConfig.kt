@@ -552,7 +552,9 @@ internal sealed class VariantAudienceMatch : JsonSerializable {
 
     /**
      * Events recorded under a variant audience ID other than the evaluating
-     * schedule's current one, e.g. a past iteration of the experiment.
+     * schedule's current one, e.g. a past iteration of the experiment. If the
+     * schedule has no variant audience, matches every event that was recorded
+     * under one.
      */
     data object NotCurrent : VariantAudienceMatch()
 
