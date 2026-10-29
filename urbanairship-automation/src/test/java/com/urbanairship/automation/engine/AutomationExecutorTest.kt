@@ -4,6 +4,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
+import com.urbanairship.audience.VariantAudience
+import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
@@ -109,6 +111,109 @@ public class AutomationExecutorTest {
         coVerify { actionExecutor.isReady(
             data = eq(JsonValue.wrap("neat")),
             preparedScheduleInfo = eq(schedule.info))
+        }
+    }
+
+    @Test
+    public fun testFrequencyCheckerSkippedForVariantNoMessageOutcomes(): TestResult = runTest {
+        listOf(VariantAudience.Outcome.HOLDOUT, VariantAudience.Outcome.VARIANT_MISS).forEach { outcome ->
+            val frequencyChecker: FrequencyChecker = mockk()
+            coEvery { frequencyChecker.checkAndIncrement() } returns false
+            coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
+
+            val schedule = makeSchedule(
+                checker = frequencyChecker,
+                info = makeInfo(variantAudienceResult = VariantAudienceResult(outcome))
+            )
+
+            assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
+            coVerify(exactly = 0) { frequencyChecker.checkAndIncrement() }
+        }
+    }
+
+    @Test
+    public fun testFrequencyCheckerChargedForVariantMatch(): TestResult = runTest {
+        val frequencyChecker: FrequencyChecker = mockk()
+        coEvery { frequencyChecker.checkAndIncrement() } returns true
+        coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
+
+        val schedule = makeSchedule(
+            checker = frequencyChecker,
+            info = makeInfo(variantAudienceResult = VariantAudienceResult(VariantAudience.Outcome.MATCHED))
+        )
+
+        assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
+        coVerify(exactly = 1) { frequencyChecker.checkAndIncrement() }
+    }
+
+    /** The experiment evaluator returns a result whenever experiments exist, matching or not. */
+    @Test
+    public fun testFrequencyCheckerSkippedForVariantOutcomesWithNonMatchingExperiment(): TestResult = runTest {
+        listOf(VariantAudience.Outcome.HOLDOUT, VariantAudience.Outcome.VARIANT_MISS).forEach { outcome ->
+            val frequencyChecker: FrequencyChecker = mockk()
+            coEvery { frequencyChecker.checkAndIncrement() } returns false
+            coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
+
+            val schedule = makeSchedule(
+                checker = frequencyChecker,
+                info = makeInfo(
+                    experimentResult = ExperimentResult(
+                        channelId = "channel",
+                        contactId = "contact",
+                        isMatching = false,
+                        allEvaluatedExperimentsMetadata = emptyList()
+                    ),
+                    variantAudienceResult = VariantAudienceResult(outcome)
+                )
+            )
+
+            assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
+            coVerify(exactly = 0) { frequencyChecker.checkAndIncrement() }
+        }
+    }
+
+    /** A matching global holdout decides the outcome ahead of the variant, so it still charges. */
+    @Test
+    public fun testFrequencyCheckerChargedForGlobalHoldoutOverVariantOutcome(): TestResult = runTest {
+        val frequencyChecker: FrequencyChecker = mockk()
+        coEvery { frequencyChecker.checkAndIncrement() } returns true
+        coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
+
+        val schedule = makeSchedule(
+            checker = frequencyChecker,
+            info = makeInfo(
+                experimentResult = ExperimentResult(
+                    channelId = "channel",
+                    contactId = "contact",
+                    isMatching = true,
+                    allEvaluatedExperimentsMetadata = emptyList()
+                ),
+                variantAudienceResult = VariantAudienceResult(VariantAudience.Outcome.VARIANT_MISS)
+            )
+        )
+
+        assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
+        coVerify(exactly = 1) { frequencyChecker.checkAndIncrement() }
+    }
+
+    /** A failed additional audience check is resolved ahead of the variant outcome, so it charges whichever arm the device landed in. */
+    @Test
+    public fun testFrequencyCheckerChargedForAudienceExcludedOverVariantOutcome(): TestResult = runTest {
+        listOf(VariantAudience.Outcome.HOLDOUT, VariantAudience.Outcome.VARIANT_MISS).forEach { outcome ->
+            val frequencyChecker: FrequencyChecker = mockk()
+            coEvery { frequencyChecker.checkAndIncrement() } returns true
+            coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
+
+            val schedule = makeSchedule(
+                checker = frequencyChecker,
+                info = makeInfo(
+                    variantAudienceResult = VariantAudienceResult(outcome),
+                    additionalAudienceCheckResult = false
+                )
+            )
+
+            assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
+            coVerify(exactly = 1) { frequencyChecker.checkAndIncrement() }
         }
     }
 
@@ -258,11 +363,27 @@ public class AutomationExecutorTest {
         coVerify { messageExecutor.interrupted(eq(schedule), eq(preparedScheduleInfo)) }
     }
 
-    private fun makeSchedule(data: PreparedScheduleData? = null, checker: FrequencyChecker? = null): PreparedSchedule {
+    private fun makeInfo(
+        experimentResult: ExperimentResult? = null,
+        variantAudienceResult: VariantAudienceResult? = null,
+        additionalAudienceCheckResult: Boolean = true
+    ): PreparedScheduleInfo = PreparedScheduleInfo(
+        scheduleId = "schedule id",
+        experimentResult = experimentResult,
+        variantAudienceResult = variantAudienceResult,
+        triggerSessionId = UUID.randomUUID().toString(),
+        additionalAudienceCheckResult = additionalAudienceCheckResult
+    )
+
+    private fun makeSchedule(
+        data: PreparedScheduleData? = null,
+        checker: FrequencyChecker? = null,
+        info: PreparedScheduleInfo = makeInfo()
+    ): PreparedSchedule {
         val scheduleData = data ?: PreparedScheduleData.Action(JsonValue.wrap("neat"))
 
         return PreparedSchedule(
-            info = PreparedScheduleInfo(scheduleId = "schedule id", triggerSessionId = UUID.randomUUID().toString()),
+            info = info,
             data = scheduleData,
             frequencyChecker = checker
         )

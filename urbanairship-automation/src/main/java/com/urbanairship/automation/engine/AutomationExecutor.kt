@@ -70,7 +70,13 @@ internal class AutomationExecutor(
             return result
         }
 
-        if (preparedSchedule.frequencyChecker?.checkAndIncrement() == false) {
+        // A variant control or miss neither spends nor consults the frequency budget, but still
+        // counts toward ledger limits. Charging them would let devices that never see the message
+        // starve the sibling arms sharing the constraint, and a miss exists to confirm the trigger
+        // fired. A matching global holdout and an audience-excluded device still charge.
+        val skipsFrequencyCheck = preparedSchedule.info.resolvedToVariantNoMessage
+
+        if (!skipsFrequencyCheck && preparedSchedule.frequencyChecker?.checkAndIncrement() == false) {
             return ScheduleReadyResult.SKIP
         }
 
