@@ -146,6 +146,32 @@ public class AutomationExecutorTest {
         coVerify(exactly = 1) { frequencyChecker.checkAndIncrement() }
     }
 
+    /** The experiment evaluator returns a result whenever experiments exist, matching or not. */
+    @Test
+    public fun testFrequencyCheckerSkippedForVariantOutcomesWithNonMatchingExperiment(): TestResult = runTest {
+        listOf(VariantAudience.Outcome.HOLDOUT, VariantAudience.Outcome.VARIANT_MISS).forEach { outcome ->
+            val frequencyChecker: FrequencyChecker = mockk()
+            coEvery { frequencyChecker.checkAndIncrement() } returns false
+            coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
+
+            val schedule = makeSchedule(
+                checker = frequencyChecker,
+                info = makeInfo(
+                    experimentResult = ExperimentResult(
+                        channelId = "channel",
+                        contactId = "contact",
+                        isMatching = false,
+                        allEvaluatedExperimentsMetadata = emptyList()
+                    ),
+                    variantAudienceResult = VariantAudienceResult(outcome)
+                )
+            )
+
+            assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
+            coVerify(exactly = 0) { frequencyChecker.checkAndIncrement() }
+        }
+    }
+
     /** A matching global holdout decides the outcome ahead of the variant, so it still charges. */
     @Test
     public fun testFrequencyCheckerChargedForGlobalHoldoutOverVariantOutcome(): TestResult = runTest {
