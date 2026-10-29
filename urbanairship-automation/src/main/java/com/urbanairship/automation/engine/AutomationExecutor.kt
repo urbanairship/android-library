@@ -70,7 +70,14 @@ internal class AutomationExecutor(
             return result
         }
 
-        if (preparedSchedule.frequencyChecker?.checkAndIncrement() == false) {
+        // A matching global holdout is resolved ahead of the variant outcome, so it still charges.
+        // A variant control or miss neither spends nor consults the budget, so it is always
+        // recorded and never displaces a real execution.
+        val info = preparedSchedule.info
+        val skipsFrequencyCheck = info.experimentResult?.isMatching != true &&
+                info.variantAudienceResult?.outcome?.isDisplaySkipped == true
+
+        if (!skipsFrequencyCheck && preparedSchedule.frequencyChecker?.checkAndIncrement() == false) {
             return ScheduleReadyResult.SKIP
         }
 
