@@ -237,6 +237,12 @@ internal sealed class LedgerEvent : JsonSerializable {
      */
     abstract val triggerId: String?
 
+    /**
+     * `variant_audience.id` the recording schedule had at record time, if any.
+     * A plain attribute for matching only; never a recording scope key.
+     */
+    abstract val variantAudienceId: String?
+
     /** When the event was recorded. */
     abstract val timestamp: Instant
 
@@ -274,6 +280,7 @@ internal sealed class LedgerEvent : JsonSerializable {
         override val scheduleId: String,
         override val sharedIds: List<String>? = null,
         override val triggerId: String? = null,
+        override val variantAudienceId: String? = null,
         override val timestamp: Instant,
         override val count: Int? = null
     ) : LedgerEvent() {
@@ -284,6 +291,7 @@ internal sealed class LedgerEvent : JsonSerializable {
             SCHEDULE_ID to scheduleId,
             SHARED_IDS to sharedIds,
             TRIGGER_ID to triggerId,
+            VARIANT_AUDIENCE_ID to variantAudienceId,
             TIMESTAMP to timestamp.toEpochMilli(),
             COUNT to count
         ).toJsonValue()
@@ -305,6 +313,7 @@ internal sealed class LedgerEvent : JsonSerializable {
         override val scheduleId: String,
         override val sharedIds: List<String>? = null,
         override val triggerId: String? = null,
+        override val variantAudienceId: String? = null,
         override val timestamp: Instant,
         override val count: Int? = null,
         /** How the execution resolved. */
@@ -321,6 +330,7 @@ internal sealed class LedgerEvent : JsonSerializable {
             SCHEDULE_ID to scheduleId,
             SHARED_IDS to sharedIds,
             TRIGGER_ID to triggerId,
+            VARIANT_AUDIENCE_ID to variantAudienceId,
             TIMESTAMP to timestamp.toEpochMilli(),
             COUNT to count,
             RESULT to result,
@@ -341,6 +351,7 @@ internal sealed class LedgerEvent : JsonSerializable {
          */
         private const val LEGACY_SHARED_ID = "shared_id"
         private const val TRIGGER_ID = "trigger_id"
+        private const val VARIANT_AUDIENCE_ID = "variant_audience_id"
         private const val TIMESTAMP = "timestamp"
         private const val COUNT = "count"
         private const val RESULT = "result"
@@ -357,6 +368,7 @@ internal sealed class LedgerEvent : JsonSerializable {
                     scheduleId = content.requireField(SCHEDULE_ID),
                     sharedIds = sharedIds,
                     triggerId = content.optionalField(TRIGGER_ID),
+                    variantAudienceId = content.optionalField(VARIANT_AUDIENCE_ID),
                     timestamp = content.requireEpochMillis(TIMESTAMP),
                     count = content.optionalField(COUNT)
                 )
@@ -365,6 +377,7 @@ internal sealed class LedgerEvent : JsonSerializable {
                     scheduleId = content.requireField(SCHEDULE_ID),
                     sharedIds = sharedIds,
                     triggerId = content.optionalField(TRIGGER_ID),
+                    variantAudienceId = content.optionalField(VARIANT_AUDIENCE_ID),
                     timestamp = content.requireEpochMillis(TIMESTAMP),
                     count = content.optionalField(COUNT),
                     result = LedgerExecutionResult.fromJson(content.require(RESULT)),

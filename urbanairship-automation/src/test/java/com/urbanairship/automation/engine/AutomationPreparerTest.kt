@@ -364,6 +364,63 @@ public class AutomationPreparerTest {
     }
 
     @Test
+    public fun testPenalizeRecordsTheSchedulesVariantAudienceId(): TestResult = runTest {
+        val schedule = makeSchedule(
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = AutomationAudience.MissBehavior.PENALIZE
+            ),
+            variantAudience = makeVariantAudience(audienceSubset = 0 to 0)
+        )
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.contactIdFor(any()) } returns null
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns
+                AirshipDeviceAudienceResult.miss
+
+        preparer.prepare(
+            schedule,
+            triggerContext,
+            triggerSessionId = UUID.randomUUID().toString(),
+            triggerId = "trigger-1"
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = schedule.identifier,
+                    sharedIds = emptyList(),
+                    triggerId = "trigger-1",
+                    variantAudienceId = "iteration-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testPreparedInfoCarriesTheVariantAudienceId(): TestResult = runTest {
+        val schedule = makeSchedule(variantAudience = makeVariantAudience(audienceSubset = 9908 to 9908))
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contactId", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns ""
+
+        mockExperimentsManager()
+
+        coEvery { messagePreparer.prepare(any(), any()) } returns
+                Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
+
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        check(result is SchedulePrepareResult.Prepared)
+        assertEquals("iteration-1", result.schedule.info.variantAudienceId)
+    }
+
+    @Test
     public fun testAudienceMismatchPenalize(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
@@ -1382,6 +1439,7 @@ public class AutomationPreparerTest {
 
         val json = """
             {
+                "id": "iteration-1",
                 "audience_hash": {
                     "hash_prefix": "686f2c15-cf8c-47a6-ae9f-e749fc792a9d:",
                     "num_hash_buckets": 16384,

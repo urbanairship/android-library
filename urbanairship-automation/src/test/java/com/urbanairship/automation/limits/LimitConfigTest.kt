@@ -4,6 +4,7 @@ package com.urbanairship.automation.limits
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.audience.TimeSpan
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import java.time.Instant
 import junit.framework.TestCase.assertEquals
@@ -25,12 +26,20 @@ public class LimitConfigTest {
     private val sharedId = "group-1"
     private val now: Instant = Instant.ofEpochMilli(10_000)
 
-    private val context = LedgerLimitContext(scheduleId = scheduleId, currentSharedIds = setOf(sharedId))
+    private val currentVariantAudienceId = "iteration-2"
+    private val pastVariantAudienceId = "iteration-1"
+
+    private val context = LedgerLimitContext(
+        scheduleId = scheduleId,
+        currentSharedIds = setOf(sharedId),
+        currentVariantAudienceId = currentVariantAudienceId
+    )
 
     private fun execution(
         scheduleId: String = this.scheduleId,
         sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
+        variantAudienceId: String? = null,
         timestamp: Instant = now,
         count: Int? = null,
         result: LedgerExecutionResult = LedgerExecutionResult.SUCCEEDED,
@@ -39,6 +48,7 @@ public class LimitConfigTest {
         scheduleId = scheduleId,
         sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
+        variantAudienceId = variantAudienceId,
         timestamp = timestamp,
         count = count,
         result = result,
@@ -381,7 +391,8 @@ public class LimitConfigTest {
     public fun testCurrentConsidersEveryGroupTheScheduleIsIn() {
         val multiGroup = LedgerLimitContext(
             scheduleId = scheduleId,
-            currentSharedIds = setOf("experiment", "promo")
+            currentSharedIds = setOf("experiment", "promo"),
+            currentVariantAudienceId = null
         )
         val rule = ExclusionRule(
             source = LedgerSource.AnySchedule,
@@ -398,7 +409,8 @@ public class LimitConfigTest {
     public fun testNotCurrentConsidersEveryGroupTheScheduleIsIn() {
         val multiGroup = LedgerLimitContext(
             scheduleId = scheduleId,
-            currentSharedIds = setOf("experiment", "promo")
+            currentSharedIds = setOf("experiment", "promo"),
+            currentVariantAudienceId = null
         )
         val rule = ExclusionRule(
             source = LedgerSource.AnySchedule,
@@ -420,7 +432,8 @@ public class LimitConfigTest {
     public fun testMultiGroupScheduleExcludesEventsFromEitherGroup() {
         val multiGroup = LedgerLimitContext(
             scheduleId = scheduleId,
-            currentSharedIds = setOf("experiment", "promo")
+            currentSharedIds = setOf("experiment", "promo"),
+            currentVariantAudienceId = null
         )
         val events = listOf(
             execution(scheduleId = otherScheduleId, sharedIds = listOf("experiment")),
@@ -455,7 +468,11 @@ public class LimitConfigTest {
      */
     @Test
     public fun testCurrentForAnUnpooledScheduleMatchesGrouplessEvents() {
-        val unpooled = LedgerLimitContext(scheduleId = scheduleId, currentSharedIds = emptySet())
+        val unpooled = LedgerLimitContext(
+            scheduleId = scheduleId,
+            currentSharedIds = emptySet(),
+            currentVariantAudienceId = null
+        )
         val rule = ExclusionRule(
             source = LedgerSource.AnySchedule,
             match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.Current)
@@ -467,7 +484,11 @@ public class LimitConfigTest {
 
     @Test
     public fun testNotCurrentForAnUnpooledScheduleMatchesGroupedEvents() {
-        val unpooled = LedgerLimitContext(scheduleId = scheduleId, currentSharedIds = emptySet())
+        val unpooled = LedgerLimitContext(
+            scheduleId = scheduleId,
+            currentSharedIds = emptySet(),
+            currentVariantAudienceId = null
+        )
         val rule = ExclusionRule(
             source = LedgerSource.AnySchedule,
             match = LedgerEventMatch.Execution(sharedGroup = SharedGroupMatch.NotCurrent)
@@ -563,7 +584,184 @@ public class LimitConfigTest {
     }
 
     // endregion
+    // region Variant-audience matching
+
+    private fun variantAudienceRule(match: VariantAudienceMatch) = ExclusionRule(
+        source = LedgerSource.AnySchedule,
+        match = LedgerEventMatch.Execution(variantAudience = match)
+    )
+
+    @Test
+    public fun testVariantAudienceCurrentMatchesOnlyTheCurrentId() {
+        val rule = variantAudienceRule(VariantAudienceMatch.Current)
+
+        assertTrue(rule.matches(execution(variantAudienceId = currentVariantAudienceId), context))
+        assertFalse(rule.matches(execution(variantAudienceId = pastVariantAudienceId), context))
+    }
+
+    @Test
+    public fun testVariantAudienceNotCurrentMatchesOnlyOtherIds() {
+        val rule = variantAudienceRule(VariantAudienceMatch.NotCurrent)
+
+        assertTrue(rule.matches(execution(variantAudienceId = pastVariantAudienceId), context))
+        assertFalse(rule.matches(execution(variantAudienceId = currentVariantAudienceId), context))
+    }
+
+    @Test
+    public fun testVariantAudienceIdMatchesOnlyThatId() {
+        val rule = variantAudienceRule(VariantAudienceMatch.Id(pastVariantAudienceId))
+
+        assertTrue(rule.matches(execution(variantAudienceId = pastVariantAudienceId), context))
+        assertFalse(rule.matches(execution(variantAudienceId = currentVariantAudienceId), context))
+    }
+
+    /**
+     * Unlike [SharedGroupMatch.NotCurrent], an event recorded with no variant
+     * audience is matched by no form, so a rule cannot reach history from
+     * before the schedule joined an experiment.
+     */
+    @Test
+    public fun testVariantAudienceNeverMatchesAnEventWithoutOne() {
+        val untagged = execution(variantAudienceId = null)
+
+        assertFalse(variantAudienceRule(VariantAudienceMatch.Current).matches(untagged, context))
+        assertFalse(variantAudienceRule(VariantAudienceMatch.NotCurrent).matches(untagged, context))
+        assertFalse(variantAudienceRule(VariantAudienceMatch.Id(currentVariantAudienceId)).matches(untagged, context))
+    }
+
+    @Test
+    public fun testVariantAudienceCurrentMatchesNothingWithoutACurrentId() {
+        val noVariantAudience = context.copy(currentVariantAudienceId = null)
+        val rule = variantAudienceRule(VariantAudienceMatch.Current)
+
+        assertFalse(rule.matches(execution(variantAudienceId = currentVariantAudienceId), noVariantAudience))
+        assertFalse(rule.matches(execution(variantAudienceId = null), noVariantAudience))
+    }
+
+    @Test
+    public fun testVariantAudienceNotCurrentWithoutACurrentIdMatchesTaggedEvents() {
+        val noVariantAudience = context.copy(currentVariantAudienceId = null)
+        val rule = variantAudienceRule(VariantAudienceMatch.NotCurrent)
+
+        assertTrue(rule.matches(execution(variantAudienceId = pastVariantAudienceId), noVariantAudience))
+        assertFalse(rule.matches(execution(variantAudienceId = null), noVariantAudience))
+    }
+
+    @Test
+    public fun testAbsentVariantAudienceMatchDoesNotFilter() {
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Execution(variantAudience = null)
+        )
+
+        assertTrue(rule.matches(execution(variantAudienceId = null), context))
+        assertTrue(rule.matches(execution(variantAudienceId = pastVariantAudienceId), context))
+    }
+
+    @Test
+    public fun testVariantAudienceMatchAppliesToTriggeredEvents() {
+        val rule = ExclusionRule(
+            source = LedgerSource.AnySchedule,
+            match = LedgerEventMatch.Triggered(variantAudience = VariantAudienceMatch.NotCurrent)
+        )
+
+        val past = LedgerEvent.Triggered(
+            scheduleId = scheduleId,
+            variantAudienceId = pastVariantAudienceId,
+            timestamp = now
+        )
+        val untagged = LedgerEvent.Triggered(scheduleId = scheduleId, timestamp = now)
+
+        assertTrue(rule.matches(past, context))
+        assertFalse(rule.matches(untagged, context))
+    }
+
+    /** Excluding past iterations' control and miss events while keeping untagged history. */
+    @Test
+    public fun testExcludePastIterationControlsAndMisses() {
+        val events = listOf(
+            execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.HOLDOUT),
+            execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.VARIANT_MISS),
+            execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.SUCCEEDED),
+            execution(variantAudienceId = null, result = LedgerExecutionResult.HOLDOUT)
+        )
+        val exclude = parseExclude(
+            """
+            { "or": [ { "source": { "type": "any" },
+                        "match": { "type": "execution",
+                                   "results": ["holdout", "variant_miss"],
+                                   "variant_audience": { "type": "not_current" } } } ] }
+            """
+        )
+
+        // Only past-iteration holdout/miss rows are subtracted; untagged and succeeded rows still count.
+        assertTrue(isOverLimit(limit = 2U, events = events, exclude = exclude))
+        assertFalse(isOverLimit(limit = 3U, events = events, exclude = exclude))
+    }
+
+    @Test
+    public fun testUnknownVariantAudienceIsNoOp() {
+        val exclude = parseExclude(
+            """
+            { "or": [ { "source": { "type": "any" },
+                        "match": { "type": "execution",
+                                   "variant_audience": { "type": "future" } } } ] }
+            """
+        )
+        val events = listOf(
+            execution(variantAudienceId = pastVariantAudienceId),
+            execution(variantAudienceId = pastVariantAudienceId)
+        )
+        assertTrue(isOverLimit(limit = 2U, events = events, exclude = exclude))
+    }
+
+    // endregion
     // region Parsing
+
+    @Test
+    public fun testParseVariantAudienceMatchForms() {
+        fun parse(json: String): VariantAudienceMatch? =
+            (LedgerEventMatch.fromJson(JsonValue.parseString(json)) as LedgerEventMatch.Execution)
+                .variantAudience
+
+        assertEquals(
+            VariantAudienceMatch.Current,
+            parse("""{ "type": "execution", "variant_audience": { "type": "current" } }""")
+        )
+        assertEquals(
+            VariantAudienceMatch.NotCurrent,
+            parse("""{ "type": "execution", "variant_audience": { "type": "not_current" } }""")
+        )
+        assertEquals(
+            VariantAudienceMatch.Id("iteration-1"),
+            parse(
+                """{ "type": "execution",
+                    "variant_audience": { "type": "id", "variant_audience_id": "iteration-1" } }"""
+            )
+        )
+        assertNull(parse("""{ "type": "execution" }"""))
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseVariantAudienceIdRequiresAnId() {
+        LedgerEventMatch.fromJson(
+            JsonValue.parseString("""{ "type": "execution", "variant_audience": { "type": "id" } }""")
+        )
+    }
+
+    @Test
+    public fun testVariantAudienceMatchJsonRoundTrip() {
+        val matches = listOf(
+            LedgerEventMatch.Execution(variantAudience = VariantAudienceMatch.Current),
+            LedgerEventMatch.Execution(variantAudience = VariantAudienceMatch.NotCurrent),
+            LedgerEventMatch.Triggered(variantAudience = VariantAudienceMatch.Id("iteration-1")),
+            LedgerEventMatch.Execution(variantAudience = VariantAudienceMatch.Unknown)
+        )
+
+        matches.forEach {
+            assertEquals(it, LedgerEventMatch.fromJson(it.toJsonValue()))
+        }
+    }
 
     @Test
     public fun testParseLimitConfig() {

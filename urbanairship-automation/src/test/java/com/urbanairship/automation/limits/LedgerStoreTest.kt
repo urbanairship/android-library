@@ -12,6 +12,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -50,12 +51,14 @@ public class LedgerStoreTest {
         scheduleId: String,
         sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
+        variantAudienceId: String? = null,
         timestamp: Instant = Instant.EPOCH,
         count: Int? = null
     ): LedgerEvent = LedgerEvent.Triggered(
         scheduleId = scheduleId,
         sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
+        variantAudienceId = variantAudienceId,
         timestamp = timestamp,
         count = count
     )
@@ -64,6 +67,7 @@ public class LedgerStoreTest {
         scheduleId: String,
         sharedIds: List<String> = emptyList(),
         triggerId: String? = null,
+        variantAudienceId: String? = null,
         timestamp: Instant = Instant.EPOCH,
         count: Int? = null,
         result: LedgerExecutionResult = LedgerExecutionResult.SUCCEEDED,
@@ -72,6 +76,7 @@ public class LedgerStoreTest {
         scheduleId = scheduleId,
         sharedIds = sharedIds.ifEmpty { null },
         triggerId = triggerId,
+        variantAudienceId = variantAudienceId,
         timestamp = timestamp,
         count = count,
         result = result,
@@ -203,6 +208,7 @@ public class LedgerStoreTest {
             scheduleId = "schedule-1",
             sharedIds = listOf("group-1"),
             triggerId = "trigger-1",
+            variantAudienceId = "iteration-1",
             timestamp = Instant.ofEpochMilli(123),
             count = 3
         )
@@ -210,6 +216,7 @@ public class LedgerStoreTest {
             scheduleId = "schedule-1",
             sharedIds = listOf("group-1"),
             triggerId = "trigger-2",
+            variantAudienceId = "iteration-1",
             timestamp = Instant.ofEpochMilli(456),
             count = 5,
             result = LedgerExecutionResult.AUDIENCE_MISS,
@@ -265,6 +272,32 @@ public class LedgerStoreTest {
             listOf(first, last),
             store.events(scheduleId = "schedule-1", sharedIds = emptyList())
         )
+    }
+
+    /** A row written before `variant_audience_id` existed decodes with no variant audience. */
+    @Test
+    public fun testRowWithoutVariantAudienceIdReadsBackAsNull(): TestResult = runTest {
+        db.dao.insertAll(
+            listOf(
+                LedgerEventEntity(
+                    scheduleId = "schedule-1",
+                    timestamp = 100,
+                    body = JsonValue.parseString(
+                        """
+                        {
+                          "type": "execution",
+                          "schedule_id": "schedule-1",
+                          "timestamp": 100,
+                          "result": "succeeded"
+                        }
+                        """
+                    )
+                )
+            )
+        )
+
+        val event = store.events(scheduleId = "schedule-1", sharedIds = emptyList()).single()
+        assertNull(event.variantAudienceId)
     }
 
     /** A row that [LedgerEvent.fromJson] rejects, written straight to the DAO. */
@@ -734,6 +767,20 @@ public class LedgerStoreTest {
         store.compact(now = date(2020, 1, 1))
 
         assertEquals(0, db.dao.count())
+    }
+
+    @Test
+    public fun testCompactKeepsRowsFromDifferentVariantAudiencesApart(): TestResult = runTest {
+        val events = listOf(
+            execution(scheduleId = "s", variantAudienceId = "iteration-1", timestamp = date(2017, 3, 5)),
+            execution(scheduleId = "s", variantAudienceId = "iteration-2", timestamp = date(2017, 9, 20)),
+            execution(scheduleId = "s", variantAudienceId = null, timestamp = date(2017, 10, 1))
+        )
+        store.recordEvents(events)
+
+        store.compact(now = date(2020, 1, 1))
+
+        assertEquals(events, store.events(scheduleId = "s", sharedIds = emptyList()))
     }
 
     @Test

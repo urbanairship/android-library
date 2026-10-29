@@ -286,6 +286,11 @@ internal sealed class LedgerEventMatch : JsonSerializable {
          */
         val sharedGroup: SharedGroupMatch? = null,
         /**
+         * Match only events recorded under a matching variant audience. If null,
+         * variant audience is not filtered.
+         */
+        val variantAudience: VariantAudienceMatch? = null,
+        /**
          * Match only events whose `trigger_id` equals this. If null, all trigger
          * IDs match.
          */
@@ -304,6 +309,11 @@ internal sealed class LedgerEventMatch : JsonSerializable {
          * shared group is not filtered.
          */
         val sharedGroup: SharedGroupMatch? = null,
+        /**
+         * Match only events recorded under a matching variant audience. If null,
+         * variant audience is not filtered.
+         */
+        val variantAudience: VariantAudienceMatch? = null,
         /**
          * Execution results to match. If null, all results match. Result values
          * this SDK version does not recognize are dropped, so a rule that lists
@@ -333,11 +343,13 @@ internal sealed class LedgerEventMatch : JsonSerializable {
         this is Triggered && event is LedgerEvent.Triggered ->
             (timeBounds?.isActive(event.timestamp) ?: true) &&
                     (sharedGroup?.matches(event.sharedIds, context) ?: true) &&
+                    (variantAudience?.matches(event.variantAudienceId, context) ?: true) &&
                     (triggerId == null || triggerId == event.triggerId)
 
         this is Execution && event is LedgerEvent.Execution ->
             (timeBounds?.isActive(event.timestamp) ?: true) &&
                     (sharedGroup?.matches(event.sharedIds, context) ?: true) &&
+                    (variantAudience?.matches(event.variantAudienceId, context) ?: true) &&
                     (results?.contains(event.result) ?: true) &&
                     (cancel == null || cancel == (event.cancel ?: false)) &&
                     (triggerId == null || triggerId == event.triggerId)
@@ -351,6 +363,7 @@ internal sealed class LedgerEventMatch : JsonSerializable {
             TYPE to TRIGGERED,
             TIME_BOUNDS to timeBounds,
             SHARED_GROUP to sharedGroup,
+            VARIANT_AUDIENCE to variantAudience,
             TRIGGER_ID to triggerId
         )
 
@@ -358,6 +371,7 @@ internal sealed class LedgerEventMatch : JsonSerializable {
             TYPE to EXECUTION,
             TIME_BOUNDS to timeBounds,
             SHARED_GROUP to sharedGroup,
+            VARIANT_AUDIENCE to variantAudience,
             RESULTS to results?.toJsonList(),
             CANCEL to cancel,
             TRIGGER_ID to triggerId
@@ -370,6 +384,7 @@ internal sealed class LedgerEventMatch : JsonSerializable {
         private const val TYPE = "type"
         private const val TIME_BOUNDS = "time_bounds"
         private const val SHARED_GROUP = "shared_group"
+        private const val VARIANT_AUDIENCE = "variant_audience"
         private const val RESULTS = "results"
         private const val CANCEL = "cancel"
         private const val TRIGGER_ID = "trigger_id"
@@ -383,18 +398,21 @@ internal sealed class LedgerEventMatch : JsonSerializable {
             val content = value.requireMap()
             val timeBounds = content.get(TIME_BOUNDS)?.let { TimeSpan.fromJson(it.requireMap()) }
             val sharedGroup = content.get(SHARED_GROUP)?.let(SharedGroupMatch::fromJson)
+            val variantAudience = content.get(VARIANT_AUDIENCE)?.let(VariantAudienceMatch::fromJson)
             val triggerId = content.optionalField<String>(TRIGGER_ID)
 
             return when (content.requireField<String>(TYPE)) {
                 TRIGGERED -> Triggered(
                     timeBounds = timeBounds,
                     sharedGroup = sharedGroup,
+                    variantAudience = variantAudience,
                     triggerId = triggerId
                 )
 
                 EXECUTION -> Execution(
                     timeBounds = timeBounds,
                     sharedGroup = sharedGroup,
+                    variantAudience = variantAudience,
                     // Parse results leniently: drop any result value this SDK
                     // version does not recognize. A rule listing only unknown
                     // results ends up with an empty set, matching nothing.
@@ -515,12 +533,93 @@ internal sealed class SharedGroupMatch : JsonSerializable {
 }
 
 /**
- * The evaluating schedule's identity, used to resolve the relative [LedgerSource]
- * and [SharedGroupMatch] selectors against a recorded event.
+ * Matches events by the variant audience they were recorded under (their
+ * `variant_audience_id`), relative to the evaluating schedule's current
+ * `variant_audience.id` or by an absolute ID.
+ *
+ * An event recorded with no variant audience never matches any form,
+ * [NotCurrent] included, so a rule cannot reach history from before the
+ * schedule joined an experiment. This is deliberately unlike
+ * [SharedGroupMatch.NotCurrent].
+ */
+internal sealed class VariantAudienceMatch : JsonSerializable {
+
+    /**
+     * Events recorded under the evaluating schedule's current variant audience
+     * ID. Matches nothing when the schedule has no `variant_audience`.
+     */
+    data object Current : VariantAudienceMatch()
+
+    /**
+     * Events recorded under a variant audience ID other than the evaluating
+     * schedule's current one, e.g. a past iteration of the experiment. If the
+     * schedule has no variant audience, matches every event that was recorded
+     * under one.
+     */
+    data object NotCurrent : VariantAudienceMatch()
+
+    /** Events recorded under a specific variant audience ID, named absolutely. */
+    data class Id(val variantAudienceId: String) : VariantAudienceMatch()
+
+    /**
+     * A variant-audience match type this SDK version does not recognize.
+     * Matches nothing (a safe no-op).
+     */
+    data object Unknown : VariantAudienceMatch()
+
+    /** Whether an event recorded under [recordedId] satisfies this match. */
+    fun matches(recordedId: String?, context: LedgerLimitContext): Boolean {
+        if (recordedId == null) {
+            return false
+        }
+
+        return when (this) {
+            is Current -> recordedId == context.currentVariantAudienceId
+            is NotCurrent -> recordedId != context.currentVariantAudienceId
+            is Id -> recordedId == variantAudienceId
+            is Unknown -> false
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = when (this) {
+        is Current -> jsonMapOf(TYPE to CURRENT)
+        is NotCurrent -> jsonMapOf(TYPE to NOT_CURRENT)
+        is Id -> jsonMapOf(TYPE to ID, VARIANT_AUDIENCE_ID to variantAudienceId)
+        is Unknown -> jsonMapOf(TYPE to UNKNOWN)
+    }.toJsonValue()
+
+    internal companion object {
+        private const val TYPE = "type"
+        private const val VARIANT_AUDIENCE_ID = "variant_audience_id"
+
+        private const val CURRENT = "current"
+        private const val NOT_CURRENT = "not_current"
+        private const val ID = "id"
+        private const val UNKNOWN = "unknown"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): VariantAudienceMatch {
+            val content = value.requireMap()
+            return when (content.requireField<String>(TYPE)) {
+                CURRENT -> Current
+                NOT_CURRENT -> NotCurrent
+                ID -> Id(content.requireField(VARIANT_AUDIENCE_ID))
+                // Forward compatible: an unrecognized match subtracts nothing.
+                else -> Unknown
+            }
+        }
+    }
+}
+
+/**
+ * The evaluating schedule's identity, used to resolve the relative [LedgerSource],
+ * [SharedGroupMatch], and [VariantAudienceMatch] selectors against a recorded event.
  */
 internal data class LedgerLimitContext(
     /** The evaluating schedule's own ID. */
     val scheduleId: String,
     /** The evaluating schedule's current shared ledger IDs. Empty when it has no shared group. */
-    val currentSharedIds: Set<String>
+    val currentSharedIds: Set<String>,
+    /** The evaluating schedule's `variant_audience.id`. Null when it has no `variant_audience`. */
+    val currentVariantAudienceId: String?
 )

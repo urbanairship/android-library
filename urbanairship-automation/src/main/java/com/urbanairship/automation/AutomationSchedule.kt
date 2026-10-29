@@ -635,6 +635,13 @@ internal fun AutomationSchedule.updateOrCreate(data: AutomationScheduleData?, ti
 internal val AutomationSchedule.ledgerSharedIds: List<String>
     get() = ledgerConfig?.sharedIds ?: emptyList()
 
+/**
+ * The `variant_audience.id` this schedule records on ledger events, or null when it has no
+ * `variant_audience`.
+ */
+internal val AutomationSchedule.ledgerVariantAudienceId: String?
+    get() = variantAudience?.id
+
 internal fun AutomationSchedule.isInAppMessageType(): Boolean {
     return when(data) {
         is AutomationSchedule.ScheduleData.Actions -> false

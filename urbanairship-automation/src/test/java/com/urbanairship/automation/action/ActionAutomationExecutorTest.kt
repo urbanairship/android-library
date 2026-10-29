@@ -60,6 +60,25 @@ public class ActionAutomationExecutorTest {
     }
 
     @Test
+    public fun testExecuteRecordsThePreparedVariantAudienceId(): TestResult = runTest {
+        executor.execute(actions, preparedInfo.copy(variantAudienceId = "iteration-1"))
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = "some id",
+                    sharedIds = listOf("group-1"),
+                    triggerId = "trigger-1",
+                    variantAudienceId = "iteration-1",
+                    result = LedgerExecutionResult.SUCCEEDED,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
     public fun testAdditionalAudienceMissRecordsAudienceMiss(): TestResult = runTest {
         val result = executor.execute(
             actions,

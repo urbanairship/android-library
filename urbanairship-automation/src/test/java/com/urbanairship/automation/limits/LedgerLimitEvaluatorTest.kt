@@ -4,6 +4,7 @@ package com.urbanairship.automation.limits
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.ledgerSharedIds
 import com.urbanairship.automation.limits.storage.LedgerDatabase
@@ -39,7 +40,8 @@ public class LedgerLimitEvaluatorTest {
         id: String = "schedule-A",
         limit: UInt?,
         sharedIds: List<String> = emptyList(),
-        limitConfig: LimitConfig? = null
+        limitConfig: LimitConfig? = null,
+        variantAudienceId: String? = null
     ): AutomationSchedule = AutomationSchedule(
         identifier = id,
         triggers = emptyList(),
@@ -47,14 +49,33 @@ public class LedgerLimitEvaluatorTest {
         data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
         ledgerConfig = sharedIds.ifEmpty { null }?.let { LedgerConfig(sharedIds = it) },
         limitConfig = limitConfig,
+        variantAudience = variantAudienceId?.let(::variantAudience),
         // Whole seconds: `created` is encoded as an ISO 8601 string, so a
         // sub-second value would not survive a JSON round trip.
         created = Instant.ofEpochSecond(1_700_000_000)
     )
 
+    private fun variantAudience(id: String): VariantAudience = VariantAudience.fromJson(
+        JsonValue.parseString(
+            """
+            {
+              "id": "$id",
+              "audience_hash": {
+                "hash_prefix": "prefix:",
+                "num_hash_buckets": 16384,
+                "hash_identifier": "contact",
+                "hash_algorithm": "farm_hash"
+              },
+              "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 100 }
+            }
+            """
+        ).requireMap()
+    )
+
     private suspend fun recordExecution(
         scheduleId: String = "schedule-A",
         sharedIds: List<String> = emptyList(),
+        variantAudienceId: String? = null,
         result: LedgerExecutionResult = LedgerExecutionResult.SUCCEEDED,
         count: Int? = null
     ) {
@@ -63,6 +84,7 @@ public class LedgerLimitEvaluatorTest {
                 LedgerEvent.Execution(
                     scheduleId = scheduleId,
                     sharedIds = sharedIds.ifEmpty { null },
+                    variantAudienceId = variantAudienceId,
                     timestamp = Instant.ofEpochMilli(10_000),
                     count = count,
                     result = result
@@ -136,6 +158,62 @@ public class LedgerLimitEvaluatorTest {
 
         // The event IS in one of the current groups, so the rule does not
         // exclude it and it still counts — the opposite direction from above.
+        assertTrue(evaluator.isOverLimit(schedule))
+    }
+
+    private fun variantAudienceExclusion(match: VariantAudienceMatch) = LimitConfig.Shared(
+        exclude = ExclusionSet(
+            listOf(
+                ExclusionRule(
+                    source = LedgerSource.AnySchedule,
+                    match = LedgerEventMatch.Execution(variantAudience = match)
+                )
+            )
+        )
+    )
+
+    /**
+     * Runs `current` and `not_current` through the real evaluator, so the
+     * schedule's own `variant_audience.id` reaching the matcher is covered.
+     */
+    @Test
+    public fun testExcludesCurrentVariantAudienceEndToEnd(): TestResult = runTest {
+        recordExecution(variantAudienceId = "iteration-2")
+
+        val schedule = schedule(
+            limit = 1U,
+            variantAudienceId = "iteration-2",
+            limitConfig = variantAudienceExclusion(VariantAudienceMatch.Current)
+        )
+
+        assertFalse(evaluator.isOverLimit(schedule))
+    }
+
+    @Test
+    public fun testExcludesNotCurrentVariantAudienceEndToEnd(): TestResult = runTest {
+        recordExecution(variantAudienceId = "iteration-1")
+        recordExecution(variantAudienceId = null)
+
+        fun schedule(limit: UInt) = schedule(
+            limit = limit,
+            variantAudienceId = "iteration-2",
+            limitConfig = variantAudienceExclusion(VariantAudienceMatch.NotCurrent)
+        )
+
+        // The past iteration's event is excluded; the untagged one still counts.
+        assertFalse(evaluator.isOverLimit(schedule(limit = 2U)))
+        assertTrue(evaluator.isOverLimit(schedule(limit = 1U)))
+    }
+
+    @Test
+    public fun testCurrentVariantAudienceMatchesNothingForAScheduleWithoutOne(): TestResult = runTest {
+        recordExecution(variantAudienceId = "iteration-2")
+
+        val schedule = schedule(
+            limit = 1U,
+            limitConfig = variantAudienceExclusion(VariantAudienceMatch.Current)
+        )
+
         assertTrue(evaluator.isOverLimit(schedule))
     }
 

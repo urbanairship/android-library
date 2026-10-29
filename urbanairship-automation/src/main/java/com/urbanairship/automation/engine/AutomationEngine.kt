@@ -11,6 +11,7 @@ import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProc
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.ledgerSharedIds
+import com.urbanairship.automation.ledgerVariantAudienceId
 import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.LedgerGroupReservations
@@ -397,7 +398,8 @@ internal class AutomationEngine(
                         ledger.recordTriggered(
                             scheduleId = updated.schedule.identifier,
                             sharedIds = updated.schedule.ledgerSharedIds,
-                            triggerId = result.triggerInfo.triggerId
+                            triggerId = result.triggerInfo.triggerId,
+                            variantAudienceId = updated.schedule.ledgerVariantAudienceId
                         )
                     }
                     startTaskToProcessTriggeredSchedule(result.scheduleId)
@@ -437,6 +439,7 @@ internal class AutomationEngine(
                         scheduleId = data.schedule.identifier,
                         sharedIds = preparedInfo.ledgerSharedIds,
                         triggerId = preparedInfo.triggerId,
+                        variantAudienceId = preparedInfo.variantAudienceId,
                         result = LedgerExecutionResult.SUCCEEDED,
                         cancel = false,
                         since = data.scheduleStateChangeDate

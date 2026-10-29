@@ -14,7 +14,8 @@ import java.time.ZoneOffset
  * Compaction merges events that are *mergeable* — identical in every field
  * except `timestamp` and `count`, recorded under the same scope — into one
  * event that sums `count` and keeps the newest `timestamp`. Events differing in
- * scope, `type`, `trigger_id`, `result`, or `cancel` never merge.
+ * scope, `type`, `trigger_id`, `variant_audience_id`, `result`, or `cancel`
+ * never merge.
  *
  * How aggressively mergeable events actually merge depends on their age, so
  * recent history keeps the full timestamp precision that exclusion rules match
@@ -57,6 +58,7 @@ internal object LedgerCompactor {
          */
         val sharedIds: List<String>,
         val triggerId: String?,
+        val variantAudienceId: String?,
         val result: LedgerExecutionResult?,
         val cancel: Boolean?
     )
@@ -96,6 +98,7 @@ internal object LedgerCompactor {
             scheduleId = event.scheduleId,
             sharedIds = LedgerSharedIds.canonical(event.sharedIds),
             triggerId = event.triggerId,
+            variantAudienceId = event.variantAudienceId,
             result = null,
             cancel = null
         )
@@ -105,6 +108,7 @@ internal object LedgerCompactor {
             scheduleId = event.scheduleId,
             sharedIds = LedgerSharedIds.canonical(event.sharedIds),
             triggerId = event.triggerId,
+            variantAudienceId = event.variantAudienceId,
             result = event.result,
             cancel = event.cancel
         )
@@ -257,6 +261,7 @@ internal object LedgerCompactor {
         }
         .thenBy { it.type.json }
         .thenBy { it.triggerId ?: "" }
+        .thenBy { it.variantAudienceId ?: "" }
         .thenBy { (it as? LedgerEvent.Execution)?.result?.json ?: "" }
         .thenBy { (it as? LedgerEvent.Execution)?.cancel?.toString() ?: "" }
 

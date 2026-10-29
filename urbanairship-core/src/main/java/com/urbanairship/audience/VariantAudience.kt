@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import java.util.Objects
 
 /**
@@ -22,6 +23,14 @@ import java.util.Objects
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class VariantAudience internal constructor(
+    /**
+     * Identifies this iteration of the experiment, identical across every schedule in it.
+     *
+     * Recorded on ledger events so a limit can filter by iteration. It plays no part in
+     * resolving the bucket. Null if the payload carried none; events recorded without it never
+     * match a `variant_audience` limit filter.
+     */
+    public val id: String?,
     private val hash: AudienceHash,
     private val audienceSubset: BucketSubset,
     private val holdoutSubset: BucketSubset?,
@@ -92,6 +101,7 @@ public class VariantAudience internal constructor(
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
+        private const val KEY_ID = "id"
         private const val KEY_HASH = "audience_hash"
         private const val KEY_AUDIENCE_SUBSET = "audience_subset"
         private const val KEY_HOLDOUT_SUBSET = "holdout_subset"
@@ -110,6 +120,8 @@ public class VariantAudience internal constructor(
          */
         @Throws(JsonException::class)
         public fun fromJson(json: JsonMap): VariantAudience {
+            val id = json.optionalField<String>(KEY_ID)
+
             val hash = AudienceHash.fromJson(json.require(KEY_HASH).requireMap())
                 ?: throw JsonException("Invalid variant audience hash in $json")
 
@@ -117,6 +129,7 @@ public class VariantAudience internal constructor(
                 ?: throw JsonException("Invalid variant audience subset in $json")
 
             return VariantAudience(
+                id = id,
                 hash = hash,
                 audienceSubset = audienceSubset,
                 holdoutSubset = json[KEY_HOLDOUT_SUBSET]?.let {
@@ -154,6 +167,7 @@ public class VariantAudience internal constructor(
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
+        KEY_ID to id,
         KEY_HASH to hash,
         KEY_AUDIENCE_SUBSET to audienceSubset,
         KEY_HOLDOUT_SUBSET to holdoutSubset,
@@ -166,6 +180,7 @@ public class VariantAudience internal constructor(
 
         other as VariantAudience
 
+        if (id != other.id) return false
         if (hash != other.hash) return false
         if (audienceSubset != other.audienceSubset) return false
         if (holdoutSubset != other.holdoutSubset) return false
@@ -174,5 +189,5 @@ public class VariantAudience internal constructor(
         return true
     }
 
-    override fun hashCode(): Int = Objects.hash(hash, audienceSubset, holdoutSubset, reportingContext)
+    override fun hashCode(): Int = Objects.hash(id, hash, audienceSubset, holdoutSubset, reportingContext)
 }
