@@ -196,6 +196,27 @@ public class AutomationExecutorTest {
         coVerify(exactly = 1) { frequencyChecker.checkAndIncrement() }
     }
 
+    /** A failed additional audience check is resolved ahead of the variant outcome, so it charges whichever arm the device landed in. */
+    @Test
+    public fun testFrequencyCheckerChargedForAudienceExcludedOverVariantOutcome(): TestResult = runTest {
+        listOf(VariantAudience.Outcome.HOLDOUT, VariantAudience.Outcome.VARIANT_MISS).forEach { outcome ->
+            val frequencyChecker: FrequencyChecker = mockk()
+            coEvery { frequencyChecker.checkAndIncrement() } returns true
+            coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
+
+            val schedule = makeSchedule(
+                checker = frequencyChecker,
+                info = makeInfo(
+                    variantAudienceResult = VariantAudienceResult(outcome),
+                    additionalAudienceCheckResult = false
+                )
+            )
+
+            assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
+            coVerify(exactly = 1) { frequencyChecker.checkAndIncrement() }
+        }
+    }
+
     @Test
     public fun testFrequencyCheckerNotCalledIfNotReady(): TestResult = runTest {
         val frequencyChecker: FrequencyChecker = mockk()
@@ -344,12 +365,14 @@ public class AutomationExecutorTest {
 
     private fun makeInfo(
         experimentResult: ExperimentResult? = null,
-        variantAudienceResult: VariantAudienceResult? = null
+        variantAudienceResult: VariantAudienceResult? = null,
+        additionalAudienceCheckResult: Boolean = true
     ): PreparedScheduleInfo = PreparedScheduleInfo(
         scheduleId = "schedule id",
         experimentResult = experimentResult,
         variantAudienceResult = variantAudienceResult,
-        triggerSessionId = UUID.randomUUID().toString()
+        triggerSessionId = UUID.randomUUID().toString(),
+        additionalAudienceCheckResult = additionalAudienceCheckResult
     )
 
     private fun makeSchedule(

@@ -106,7 +106,11 @@ internal class InAppMessageAutomationExecutor(
 
         // Display
         displayDelegate?.messageWillDisplay(data.message, preparedScheduleInfo.scheduleId)
-        data.displayCoordinator.messageWillDisplay(data.message)
+        // A variant control or miss displays nothing, so it must not hold the coordinator's lock.
+        val takesDisplayLock = !preparedScheduleInfo.resolvedToVariantNoMessage
+        if (takesDisplayLock) {
+            data.displayCoordinator.messageWillDisplay(data.message)
+        }
 
         var result = ScheduleExecuteResult.FINISHED
 
@@ -184,7 +188,9 @@ internal class InAppMessageAutomationExecutor(
         }
 
         // Finished
-        data.displayCoordinator.messageFinishedDisplaying(data.message)
+        if (takesDisplayLock) {
+            data.displayCoordinator.messageFinishedDisplaying(data.message)
+        }
         displayDelegate?.messageFinishedDisplaying(data.message, preparedScheduleInfo.scheduleId)
 
         // Clean up assets
