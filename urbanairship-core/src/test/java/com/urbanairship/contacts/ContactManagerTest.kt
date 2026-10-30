@@ -311,6 +311,32 @@ public class ContactManagerTest {
     }
 
     @Test
+    public fun testIdentifyAfterContactDeletedServerSide(): TestResult = runTest {
+        coEvery { mockApiClient.resolve(any(), any(), any()) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+        coEvery { mockApiClient.identify(any(), any(), "user", any()) } returns RequestResult(
+            status = 200,
+            value = nonAnonIdentifyResult.copy(contactId = anonIdentityResult.contactId),
+            body = null,
+            headers = emptyMap()
+        )
+        contactManager.addOperation(ContactOperation.Identify("user"))
+        assertTrue(contactManager.performNextOperation())
+        coVerify(exactly = 1) { mockApiClient.identify(any(), any(), "user", any()) }
+
+        // The named user is gone server side, so resolving the same contact ID now reports it as anonymous
+        val relaunched = ContactManager(
+            preferenceStore, mockChannel, mockJobDispatcher, mockApiClient, mockLocaleManager,
+            mockAudienceOverridesProvider, testClock, testDispatcher
+        ).also { it.isEnabled = true }
+
+        relaunched.addOperation(ContactOperation.Identify("user"))
+        assertTrue(relaunched.performNextOperation())
+        coVerify(exactly = 2) { mockApiClient.identify(any(), any(), "user", any()) }
+    }
+
+    @Test
     public fun testIdentifyClientError(): TestResult = runTest {
         contactManager.addOperation(ContactOperation.Identify("some named user id"))
 
