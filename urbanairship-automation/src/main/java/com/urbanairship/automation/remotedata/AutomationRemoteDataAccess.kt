@@ -62,7 +62,7 @@ internal class AutomationRemoteDataAccess(
                 InAppRemoteData.fromPayloads(payloads)
             } catch (ex: Exception) {
                 UALog.e(ex) { "Failed to parse in-app remote data payloads" }
-                InAppRemoteData(emptyMap())
+                InAppRemoteData(emptyMap(), RemoteDataSource.entries.toSet())
             }
         }
 
@@ -193,13 +193,30 @@ internal class AutomationRemoteDataAccess(
 
 }
 
+/**
+ * In-app remote data parsed per source.
+ *
+ * @property payload Parsed payloads by source.
+ * @property unreadableSources Sources with a payload that couldn't be parsed.
+ */
 internal data class InAppRemoteData(
-    val payload: Map<RemoteDataSource, Payload>
+    val payload: Map<RemoteDataSource, Payload>,
+    val unreadableSources: Set<RemoteDataSource> = emptySet()
 ) {
+    /**
+     * The schedules and constraints of one source's payload.
+     *
+     * @property failedConstraintIds Ids of constraint entries that couldn't be read. Their stored
+     * constraints must not be deleted.
+     * @property constraintsUnreadable True when `frequency_constraints` holds something that couldn't be
+     * read and has no usable id, so no stored constraint can be safely deleted.
+     */
     data class Data(
         val schedules: List<AutomationSchedule>,
         val constraints: List<FrequencyConstraint>?,
-        val failedSchedules: List<FailedScheduleRecord> = emptyList()
+        val failedSchedules: List<FailedScheduleRecord> = emptyList(),
+        val failedConstraintIds: List<String> = emptyList(),
+        val constraintsUnreadable: Boolean = false
     ) {
         companion object {
             private const val SCHEDULES = "in_app_messages"
@@ -222,11 +239,62 @@ internal data class InAppRemoteData(
                     }
                 }
 
+                val constraints = parseConstraints(value[CONSTRAINTS])
+
                 return Data(
                     schedules = schedules,
-                    constraints = value[CONSTRAINTS]?.requireList()?.map(FrequencyConstraint::fromJson),
-                    failedSchedules = failedSchedules
+                    constraints = constraints.constraints,
+                    failedSchedules = failedSchedules,
+                    failedConstraintIds = constraints.failedIds,
+                    constraintsUnreadable = constraints.unreadable
                 )
+            }
+
+            private data class ParsedConstraints(
+                val constraints: List<FrequencyConstraint>?,
+                val failedIds: List<String> = emptyList(),
+                val unreadable: Boolean = false
+            )
+
+            /**
+             * Reads `frequency_constraints` one entry at a time so a bad entry never fails the payload.
+             *
+             * An absent key or an explicit `null` means no constraints. A value that isn't a list, or an
+             * entry without a readable `id`, marks the constraints unreadable.
+             *
+             * @param value The `frequency_constraints` value, if present.
+             * @return The readable constraints, the ids of entries that couldn't be read, and whether
+             * anything couldn't be read without an id.
+             */
+            private fun parseConstraints(value: JsonValue?): ParsedConstraints {
+                if (value == null || value.isNull) {
+                    return ParsedConstraints(constraints = null)
+                }
+
+                val entries = value.list ?: run {
+                    UALog.e { "Failed to parse frequency constraints, not a list: $value" }
+                    return ParsedConstraints(constraints = null, unreadable = true)
+                }
+
+                val constraints = mutableListOf<FrequencyConstraint>()
+                val failedIds = mutableListOf<String>()
+                var unreadable = false
+
+                entries.forEach { entry ->
+                    try {
+                        constraints.add(FrequencyConstraint.fromJson(entry))
+                    } catch (ex: Exception) {
+                        val identifier = entry.map?.get(IDENTIFIER)?.string
+                        UALog.e(ex) { "Failed to parse frequency constraint ${identifier ?: "without a readable id"}" }
+                        if (identifier != null) {
+                            failedIds.add(identifier)
+                        } else {
+                            unreadable = true
+                        }
+                    }
+                }
+
+                return ParsedConstraints(constraints, failedIds, unreadable)
             }
 
             /**
@@ -261,11 +329,7 @@ internal data class InAppRemoteData(
         }
 
         fun copyWithUpdateSchedules(updateBlock: (AutomationSchedule) -> AutomationSchedule): Data {
-            return Data(
-                schedules = this.schedules.map(updateBlock),
-                constraints = this.constraints,
-                failedSchedules = this.failedSchedules
-            )
+            return copy(schedules = this.schedules.map(updateBlock))
         }
     }
 
@@ -285,14 +349,20 @@ internal data class InAppRemoteData(
 
         fun fromPayloads(payloads: List<RemoteDataPayload>): InAppRemoteData {
             val parsed = mutableMapOf<RemoteDataSource, Payload>()
+            val unreadable = mutableSetOf<RemoteDataSource>()
             payloads.forEach { payload ->
                 val source = payload.remoteDataInfo?.source ?: RemoteDataSource.APP
                 // A payload we can't parse is left out so it reads as "no payload" for its own
                 // source, rather than taking down the other sources with it.
-                parse(payload)?.let { parsed[source] = it }
+                val result = parse(payload)
+                if (result != null) {
+                    parsed[source] = result
+                } else {
+                    unreadable.add(source)
+                }
             }
 
-            return InAppRemoteData(parsed)
+            return InAppRemoteData(parsed, unreadable)
         }
 
         private fun parse(payload: RemoteDataPayload): Payload? {

@@ -7,6 +7,7 @@ import com.urbanairship.TestClock
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
@@ -292,7 +293,7 @@ public class AutomationRemoteDataAccessTest {
     }
 
     @Test
-    public fun testUpdatesFlowCorruptPayloadEmitsEmpty(): TestResult = runTest {
+    public fun testUpdatesFlowCorruptPayloadReportsSourceUnreadable(): TestResult = runTest {
         // Simulate a payload whose data map is missing the required "in_app_messages" key,
         // as happens when JsonMap.toString() previously stored SQL NULL and the row reads back
         // as an empty map.
@@ -308,7 +309,7 @@ public class AutomationRemoteDataAccessTest {
 
         val result = subject.updatesFlow.first()
 
-        assertEquals(InAppRemoteData(emptyMap()), result)
+        assertEquals(InAppRemoteData(emptyMap(), setOf(RemoteDataSource.APP)), result)
     }
 
     @Test
@@ -430,33 +431,106 @@ public class AutomationRemoteDataAccessTest {
     }
 
     @Test
-    public fun testBadConstraintOnlyFailsItsOwnSource() {
-        // A single malformed frequency constraint still fails its whole payload, but must not
-        // reach across sources.
-        val badConstraints = RemoteDataPayload(
+    public fun testCorruptPayloadReportsItsSourceUnreadable() {
+        val corruptContact = RemoteDataPayload(
             type = "in_app_messages",
             timestamp = Instant.ofEpochMilli(999L),
-            data = JsonValue
-                .parseString(
-                    """{ "in_app_messages": [], "frequency_constraints": [ { "id": "no-range" } ] }"""
-                )
-                .requireMap(),
+            data = JsonMap.EMPTY_MAP,
             remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.CONTACT)
         )
 
-        val validApp = RemoteDataPayload(
-            type = "in_app_messages",
-            timestamp = Instant.ofEpochMilli(999L),
-            data = JsonValue
-                .parseString("""{ "in_app_messages": [$VALID_SCHEDULE] }""")
-                .requireMap(),
-            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.APP)
+        val result = InAppRemoteData.fromPayloads(listOf(corruptContact))
+
+        assertTrue(result.payload.isEmpty())
+        assertEquals(setOf(RemoteDataSource.CONTACT), result.unreadableSources)
+    }
+
+    @Test
+    public fun testMalformedConstraintEntryKeepsItsIdAndOtherConstraints() {
+        val data = parseData(
+            """
+            {
+                "in_app_messages": [$VALID_SCHEDULE],
+                "frequency_constraints": [
+                    { "id": "foo", "range": 10, "boundary": 2, "period": "seconds" },
+                    { "id": "bad", "range": 10, "boundary": 2, "period": "fortnight" }
+                ]
+            }
+            """
         )
 
-        val result = InAppRemoteData.fromPayloads(listOf(validApp, badConstraints))
+        assertEquals(1, data.schedules.size)
+        assertEquals(listOf("foo"), data.constraints?.map { it.identifier })
+        assertEquals(listOf("bad"), data.failedConstraintIds)
+        assertFalse(data.constraintsUnreadable)
+    }
 
-        assertEquals(1, result.payload[RemoteDataSource.APP]?.data?.schedules?.size)
-        assertNull(result.payload[RemoteDataSource.CONTACT])
+    @Test
+    public fun testConstraintEntryWithoutIdMarksConstraintsUnreadable() {
+        val data = parseData(
+            """
+            {
+                "in_app_messages": [],
+                "frequency_constraints": [
+                    { "id": "foo", "range": 10, "boundary": 2, "period": "seconds" },
+                    { "range": 10, "boundary": 2, "period": "fortnight" }
+                ]
+            }
+            """
+        )
+
+        assertEquals(listOf("foo"), data.constraints?.map { it.identifier })
+        assertTrue(data.failedConstraintIds.isEmpty())
+        assertTrue(data.constraintsUnreadable)
+    }
+
+    @Test
+    public fun testNonListConstraintsKeepSchedulesAndMarkConstraintsUnreadable() {
+        val data = parseData(
+            """{ "in_app_messages": [$VALID_SCHEDULE], "frequency_constraints": { "id": "foo" } }"""
+        )
+
+        assertEquals(1, data.schedules.size)
+        assertNull(data.constraints)
+        assertTrue(data.constraintsUnreadable)
+    }
+
+    @Test
+    public fun testNullConstraintsReadAsAbsent() {
+        val json = jsonMapOf(
+            "in_app_messages" to JsonValue.wrapOpt(emptyList<JsonValue>()),
+            "frequency_constraints" to JsonValue.NULL
+        )
+        val data = InAppRemoteData.Data.fromJson(json, 999L)
+
+        assertNull(data.constraints)
+        assertTrue(data.failedConstraintIds.isEmpty())
+        assertFalse(data.constraintsUnreadable)
+    }
+
+    @Test
+    public fun testNonObjectConstraintEntryMarksConstraintsUnreadable() {
+        val data = parseData(
+            """{ "in_app_messages": [], "frequency_constraints": [ "foo", 1 ] }"""
+        )
+
+        assertEquals(emptyList<FrequencyConstraint>(), data.constraints)
+        assertTrue(data.failedConstraintIds.isEmpty())
+        assertTrue(data.constraintsUnreadable)
+    }
+
+    @Test
+    public fun testWrongTypedConstraintIdMarksConstraintsUnreadable() {
+        val data = parseData(
+            """{ "in_app_messages": [], "frequency_constraints": [ { "id": 5, "range": 10, "boundary": 2, "period": "fortnight" } ] }"""
+        )
+
+        assertTrue(data.failedConstraintIds.isEmpty())
+        assertTrue(data.constraintsUnreadable)
+    }
+
+    private fun parseData(json: String): InAppRemoteData.Data {
+        return InAppRemoteData.Data.fromJson(JsonValue.parseString(json.trimIndent()).requireMap(), 999L)
     }
 
     private fun parseData(schedules: List<String>, payloadTimestamp: Long): InAppRemoteData.Data {

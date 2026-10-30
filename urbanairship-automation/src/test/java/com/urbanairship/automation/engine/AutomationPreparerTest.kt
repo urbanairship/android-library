@@ -175,6 +175,21 @@ public class AutomationPreparerTest {
     }
 
     @Test
+    public fun testMissingFrequencyConstraintSkips(): TestResult = runTest {
+        val schedule = makeSchedule()
+
+        coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+        coEvery { frequencyLimitManager.getFrequencyChecker(any()) } returns
+                Result.failure(IllegalStateException("Missing frequency constraint"))
+
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        assertEquals(SchedulePrepareResult.Skip, result)
+
+        coVerify(exactly = 0) { remoteDataAccess.notifyOutdated(any()) }
+    }
+
+    @Test
     public fun testAudienceMismatchSkip(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(

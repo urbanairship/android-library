@@ -216,4 +216,50 @@ public class FrequencyLimitManagerTest {
 
         assertEquals(1, store.getOccurrences("foo").size)
     }
+
+    @Test
+    public fun testPreservedConstraintIdIsNotDeleted(): TestResult = runTest {
+        manager.setConstraints(
+            listOf(FrequencyConstraint("foo", 10.seconds, 2), FrequencyConstraint("bar", 10.seconds, 2))
+        )
+
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
+        assertTrue(checker.checkAndIncrement())
+
+        manager.setConstraints(emptyList(), preserveConstraintIds = setOf("foo"))
+        manager.writePendingInQueue()
+
+        assertNotNull(store.getConstraint("foo"))
+        assertEquals(1, store.getOccurrences("foo").size)
+        assertNull(store.getConstraint("bar"))
+    }
+
+    @Test
+    public fun testPreserveAllDeletesNothingButStillUpserts(): TestResult = runTest {
+        manager.setConstraints(listOf(FrequencyConstraint("foo", 10.seconds, 2)))
+
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
+        assertTrue(checker.checkAndIncrement())
+
+        manager.setConstraints(listOf(FrequencyConstraint("bar", 10.seconds, 2)), preserveAll = true)
+        manager.writePendingInQueue()
+
+        assertNotNull(store.getConstraint("foo"))
+        assertEquals(1, store.getOccurrences("foo").size)
+        assertNotNull(store.getConstraint("bar"))
+    }
+
+    @Test
+    public fun testPreserveAllStillClearsOccurrencesOnRangeChange(): TestResult = runTest {
+        manager.setConstraints(listOf(FrequencyConstraint("foo", 10.seconds, 2)))
+
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
+        assertTrue(checker.checkAndIncrement())
+        manager.writePendingInQueue()
+
+        manager.setConstraints(listOf(FrequencyConstraint("foo", 20.seconds, 2)), preserveAll = true)
+
+        assertEquals(20.seconds, store.getConstraint("foo")?.range)
+        assertEquals(0, store.getOccurrences("foo").size)
+    }
 }
