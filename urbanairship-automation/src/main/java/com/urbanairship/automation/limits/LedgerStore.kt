@@ -93,9 +93,11 @@ internal interface LedgerStoreInterface {
      * Retention: drops every event whose recording scopes are all dead.
      *
      * An event survives while any of the IDs it was recorded under is still
-     * live, so a shared group's pooled history outlives individual variants. An
-     * event is deleted only when its `scheduleId` is not in [liveScheduleIds]
-     * **and** none of its `sharedIds` is in [liveSharedIds].
+     * live, so a shared group's pooled history outlives individual variants. A
+     * live shared ID also keeps the events of the schedule it names, since that
+     * is how a schedule inherits history from the one it replaces. An event is
+     * deleted only when its `scheduleId` is in neither [liveScheduleIds] nor
+     * [liveSharedIds] **and** none of its `sharedIds` is in [liveSharedIds].
      *
      * @param liveScheduleIds Schedule IDs that still reference the ledger.
      * @param liveSharedIds Shared group IDs that still reference the ledger.

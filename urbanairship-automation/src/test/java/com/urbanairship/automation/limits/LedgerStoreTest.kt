@@ -665,6 +665,17 @@ public class LedgerStoreTest {
         assertEquals(2, db.dao.count())
     }
 
+    @Test
+    public fun testRetainKeepsEventsOfScheduleNamedByLiveSharedId(): TestResult = runTest {
+        val inherited = execution(scheduleId = "old")
+        store.recordEvents(listOf(inherited, execution(scheduleId = "unrelated")))
+
+        store.retainEvents(liveScheduleIds = setOf("new"), liveSharedIds = setOf("old"))
+
+        assertEquals(listOf(inherited), store.events(scheduleId = "old", sharedIds = emptyList()))
+        assertEquals(1, db.dao.count())
+    }
+
     /**
      * A row this SDK cannot decode still has readable scope columns, so
      * retention judges it like any other row rather than leaking it forever.
@@ -942,6 +953,18 @@ public class LedgerStoreTest {
         assertEquals(1, db.dao.count())
         // The survivor keeps both of its group rows, not just the live one.
         assertEquals(2, sharedIdRowCount())
+    }
+
+    @Test
+    public fun testRetainFallbackKeepsEventsOfScheduleNamedByLiveSharedId(): TestResult = runTest {
+        val inherited = execution(scheduleId = "old")
+        store.recordEvents(listOf(inherited, execution(scheduleId = "unrelated")))
+
+        val manyLiveIds = (0 until 1200).map { "schedule-$it" }.toSet()
+        store.retainEvents(liveScheduleIds = manyLiveIds, liveSharedIds = setOf("old"))
+
+        assertEquals(listOf(inherited), store.events(scheduleId = "old", sharedIds = emptyList()))
+        assertEquals(1, db.dao.count())
     }
 
     /** UTC, matching the zone the compactor buckets in. */

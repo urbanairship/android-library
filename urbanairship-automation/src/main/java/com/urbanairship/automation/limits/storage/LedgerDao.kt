@@ -192,11 +192,14 @@ internal interface LedgerDao {
     suspend fun getEventScopes(): List<LedgerEventScope>
 
     /**
-     * Deletes every event orphaned on both axes: its recording schedule is not
-     * in [liveScheduleIds] **and** none of its shared groups, if it has any,
-     * is in [liveSharedIds].
+     * Deletes every event orphaned on both axes: its recording schedule is in
+     * neither [liveScheduleIds] nor [liveSharedIds] **and** none of its shared
+     * groups, if it has any, is in [liveSharedIds]. A live shared ID names the
+     * schedule whose history it inherits, so it keeps that schedule's events,
+     * matching the `scheduleId IN (:sharedIds)` clause of
+     * [getEventsByScheduleOrSharedIds].
      *
-     * Picks its own strategy. While the live IDs fit inside the statement
+     * Picks its own strategy. While the bound IDs fit inside the statement
      * variable limit this is a single predicate delete that reads no rows.
      * Past that limit the predicate cannot be bound, and `NOT IN` cannot be
      * batched the way `IN` can — a chunk would delete the rows another chunk
@@ -211,13 +214,15 @@ internal interface LedgerDao {
         liveScheduleIds: Set<String>,
         liveSharedIds: Set<String>
     ): Int {
-        if (liveScheduleIds.size + liveSharedIds.size <= MAX_STATEMENT_PARAMETERS) {
+        // The shared IDs are bound twice: against the schedule ID and against the group rows.
+        if (liveScheduleIds.size + 2 * liveSharedIds.size <= MAX_STATEMENT_PARAMETERS) {
             return deleteOrphanedEventsInternal(liveScheduleIds, liveSharedIds)
         }
 
         val orphanIds = getEventScopes()
             .filter { scope ->
                 scope.scheduleId !in liveScheduleIds &&
+                        scope.scheduleId !in liveSharedIds &&
                         scope.sharedIds.none { it.value in liveSharedIds }
             }
             .map { it.id }
@@ -287,10 +292,14 @@ internal interface LedgerDao {
      * all (whose subquery match is trivially empty) is judged on its
      * schedule alone. SQLite evaluates `x NOT IN ()` as true, so an empty
      * live-shared-IDs set correctly orphans everything on that axis.
+     *
+     * [liveSharedIds] is bound twice, against the schedule ID and against the
+     * group rows, so the caller counts it twice toward the variable limit.
      */
     @Query(
         "DELETE FROM ledger_events " +
             "WHERE scheduleId NOT IN (:liveScheduleIds) " +
+            "AND scheduleId NOT IN (:liveSharedIds) " +
             "AND id NOT IN (SELECT eventId FROM ledger_shared_ids WHERE value IN (:liveSharedIds))"
     )
     suspend fun deleteOrphanedEventsInternal(
