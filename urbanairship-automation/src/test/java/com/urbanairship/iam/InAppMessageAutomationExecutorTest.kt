@@ -300,9 +300,10 @@ public class InAppMessageAutomationExecutorTest {
     }
 
     @Test
-    public fun testExecuteVariantHoldout(): TestResult = runTest {
+    public fun testExecuteVariantControl(): TestResult = runTest {
         val info = preparedInfo.copy(
-            variantAudienceResult = VariantAudienceResult(outcome = VariantAudience.Outcome.HOLDOUT)
+            variantAudienceResult = VariantAudienceResult(outcome = VariantAudience.Outcome.HOLDOUT),
+            variantAudienceId = "iteration-1"
         )
 
         every { displayCoordinator.messageWillDisplay(any()) } just runs
@@ -322,15 +323,14 @@ public class InAppMessageAutomationExecutorTest {
             recordedEvents.map { it.data?.toJsonValue() }
         )
 
-        // A variant experiment's own holdout arm is indistinguishable from the global holdout
-        // mechanism in ledger terms, even though it reports its own resolution event.
         assertEquals(
             listOf(
                 TestAutomationLedger.Recorded.Execution(
                     scheduleId = info.scheduleId,
                     sharedIds = emptyList(),
                     triggerId = null,
-                    result = LedgerExecutionResult.HOLDOUT,
+                    variantAudienceId = "iteration-1",
+                    result = LedgerExecutionResult.VARIANT_CONTROL,
                     cancel = false
                 )
             ),

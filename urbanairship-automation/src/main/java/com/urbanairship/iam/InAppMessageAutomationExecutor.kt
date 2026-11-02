@@ -116,10 +116,9 @@ internal class InAppMessageAutomationExecutor(
 
         val variantOutcome = preparedScheduleInfo.variantAudienceResult?.outcome
 
-        // Two unrelated checks (global holdout, and a variant experiment's own no-message
-        // arm) can both resolve to holdout for the same schedule at this same last-mile
-        // point; either one alone is sufficient, so check global holdout first and treat
-        // this as a single outcome rather than risk emitting both.
+        // The global holdout and a variant experiment's own no-message arm can both apply to
+        // the same schedule at this last-mile point; either one alone is sufficient, so check
+        // global holdout first and treat this as a single outcome rather than risk emitting both.
         if (preparedScheduleInfo.experimentResult?.isMatching == true) {
             UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} part of experiment." }
             data.analytics.recordEvent(
@@ -139,9 +138,7 @@ internal class InAppMessageAutomationExecutor(
                         event = LayoutResolutionEvent.variantControl(),
                         layoutContext = null
                     )
-                    // Identical to the global holdout mechanism in ledger terms; the two
-                    // diverge only in which resolution event they report.
-                    ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
+                    ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.VARIANT_CONTROL)
                 }
                 // An outcome this version can't name still says the experiment resolved to
                 // something other than this schedule's message, which is what variant_miss

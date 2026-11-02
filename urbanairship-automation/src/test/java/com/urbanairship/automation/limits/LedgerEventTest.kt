@@ -274,6 +274,18 @@ public class LedgerEventTest {
     }
 
     @Test
+    public fun testVariantControlResultRoundTrips() {
+        val event = LedgerEvent.Execution(
+            scheduleId = "schedule-1",
+            timestamp = Instant.ofEpochMilli(1000),
+            result = LedgerExecutionResult.VARIANT_CONTROL
+        )
+
+        assertEquals("variant_control", event.toJsonValue().requireMap().get("result")?.string)
+        assertEquals(event, LedgerEvent.fromJson(event.toJsonValue()))
+    }
+
+    @Test
     public fun testVariantAudienceIdIsOmittedWhenNull() {
         val event = LedgerEvent.Triggered(scheduleId = "schedule-1", timestamp = Instant.ofEpochMilli(1000))
 
