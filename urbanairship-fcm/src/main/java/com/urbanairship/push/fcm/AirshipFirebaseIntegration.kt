@@ -16,7 +16,8 @@ public object AirshipFirebaseIntegration {
     /**
      * Called to handle [com.google.firebase.messaging.FirebaseMessagingService.onMessageReceived]. The task should be finished
      * before `onMessageReceived(RemoteMessage message)` is complete. Wait for the message to be complete
-     * by calling `get()` on the future.
+     * by calling `get()` on the future. Don't call `get()` from the main thread: it blocks until the
+     * push is processed and can cause an ANR.
      *
      * @param context The application context.
      * @param message The message.
@@ -34,7 +35,23 @@ public object AirshipFirebaseIntegration {
     }
 
     /**
+     * Called to handle [com.google.firebase.messaging.FirebaseMessagingService.onMessageReceived] from a coroutine.
+     * Suspends until the message is processed.
+     *
+     * @param context The application context.
+     * @param message The message.
+     */
+    public suspend fun processMessageSuspending(context: Context, message: RemoteMessage) {
+        PushProviderBridge
+            .processPush(FcmPushProvider::class.java, PushMessage(message.data))
+            .execute(context)
+    }
+
+    /**
      * Called to handle [com.google.firebase.messaging.FirebaseMessagingService.onMessageReceived] synchronously.
+     *
+     * Call from a background thread. On the main thread the message is processed
+     * asynchronously and this method returns before processing completes.
      *
      * @param context The application context.
      * @param message The message.

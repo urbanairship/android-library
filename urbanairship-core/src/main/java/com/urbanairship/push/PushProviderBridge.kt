@@ -3,20 +3,22 @@
 package com.urbanairship.push
 
 import android.content.Context
+import android.os.Looper
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import java.util.concurrent.TimeoutException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * [PushProvider] callback methods. Low level push provider bridge. Most apps should not call this directly.
@@ -114,38 +116,47 @@ public object PushProviderBridge {
         }
 
         /**
-         * Executes the request.
+         * Executes the request on [AirshipDispatchers.IO].
          *
          * @param context The application context.
          */
         public suspend fun execute(context: Context) {
-            val pushJob = IncomingPushRunnable.Builder(context)
-                .setMessage(pushMessage)
-                .setProviderClass(provider.toString())
-                .build()
-
             try {
-                if (maxCallbackWaitTime > Duration.ZERO) {
-                    withTimeout(maxCallbackWaitTime) {
+                withContext(AirshipDispatchers.IO) {
+                    val pushJob = IncomingPushRunnable.Builder(context)
+                        .setMessage(pushMessage)
+                        .setProviderClass(provider.toString())
+                        .build()
+
+                    if (maxCallbackWaitTime <= Duration.ZERO) {
                         pushJob.run()
+                    } else if (withTimeoutOrNull(maxCallbackWaitTime) { pushJob.run() } == null) {
+                        UALog.e("Application took too long to process push. App may get closed.")
                     }
-                } else {
-                    pushJob.run()
                 }
-            } catch (e: TimeoutException) {
-                UALog.e(e, "Application took too long to process push. App may get closed.")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 UALog.e(e, "Failed to wait for notification")
             }
         }
 
         /**
-         * Executes the request synchronously.
+         * Executes the request, blocking the calling thread until it completes.
+         *
+         * On the main thread the request runs asynchronously instead, since blocking there
+         * causes ANRs.
          *
          * @param context The application context.
          */
         @WorkerThread
         public fun executeSync(context: Context) {
+            if (Looper.getMainLooper().thread == Thread.currentThread()) {
+                UALog.e("executeSync must not be called from the main thread. Processing the push asynchronously.")
+                execute(context, callback = null)
+                return
+            }
+
             runBlocking {
                 execute(context)
             }
