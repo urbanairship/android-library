@@ -197,6 +197,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         pushManager.addInternalPushListener(pushListener)
         privacyManager.addListener(privacyListener)
         config.addConfigListener(configListener)
+        providers.forEach { it.onRefreshStateInvalidated = ::dispatchRefreshJobAsync }
 
         scope.launch {
             localeManager.localeUpdates.collect { dispatchRefreshJob() }
