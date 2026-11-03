@@ -62,7 +62,9 @@ internal interface AutomationLedgerInterface {
      * live schedule references any more, then compacts what remains.
      *
      * An event survives while any of the IDs it was recorded under is still
-     * live, so a group's pooled history outlives individual variants.
+     * live, so a group's pooled history outlives individual variants. A live
+     * shared ID also keeps the events of the schedule it names, since that is
+     * how a schedule inherits history from the one it replaces.
      *
      * Unlike the record calls, failures are not swallowed here: reconciling is
      * maintenance that nothing in execution depends on, so the caller decides
