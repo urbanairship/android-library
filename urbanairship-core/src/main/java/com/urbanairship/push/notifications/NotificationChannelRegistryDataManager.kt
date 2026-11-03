@@ -59,20 +59,14 @@ internal class NotificationChannelRegistryDataManager(
     }
 
     /**
-     * Creates a channel in the database. This is a no-op if a channel already exists under
-     * the associated identifier.
+     * Creates a channel in the database, replacing any existing channel with the same identifier.
      *
      * @param channelCompat A NotificationChannelCompat.
+     * @return `true` if the channel was saved, `false` if the write failed.
      */
     @WorkerThread
     public fun createChannel(channelCompat: NotificationChannelCompat): Boolean {
-        val db = getWritableDatabase() ?: run {
-            UALog.e("NotificationChannelRegistryDataManager - Unable to save notification channel.")
-            return false
-        }
-
-        saveChannel(channelCompat, db)
-        return true
+        return saveChannel(channelCompat)
     }
 
     /**
@@ -173,12 +167,16 @@ internal class NotificationChannelRegistryDataManager(
     }
 
     @WorkerThread
-    private fun saveChannel(channelCompat: NotificationChannelCompat, database: SQLiteDatabase) {
+    private fun saveChannel(channelCompat: NotificationChannelCompat): Boolean {
         val value = ContentValues()
         value.put(COLUMN_NAME_CHANNEL_ID, channelCompat.id)
         value.put(COLUMN_NAME_DATA, channelCompat.toJsonValue().toString())
 
-        database.insertWithOnConflict(TABLE_NAME, null, value, SQLiteDatabase.CONFLICT_REPLACE)
+        val success = insert(TABLE_NAME, value) != -1L
+        if (!success) {
+            UALog.e("NotificationChannelRegistryDataManager - Unable to save notification channel: %s", channelCompat.id)
+        }
+        return success
     }
 
     public companion object {

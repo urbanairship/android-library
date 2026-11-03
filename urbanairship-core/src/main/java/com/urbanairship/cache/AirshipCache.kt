@@ -1,7 +1,9 @@
 package com.urbanairship.cache
 
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
@@ -33,7 +35,8 @@ public class AirshipCache(
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
 
-    private val store: CacheDao = if (isPersistent) {
+    @set:VisibleForTesting
+    internal var store: CacheDao = if (isPersistent) {
         CacheDatabase.persistent(context, runtimeConfig.configOptions.appKey).cacheDao()
     } else {
         CacheDatabase.inMemory(context).cacheDao()
@@ -57,11 +60,12 @@ public class AirshipCache(
     }
 
     public suspend fun <T> getCached(key: String, converter: (JsonValue) -> T): T? {
-        val stored = store.getEntryWithKey(key) ?: return null
+        val stored = guardDb(null, { "Failed to read cache entry for key: $key" }) { store.getEntryWithKey(key) }
+            ?: return null
         if (stored.appVersion != appVersion ||
             stored.sdkVersion != sdkVersion ||
             stored.isExpired(clock.now())) {
-            store.deleteItemWithKey(key)
+            guardDb(Unit, { "Failed to delete stale cache entry for key: $key" }) { store.deleteItemWithKey(key) }
             return null
         }
 
@@ -74,19 +78,37 @@ public class AirshipCache(
     }
 
     public suspend fun delete(key: String) {
-        store.deleteItemWithKey(key)
+        guardDb(Unit, { "Failed to delete cache entry for key: $key" }) { store.deleteItemWithKey(key) }
     }
 
     public suspend fun store(value: JsonSerializable, key: String, ttl: Duration) {
-        store.updateEntry(
-            CacheEntity(
-                key = key,
-                appVersion = appVersion,
-                sdkVersion = sdkVersion,
-                data = value.toJsonValue(),
-                expireOn = clock.now() + ttl
+        guardDb(Unit, { "Failed to store cache entry for key: $key" }) {
+            store.updateEntry(
+                CacheEntity(
+                    key = key,
+                    appVersion = appVersion,
+                    sdkVersion = sdkVersion,
+                    data = value.toJsonValue(),
+                    expireOn = clock.now() + ttl
+                )
             )
-        )
+        }
+    }
+
+    /**
+     * Runs [block], logging and returning [default] instead of letting [SQLiteException] crash.
+     *
+     * @param default The value to return if [block] throws [SQLiteException].
+     * @param message Describes the failure for the log, evaluated only if [block] throws.
+     * @param block The database operation to run.
+     */
+    private suspend inline fun <T> guardDb(default: T, noinline message: () -> String, block: () -> T): T {
+        return try {
+            block()
+        } catch (e: SQLiteException) {
+            UALog.e(e, message)
+            default
+        }
     }
 
     internal suspend fun deleteExpired(

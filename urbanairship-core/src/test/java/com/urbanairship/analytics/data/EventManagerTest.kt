@@ -1,5 +1,6 @@
 package com.urbanairship.analytics.data
 
+import android.database.sqlite.SQLiteException
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
 import com.urbanairship.preferences.PreferenceStore
@@ -186,6 +187,37 @@ public class EventManagerTest public constructor() : BaseTestCase() {
 
         eventManager.addEvent(testEvent, Event.Priority.NORMAL)
 
+        advanceUntilIdle()
+        verify { mockDispatcher.dispatch(any()) }
+    }
+
+    /**
+     * Tests that a failed insert drops the event instead of crashing: no trim and no
+     * upload scheduling happen for an event that was never persisted.
+     */
+    @Test
+    public fun testAddEventInsertFailureDropsEvent(): TestResult = runTest(testDispatcher.scheduler) {
+        coEvery { mockEventDao.insert(any()) } throws SQLiteException()
+
+        eventManager.addEvent(testEvent, Event.Priority.NORMAL)
+
+        coVerify(exactly = 0) { mockEventDao.trimDatabase(any()) }
+        advanceUntilIdle()
+        verify(exactly = 0) { mockDispatcher.dispatch(any()) }
+    }
+
+    /**
+     * Tests that a failed trim doesn't block scheduling the upload for an event that
+     * was actually persisted by the preceding insert.
+     */
+    @Test
+    public fun testAddEventTrimFailureStillSchedulesUpload(): TestResult = runTest(testDispatcher.scheduler) {
+        coEvery { mockEventDao.insert(any()) } returns Unit
+        coEvery { mockEventDao.trimDatabase(any()) } throws SQLiteException()
+
+        eventManager.addEvent(testEvent, Event.Priority.NORMAL)
+
+        coVerify(exactly = 1) { mockEventDao.insert(EventEntity(testEvent)) }
         advanceUntilIdle()
         verify { mockDispatcher.dispatch(any()) }
     }

@@ -1,6 +1,7 @@
 package com.urbanairship.meteredusage
 
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.preferences.PreferenceStore
@@ -149,6 +150,48 @@ public class AirshipMeteredUsageTest {
         assertNull(events.first().entityId)
         assertNull(events.first().reportingContext)
         assertNull(events.first().timestamp)
+    }
+
+    @Test
+    public fun testAddEventWriteFailureDoesNotScheduleUpload(): TestResult = runTest {
+        val mockStore: EventsDao = mockk(relaxed = true)
+        every { mockStore.addEvent(any()) } throws SQLiteException()
+
+        val manager = AirshipMeteredUsage(
+            context = context,
+            dataStore = PreferenceStore.inMemoryStore(context),
+            config = testConfig,
+            privacyManager = privacyManager,
+            store = mockStore,
+            client = apiClient,
+            contact = contact,
+            channel = channel,
+            jobDispatcher = mockJobDispatcher
+        )
+
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)
+            )
+        )
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
+
+        manager.addEvent(
+            MeteredUsageEventEntity(
+                eventId = "event-id",
+                entityId = "entity-id",
+                type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
+                product = "test-product",
+                reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
+                timestamp = Instant.ofEpochMilli(12),
+                contactId = "test-contact-id"
+            )
+        )
+
+        // scheduleUpload(delay = 0.seconds) is the dispatch addEvent itself would trigger on a
+        // successful write; enabling the config above already triggers its own unrelated
+        // initial-delay dispatch, so this can't just assert zero dispatches overall.
+        verify(exactly = 0) { mockJobDispatcher.dispatch(makeJobInfo(0.milliseconds)) }
     }
 
     @Test
