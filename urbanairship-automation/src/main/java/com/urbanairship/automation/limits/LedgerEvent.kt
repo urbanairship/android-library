@@ -58,17 +58,25 @@ internal sealed class LedgerExecutionResult(internal val json: String) : JsonSer
      * outcome was "no message." Everything except display or actions
      * occurred, so it counts toward the limit like a real execution. Emitted
      * by the global holdout mechanism (holdout experiment groups /
-     * `bypass_holdout_groups`), and equally by an Experiment Groups variant
-     * experiment whose resolved hash bucket lands in its own no-message arm —
-     * the two are indistinguishable in their effect on the ledger, only in
-     * why they occurred.
+     * `bypass_holdout_groups`) only; a variant experiment's no-message arm
+     * records [VARIANT_CONTROL].
      */
     data object HOLDOUT : LedgerExecutionResult("holdout")
 
     /**
      * Reached the same last mile as [HOLDOUT], but the resolved hash bucket
-     * landed in neither this schedule's own arm nor its holdout arm — i.e.
-     * some sibling schedule's arm owns it. Not a holdout: the user wasn't
+     * landed in the Experiment Groups variant experiment's own no-message
+     * (control) arm. Not a holdout: it is scoped to one experiment iteration,
+     * so it is named apart from [HOLDOUT] and a rule can exclude past
+     * iterations' controls without touching global holdouts. Counts toward
+     * the limit by default, same as any other execution.
+     */
+    data object VARIANT_CONTROL : LedgerExecutionResult("variant_control")
+
+    /**
+     * Reached the same last mile as [HOLDOUT], but the resolved hash bucket
+     * landed in neither this schedule's own arm nor its control arm — i.e.
+     * some sibling schedule's arm owns it. Not a control: the user wasn't
      * assigned "no message," just not this schedule's message. This is what
      * lets a schedule whose own trigger fired, and who would otherwise have
      * executed, still be counted as a known member of the experiment
@@ -103,7 +111,7 @@ internal sealed class LedgerExecutionResult(internal val json: String) : JsonSer
          * null.
          */
         internal val known: List<LedgerExecutionResult> by lazy {
-            listOf(SUCCEEDED, HOLDOUT, VARIANT_MISS, AUDIENCE_MISS, BACKFILL)
+            listOf(SUCCEEDED, HOLDOUT, VARIANT_CONTROL, VARIANT_MISS, AUDIENCE_MISS, BACKFILL)
         }
 
         /**

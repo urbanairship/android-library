@@ -82,8 +82,7 @@ public class LayoutResolutionEvent(
 
         /**
          * A variant experiment resolved this schedule to its own no-message arm. Distinct
-         * from [control], which is the (unrelated) global holdout mechanism — the two are
-         * recorded identically in the ledger (both `holdout`), but reported separately here.
+         * from [control], which is the (unrelated) global holdout mechanism.
          */
         public fun variantControl(): LayoutResolutionEvent {
             return LayoutResolutionEvent(

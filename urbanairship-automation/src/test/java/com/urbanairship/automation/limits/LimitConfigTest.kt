@@ -680,23 +680,25 @@ public class LimitConfigTest {
     @Test
     public fun testExcludePastIterationControlsAndMisses() {
         val events = listOf(
-            execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.HOLDOUT),
+            execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.VARIANT_CONTROL),
             execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.VARIANT_MISS),
             execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.SUCCEEDED),
-            execution(variantAudienceId = null, result = LedgerExecutionResult.HOLDOUT)
+            execution(variantAudienceId = pastVariantAudienceId, result = LedgerExecutionResult.HOLDOUT),
+            execution(variantAudienceId = null, result = LedgerExecutionResult.VARIANT_CONTROL)
         )
         val exclude = parseExclude(
             """
             { "or": [ { "source": { "type": "any" },
                         "match": { "type": "execution",
-                                   "results": ["holdout", "variant_miss"],
+                                   "results": ["variant_control", "variant_miss"],
                                    "variant_audience": { "type": "not_current" } } } ] }
             """
         )
 
-        // Only past-iteration holdout/miss rows are subtracted; untagged and succeeded rows still count.
-        assertTrue(isOverLimit(limit = 2U, events = events, exclude = exclude))
-        assertFalse(isOverLimit(limit = 3U, events = events, exclude = exclude))
+        // Only past-iteration control/miss rows are subtracted; untagged, succeeded and global
+        // holdout rows still count.
+        assertTrue(isOverLimit(limit = 3U, events = events, exclude = exclude))
+        assertFalse(isOverLimit(limit = 4U, events = events, exclude = exclude))
     }
 
     @Test
