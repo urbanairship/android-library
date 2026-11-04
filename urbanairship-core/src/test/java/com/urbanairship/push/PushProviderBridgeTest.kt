@@ -14,7 +14,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -22,6 +21,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -36,15 +36,15 @@ public class PushProviderBridgeTest {
 
     private val processedOn = AtomicReference<Thread>()
     private val started = CountDownLatch(1)
+    private val release = CountDownLatch(1)
     private val processed = CountDownLatch(1)
-    private var processingDelayMs = 0L
 
     @Before
     public fun setup() {
         mockkObject(Airship)
         every { Airship.waitForReadyBlocking(any()) } answers {
             started.countDown()
-            Thread.sleep(processingDelayMs)
+            release.await(10, TimeUnit.SECONDS)
             processedOn.set(Thread.currentThread())
             processed.countDown()
             false
@@ -53,41 +53,49 @@ public class PushProviderBridgeTest {
 
     @After
     public fun tearDown() {
+        release.countDown()
         unmockkObject(Airship)
     }
 
     private fun request() = PushProviderBridge.processPush(TestPushProvider::class.java, message)
 
-    @Test
-    public fun testExecuteSyncOffMainThreadBlocks() {
-        processingDelayMs = 200
+    private fun executeSyncOnBackgroundThread(request: PushProviderBridge.ProcessPushRequest): CountDownLatch {
         val finished = CountDownLatch(1)
-        val processedWhenReturned = AtomicReference<Boolean>()
-
         Thread {
-            request().executeSync(context)
-            processedWhenReturned.set(processed.count == 0L)
+            request.executeSync(context)
             finished.countDown()
         }.start()
+        return finished
+    }
 
+    @Test
+    public fun testExecuteSyncOffMainThreadBlocks() {
+        val finished = executeSyncOnBackgroundThread(request())
+
+        assertTrue(started.await(10, TimeUnit.SECONDS))
+        assertFalse(finished.await(100, TimeUnit.MILLISECONDS))
+
+        release.countDown()
         assertTrue(finished.await(10, TimeUnit.SECONDS))
-        assertTrue(processedWhenReturned.get())
+        assertEquals(0L, processed.count)
     }
 
     @Test
     public fun testExecuteSyncOnMainThreadDoesNotBlock() {
-        processingDelayMs = 500
         assertSame(Looper.getMainLooper().thread, Thread.currentThread())
 
         request().executeSync(context)
-
         assertEquals(1L, processed.count)
+
+        release.countDown()
         assertTrue(processed.await(10, TimeUnit.SECONDS))
         assertNotSame(Thread.currentThread(), processedOn.get())
     }
 
     @Test
     public fun testExecuteRunsOffCallerThread() {
+        release.countDown()
+
         runBlocking { request().execute(context) }
 
         assertNotNull(processedOn.get())
@@ -103,7 +111,6 @@ public class PushProviderBridgeTest {
 
     @Test
     public fun testExecutePropagatesCancellation() {
-        processingDelayMs = 500
         var resumed = false
 
         runBlocking {
@@ -112,9 +119,38 @@ public class PushProviderBridgeTest {
                 resumed = true
             }
             assertTrue(started.await(10, TimeUnit.SECONDS))
-            job.cancelAndJoin()
+            job.cancel()
+            release.countDown()
+            job.join()
         }
 
         assertFalse(resumed)
+    }
+
+    @Test
+    public fun testExecuteSyncReturnsAfterMaxCallbackWaitTime() {
+        val finished = executeSyncOnBackgroundThread(request().setMaxCallbackWaitTimeMs(200))
+
+        assertTrue(finished.await(10, TimeUnit.SECONDS))
+        assertEquals(1L, processed.count)
+
+        release.countDown()
+        assertTrue(processed.await(10, TimeUnit.SECONDS))
+    }
+
+    @Test
+    public fun testMaxCallbackWaitTimeSwallowsProcessingFailures() {
+        every { Airship.waitForReadyBlocking(any()) } throws IllegalStateException("boom")
+        val uncaught = AtomicReference<Throwable>()
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { _, e -> uncaught.set(e) }
+
+        try {
+            runBlocking { request().setMaxCallbackWaitTimeMs(1000).execute(context) }
+        } finally {
+            Thread.setDefaultUncaughtExceptionHandler(defaultHandler)
+        }
+
+        assertNull(uncaught.get())
     }
 }

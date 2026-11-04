@@ -116,7 +116,11 @@ public object PushProviderBridge {
         }
 
         /**
-         * Executes the request on [AirshipDispatchers.IO].
+         * Executes the request on [AirshipDispatchers.IO], suspending until it completes or the
+         * max callback wait time elapses.
+         *
+         * Once the max callback wait time elapses this returns, and the request keeps running
+         * in the background.
          *
          * @param context The application context.
          */
@@ -130,7 +134,19 @@ public object PushProviderBridge {
 
                     if (maxCallbackWaitTime <= Duration.ZERO) {
                         pushJob.run()
-                    } else if (withTimeoutOrNull(maxCallbackWaitTime) { pushJob.run() } == null) {
+                        return@withContext
+                    }
+
+                    // run() never suspends, so only a join on a separate job can time out.
+                    val job = scope.launch {
+                        try {
+                            pushJob.run()
+                        } catch (e: Exception) {
+                            UALog.e(e, "Failed to process push")
+                        }
+                    }
+
+                    if (withTimeoutOrNull(maxCallbackWaitTime) { job.join() } == null) {
                         UALog.e("Application took too long to process push. App may get closed.")
                     }
                 }
@@ -142,7 +158,8 @@ public object PushProviderBridge {
         }
 
         /**
-         * Executes the request, blocking the calling thread until it completes.
+         * Executes the request, blocking the calling thread until it completes or the max callback
+         * wait time elapses.
          *
          * On the main thread the request runs asynchronously instead, since blocking there
          * causes ANRs.
