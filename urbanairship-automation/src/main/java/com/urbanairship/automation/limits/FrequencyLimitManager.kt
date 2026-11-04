@@ -170,12 +170,22 @@ internal class FrequencyLimitManager(
     }
 
     /**
-     * Called to update constraints.
+     * Upserts [constraints] and deletes stored constraints that are no longer listed.
      *
-     * @param constraints The constraints.
-     * @return Instance of [Result<Unit>].
+     * A stored constraint missing from [constraints] survives, with its occurrences, when its id is in
+     * [preserveConstraintIds] or when [preserveAll] is true. A listed constraint whose range changed is
+     * always replaced and its occurrences cleared.
+     *
+     * @param constraints The constraints that could be read.
+     * @param preserveConstraintIds Ids of stored constraints that are never deleted for being unlisted.
+     * @param preserveAll When true, no unlisted constraint is deleted.
+     * @return A failure if the store couldn't be read or written.
      */
-    suspend fun setConstraints(constraints: List<FrequencyConstraint>): Result<Unit> {
+    suspend fun setConstraints(
+        constraints: List<FrequencyConstraint>,
+        preserveConstraintIds: Set<String> = emptySet(),
+        preserveAll: Boolean = false
+    ): Result<Unit> {
         return queue.run {
             writePending()
             try {
@@ -191,7 +201,7 @@ internal class FrequencyLimitManager(
                 val toDelete = existing
                     .filter { constraint ->
                         if (!incomingIds.contains(constraint.constraintId)) {
-                            true
+                            !preserveAll && !preserveConstraintIds.contains(constraint.constraintId)
                         } else {
                             constraints.any { incoming ->
                                 constraint.constraintId == incoming.identifier && constraint.range != incoming.range

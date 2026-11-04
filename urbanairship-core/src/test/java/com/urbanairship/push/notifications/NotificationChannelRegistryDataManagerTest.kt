@@ -2,9 +2,17 @@ package com.urbanairship.push.notifications
 
 import android.app.Notification
 import android.app.NotificationManager
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabaseCorruptException
+import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.spyk
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
@@ -93,5 +101,55 @@ public class NotificationChannelRegistryDataManagerTest {
     public fun testDeleteChannel() {
         dataManager.createChannel(channel1)
         Assert.assertTrue(dataManager.deleteChannel(channel1.id))
+    }
+
+    @Test
+    public fun testGetChannelsCorruptCursorReturnsEmptySet() {
+        val corruptCursor = mockk<Cursor>()
+        every { corruptCursor.moveToFirst() } throws SQLiteDatabaseCorruptException("database disk image is malformed")
+        every { corruptCursor.close() } just Runs
+
+        val spyManager = spyk(dataManager)
+        every { spyManager.query(any(), any(), any(), any(), any()) } returns corruptCursor
+
+        Assert.assertTrue(spyManager.channels.isEmpty())
+    }
+
+    @Test
+    public fun testGetChannelCorruptCursorReturnsNull() {
+        val corruptCursor = mockk<Cursor>()
+        every { corruptCursor.moveToFirst() } throws SQLiteDatabaseCorruptException("database disk image is malformed")
+        every { corruptCursor.close() } just Runs
+
+        val spyManager = spyk(dataManager)
+        every { spyManager.query(any(), any(), any(), any(), any()) } returns corruptCursor
+
+        Assert.assertNull(spyManager.getChannel(channel1.id))
+    }
+
+    @Test
+    public fun testGetChannelsCloseFailureReturnsEmptySet() {
+        val cursor = mockk<Cursor>()
+        every { cursor.moveToFirst() } returns false
+        every { cursor.isAfterLast } returns true
+        every { cursor.close() } throws SQLiteException("unable to close database")
+
+        val spyManager = spyk(dataManager)
+        every { spyManager.query(any(), any(), any(), any(), any()) } returns cursor
+
+        Assert.assertTrue(spyManager.channels.isEmpty())
+    }
+
+    @Test
+    public fun testGetChannelCloseFailureReturnsNull() {
+        val cursor = mockk<Cursor>()
+        every { cursor.moveToFirst() } returns false
+        every { cursor.isAfterLast } returns true
+        every { cursor.close() } throws SQLiteException("unable to close database")
+
+        val spyManager = spyk(dataManager)
+        every { spyManager.query(any(), any(), any(), any(), any()) } returns cursor
+
+        Assert.assertNull(spyManager.getChannel(channel1.id))
     }
 }

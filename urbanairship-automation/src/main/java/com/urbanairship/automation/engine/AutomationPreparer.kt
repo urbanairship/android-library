@@ -97,9 +97,10 @@ internal class AutomationPreparer internal constructor(
             val frequencyChecker = frequencyLimitManager.getFrequencyChecker(
                 schedule.frequencyConstraintIds
             ).getOrElse { ex ->
+                // Skip rather than invalidate: refreshing remote data can't restore a constraint
+                // that's missing or unreadable, so invalidating would refresh in a loop.
                 UALog.e(ex) { "Failed to fetch frequency checker for schedule ${schedule.identifier}" }
-                remoteDataAccess.notifyOutdated(schedule)
-                return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
+                return@run RetryingQueue.Result.Success(SchedulePrepareResult.Skip)
             }
 
             val audience = CompoundAudienceSelector.combine(

@@ -6,6 +6,8 @@ import android.content.Context
 import android.database.Cursor
 import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabaseCorruptException
+import android.database.sqlite.SQLiteException
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
@@ -110,30 +112,52 @@ internal class RemoteDataStore (
      * Gets all payloads of the specified types.
      *
      * @param types The specified types.
+     * @param onReadFailed Invoked if the database is unopenable or corrupt, so callers can tell
+     * a failure apart from a legitimately empty result. Not invoked for a transient read error
+     * (e.g. a locked database), since that doesn't mean the stored data is stale or wrong - but
+     * IS invoked if the database is still unopenable after its own retries are exhausted, since
+     * by then the condition is no longer transient.
      * @return A List of RemoteDataPayload.
      */
-    fun getPayloads(types: Collection<String>?): Set<RemoteDataPayload> {
-        var cursor: Cursor? = null
+    fun getPayloads(
+        types: Collection<String>?,
+        onReadFailed: () -> Unit = {}
+    ): Set<RemoteDataPayload> {
+        val cursor = if (types == null) {
+            this.query(TABLE_NAME, null, null, null, null)
+        } else {
+            val where =
+                COLUMN_NAME_TYPE + " IN ( " + "?".repeat(times = types.size, separator = ", ") + " )"
+
+            this.query(
+                TABLE_NAME, null, where, types.toTypedArray<String>(), null
+            )
+        } ?: run {
+            onReadFailed()
+            return emptySet()
+        }
 
         try {
-            if (types == null) {
-                cursor = this.query(TABLE_NAME, null, null, null, null)
-            } else {
-                val where =
-                    COLUMN_NAME_TYPE + " IN ( " + "?".repeat(times = types.size, separator = ", ") + " )"
-
-                cursor = this.query(
-                    TABLE_NAME, null, where, types.toTypedArray<String>(), null
-                )
+            return try {
+                generatePayloadEntries(cursor)
+            } catch (e: SQLiteDatabaseCorruptException) {
+                UALog.e(e, "RemoteDataStore - Unable to read remote data payloads.")
+                onReadFailed()
+                emptySet()
+            } catch (e: SQLiteException) {
+                // Transient contention (e.g. a locked database) rather than bad data, so this
+                // doesn't call onReadFailed() - the store isn't known to be stale or wrong.
+                UALog.e(e, "RemoteDataStore - Unable to read remote data payloads.")
+                emptySet()
             }
-
-            if (cursor == null) {
-                return emptySet()
-            }
-
-            return generatePayloadEntries(cursor)
         } finally {
-            cursor?.close()
+            try {
+                cursor.close()
+            } catch (e: Throwable) {
+                // Any Throwable, not just SQLiteException: left uncaught, it would replace the
+                // result or exception the try block above already settled on.
+                UALog.e(e, "RemoteDataStore - Unable to close remote data payloads cursor.")
+            }
         }
     }
 

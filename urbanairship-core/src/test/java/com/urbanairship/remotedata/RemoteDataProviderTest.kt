@@ -3,6 +3,9 @@
 package com.urbanairship.remotedata
 
 import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabaseCorruptException
+import android.database.sqlite.SQLiteException
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.preferences.SyncPrefKey
@@ -13,6 +16,11 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.LocaleCompat
 import com.urbanairship.util.minus
 import com.urbanairship.util.plus
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.spyk
 import java.time.Instant
 import java.util.Locale
 import java.util.UUID
@@ -429,6 +437,256 @@ public class RemoteDataProviderTest {
     }
 
     @Test
+    public fun testPayloadsReadFailureClearsRefreshState(): TestResult = runTest {
+        val remoteDataInfo = RemoteDataInfo(
+            url = "example://",
+            lastModified = "some last modified",
+            source = RemoteDataSource.APP
+        )
+
+        val store = spyk(RemoteDataStore(context, "appKey", UUID.randomUUID().toString()))
+        val failingProvider = TestRemoteDataProvider(context, clock, remoteDataStore = store)
+        failingProvider.isEnabled = true
+        failingProvider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+
+        failingProvider.fetchRemoteDataCallback = { _, _, _ ->
+            RequestResult(
+                status = 200,
+                value = RemoteDataApiClient.Result(
+                    remoteDataInfo,
+                    payloads = setOf(
+                        RemoteDataPayload(
+                            type = "some type",
+                            timestamp = Instant.ofEpochMilli(1000),
+                            data = jsonMapOf("something" to "something"),
+                            remoteDataInfo = remoteDataInfo
+                        )
+                    )
+                ),
+                body = null,
+                headers = emptyMap()
+            )
+        }
+
+        assertTrue(
+            failingProvider.refresh("some token", Locale.CANADA_FRENCH, 100)
+                is RemoteDataProvider.RefreshResult.NewData
+        )
+
+        val corruptCursor = mockk<Cursor>()
+        every { corruptCursor.moveToFirst() } throws SQLiteDatabaseCorruptException("database disk image is malformed")
+        every { corruptCursor.close() } just Runs
+        every { store.query(any(), any(), any(), any(), any()) } returns corruptCursor
+
+        assertTrue(failingProvider.payloads(listOf("some type")).isEmpty())
+
+        // Must not condition the request on the now-unreliable remote data info, or it risks a 304 against the empty store.
+        failingProvider.fetchRemoteDataCallback = { _, _, lastRemoteDataInfo ->
+            assertNull(lastRemoteDataInfo)
+            RequestResult(
+                status = 200,
+                value = RemoteDataApiClient.Result(remoteDataInfo, payloads = emptySet()),
+                body = null,
+                headers = emptyMap()
+            )
+        }
+        assertTrue(
+            failingProvider.refresh("some token", Locale.CANADA_FRENCH, 100)
+                is RemoteDataProvider.RefreshResult.NewData
+        )
+    }
+
+    @Test
+    public fun testPayloadsReadFailureInvokesOnRefreshStateInvalidated(): TestResult = runTest {
+        val remoteDataInfo = RemoteDataInfo(
+            url = "example://",
+            lastModified = "some last modified",
+            source = RemoteDataSource.APP
+        )
+
+        val store = spyk(RemoteDataStore(context, "appKey", UUID.randomUUID().toString()))
+        val failingProvider = TestRemoteDataProvider(context, clock, remoteDataStore = store)
+        failingProvider.isEnabled = true
+        failingProvider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+        failingProvider.fetchRemoteDataCallback = { _, _, _ ->
+            RequestResult(
+                status = 200,
+                value = RemoteDataApiClient.Result(remoteDataInfo, payloads = emptySet()),
+                body = null,
+                headers = emptyMap()
+            )
+        }
+        assertTrue(
+            failingProvider.refresh("some token", Locale.CANADA_FRENCH, 100)
+                is RemoteDataProvider.RefreshResult.NewData
+        )
+
+        var invalidated = false
+        failingProvider.onRefreshStateInvalidated = { invalidated = true }
+
+        val corruptCursor = mockk<Cursor>()
+        every { corruptCursor.moveToFirst() } throws SQLiteDatabaseCorruptException("database disk image is malformed")
+        every { corruptCursor.close() } just Runs
+        every { store.query(any(), any(), any(), any(), any()) } returns corruptCursor
+
+        failingProvider.payloads(listOf("some type"))
+
+        assertTrue(invalidated)
+    }
+
+    @Test
+    public fun testPayloadsTransientReadFailureDoesNotClearRefreshState(): TestResult = runTest {
+        val remoteDataInfo = RemoteDataInfo(
+            url = "example://",
+            lastModified = "some last modified",
+            source = RemoteDataSource.APP
+        )
+
+        val store = spyk(RemoteDataStore(context, "appKey", UUID.randomUUID().toString()))
+        val failingProvider = TestRemoteDataProvider(context, clock, remoteDataStore = store)
+        failingProvider.isEnabled = true
+        failingProvider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+        failingProvider.fetchRemoteDataCallback = { _, _, _ ->
+            RequestResult(
+                status = 200,
+                value = RemoteDataApiClient.Result(remoteDataInfo, payloads = emptySet()),
+                body = null,
+                headers = emptyMap()
+            )
+        }
+        assertTrue(
+            failingProvider.refresh("some token", Locale.CANADA_FRENCH, 100)
+                is RemoteDataProvider.RefreshResult.NewData
+        )
+
+        var invalidated = false
+        failingProvider.onRefreshStateInvalidated = { invalidated = true }
+
+        val lockedCursor = mockk<Cursor>()
+        every { lockedCursor.moveToFirst() } throws SQLiteException("database is locked")
+        every { lockedCursor.close() } just Runs
+        every { store.query(any(), any(), any(), any(), any()) } returns lockedCursor
+
+        assertTrue(failingProvider.payloads(listOf("some type")).isEmpty())
+
+        // A transient contention error isn't bad data, so it must not clear the refresh state.
+        assertFalse(invalidated)
+        val stored = requireNotNull(failingProvider.prefs.get(REFRESH_STATE_KEY)).requireMap()
+        assertEquals(remoteDataInfo, RemoteDataInfo(stored.require("remoteDataInfo")))
+    }
+
+    @Test
+    public fun testPayloadsReadFailureDoesNotClobberConcurrentRefresh(): TestResult = runTest {
+        val staleInfo = RemoteDataInfo(url = "example://", lastModified = "stale", source = RemoteDataSource.APP)
+        val freshInfo = RemoteDataInfo(url = "example://", lastModified = "fresh", source = RemoteDataSource.APP)
+
+        val store = spyk(RemoteDataStore(context, "appKey", UUID.randomUUID().toString()))
+        val failingProvider = TestRemoteDataProvider(context, clock, remoteDataStore = store)
+        failingProvider.isEnabled = true
+        failingProvider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+
+        failingProvider.fetchRemoteDataCallback = { _, _, _ ->
+            RequestResult(
+                status = 200,
+                value = RemoteDataApiClient.Result(staleInfo, payloads = emptySet()),
+                body = null,
+                headers = emptyMap()
+            )
+        }
+        assertTrue(
+            failingProvider.refresh("token-1", Locale.CANADA_FRENCH, 100)
+                is RemoteDataProvider.RefreshResult.NewData
+        )
+
+        val corruptCursor = mockk<Cursor>()
+        every { corruptCursor.moveToFirst() } answers {
+            // A concurrent refresh() lands fresh data while this read is still in flight.
+            failingProvider.prefs.put(
+                REFRESH_STATE_KEY,
+                jsonMapOf(
+                    "changeToken" to "token-2",
+                    "remoteDataInfo" to freshInfo,
+                    "timeMilliseconds" to clock.currentTime.toEpochMilli()
+                ).toJsonValue()
+            )
+            throw SQLiteDatabaseCorruptException("database disk image is malformed")
+        }
+        every { corruptCursor.close() } just Runs
+
+        // Only the first read races the concurrent refresh; the retry hits the real,
+        // uncorrupted database.
+        var queryCount = 0
+        every { store.query(any(), any(), any(), any(), any()) } answers {
+            queryCount++
+            if (queryCount == 1) corruptCursor else callOriginal()
+        }
+
+        assertTrue(failingProvider.payloads(listOf("some type")).isEmpty())
+
+        // The read failed against staleInfo, so it must not erase the fresh state a
+        // concurrent refresh() already wrote for different data.
+        val stored = requireNotNull(failingProvider.prefs.get(REFRESH_STATE_KEY)).requireMap()
+        assertEquals(freshInfo, RemoteDataInfo(stored.require("remoteDataInfo")))
+    }
+
+    @Test
+    public fun testPayloadsRetriesAfterRacingConcurrentRefresh(): TestResult = runTest {
+        val staleInfo = RemoteDataInfo(url = "example://", lastModified = "stale", source = RemoteDataSource.APP)
+        val freshInfo = RemoteDataInfo(url = "example://", lastModified = "fresh", source = RemoteDataSource.APP)
+        val freshPayload = RemoteDataPayload(
+            type = "some type",
+            timestamp = Instant.ofEpochMilli(2000),
+            data = jsonMapOf("fresh" to "data"),
+            remoteDataInfo = freshInfo
+        )
+
+        val store = spyk(RemoteDataStore(context, "appKey", UUID.randomUUID().toString()))
+        val failingProvider = TestRemoteDataProvider(context, clock, remoteDataStore = store)
+        failingProvider.isEnabled = true
+        failingProvider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+
+        failingProvider.fetchRemoteDataCallback = { _, _, _ ->
+            RequestResult(
+                status = 200,
+                value = RemoteDataApiClient.Result(staleInfo, payloads = emptySet()),
+                body = null,
+                headers = emptyMap()
+            )
+        }
+        assertTrue(
+            failingProvider.refresh("token-1", Locale.CANADA_FRENCH, 100)
+                is RemoteDataProvider.RefreshResult.NewData
+        )
+
+        val corruptCursor = mockk<Cursor>()
+        every { corruptCursor.moveToFirst() } answers {
+            // A concurrent refresh() lands fresh data in the store, and its own refresh
+            // state, while this read is still in flight against the old state.
+            failingProvider.prefs.put(
+                REFRESH_STATE_KEY,
+                jsonMapOf(
+                    "changeToken" to "token-2",
+                    "remoteDataInfo" to freshInfo,
+                    "timeMilliseconds" to clock.currentTime.toEpochMilli()
+                ).toJsonValue()
+            )
+            store.savePayloads(setOf(freshPayload))
+            throw SQLiteDatabaseCorruptException("database disk image is malformed")
+        }
+        every { corruptCursor.close() } just Runs
+
+        var queryCount = 0
+        every { store.query(any(), any(), any(), any(), any()) } answers {
+            queryCount++
+            if (queryCount == 1) corruptCursor else callOriginal()
+        }
+
+        // The retry against the now-fresher store must return the data that landed, not
+        // the empty result left over from the read that raced the concurrent refresh.
+        assertEquals(setOf(freshPayload), failingProvider.payloads(listOf("some type")))
+    }
+
+    @Test
     public fun testStatus(): TestResult = runTest {
         val token = UUID.randomUUID().toString()
         val locale = Locale.CANADA_FRENCH
@@ -569,10 +827,11 @@ public class RemoteDataProviderTest {
 internal class TestRemoteDataProvider(
     context: Context,
     clock: Clock,
-    val prefs: PreferenceStore = PreferenceStore.inMemoryStore(context)
+    val prefs: PreferenceStore = PreferenceStore.inMemoryStore(context),
+    val remoteDataStore: RemoteDataStore = RemoteDataStore(context, "appKey", UUID.randomUUID().toString())
 ) : RemoteDataProvider(
     source = RemoteDataSource.APP,
-    remoteDataStore = RemoteDataStore(context, "appKey", UUID.randomUUID().toString()),
+    remoteDataStore = remoteDataStore,
     preferenceStore = prefs,
     clock = clock
 ) {

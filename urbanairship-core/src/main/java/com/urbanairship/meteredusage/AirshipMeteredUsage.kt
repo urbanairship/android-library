@@ -3,6 +3,7 @@
 package com.urbanairship.meteredusage
 
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.urbanairship.preferences.PreferenceStore
@@ -101,7 +102,12 @@ public class AirshipMeteredUsage internal constructor(
             eventToStore = event.withAnalyticsDisabled()
         }
 
-        store.addEvent(eventToStore)
+        try {
+            store.addEvent(eventToStore)
+        } catch (e: SQLiteException) {
+            UALog.e(e) { "Failed to save metered usage event, dropping it" }
+            return
+        }
         scheduleUpload(delay = 0.seconds)
     }
 

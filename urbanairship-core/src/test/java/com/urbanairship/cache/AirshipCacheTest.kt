@@ -1,5 +1,6 @@
 package com.urbanairship.cache
 
+import android.database.sqlite.SQLiteException
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -7,6 +8,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -57,6 +60,39 @@ public class AirshipCacheTest {
         stored = cache.getCached(storeKey) { it }
 
         assertEquals(content, stored)
+    }
+
+    @Test
+    public fun testStoreSwallowsWriteFailure(): TestResult = runTest {
+        val mockDao: CacheDao = mockk(relaxed = true)
+        coEvery { mockDao.updateEntry(any()) } throws SQLiteException()
+        cache.store = mockDao
+
+        // Does not throw.
+        cache.store(JsonValue.wrap("item"), "key", 1.milliseconds)
+
+        coVerify(exactly = 1) { mockDao.updateEntry(any()) }
+    }
+
+    @Test
+    public fun testDeleteSwallowsWriteFailure(): TestResult = runTest {
+        val mockDao: CacheDao = mockk(relaxed = true)
+        coEvery { mockDao.deleteItemWithKey(any()) } throws SQLiteException()
+        cache.store = mockDao
+
+        // Does not throw.
+        cache.delete("key")
+
+        coVerify(exactly = 1) { mockDao.deleteItemWithKey(any()) }
+    }
+
+    @Test
+    public fun testGetCachedReturnsNullOnReadFailure(): TestResult = runTest {
+        val mockDao: CacheDao = mockk(relaxed = true)
+        coEvery { mockDao.getEntryWithKey(any()) } throws SQLiteException()
+        cache.store = mockDao
+
+        assertNull(cache.getCached("key") { it })
     }
 
     @Test
