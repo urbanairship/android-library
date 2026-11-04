@@ -102,8 +102,7 @@ internal class PropertiesConfigParser private constructor(
             val inStream = try {
                 assetManager.open(propertiesFile)
             } catch (e: FileNotFoundException) {
-                // open() also reports a torn-down AssetManager or an unreadable APK this way, so
-                // keep the original rather than claiming the file is absent.
+                // Chain the original; open() reports more than a missing file this way.
                 throw FileNotFoundException("Unable to find properties file: $propertiesFile")
                     .apply { initCause(e) }
             }

@@ -114,7 +114,7 @@ public class AirshipConfigOptionsTest {
                 .build()
         }
 
-        Assert.assertTrue(exception.cause is FileNotFoundException)
+        Assert.assertTrue(exception.cause?.cause is FileNotFoundException)
     }
 
     @Test
@@ -129,11 +129,11 @@ public class AirshipConfigOptionsTest {
     }
 
     /**
-     * Pins the fix for MOBILE-5988: the asset root must never be listed to decide whether the
-     * properties file exists, because that walks every entry in the APK's zip directory.
+     * Verifies the asset root is never listed to decide whether the properties file exists;
+     * listing walks every entry in the APK's zip directory.
      *
      * Robolectric's list("") returns full recursive paths, unlike a real device, so no test that
-     * only checks which files load can tell the two implementations apart.
+     * only checks which files load can tell the two implementations apart. See MOBILE-5988.
      */
     @Test
     public fun testDoesNotListAssets() {
@@ -142,6 +142,21 @@ public class AirshipConfigOptionsTest {
         val parser = PropertiesConfigParser.fromAssets(application, ASSET_PROPERTIES_FILE, assets)
 
         Assert.assertEquals("topLevelAppKey", parser.getString("developmentAppKey"))
+        verify(exactly = 0) { assets.list(any()) }
+    }
+
+    /**
+     * Same as [testDoesNotListAssets] for a file that is absent, which is the path apps that ship
+     * no properties file take on every Autopilot entry point.
+     */
+    @Test
+    public fun testMissDoesNotListAssets() {
+        val assets = spyk(application.resources.assets)
+
+        Assert.assertThrows(FileNotFoundException::class.java) {
+            PropertiesConfigParser.fromAssets(application, "missing.properties", assets)
+        }
+
         verify(exactly = 0) { assets.list(any()) }
     }
 
