@@ -76,9 +76,11 @@ public class RemoteDataForegroundPollingTest {
     private val mockContactProvider: RemoteDataProvider = mockk {
         every { source } returns RemoteDataSource.CONTACT
         every { isEnabled } returns false
+        every { onRefreshStateInvalidated = any() } just runs
     }
     private val mockAppProvider: RemoteDataProvider = mockk {
         every { source } returns RemoteDataSource.APP
+        every { onRefreshStateInvalidated = any() } just runs
     }
 
     private val refreshFlow =

@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
@@ -59,20 +60,14 @@ internal class NotificationChannelRegistryDataManager(
     }
 
     /**
-     * Creates a channel in the database. This is a no-op if a channel already exists under
-     * the associated identifier.
+     * Creates a channel in the database, replacing any existing channel with the same identifier.
      *
      * @param channelCompat A NotificationChannelCompat.
+     * @return `true` if the channel was saved, `false` if the write failed.
      */
     @WorkerThread
     public fun createChannel(channelCompat: NotificationChannelCompat): Boolean {
-        val db = getWritableDatabase() ?: run {
-            UALog.e("NotificationChannelRegistryDataManager - Unable to save notification channel.")
-            return false
-        }
-
-        saveChannel(channelCompat, db)
-        return true
+        return saveChannel(channelCompat)
     }
 
     /**
@@ -85,17 +80,20 @@ internal class NotificationChannelRegistryDataManager(
                 TABLE_NAME, null, null, null, null
             ) ?: return emptySet()
 
-            val channels = mutableSetOf<NotificationChannelCompat>()
-
-            cursor.moveToFirst()
-
-            while (!cursor.isAfterLast) {
-                val channelCompat = getChannel(cursor)
-                channelCompat?.let { channels.add(it) }
-                cursor.moveToNext()
+            return try {
+                cursor.use {
+                    val channels = mutableSetOf<NotificationChannelCompat>()
+                    it.moveToFirst()
+                    while (!it.isAfterLast) {
+                        getChannel(it)?.let { channel -> channels.add(channel) }
+                        it.moveToNext()
+                    }
+                    channels
+                }
+            } catch (e: SQLiteException) {
+                UALog.e(e, "NotificationChannelRegistryDataManager - Unable to read notification channels.")
+                emptySet()
             }
-
-            return channels
         }
 
     /**
@@ -110,16 +108,15 @@ internal class NotificationChannelRegistryDataManager(
         val cursor = query(TABLE_NAME, null, where, arrayOf(channelId), null)
             ?: return null
 
-        cursor.moveToFirst()
-
-        var channelCompat: NotificationChannelCompat? = null
-        if (!cursor.isAfterLast) {
-            channelCompat = getChannel(cursor)
+        return try {
+            cursor.use {
+                it.moveToFirst()
+                if (!it.isAfterLast) getChannel(it) else null
+            }
+        } catch (e: SQLiteException) {
+            UALog.e(e, "NotificationChannelRegistryDataManager - Unable to read notification channel: %s", channelId)
+            null
         }
-
-        cursor.close()
-
-        return channelCompat
     }
 
     /**
@@ -173,12 +170,16 @@ internal class NotificationChannelRegistryDataManager(
     }
 
     @WorkerThread
-    private fun saveChannel(channelCompat: NotificationChannelCompat, database: SQLiteDatabase) {
+    private fun saveChannel(channelCompat: NotificationChannelCompat): Boolean {
         val value = ContentValues()
         value.put(COLUMN_NAME_CHANNEL_ID, channelCompat.id)
         value.put(COLUMN_NAME_DATA, channelCompat.toJsonValue().toString())
 
-        database.insertWithOnConflict(TABLE_NAME, null, value, SQLiteDatabase.CONFLICT_REPLACE)
+        val success = insert(TABLE_NAME, value) != -1L
+        if (!success) {
+            UALog.e("NotificationChannelRegistryDataManager - Unable to save notification channel: %s", channelCompat.id)
+        }
+        return success
     }
 
     public companion object {

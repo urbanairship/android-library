@@ -138,7 +138,24 @@ internal class AutomationRemoteDataSubscriber (
             .mapNotNull { it.data.constraints }
             .fold(emptyList<FrequencyConstraint>()) { acc, next -> acc + next}
 
-        val result = frequencyLimitManager.setConstraints(constraints)
+        val preserveConstraintIds = data.payload.values
+            .flatMap { it.data.failedConstraintIds }
+            .toSet()
+
+        // The constraint store has no source column, so one unreadable source blocks every deletion.
+        val unreadableSources = RemoteDataSource.entries.filter { source ->
+            data.unreadableSources.contains(source) || data.payload[source]?.data?.constraintsUnreadable == true
+        }
+
+        if (unreadableSources.isNotEmpty()) {
+            UALog.e { "Constraints unreadable for $unreadableSources, keeping all stored constraints" }
+        }
+
+        val result = frequencyLimitManager.setConstraints(
+            constraints = constraints,
+            preserveConstraintIds = preserveConstraintIds,
+            preserveAll = unreadableSources.isNotEmpty()
+        )
         if (result.isFailure) {
             UALog.w { "Failed to process constraints ${result.exceptionOrNull()}" }
         }

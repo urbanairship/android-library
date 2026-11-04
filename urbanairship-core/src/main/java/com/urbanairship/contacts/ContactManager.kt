@@ -865,7 +865,10 @@ internal class ContactManager(
             )
             cachedAuthToken.set(auth, result.tokenExpiryDate)
 
-            val resolvedNamedUser = if (result.contactId == lastContactIdentity?.contactId) {
+            // An anonymous contact has no named user, e.g. once it was deleted server side
+            val resolvedNamedUser = if (result.isAnonymous) {
+                null
+            } else if (result.contactId == lastContactIdentity?.contactId) {
                 namedUserId ?: lastContactIdentity?.namedUserId
             } else {
                 namedUserId

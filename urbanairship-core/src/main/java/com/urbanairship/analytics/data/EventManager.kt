@@ -129,10 +129,20 @@ public class EventManager @VisibleForTesting internal constructor(
         val entity = EventEntity(eventData)
 
         eventLock.withLock {
-            eventDao.insert(entity)
-            // Handle database max size exceeded
-            val maxSize = preferenceStore.get(MAX_TOTAL_DB_SIZE_KEY) ?: EventResponse.MAX_TOTAL_DB_SIZE_BYTES
-            eventDao.trimDatabase(maxSize)
+            try {
+                eventDao.insert(entity)
+            } catch (e: SQLiteException) {
+                UALog.e(e, "EventManager - Failed to save event, dropping it")
+                return
+            }
+
+            try {
+                // Handle database max size exceeded
+                val maxSize = preferenceStore.get(MAX_TOTAL_DB_SIZE_KEY) ?: EventResponse.MAX_TOTAL_DB_SIZE_BYTES
+                eventDao.trimDatabase(maxSize)
+            } catch (e: SQLiteException) {
+                UALog.e(e, "EventManager - Failed to trim event database")
+            }
         }
 
         when (priority) {
@@ -165,8 +175,12 @@ public class EventManager @VisibleForTesting internal constructor(
      * Deletes all events.
      */
     public suspend fun deleteEvents() {
-        eventLock.withLock {
-            eventDao.deleteAll()
+        try {
+            eventLock.withLock {
+                eventDao.deleteAll()
+            }
+        } catch (e: SQLiteException) {
+            UALog.e(e, "EventManager - Failed to delete events")
         }
     }
 

@@ -44,6 +44,9 @@ internal abstract class RemoteDataProvider(
         )
     private val lastRefreshStateLock = ReentrantLock()
 
+    /** Notified when a read failure invalidates [lastRefreshState], so a caller can dispatch a refresh. */
+    var onRefreshStateInvalidated: (() -> Unit)? = null
+
     var isEnabled: Boolean
     get() {
         return preferenceStore.get(enabledKey) ?: defaultEnabled
@@ -70,7 +73,25 @@ internal abstract class RemoteDataProvider(
     suspend fun payloads(type: List<String>): Set<RemoteDataPayload> {
         return withContext(AirshipDispatchers.IO) {
             if (isEnabled) {
-                remoteDataStore.getPayloads(type)
+                // Snapshot before the read so a failure only invalidates the state it actually
+                // read against - not a newer one a concurrent refresh() just wrote.
+                val stateBeforeRead = lastRefreshState
+                var racedConcurrentRefresh = false
+                val result = remoteDataStore.getPayloads(type, onReadFailed = {
+                    val cleared = stateBeforeRead?.remoteDataInfo?.let(::invalidateRefreshState) ?: false
+                    racedConcurrentRefresh = stateBeforeRead != null && !cleared
+                })
+
+                if (racedConcurrentRefresh) {
+                    // The read failed against state a concurrent refresh() had already
+                    // replaced with fresher data, so the store likely holds something now -
+                    // retry once instead of handing back an empty result for data that's there.
+                    remoteDataStore.getPayloads(type, onReadFailed = {
+                        lastRefreshState?.remoteDataInfo?.let(::invalidateRefreshState)
+                    })
+                } else {
+                    result
+                }
             } else {
                 emptySet()
             }
@@ -105,6 +126,16 @@ internal abstract class RemoteDataProvider(
                 false
             }
         }
+    }
+
+    // Unlike notifyOutdated(), fires onRefreshStateInvalidated - use only for invalidations made
+    // internally, not ones already routed (and dispatched) through RemoteData.notifyOutdated().
+    private fun invalidateRefreshState(remoteDataInfo: RemoteDataInfo): Boolean {
+        val cleared = notifyOutdated(remoteDataInfo)
+        if (cleared) {
+            onRefreshStateInvalidated?.invoke()
+        }
+        return cleared
     }
 
     // / Refreshes data. Assumes no reentry.

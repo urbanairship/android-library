@@ -63,7 +63,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     private val frequencyLimitManager: FrequencyLimitManager = mockk {
-        coEvery { this@mockk.setConstraints(any()) } returns Result.success(Unit)
+        coEvery { this@mockk.setConstraints(any(), any(), any()) } returns Result.success(Unit)
     }
 
     /**
@@ -457,11 +457,130 @@ public class AutomationRemoteDataSubscriberTest {
         advanceUntilIdle()
 
 
-        coEvery { frequencyLimitManager.setConstraints(any()) } returns Result.success(Unit)
+        coEvery { frequencyLimitManager.setConstraints(any(), any(), any()) } returns Result.success(Unit)
         updatesFlow.emit(data)
         advanceUntilIdle()
 
         coVerify { frequencyLimitManager.setConstraints(appConstraints + contactConstraints) }
+    }
+
+    @Test
+    public fun testMalformedConstraintEntryKeepsOtherConstraintsAndMessages(): TestResult = runTest {
+        val appSchedules = makeSchedules(RemoteDataSource.APP)
+        val constraints = listOf(FrequencyConstraint("foo", 100.seconds, 10))
+        coJustRun { engine.upsertSchedules(any()) }
+
+        val data = InAppRemoteData(
+            payload = mapOf(
+                RemoteDataSource.APP to InAppRemoteData.Payload(
+                    data = InAppRemoteData.Data(appSchedules, constraints, failedConstraintIds = listOf("bad")),
+                    timestamp = clock.now()
+                )
+            )
+        )
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(data)
+        advanceUntilIdle()
+
+        coVerify { frequencyLimitManager.setConstraints(constraints, setOf("bad"), false) }
+        coVerify { engine.upsertSchedules(appSchedules) }
+    }
+
+    @Test
+    public fun testConstraintEntryWithoutIdPreservesAllConstraints(): TestResult = runTest {
+        val constraints = listOf(FrequencyConstraint("foo", 100.seconds, 10))
+
+        val data = InAppRemoteData(
+            payload = mapOf(
+                RemoteDataSource.APP to InAppRemoteData.Payload(
+                    data = InAppRemoteData.Data(listOf(), constraints, constraintsUnreadable = true),
+                    timestamp = clock.now()
+                )
+            )
+        )
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(data)
+        advanceUntilIdle()
+
+        coVerify { frequencyLimitManager.setConstraints(constraints, emptySet(), true) }
+    }
+
+    @Test
+    public fun testUnreadableListStopsMessagesButKeepsConstraints(): TestResult = runTest {
+        val appSchedules = makeSchedules(RemoteDataSource.APP)
+        coEvery { engine.getSchedules() } returns appSchedules
+        coJustRun { engine.stopSchedules(any()) }
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(InAppRemoteData(emptyMap(), setOf(RemoteDataSource.APP)))
+        advanceUntilIdle()
+
+        coVerify { frequencyLimitManager.setConstraints(emptyList(), emptySet(), true) }
+        coVerify { engine.stopSchedules(eq(appSchedules.map { it.identifier })) }
+    }
+
+    @Test
+    public fun testEveryUnreadableSourceStopsAllMessagesButKeepsConstraints(): TestResult = runTest {
+        val schedules = makeSchedules(RemoteDataSource.APP) + makeSchedules(RemoteDataSource.CONTACT)
+        coEvery { engine.getSchedules() } returns schedules
+        coJustRun { engine.stopSchedules(any()) }
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(InAppRemoteData(emptyMap(), RemoteDataSource.entries.toSet()))
+        advanceUntilIdle()
+
+        coVerify { frequencyLimitManager.setConstraints(emptyList(), emptySet(), true) }
+        RemoteDataSource.entries.forEach { source ->
+            val ids = schedules.filter { getSource(it) == source }.map { it.identifier }
+            coVerify { engine.stopSchedules(eq(ids)) }
+        }
+    }
+
+    @Test
+    public fun testOneUnreadableSourceStillUpsertsOtherSourcesConstraints(): TestResult = runTest {
+        val contactConstraints = listOf(FrequencyConstraint("new", 1.seconds, 1))
+
+        val data = InAppRemoteData(
+            payload = mapOf(
+                RemoteDataSource.CONTACT to InAppRemoteData.Payload(
+                    data = InAppRemoteData.Data(listOf(), contactConstraints),
+                    timestamp = clock.now()
+                )
+            ),
+            unreadableSources = setOf(RemoteDataSource.APP)
+        )
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(data)
+        advanceUntilIdle()
+
+        coVerify { frequencyLimitManager.setConstraints(contactConstraints, emptySet(), true) }
+    }
+
+    @Test
+    public fun testConstraintsDeletedWhenEverythingIsReadable(): TestResult = runTest {
+        val data = InAppRemoteData(
+            payload = mapOf(
+                RemoteDataSource.APP to InAppRemoteData.Payload(
+                    data = InAppRemoteData.Data(listOf(), null),
+                    timestamp = clock.now()
+                )
+            )
+        )
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(data)
+        advanceUntilIdle()
+
+        coVerify { frequencyLimitManager.setConstraints(emptyList(), emptySet(), false) }
     }
 
     @Test

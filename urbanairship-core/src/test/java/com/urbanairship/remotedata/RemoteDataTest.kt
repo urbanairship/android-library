@@ -88,11 +88,15 @@ public class RemoteDataTest {
     private val pollingGate = kotlinx.coroutines.CompletableDeferred<Unit>()
     private val testTaskSleeper: TestTaskSleeper = TestTaskSleeper(testClock) { pollingGate.await() }
 
+    private val appRefreshStateInvalidatedCallbacks = mutableListOf<() -> Unit>()
+
     private val mockContactRemoteDataProvider: RemoteDataProvider = mockk {
         every { this@mockk.source } returns RemoteDataSource.CONTACT
+        every { this@mockk.onRefreshStateInvalidated = any() } just runs
     }
     private val mockAppRemoteDataProvider: RemoteDataProvider = mockk {
         every { this@mockk.source } returns RemoteDataSource.APP
+        every { this@mockk.onRefreshStateInvalidated = capture(appRefreshStateInvalidatedCallbacks) } just runs
     }
 
     private val refreshFlow = MutableSharedFlow<Pair<RemoteDataSource, RemoteDataProvider.RefreshResult>>()
@@ -190,6 +194,14 @@ public class RemoteDataTest {
             every { this@mockk.isRemoteDataUpdate } returns true
         }
         pushListeners.forEach { it.onPushReceived(mockPush, false) }
+        testDispatcher.scheduler.advanceUntilIdle()
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
+    }
+
+    @Test
+    public fun testReadFailureInvalidationDispatchesRefresh(): TestResult = runTest {
+        verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
+        appRefreshStateInvalidatedCallbacks.single().invoke()
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }
