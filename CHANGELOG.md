@@ -11,6 +11,7 @@ Patch release that fixes several issues. Apps that use Scenes with multiple page
 ### Changes
 - Fixed the first page change in a Scene pager not animating, which could leave the previous page displayed while the pager advanced and keep the Next button disabled when a text field had focus
 - Fixed a device staying on an anonymous contact after its contact was deleted, instead of identifying again with its named user
+- Fixed a crash when opening a Message Center message on devices where WebView throws while starting Safe Browsing
 
 ## Version 20.12.2 - October 5, 2026
 
