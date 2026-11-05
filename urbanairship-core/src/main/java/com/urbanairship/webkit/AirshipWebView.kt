@@ -199,13 +199,22 @@ public open class AirshipWebView : WebView {
             // In WebView version 122.0.6174.0 and later, this initialization is done automatically.
             // We should still call it here for older versions, as this will return immediately
             // if Safe Browsing is already initialized.
-            @Suppress("DEPRECATION")
-            WebViewCompat.startSafeBrowsing(context.applicationContext) { started ->
-                if (!started) {
-                    UALog.d("Unable to start Safe Browsing. Feature is not supported or disabled in the manifest.")
+            var isReady = false
+            try {
+                @Suppress("DEPRECATION")
+                WebViewCompat.startSafeBrowsing(context.applicationContext) { started ->
+                    if (!started) {
+                        UALog.d("Unable to start Safe Browsing. Feature is not supported or disabled in the manifest.")
+                    }
+                    isReady = true
+                    isStartSafeBrowsingAttempted = true
+                    onReadyCallback.run()
                 }
+            } catch (e: Exception) {
+                // Some WebView providers throw from inside the framework call (e.g. null statics).
+                UALog.e(e) { "Failed to start Safe Browsing, loading without it." }
                 isStartSafeBrowsingAttempted = true
-                onReadyCallback.run()
+                if (!isReady) onReadyCallback.run()
             }
         } else {
             UALog.d("Unable to start Safe Browsing. Feature is not supported or disabled in the manifest.")
