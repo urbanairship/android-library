@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -142,7 +143,10 @@ public class Inbox @VisibleForTesting internal constructor(
     }
 
     private val configListener = AirshipRuntimeConfig.ConfigChangeListener {
-        scheduleUpdateIfEnabled(UpdateType.REQUIRED)
+        scope.launch {
+            inboxJobHandler.requireUserUpdate()
+            scheduleUpdateIfEnabled(UpdateType.REQUIRED)
+        }
     }
 
     private val channelRegistrationPayloadExtender = AirshipChannel.Extender { builder ->
@@ -155,8 +159,7 @@ public class Inbox @VisibleForTesting internal constructor(
 
     init {
         scope.launch {
-            val id = airshipChannel.id
-            airshipChannel.channelIdFlow.filter { it == id }.collect {
+            airshipChannel.channelIdFlow.filterNotNull().collect {
                 scheduleUpdate(UpdateType.REQUIRED)
             }
         }
