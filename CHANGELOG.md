@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.12.3 - October 30, 2026
+
+Patch release that fixes several issues. Apps that use Scenes with multiple pages, or that identify contacts with a named user, should update to this version or newer.
+
+### Changes
+- Fixed the first page change in a Scene pager not animating, which could leave the previous page displayed while the pager advanced and keep the Next button disabled when a text field had focus
+- Fixed a device staying on an anonymous contact after its contact was deleted, instead of identifying again with its named user
+- Fixed a crash when opening a Message Center message on devices where WebView throws while starting Safe Browsing
+
 ## Version 20.12.2 - October 5, 2026
 
 Patch release that fixes several issues. Apps that use Compose Message Center or legacy banners, or that depend on Firebase Performance Monitoring should update to this version or newer.
