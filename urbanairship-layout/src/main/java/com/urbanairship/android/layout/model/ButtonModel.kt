@@ -18,8 +18,6 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal abstract class ButtonModel<T, I: Button>(
@@ -45,46 +43,41 @@ internal abstract class ButtonModel<T, I: Button>(
 
     override var listener: Listener? = null
 
+    private var isHandlingTap = false
+
     @CallSuper
     override fun onViewAttached(view: T) {
-        pagerState?.let { state ->
-            viewScope.launch {
-                state.changes
-                    .map { it.isScrolling }
-                    .distinctUntilChanged()
-                    .collect { isScrolling ->
-                        listener?.setEnabled(!isScrolling)
-                    }
-            }
-        }
-
+        // Taps are dropped while one is handled or a page turns, rather than disabling the view:
+        // disabling a focused view hands D-pad focus to the first focusable view in the window.
         viewScope.launch {
             view.taps().collect {
-                listener?.setEnabled(enabled = false)
+                if (isHandlingTap || pagerState?.changes?.value?.isScrolling == true) return@collect
 
-                val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
-
-                report(
-                    event = ButtonTap(
-                        data = ReportingEvent.ButtonTapData(
-                            identifier = viewInfo.identifier,
-                            reportingMetadata = viewInfo.reportingMetadata),
-                        context = reportingContext
-                    )
-                )
-
-                evaluateOutcomes(view.context ?: Airship.application)
-
-                if (viewInfo.enableBehaviors?.isNotEmpty() == true) {
-                    val currentPager = layoutState.pager?.changes?.value
-                    val currentForm = layoutState.thomasForm?.formUpdates?.value
-                    val shouldBeEnabled = mapEnableBehavior(form = currentForm, pager = currentPager)
-                    listener?.setEnabled(shouldBeEnabled)
-                } else {
-                    listener?.setEnabled(enabled = true)
+                isHandlingTap = true
+                viewScope.launch {
+                    try {
+                        handleTap(view)
+                    } finally {
+                        isHandlingTap = false
+                    }
                 }
             }
         }
+    }
+
+    private suspend fun handleTap(view: T) {
+        val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
+
+        report(
+            event = ButtonTap(
+                data = ReportingEvent.ButtonTapData(
+                    identifier = viewInfo.identifier,
+                    reportingMetadata = viewInfo.reportingMetadata),
+                context = reportingContext
+            )
+        )
+
+        evaluateOutcomes(view.context ?: Airship.application)
     }
 
     private suspend fun evaluateOutcomes(context: Context) {

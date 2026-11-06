@@ -36,12 +36,14 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -287,6 +289,57 @@ public class ButtonModelTest {
         }
     }
 
+    @Test
+    public fun aTapWhileOneIsHandledIsDropped(): TestResult = runTest {
+        coEvery { mockActionsRunner.run(any(), any()) } coAnswers { delay(1.seconds) }
+        val taps = MutableSharedFlow<Unit>()
+        every { mockView.taps() } returns taps
+        buttonModel = makeButton(
+            actions = mapOf("slow" to JsonValue.wrap("value")),
+            clickBehaviors = emptyList()
+        )
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        runCurrent()
+        taps.emit(Unit)
+        advanceUntilIdle()
+        coVerify(exactly = 1) { mockActionsRunner.run(any(), any()) }
+
+        // Once it's handled, the next tap runs.
+        taps.emit(Unit)
+        advanceUntilIdle()
+        coVerify(exactly = 2) { mockActionsRunner.run(any(), any()) }
+    }
+
+    @Test
+    public fun aTapWhileThePageTurnsIsDropped(): TestResult = runTest {
+        val pagerState = SharedState(State.Pager(identifier = "pager", isScrolling = true))
+        buttonModel = makeButton(
+            actions = mapOf("foo" to JsonValue.wrap("bar")),
+            clickBehaviors = emptyList(),
+            pagerState = pagerState
+        )
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+        coVerify(exactly = 0) { mockActionsRunner.run(any(), any()) }
+    }
+
+    @Test
+    public fun aTapDoesNotDisableTheView(): TestResult = runTest {
+        val listener: ButtonModel.Listener = mockk(relaxed = true)
+        buttonModel = makeButton(clickBehaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT))
+        buttonModel.listener = listener
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        verify(exactly = 0) { listener.setEnabled(any()) }
+    }
+
     private fun layoutStateInForm(identifier: String): LayoutState {
         val form = SharedState(
             State.Form(
@@ -316,7 +369,8 @@ public class ButtonModelTest {
     private fun makeButton(
         actions: Map<String, JsonValue>? = null,
         clickBehaviors: List<ButtonClickBehaviorType> = listOf(ButtonClickBehaviorType.DISMISS),
-        identifier: String = "test-button"
+        identifier: String = "test-button",
+        pagerState: SharedState<State.Pager>? = null
     ): LabelButtonModel {
         val mockInfo = mockk<LabelButtonInfo>(relaxed = true) {
             every { this@mockk.identifier } returns identifier
@@ -333,7 +387,7 @@ public class ButtonModelTest {
             viewInfo = mockInfo,
             label = mockLabel,
             formState = null,
-            pagerState = null,
+            pagerState = pagerState,
             environment = mockEnv,
             properties = ModelProperties(null),
         )
