@@ -225,8 +225,7 @@ public class ModalActivity : AppCompatActivity() {
 
     /**
      * Steps D-pad or keyboard focus out of a web page and onto the next view in the scene, so
-     * Back leaves the page before it leaves the scene. A page can hold the arrows for a long
-     * time, and dismissing the whole scene is a lot to lose for wanting out of it.
+     * Back leaves the page before it leaves the scene.
      *
      * @return `true` if focus moved.
      */
