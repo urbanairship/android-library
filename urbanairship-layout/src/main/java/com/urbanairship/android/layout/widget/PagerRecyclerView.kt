@@ -235,7 +235,10 @@ internal class PagerRecyclerView(
                 isSettling = false
                 releaseFocusHold()
 
-                if (hadFocusDuringScroll) {
+                // A modal can page with nothing focused, and then a page's first control should
+                // take focus as soon as one appears.
+                val modalHasNoFocus = viewEnvironment.receivesKeysWithoutFocus && rootView.findFocus() == null
+                if (hadFocusDuringScroll || modalHasNoFocus) {
                     hadFocusDuringScroll = false
                     moveFocusIntoPage(position)
                 }

@@ -18,6 +18,7 @@ import java.time.Duration
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -174,6 +175,24 @@ public class PagerRecyclerViewFocusTest {
     }
 
     @Test
+    public fun testAModalPagingWithNothingFocusedFocusesTheFirstControlItReaches() {
+        val lastButton = focusableButton()
+        val pager = show(
+            listOf(View(activity), View(activity), lastButton),
+            receivesKeysWithoutFocus = true,
+            hostFocusable = false
+        )
+        assertNull(activity.window.decorView.findFocus())
+
+        turnToPage(pager, 1)
+        assertNull(activity.window.decorView.findFocus())
+
+        pager.scrollTo(2, animate = true)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
+        assertTrue(lastButton.isFocused)
+    }
+
+    @Test
     public fun testFocusOutsideThePagerIsLeftAlone() {
         val pager = show(listOf(focusableButton(), View(activity)))
         hostButton.requestFocus()
@@ -187,8 +206,10 @@ public class PagerRecyclerViewFocusTest {
         pageViews: List<View>,
         handlesDirectionalKeys: Boolean = true,
         receivesKeysWithoutFocus: Boolean = false,
+        hostFocusable: Boolean = true,
         beforeLayout: (PagerRecyclerView) -> Unit = {}
     ): PagerRecyclerView {
+        hostButton.isFocusable = hostFocusable
         val pages = pageViews.map { page ->
             mockk<AnyModel>(relaxed = true) {
                 every { createView(any(), any(), any()) } returns page
