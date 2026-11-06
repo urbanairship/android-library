@@ -661,14 +661,14 @@ internal class PagerModel(
     }
 
     /**
-     * Whether Left/Right can ever do anything on this pager, as handled by [onDirectionalKey].
+     * Whether Left/Right can do anything on this pager right now, as handled by [onDirectionalKey].
      * When they can't, a page with nothing focusable has nothing for a D-pad or keyboard to do
      * either.
      */
     val handlesDirectionalKeys: Boolean
         get() = viewInfo.gestures.orEmpty().filterIsInstance<PagerGesture.Tap>().any {
             it.location in KEY_TAP_LOCATIONS
-        } || !(isSinglePage || viewInfo.isSwipeDisabled)
+        } || !(isSinglePage || viewInfo.isSwipeDisabled || pagerState.changes.value.isScrollDisabled)
 
     /**
      * Handles a Left/Right key press that couldn't move focus within the current page.

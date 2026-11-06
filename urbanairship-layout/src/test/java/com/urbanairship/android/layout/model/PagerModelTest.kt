@@ -528,6 +528,17 @@ public class PagerModelTest {
     }
 
     @Test
+    public fun testHandlesDirectionalKeysFollowsDisabledScrolling() {
+        assertTrue(pagerModel.handlesDirectionalKeys)
+
+        pagerState.update { it.copy(isScrollDisabled = true) }
+        assertFalse(pagerModel.handlesDirectionalKeys)
+
+        pagerState.update { it.copy(isScrollDisabled = false) }
+        assertTrue(pagerModel.handlesDirectionalKeys)
+    }
+
+    @Test
     public fun testPageViewIds() {
         val id0 = pagerModel.getPageViewId(0)
         val id1 = pagerModel.getPageViewId(1)
