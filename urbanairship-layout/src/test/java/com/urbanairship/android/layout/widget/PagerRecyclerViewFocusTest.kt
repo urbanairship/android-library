@@ -147,6 +147,17 @@ public class PagerRecyclerViewFocusTest {
     }
 
     @Test
+    public fun testInitialFocusMissedBeforeTheFirstLayoutMovesIntoThePage() {
+        val pageButton = focusableButton()
+        show(listOf(pageButton, View(activity)), handlesDirectionalKeys = false) { pager ->
+            assertFalse(pager.requestFocus(View.FOCUS_DOWN))
+            hostButton.requestFocus()
+        }
+
+        assertTrue(pageButton.isFocused)
+    }
+
+    @Test
     public fun testFocusOutsideThePagerIsLeftAlone() {
         val pager = show(listOf(focusableButton(), View(activity)))
         hostButton.requestFocus()
@@ -158,7 +169,8 @@ public class PagerRecyclerViewFocusTest {
 
     private fun show(
         pageViews: List<View>,
-        handlesDirectionalKeys: Boolean = true
+        handlesDirectionalKeys: Boolean = true,
+        beforeLayout: (PagerRecyclerView) -> Unit = {}
     ): PagerRecyclerView {
         val pages = pageViews.map { page ->
             mockk<AnyModel>(relaxed = true) {
@@ -182,6 +194,7 @@ public class PagerRecyclerViewFocusTest {
             addView(pager, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
         }
         activity.setContentView(root)
+        beforeLayout(pager)
         idle()
         return pager
     }

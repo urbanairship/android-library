@@ -36,6 +36,7 @@ internal class PagerRecyclerView(
     private var isSettling = false
     private var hadFocusDuringScroll = false
     private var isHoldingFocus = false
+    private var missedFocusRequest = false
 
     private var listener: PagerView.OnScrollListener? = null
 
@@ -175,6 +176,7 @@ internal class PagerRecyclerView(
         // A parallax background reads this before the first scroll, not just after: a pager
         // sitting on page one, never swiped, still has a resting offset to be placed against.
         listener?.onContentOffsetChanged(contentOffset())
+        focusPageAfterMissedRequest()
     }
 
     private val recyclerScrollListener: OnScrollListener = object : OnScrollListener() {
@@ -326,8 +328,22 @@ internal class PagerRecyclerView(
         descendantFocusability = focusability
     }
 
-    override fun onRequestFocusInDescendants(direction: Int, previouslyFocusedRect: Rect?): Boolean =
-        !isComputingLayout && displayedPage?.requestFocus(direction, previouslyFocusedRect) == true
+    override fun onRequestFocusInDescendants(direction: Int, previouslyFocusedRect: Rect?): Boolean {
+        val page = displayedPage
+        if (page == null) {
+            missedFocusRequest = !isInTouchMode
+            return false
+        }
+        return !isComputingLayout && page.requestFocus(direction, previouslyFocusedRect)
+    }
+
+    // A window picks its initial focus before the pager lays out its first page, so that focus
+    // lands on a control elsewhere in the scene, such as the close button.
+    private fun focusPageAfterMissedRequest() {
+        if (!missedFocusRequest || displayedPage == null) return
+        missedFocusRequest = false
+        post { if (!isInTouchMode) displayedPage?.requestFocus(View.FOCUS_DOWN) }
+    }
 
     override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean =
         if (takesKeyFocus) {
