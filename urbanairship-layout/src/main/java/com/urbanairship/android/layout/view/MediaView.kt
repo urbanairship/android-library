@@ -297,8 +297,9 @@ internal class MediaView(
             else -> wv.focusSearch(View.FOCUS_BACKWARD)
         } ?: return false
 
-        if (event.action == KeyEvent.ACTION_DOWN) return target.requestFocus(direction)
-        return true
+        // A press that moves focus sends its release to the new view, so a release still arriving
+        // here is from a press that didn't.
+        return event.action == KeyEvent.ACTION_DOWN && target.requestFocus(direction)
     }
 
     private fun togglePlayback() {
