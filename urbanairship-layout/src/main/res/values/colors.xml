@@ -2,4 +2,6 @@
 <resources>
     <color name="system_bar_scrim_dark">#80000000</color>
     <color name="system_bar_scrim_light">#80FFFFFF</color>
+    <color name="ua_layout_focus_ring_inner">#FFFFFFFF</color>
+    <color name="ua_layout_focus_ring_outer">#CC000000</color>
 </resources>

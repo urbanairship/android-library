@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.widget
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.ColorFilter
 import android.graphics.Outline
 import android.graphics.Paint
@@ -15,13 +14,14 @@ import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.webkit.WebView
 import android.widget.HorizontalScrollView
 import android.widget.ScrollView
+import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.android.layout.R
-import com.urbanairship.android.layout.util.LayoutUtils
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Draws a focus ring around whichever view inside [root] has input focus, while the window isn't
@@ -29,8 +29,9 @@ import com.urbanairship.android.layout.util.LayoutUtils
  *
  * Scenes are styled by their authors, so the views' own focused states can't be relied on to be
  * visible. The ring is two-tone so at least one tone contrasts with any background, and follows
- * the focused view's shape just outside its edge, so it never covers the view's own border.
- * Parents clip their children, so it's drawn in [root]'s overlay rather than the focused view's.
+ * the focused view's shape just outside its edge, so it doesn't cover the view's own border. Along
+ * an edge with no room outside, such as a full-screen pager's, it moves inside instead. Parents clip
+ * their children, so it's drawn in [root]'s overlay rather than the focused view's.
  */
 internal class FocusRing private constructor(private val root: ViewGroup) :
     ViewTreeObserver.OnGlobalFocusChangeListener,
@@ -81,10 +82,9 @@ internal class FocusRing private constructor(private val root: ViewGroup) :
         return false
     }
 
-    // A web page draws its own focus, and a pager holding focus itself has nothing to show; a ring
-    // around either says nothing about what's focused. A scroll view only takes focus when it has
-    // content to scroll, so the ring shows what the arrows are moving.
-    private fun View.wantsRing(): Boolean = this !is WebView && this !is RecyclerView
+    // A web page draws its own focus, but a video's player never gets the arrows so doesn't; scroll
+    // views and pagers only take focus when the arrows move them.
+    private fun View.wantsRing(): Boolean = this !is TouchAwareAirshipWebView
 
     companion object {
 
@@ -97,6 +97,24 @@ internal class FocusRing private constructor(private val root: ViewGroup) :
     }
 }
 
+/**
+ * Sets [out] to the ring's outer edge: [target] grown by [reach] on every side, with any side that
+ * would land outside [clip] pulled back to it.
+ *
+ * @param target The focused view's bounds.
+ * @param clip The area the ring may draw in.
+ * @param reach How far past [target] the ring's outer edge sits when there's room.
+ * @param out Receives the outer edge.
+ */
+internal fun fitRing(target: Rect, clip: Rect, reach: Float, out: RectF) {
+    out.set(
+        max(target.left - reach, clip.left.toFloat()),
+        max(target.top - reach, clip.top.toFloat()),
+        min(target.right + reach, clip.right.toFloat()),
+        min(target.bottom + reach, clip.bottom.toFloat())
+    )
+}
+
 private fun View.scrollsItsContent(): Boolean =
     this is ScrollView || this is NestedScrollView || this is HorizontalScrollView || this is RecyclerView
 
@@ -104,19 +122,23 @@ private class FocusRingDrawable(context: Context) : Drawable() {
 
     var target: View? = null
 
-    private val strokeWidth = LayoutUtils.dpToPx(context, STROKE_WIDTH_DP).toFloat()
-    private val gap = LayoutUtils.dpToPx(context, GAP_DP).toFloat()
+    private val density = context.resources.displayMetrics.density
+    private val innerWidth = INNER_WIDTH_DP * density
+    private val outerWidth = OUTER_WIDTH_DP * density
+    private val gap = GAP_DP * density
+    /** How far past the focused view's edge the ring reaches when there's room for it. */
+    private val reach = gap + innerWidth + outerWidth
 
     private val outer = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = this@FocusRingDrawable.strokeWidth
-        color = OUTER_COLOR
+        strokeWidth = outerWidth
+        color = ContextCompat.getColor(context, R.color.ua_layout_focus_ring_outer)
     }
 
     private val inner = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = this@FocusRingDrawable.strokeWidth
-        color = INNER_COLOR
+        strokeWidth = innerWidth
+        color = ContextCompat.getColor(context, R.color.ua_layout_focus_ring_inner)
     }
 
     /** The focused view's bounds in the root's coordinates, empty when there's nothing to draw. */
@@ -134,6 +156,7 @@ private class FocusRingDrawable(context: Context) : Drawable() {
     private val oldClip = Rect()
     private val outline = Outline()
     private val path = Path()
+    private val ringBounds = RectF()
     private val ringRect = RectF()
 
     /** Recomputes where the ring goes; returns whether that changed. */
@@ -178,16 +201,20 @@ private class FocusRingDrawable(context: Context) : Drawable() {
     override fun draw(canvas: Canvas) {
         if (targetRect.isEmpty || clipRect.isEmpty) return
 
+        fitRing(targetRect, clipRect, reach, ringBounds)
+
         canvas.save()
         canvas.clipRect(clipRect)
-        stroke(canvas, outset = gap + strokeWidth / 2, inner)
-        stroke(canvas, outset = gap + strokeWidth * 1.5f, outer)
+        stroke(canvas, inset = outerWidth + innerWidth / 2, inner)
+        stroke(canvas, inset = outerWidth / 2, outer)
         canvas.restore()
     }
 
-    private fun stroke(canvas: Canvas, outset: Float, paint: Paint) {
-        ringRect.set(targetRect)
-        ringRect.inset(-outset, -outset)
+    /** Draws a stroke centred [inset] inside the ring's outer edge. */
+    private fun stroke(canvas: Canvas, inset: Float, paint: Paint) {
+        ringRect.set(ringBounds)
+        ringRect.inset(inset, inset)
+        val outset = reach - inset
 
         if (isOval) {
             canvas.drawOval(ringRect, paint)
@@ -239,10 +266,9 @@ private class FocusRingDrawable(context: Context) : Drawable() {
     override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
 
     private companion object {
-        const val STROKE_WIDTH_DP = 2
-        const val GAP_DP = 2
+        const val INNER_WIDTH_DP = 3f
+        const val OUTER_WIDTH_DP = 3f
+        const val GAP_DP = 2f
         const val MAX_WRAPPER_DEPTH = 3
-        const val INNER_COLOR = Color.WHITE
-        val OUTER_COLOR = Color.argb(204, 0, 0, 0)
     }
 }
