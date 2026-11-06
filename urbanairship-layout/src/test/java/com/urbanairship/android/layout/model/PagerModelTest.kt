@@ -446,6 +446,38 @@ public class PagerModelTest {
     }
 
     @Test
+    public fun testDirectionalKeySwipesBeforeATapAnywhereGesture(): TestResult = runTest {
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "any-tap",
+                reportingMetadata = null,
+                location = GestureLocation.ANY,
+                outcomes = listOf(
+                    Outcome.PagerStepNavigation("next", Outcome.PagerStepNavigation.Direction.NEXT)
+                )
+            )
+        )
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        // Right and Left swipe while a swipe is possible...
+        assertTrue(pagerModel.onDirectionalKey(isRight = true, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+        assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(0, pagerState.changes.value.pageIndex)
+        verify(exactly = 2) { mockReporter.report(match { it is ReportingEvent.PageSwipe }) }
+        verify(exactly = 0) { mockReporter.report(match { it is ReportingEvent.Gesture }) }
+
+        // ...and the tap anywhere runs once there's nothing to swipe back to.
+        assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+        verify(exactly = 1) { mockReporter.report(match { it is ReportingEvent.Gesture }) }
+    }
+
+    @Test
     public fun testEdgeTapRunsATapAnywhereGestureOnce(): TestResult = runTest {
         every { mockViewInfo.gestures } returns listOf(
             PagerGesture.Tap(
