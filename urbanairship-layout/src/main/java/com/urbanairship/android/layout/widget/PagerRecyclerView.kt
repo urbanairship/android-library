@@ -299,16 +299,35 @@ internal class PagerRecyclerView(
     override fun focusSearch(direction: Int): View? =
         super.focusSearch(direction) ?: inOrderFallback(direction)?.let { super.focusSearch(it) }
 
+    // A pager left holding focus has to count as focusable, or a search in focus order from it
+    // finds nothing.
     private val takesKeyFocus: Boolean
-        get() = isInTouchMode || isHoldingFocus || model.handlesDirectionalKeys
+        get() = isInTouchMode || isHoldingFocus || isFocused || model.handlesDirectionalKeys
+
+    // Neighbouring pages stay attached just off-screen, and focusing a control on one would move
+    // focus out of sight without turning the page.
+    private val displayedPage: View?
+        get() = getDisplayedPageView()?.takeIf { it.visibility == VISIBLE }
 
     override fun addFocusables(views: ArrayList<View>, direction: Int, focusableMode: Int) {
-        if (takesKeyFocus) {
-            super.addFocusables(views, direction, focusableMode)
-        } else {
-            addDescendantFocusables(views, direction, focusableMode)
+        val count = views.size
+        if (descendantFocusability != FOCUS_BLOCK_DESCENDANTS) {
+            displayedPage?.addFocusables(views, direction, focusableMode)
+        }
+        if (takesKeyFocus && (views.size == count || descendantFocusability != FOCUS_AFTER_DESCENDANTS)) {
+            addOwnFocusable(views, direction, focusableMode)
         }
     }
+
+    private fun addOwnFocusable(views: ArrayList<View>, direction: Int, focusableMode: Int) {
+        val focusability = descendantFocusability
+        descendantFocusability = FOCUS_BLOCK_DESCENDANTS
+        super.addFocusables(views, direction, focusableMode)
+        descendantFocusability = focusability
+    }
+
+    override fun onRequestFocusInDescendants(direction: Int, previouslyFocusedRect: Rect?): Boolean =
+        !isComputingLayout && displayedPage?.requestFocus(direction, previouslyFocusedRect) == true
 
     override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean =
         if (takesKeyFocus) {

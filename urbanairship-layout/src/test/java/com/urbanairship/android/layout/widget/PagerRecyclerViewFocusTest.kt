@@ -17,6 +17,7 @@ import io.mockk.mockk
 import java.time.Duration
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -119,10 +120,30 @@ public class PagerRecyclerViewFocusTest {
         val pageButton = focusableButton()
         val pager = show(listOf(pageButton, View(activity)), handlesDirectionalKeys = false)
         pageButton.requestFocus()
-        turnToPage(pager, 1)
+        pager.scrollTo(1, animate = true)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
+        assertTrue(pager.isFocused)
+        assertTrue(pager in activity.window.decorView.getFocusables(View.FOCUS_FORWARD))
 
         // Nothing lies below the pager, so Down goes on in focus order and wraps to the top.
         assertSame(hostButton, pager.focusSearch(View.FOCUS_DOWN))
+    }
+
+    @Test
+    public fun testAControlOnAnOffScreenPageIsNotFocusable() {
+        val firstButton = focusableButton()
+        val offScreenButton = focusableButton()
+        val pager = show(listOf(firstButton, View(activity), offScreenButton), handlesDirectionalKeys = false)
+        firstButton.requestFocus()
+
+        pager.scrollTo(1, animate = true)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
+        assertTrue(offScreenButton.isAttachedToWindow)
+        assertSame(pager, activity.window.decorView.findFocus())
+
+        assertFalse(offScreenButton in activity.window.decorView.getFocusables(View.FOCUS_RIGHT))
+        assertNotSame(offScreenButton, pager.focusSearch(View.FOCUS_RIGHT))
+        assertFalse(pager.requestFocus(View.FOCUS_DOWN) && offScreenButton.isFocused)
     }
 
     @Test
