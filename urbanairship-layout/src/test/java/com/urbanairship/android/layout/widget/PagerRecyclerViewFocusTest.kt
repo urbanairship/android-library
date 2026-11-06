@@ -158,6 +158,22 @@ public class PagerRecyclerViewFocusTest {
     }
 
     @Test
+    public fun testAPagerThatTurnsWithTheArrowsIsAFocusStop() {
+        val pager = show(listOf(View(activity), focusableButton()))
+        hostButton.requestFocus()
+
+        assertTrue(pager in activity.window.decorView.getFocusables(View.FOCUS_DOWN))
+    }
+
+    @Test
+    public fun testAModalsPagerIsNotAFocusStop() {
+        val pager = show(listOf(View(activity), focusableButton()), receivesKeysWithoutFocus = true)
+        hostButton.requestFocus()
+
+        assertFalse(pager in activity.window.decorView.getFocusables(View.FOCUS_DOWN))
+    }
+
+    @Test
     public fun testFocusOutsideThePagerIsLeftAlone() {
         val pager = show(listOf(focusableButton(), View(activity)))
         hostButton.requestFocus()
@@ -170,6 +186,7 @@ public class PagerRecyclerViewFocusTest {
     private fun show(
         pageViews: List<View>,
         handlesDirectionalKeys: Boolean = true,
+        receivesKeysWithoutFocus: Boolean = false,
         beforeLayout: (PagerRecyclerView) -> Unit = {}
     ): PagerRecyclerView {
         val pages = pageViews.map { page ->
@@ -187,7 +204,10 @@ public class PagerRecyclerViewFocusTest {
             every { getPageViewId(any()) } answers { View.generateViewId() }
         }
 
-        val pager = PagerRecyclerView(activity, model, mockk<ViewEnvironment>(relaxed = true))
+        val environment = mockk<ViewEnvironment>(relaxed = true) {
+            every { this@mockk.receivesKeysWithoutFocus } returns receivesKeysWithoutFocus
+        }
+        val pager = PagerRecyclerView(activity, model, environment)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             addView(hostButton, MATCH_PARENT, 100)
