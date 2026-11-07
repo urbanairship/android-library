@@ -769,7 +769,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         </pre> *
          *
          * @param context The application context.
-         * @param propertiesFile The name of the properties file in the assets directory.
+         * @param propertiesFile The properties file path, relative to the assets directory.
          * @return The config option builder.
          */
         public fun applyProperties(context: Context, propertiesFile: String): Builder {
@@ -787,7 +787,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
          * logging an error.
          *
          * @param context The application context.
-         * @param propertiesFile The name of the properties file in the assets directory.
+         * @param propertiesFile The properties file path, relative to the assets directory.
          * @return The config option builder.
          * @throws ConfigException
          */
