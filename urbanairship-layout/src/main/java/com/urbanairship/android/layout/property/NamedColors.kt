@@ -45,7 +45,7 @@ public class NamedColors private constructor(private val colors: Map<String, Col
      * Returns these colors with [content]'s own `references.colors` laid over them, so a name
      * both define takes [content]'s color.
      *
-     * @param content a scene, or an async view's content, whose root may carry `references`.
+     * @param content a scene, or an async view's wrapper, whose root may carry `references`.
      * @return the colors in scope within [content].
      * @throws JsonException if a named color isn't a color, a reference among them.
      */
