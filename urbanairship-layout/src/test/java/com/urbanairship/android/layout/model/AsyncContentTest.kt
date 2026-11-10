@@ -66,6 +66,7 @@ public class AsyncContentTest {
         val content = parse(
             """
             {
+              "type": "async_response",
               "view": { "type": "container", "items": [] },
               "references": { "colors": { "brand": { "default": { "type": "hex", "hex": "#C8336C" } } } }
             }
@@ -80,7 +81,7 @@ public class AsyncContentTest {
 
     @Test
     public fun testAWrapperWithoutReferencesKeepsTheScenesColors() {
-        val content = parse("""{ "view": { "type": "empty_view" } }""")
+        val content = parse("""{ "type": "async_response", "view": { "type": "empty_view" } }""")
 
         assertTrue(content.info is EmptyInfo)
         assertSame(sceneColors, content.namedColors)
@@ -88,21 +89,26 @@ public class AsyncContentTest {
 
     @Test
     public fun testAWrapperWithABrokenViewFails() {
-        assertThrows(JsonException::class.java) { parse("""{ "view": { "type": "not_a_view" } }""") }
-        assertThrows(JsonException::class.java) { parse("""{ "view": "empty_view" }""") }
+        assertThrows(JsonException::class.java) { parse("""{ "type": "async_response", "view": { "type": "not_a_view" } }""") }
+        assertThrows(JsonException::class.java) { parse("""{ "type": "async_response", "view": "empty_view" }""") }
     }
 
     @Test
     public fun testAWrapperWithMalformedReferencesFails() {
         assertThrows(JsonException::class.java) {
-            parse("""{ "view": { "type": "empty_view" }, "references": [] }""")
+            parse("""{ "type": "async_response", "view": { "type": "empty_view" }, "references": [] }""")
         }
         assertThrows(JsonException::class.java) {
-            parse("""{ "view": { "type": "empty_view" }, "references": { "colors": "brand" } }""")
+            parse("""{ "type": "async_response", "view": { "type": "empty_view" }, "references": { "colors": "brand" } }""")
         }
         assertThrows(JsonException::class.java) {
-            parse("""{ "view": { "type": "empty_view" }, "references": { "colors": { "brand": "#C8336C" } } }""")
+            parse("""{ "type": "async_response", "view": { "type": "empty_view" }, "references": { "colors": { "brand": "#C8336C" } } }""")
         }
+    }
+
+    @Test
+    public fun testAViewWithoutTheAsyncResponseTypeIsNotAWrapper() {
+        assertThrows(JsonException::class.java) { parse("""{ "view": { "type": "empty_view" } }""") }
     }
 
     @Test

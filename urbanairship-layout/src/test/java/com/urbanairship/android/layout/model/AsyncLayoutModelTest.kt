@@ -285,7 +285,7 @@ public class AsyncLayoutModelTest {
     @Test
     public fun wrapperWithBrokenView_setsClientError(): TestResult = runTest(testDispatcher) {
         val info = parseAsyncInfo(asyncControllerJson())
-        session.addResponse(200, body = """{ "view": { "type": "not_a_view" } }""")
+        session.addResponse(200, body = """{ "type": "async_response", "view": { "type": "not_a_view" } }""")
         val model = newModel(info)
         val context = RuntimeEnvironment.getApplication()
 
@@ -546,6 +546,7 @@ public class AsyncLayoutModelTest {
             200,
             body = """
                 {
+                  "type": "async_response",
                   "view": {
                     "type": "container",
                     "background_color": { "type": "color_reference", "name": "brand" },

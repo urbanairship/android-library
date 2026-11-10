@@ -13,9 +13,10 @@ internal class AsyncContent(val info: ViewInfo, val namedColors: NamedColors) {
 
         /**
          * Parses an async view's response, which is either a view or a wrapper of the form
-         * `{ "view": <view>, "references": { "colors": { ... } } }` with `references` optional.
+         * `{ "type": "async_response", "view": <view>, "references": { "colors": { ... } } }` with
+         * `references` optional.
          *
-         * An object with a `view` key and no `type` key is the wrapper; anything else is a view.
+         * Any other `type` is a view.
          * The wrapper's named colors are looked up before [sceneColors]. A bare view's own
          * `references` key isn't read.
          *
@@ -36,8 +37,11 @@ internal class AsyncContent(val info: ViewInfo, val namedColors: NamedColors) {
             return AsyncContent(ViewInfo.viewInfoFromJson(view), sceneColors.scopedTo(json))
         }
 
+        /** The `type` that marks the response as a wrapper rather than a view. */
+        private const val WRAPPER_TYPE = "async_response"
+
         private fun isWrapper(json: JsonMap): Boolean =
-            json.containsKey("view") && !json.containsKey("type")
+            json.opt("type").optString() == WRAPPER_TYPE
 
         /** [NamedColors.scopedTo] skips a `references` that isn't an object; here it's an error. */
         @Throws(JsonException::class)
