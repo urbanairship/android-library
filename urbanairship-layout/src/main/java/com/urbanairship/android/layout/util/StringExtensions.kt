@@ -87,7 +87,7 @@ private const val boldTag = """<b>$1</b>"""
  * stays literal rather than pairing as an empty or star-only italic.
  */
 private val italicRegexStar = """\*([^*]+?)\*""".toRegex()
-private val italicRegexBar = """\b_(.+?)_\b""".toRegex()
+private val italicRegexBar = """\b_([^_].*?)_\b""".toRegex()
 private const val italicTag = """<i>$1</i>"""
 
 /** Matches `~~strikethrough~~` */

@@ -274,9 +274,15 @@ public class StringExtensionsTest {
 
     @Test
     public fun markdownToHtmlLeavesEmptyPairsLiteral() {
-        listOf("****", "~~~~", "^^^^", ",{},").forEach { input ->
+        listOf("****", "____", "~~~~", "^^^^", ",{},").forEach { input ->
             assertEquals(input, input.markdownToHtml())
         }
+    }
+
+    @Test
+    public fun markdownToHtmlUnderscoreItalicStillMatchesInsideWords() {
+        assertEquals("<i>italic</i>", "_italic_".markdownToHtml())
+        assertEquals("<i>a_b</i>", "_a_b_".markdownToHtml())
     }
 
     @Test
