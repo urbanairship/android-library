@@ -38,7 +38,7 @@ public class NotificationProxyReceiver public constructor() : BroadcastReceiver(
          * before finishing early (1 second for takeOff).
          */
         val pendingResult = goAsync()
-        NotificationIntentProcessor(context, intent).process(ACTION_TIMEOUT) { result ->
+        NotificationIntentProcessor(context, intent).process(overallTimeout = ACTION_TIMEOUT) { result ->
             result.fold(onSuccess = {
                 UALog.v { "Finished processing notification intent with result $it." }
             }, onFailure = {

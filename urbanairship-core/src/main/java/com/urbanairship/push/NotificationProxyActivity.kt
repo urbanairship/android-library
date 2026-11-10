@@ -4,6 +4,7 @@ package com.urbanairship.push
 import android.app.Activity
 import android.os.Bundle
 import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.Airship
@@ -36,7 +37,7 @@ public class NotificationProxyActivity public constructor() : Activity() {
         UALog.v("Received intent: %s", intent.action)
 
         // Processing outlives this activity, which must finish before onCreate returns.
-        NotificationIntentProcessor(applicationContext, intent).process(ACTION_TIMEOUT) { result ->
+        NotificationIntentProcessor(applicationContext, intent).process(readyTimeout = TAKE_OFF_TIMEOUT) { result ->
             result.fold(onSuccess = {
                 UALog.v { "Finished processing notification intent with result $it." }
             }, onFailure = {
@@ -50,14 +51,16 @@ public class NotificationProxyActivity public constructor() : Activity() {
         finish()
     }
 
-    private companion object {
+    internal companion object {
         /**
-         * How long processing may run after this activity has finished.
+         * How long to wait for takeOff before giving up on a notification intent.
          *
          * Bounded by Android's background activity start grace period rather than by an ANR
-         * budget: once that period lapses, the application launch this processing performs is
-         * dropped and the notification tap opens nothing.
+         * budget: processing resumes after this activity has finished, and once that period
+         * lapses the application launch is dropped and the notification tap opens nothing.
+         * Only the wait is bounded, so notification actions still run to completion.
          */
-        private val ACTION_TIMEOUT: Duration = 8.seconds
+        @VisibleForTesting
+        internal val TAKE_OFF_TIMEOUT: Duration = 8.seconds
     }
 }

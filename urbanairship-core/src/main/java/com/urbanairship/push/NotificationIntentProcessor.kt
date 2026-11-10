@@ -39,7 +39,7 @@ import kotlinx.coroutines.withTimeout
 internal class NotificationIntentProcessor(
     private val context: Context,
     private val intent: Intent,
-    private val waitForReady: suspend () -> Boolean = { Airship.waitForReady() },
+    private val waitForReady: suspend (Duration?) -> Boolean = { Airship.waitForReady(it) },
     private val analyticsProvider: () -> Analytics = { Airship.analytics },
     private val pushProvider: () -> PushManager = { Airship.push },
     private val autoLaunchApplicationProvider: () -> Boolean = {
@@ -60,22 +60,30 @@ internal class NotificationIntentProcessor(
      * Processing happens on the main thread using [Dispatchers.Main.immediate] to ensure
      * that activity launches are not blocked by background restrictions.
      *
-     * @param timeout Optional timeout for processing. If the timeout is reached,
-     * the callback will be invoked with a failure result.
+     * @param readyTimeout Optional bound on the wait for the SDK to become ready. Reaching it
+     * invokes the callback with a failure result. It leaves the processing that follows unbounded,
+     * so notification actions are not cut short by a slow takeOff.
+     * @param overallTimeout Optional bound on the whole operation, for callers that answer to a
+     * hard platform deadline such as a broadcast. Reaching it cancels processing in place,
+     * wherever it has got to, and invokes the callback with a failure result.
      * @param callback Callback to be invoked when processing is complete or fails.
      */
     @MainThread
-    fun process(timeout: Duration? = null, callback: (Result<Unit>) -> Unit) {
+    fun process(
+        readyTimeout: Duration? = null,
+        overallTimeout: Duration? = null,
+        callback: (Result<Unit>) -> Unit
+    ) {
         // Immediate main to avoid run loop hop so we can start activities without any background restrictions
         scope.launch {
             try {
-                val result = if (timeout != null) {
+                val result = if (overallTimeout != null) {
                     // withTimeout will throw if it reaches the timeout
-                    withTimeout(timeout) {
-                        processInternal()
+                    withTimeout(overallTimeout) {
+                        processInternal(readyTimeout)
                     }
                 } else {
-                    processInternal()
+                    processInternal(readyTimeout)
                 }
                 callback(result)
             } catch(e: Exception) {
@@ -84,13 +92,19 @@ internal class NotificationIntentProcessor(
         }
     }
 
-    private suspend fun processInternal(): Result<Unit> {
+    private suspend fun processInternal(readyTimeout: Duration?): Result<Unit> {
         if (intent.action == null || notificationInfo == null) {
             return Result.failure(IllegalArgumentException("Invalid intent $intent"))
         }
 
-        // Suspends instead of blocking. The timeout passed to process() bounds the wait.
-        if (!waitForReady()) {
+        // Rides on the intent and needs nothing from the SDK, so a slow takeOff must not cost the
+        // app the delete intent it attached to its own notification.
+        if (intent.action == PushManager.ACTION_NOTIFICATION_DISMISSED) {
+            sendDeleteIntent()
+        }
+
+        // Suspends instead of blocking.
+        if (!waitForReady(readyTimeout)) {
             return Result.failure(IllegalStateException("Airship is not ready, unable to process $intent"))
         }
 
@@ -162,16 +176,19 @@ internal class NotificationIntentProcessor(
     private fun onNotificationDismissed() {
         UALog.i("Notification dismissed: $notificationInfo")
 
+        if (notificationInfo != null) {
+            pushProvider().notificationListener?.onNotificationDismissed(notificationInfo)
+        }
+    }
+
+    /** Forwards the delete intent the app attached to its own notification, if there is one. */
+    private fun sendDeleteIntent() {
         intent.extras?.getParcelableCompat<PendingIntent>(EXTRA_NOTIFICATION_DELETE_INTENT)?.let {
             try {
                 it.send()
             } catch (_: PendingIntent.CanceledException) {
                 UALog.d("Failed to send notification's deleteIntent, already canceled.")
             }
-        }
-
-        if (notificationInfo != null) {
-            pushProvider().notificationListener?.onNotificationDismissed(notificationInfo)
         }
     }
 

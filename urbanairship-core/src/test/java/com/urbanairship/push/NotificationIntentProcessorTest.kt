@@ -2,6 +2,7 @@
 package com.urbanairship.push
 
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.os.bundleOf
@@ -250,24 +251,56 @@ public class NotificationIntentProcessorTest {
     public fun testNotReadyFails(): TestResult = runTest {
         val result = processIntent(responseIntent, waitForReady = { false })
 
-        Assert.assertTrue(result.isFailure)
+        Assert.assertTrue(result.exceptionOrNull() is IllegalStateException)
         verify(exactly = 0) { context.startActivity(any()) }
         verify(exactly = 0) { notificationListener.onNotificationOpened(any()) }
     }
 
     /**
-     * Test that the timeout covers the wait for the SDK to become ready.
+     * Test that the overall timeout covers the wait for the SDK to become ready.
      */
     @Test
-    public fun testTimeoutCoversWaitForReady(): TestResult = runTest {
+    public fun testOverallTimeoutCoversWaitForReady(): TestResult = runTest {
         val result = processIntent(
             intent = responseIntent,
-            timeout = 9.seconds,
+            overallTimeout = 9.seconds,
             waitForReady = { awaitCancellation() }
         )
 
         Assert.assertTrue(result.exceptionOrNull() is TimeoutCancellationException)
         verify(exactly = 0) { context.startActivity(any()) }
+    }
+
+    /**
+     * Test that the ready timeout bounds the wait rather than the processing that follows.
+     */
+    @Test
+    public fun testReadyTimeoutBoundsTheWait(): TestResult = runTest {
+        var passedToWait: Duration? = null
+
+        val result = processIntent(
+            intent = responseIntent,
+            readyTimeout = 8.seconds,
+            waitForReady = { passedToWait = it; false }
+        )
+
+        Assert.assertEquals(8.seconds, passedToWait)
+        Assert.assertTrue(result.exceptionOrNull() is IllegalStateException)
+    }
+
+    /**
+     * Test that the notification's own delete intent is sent without waiting for the SDK.
+     */
+    @Test
+    public fun testDeleteIntentIsSentWithoutWaitingForReady(): TestResult = runTest {
+        val deleteIntent: PendingIntent = mockk(relaxed = true)
+        dismissIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, deleteIntent)
+
+        val result = processIntent(dismissIntent, waitForReady = { false })
+
+        Assert.assertTrue(result.exceptionOrNull() is IllegalStateException)
+        verify { deleteIntent.send() }
+        verify(exactly = 0) { notificationListener.onNotificationDismissed(any()) }
     }
 
     private fun verifyApplicationLaunched() {
@@ -282,8 +315,9 @@ public class NotificationIntentProcessorTest {
 
     private suspend fun processIntent(
         intent: Intent,
-        timeout: Duration? = null,
-        waitForReady: suspend () -> Boolean = { true }
+        readyTimeout: Duration? = null,
+        overallTimeout: Duration? = null,
+        waitForReady: suspend (Duration?) -> Boolean = { true }
     ): Result<Unit> {
         val deferred = CompletableDeferred<Result<Unit>>()
         NotificationIntentProcessor(
@@ -293,7 +327,7 @@ public class NotificationIntentProcessorTest {
             analyticsProvider = { analytics },
             pushProvider = { pushManager },
             autoLaunchApplicationProvider = { true }
-        ).process(timeout) { result ->
+        ).process(readyTimeout, overallTimeout) { result ->
             deferred.complete(result)
         }
         return deferred.await()
