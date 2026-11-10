@@ -7,6 +7,8 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * An activity that handles notification intents.
@@ -33,7 +35,8 @@ public class NotificationProxyActivity public constructor() : Activity() {
 
         UALog.v("Received intent: %s", intent.action)
 
-        NotificationIntentProcessor(this, intent).process { result ->
+        // Processing outlives this activity, which must finish before onCreate returns.
+        NotificationIntentProcessor(applicationContext, intent).process(ACTION_TIMEOUT) { result ->
             result.fold(onSuccess = {
                 UALog.v { "Finished processing notification intent with result $it." }
             }, onFailure = {
@@ -45,5 +48,16 @@ public class NotificationProxyActivity public constructor() : Activity() {
 
         // This needs to be called before onCreate finishes or Android will crash
         finish()
+    }
+
+    private companion object {
+        /**
+         * How long processing may run after this activity has finished.
+         *
+         * Bounded by Android's background activity start grace period rather than by an ANR
+         * budget: once that period lapses, the application launch this processing performs is
+         * dropped and the notification tap opens nothing.
+         */
+        private val ACTION_TIMEOUT: Duration = 8.seconds
     }
 }

@@ -30,13 +30,21 @@ import kotlinx.coroutines.withTimeout
 
 /**
  * Processes notification intents.
+ *
+ * The SDK is reached through providers rather than read during construction. Every `Airship`
+ * accessor blocks the calling thread until takeOff completes, and both callers construct this on
+ * the main thread, so reading them eagerly would block there. The providers are invoked only after
+ * [waitForReady] has returned.
  */
 internal class NotificationIntentProcessor(
     private val context: Context,
     private val intent: Intent,
-    private val analytics: Analytics = Airship.analytics,
-    private val pushManager: PushManager = Airship.push,
-    private val autoLaunchApplication: Boolean = Airship.airshipConfigOptions.autoLaunchApplication,
+    private val waitForReady: suspend () -> Boolean = { Airship.waitForReady() },
+    private val analyticsProvider: () -> Analytics = { Airship.analytics },
+    private val pushProvider: () -> PushManager = { Airship.push },
+    private val autoLaunchApplicationProvider: () -> Boolean = {
+        Airship.airshipConfigOptions.autoLaunchApplication
+    },
 ) {
     private val actionButtonInfo = NotificationActionButtonInfo.fromIntent(intent)
     private val notificationInfo = NotificationInfo.fromIntent(intent)
@@ -81,6 +89,11 @@ internal class NotificationIntentProcessor(
             return Result.failure(IllegalArgumentException("Invalid intent $intent"))
         }
 
+        // Suspends instead of blocking. The timeout passed to process() bounds the wait.
+        if (!waitForReady()) {
+            return Result.failure(IllegalStateException("Airship is not ready, unable to process $intent"))
+        }
+
         UALog.v("Processing intent: %s", intent.action)
         return when (intent.action) {
             PushManager.ACTION_NOTIFICATION_RESPONSE -> {
@@ -103,6 +116,9 @@ internal class NotificationIntentProcessor(
     private suspend fun onNotificationResponse() {
         UALog.i("Notification response: $notificationInfo, $actionButtonInfo")
         if (notificationInfo == null) { return }
+
+        val analytics = analyticsProvider()
+        val pushManager = pushProvider()
 
         if (actionButtonInfo == null || actionButtonInfo.isForeground) {
             // Set the conversion push id and metadata
@@ -155,7 +171,7 @@ internal class NotificationIntentProcessor(
         }
 
         if (notificationInfo != null) {
-            pushManager.notificationListener?.onNotificationDismissed(notificationInfo)
+            pushProvider().notificationListener?.onNotificationDismissed(notificationInfo)
         }
     }
 
@@ -173,7 +189,7 @@ internal class NotificationIntentProcessor(
             return
         }
 
-        if (!autoLaunchApplication) {
+        if (!autoLaunchApplicationProvider()) {
             return
         }
 
