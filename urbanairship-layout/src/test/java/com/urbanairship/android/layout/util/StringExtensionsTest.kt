@@ -254,6 +254,38 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlLeavesUnmatchedMarkersLiteral() {
+        listOf(
+            "**unclosed bold",
+            "unopened bold**",
+            "***unclosed bold italic",
+            "*unclosed italic",
+            "__unclosed bold",
+            "_unclosed italic",
+            "~~unclosed strike",
+            "==unclosed highlight",
+            "^^unclosed sup",
+            ",{unclosed sub",
+            "unopened sub},",
+        ).forEach { input ->
+            assertEquals(input, input.markdownToHtml())
+        }
+    }
+
+    @Test
+    public fun markdownToHtmlLeavesEmptyPairsLiteral() {
+        listOf("****", "~~~~", "^^^^", ",{},").forEach { input ->
+            assertEquals(input, input.markdownToHtml())
+        }
+    }
+
+    @Test
+    public fun markdownToHtmlUnmatchedMarkerBesideAPair() {
+        assertEquals("<b>bold</b> and **open", "**bold** and **open".markdownToHtml())
+        assertEquals("<i>italic</i> and **open", "*italic* and **open".markdownToHtml())
+    }
+
+    @Test
     public fun markdownToHtmlColorSpans() {
         val input = "[Sale]{color:brand} ends [today]{color:urgent}, so don't miss it"
         val expected = """<span style="color: #000001;">Sale</span> ends <span style="color: #000002;">today</span>, so don&#39;t miss it"""

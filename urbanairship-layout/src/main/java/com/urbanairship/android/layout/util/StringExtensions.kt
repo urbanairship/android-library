@@ -73,30 +73,33 @@ private val linkRegex = """\[(.+?)]\((.+?)\)""".toRegex()
 private const val linkTag = """<a href="$2">$1</a>"""
 
 /** Matches `***bold + italic***` or `___bold + italic___` */
-private val boldAndItalicRegexStar = """\*\*\*(.*?)\*\*\*""".toRegex()
-private val boldAndItalicRegexBar = """\b___(.*?)___\b""".toRegex()
+private val boldAndItalicRegexStar = """\*\*\*(.+?)\*\*\*""".toRegex()
+private val boldAndItalicRegexBar = """\b___(.+?)___\b""".toRegex()
 private const val boldAndItalicTag = """<b><i>$1</i></b>"""
 
 /** Matches `**bold**` or `__bold__` */
-private val boldRegexStar = """\*\*(.*?)\*\*""".toRegex()
-private val boldRegexBar = """\b__(.*?)__\b""".toRegex()
+private val boldRegexStar = """\*\*(.+?)\*\*""".toRegex()
+private val boldRegexBar = """\b__(.+?)__\b""".toRegex()
 private const val boldTag = """<b>$1</b>"""
 
-/** Matches `*italic*` or `_italic_` */
-private val italicRegexStar = """\*(.*?)\*""".toRegex()
-private val italicRegexBar = """\b_(.*?)_\b""".toRegex()
+/**
+ * Matches `*italic*` or `_italic_`. Runs after bold, so a star left in the text is unmatched and
+ * stays literal rather than pairing as an empty or star-only italic.
+ */
+private val italicRegexStar = """\*([^*]+?)\*""".toRegex()
+private val italicRegexBar = """\b_(.+?)_\b""".toRegex()
 private const val italicTag = """<i>$1</i>"""
 
 /** Matches `~~strikethrough~~` */
-private val strikethroughRegex = """~~(.*?)~~""".toRegex()
+private val strikethroughRegex = """~~(.+?)~~""".toRegex()
 private const val strikethroughTag = """<s>$1</s>"""
 
 /** Matches `^^superscript^^` */
-private val superscriptRegex = """\^\^(.*?)\^\^""".toRegex()
+private val superscriptRegex = """\^\^(.+?)\^\^""".toRegex()
 private const val superscriptTag = """<sup>$1</sup>"""
 
 /** Matches `,{subscript},` */
-private val subscriptRegex = """,\{(.*?)\},""".toRegex()
+private val subscriptRegex = """,\{(.+?)\},""".toRegex()
 private const val subscriptTag = """<sub>$1</sub>"""
 
 /** Matches `==highlight==` */
