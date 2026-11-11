@@ -68,8 +68,8 @@ private val colorSpanRegex = run {
     """$open((?:$notBracket|$open$notBracket*$close\([^)]*\))+?)$close\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
 }
 
-/** Matches `[link](url)` */
-private val linkRegex = """\[(.+?)]\((.+?)\)""".toRegex()
+/** Matches `[link](url)` whose text holds no brackets, so a bracket before the link stays literal. */
+private val linkRegex = """\[([^\[\]]*)]\((.+?)\)""".toRegex()
 private const val linkTag = """<a href="$2">$1</a>"""
 
 /** Matches `^^superscript^^` */
@@ -83,7 +83,7 @@ private const val subscriptTag = """<sub>$1</sub>"""
 /** Matches `==highlight==` */
 private val highlightRegex = """==([\s\S]+?)==""".toRegex()
 /** Color is replaced later **/
-private const val highlightTag = """<span style="background-color: #4DFFFF00;">$1</span>"""
+private const val highlightTag = """<$HIGHLIGHT_TAG>$1</$HIGHLIGHT_TAG>"""
 
 /** Newline character `\n` */
 private const val newline = "\n"
@@ -102,7 +102,7 @@ private fun String.replaceColorSpans(colorNames: List<String>): String {
                 text
             } else {
                 val placeholder = "#%06X".format(index + 1)
-                """<span style="color: $placeholder;">$text</span>"""
+                """<font color="$placeholder">$text</font>"""
             }
         }
         if (next == result) return result
@@ -118,7 +118,7 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         // symbols like < or & after converting to HTML and rendering the text.
         // This must be done first, before any other formatting is applied.
         .htmlEncode()
-        // Replace [text]{color:name} with a placeholder-colored <span>, before links so a
+        // Replace [text]{color:name} with a placeholder-colored tag, before links so a
         // link regex can't swallow the brackets
         .replaceColorSpans(colorNames)
         // Replace newlines with <br>
@@ -132,7 +132,7 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         .replace(superscriptRegex, superscriptTag)
         // Replace ,{subscript}, with <sub>subscript</sub>
         .replace(subscriptRegex, subscriptTag)
-        // Replace ==highlight== with <span style="background-color: #4DFFFF00;">highlight</span>
+        // Replace ==highlight== with <uahighlight>highlight</uahighlight>
         .replace(highlightRegex, highlightTag)
         // Draw escaped characters as themselves
         .replace(escapedCharRegex) { (it.value[0].code - ESCAPE_OFFSET).toChar().toString().htmlEncode() }

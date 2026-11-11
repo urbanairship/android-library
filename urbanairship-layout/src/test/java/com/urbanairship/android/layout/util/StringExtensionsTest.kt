@@ -186,7 +186,7 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlHighlightIntraword() {
         val input = "high==light==ed"
-        val expected = """high<span style="background-color: #4DFFFF00;">light</span>ed"""
+        val expected = """high<uahighlight>light</uahighlight>ed"""
         assertEquals(expected, input.markdownToHtml())
     }
 
@@ -214,14 +214,14 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlSuperscriptWithHighlightInside() {
         val input = "mc^^==2==^^"
-        val expected = """mc<sup><span style="background-color: #4DFFFF00;">2</span></sup>"""
+        val expected = """mc<sup><uahighlight>2</uahighlight></sup>"""
         assertEquals(expected, input.markdownToHtml())
     }
 
     @Test
     public fun markdownToHtmlSubscriptInsideHighlight() {
         val input = "==H,{2},O=="
-        val expected = """<span style="background-color: #4DFFFF00;">H<sub>2</sub>O</span>"""
+        val expected = """<uahighlight>H<sub>2</sub>O</uahighlight>"""
         assertEquals(expected, input.markdownToHtml())
     }
 
@@ -242,7 +242,7 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlHighlightedSubscriptAndSuperscript() {
         val input = "==H,{2},O is highlighted!==  and  ==E = mc^^2^^ too=="
-        val expected = """<span style="background-color: #4DFFFF00;">H<sub>2</sub>O is highlighted!</span>  and  <span style="background-color: #4DFFFF00;">E = mc<sup>2</sup> too</span>"""
+        val expected = """<uahighlight>H<sub>2</sub>O is highlighted!</uahighlight>  and  <uahighlight>E = mc<sup>2</sup> too</uahighlight>"""
         assertEquals(expected, input.markdownToHtml())
     }
 
@@ -365,6 +365,12 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlLinkTextHoldsNoBrackets() {
+        assertEquals("""[<a href="u">a</a>""", "[[a](u)".markdownToHtml())
+        assertEquals("""<a href="u"></a>""", "[](u)".markdownToHtml())
+    }
+
+    @Test
     public fun markdownToHtmlUnmatchedMarkerBesideAPair() {
         assertEquals("<b>bold</b> and **open", "**bold** and **open".markdownToHtml())
         assertEquals("<i>italic</i> and **open", "*italic* and **open".markdownToHtml())
@@ -373,7 +379,7 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlColorSpans() {
         val input = "[Sale]{color:brand} ends [today]{color:urgent}, so don't miss it"
-        val expected = """<span style="color: #000001;">Sale</span> ends <span style="color: #000002;">today</span>, so don&#39;t miss it"""
+        val expected = """<font color="#000001">Sale</font> ends <font color="#000002">today</font>, so don&#39;t miss it"""
         assertEquals(expected, input.markdownToHtml(listOf("brand", "urgent")))
     }
 
@@ -386,27 +392,27 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlNestedColorSpans() {
         val input = "[one [two]{color:inner} one]{color:outer}"
-        val expected = """<span style="color: #000001;">one <span style="color: #000002;">two</span> one</span>"""
+        val expected = """<font color="#000001">one <font color="#000002">two</font> one</font>"""
         assertEquals(expected, input.markdownToHtml(listOf("outer", "inner")))
     }
 
     @Test
     public fun markdownToHtmlColorSpanAroundStylesAndLink() {
         val input = "[**Sale** at the [store](https://example.com) ,{now},]{color:brand}"
-        val expected = """<span style="color: #000001;"><b>Sale</b> at the <a href="https://example.com">store</a> <sub>now</sub></span>"""
+        val expected = """<font color="#000001"><b>Sale</b> at the <a href="https://example.com">store</a> <sub>now</sub></font>"""
         assertEquals(expected, input.markdownToHtml(listOf("brand")))
     }
 
     @Test
     public fun markdownToHtmlColorSpanBeforeLink() {
         val input = "[Sale]{color:brand} at the [store](https://example.com)"
-        val expected = """<span style="color: #000001;">Sale</span> at the <a href="https://example.com">store</a>"""
+        val expected = """<font color="#000001">Sale</font> at the <a href="https://example.com">store</a>"""
         assertEquals(expected, input.markdownToHtml(listOf("brand")))
     }
 
     @Test
     public fun markdownToHtmlColorSpanTextWithPercent() {
-        val expected = """<span style="color: #000001;">20% off</span>"""
+        val expected = """<font color="#000001">20% off</font>"""
         assertEquals(expected, "[20% off]{color:brand}".markdownToHtml(listOf("brand")))
     }
 
@@ -442,7 +448,7 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlEscapedBracketStillOpensAColorSpan() {
         val input = """[parens](color:brand) and \[escaped]{color:brand}"""
-        val expected = """<a href="color:brand">parens</a> and <span style="color: #000001;">escaped</span>"""
+        val expected = """<a href="color:brand">parens</a> and <font color="#000001">escaped</font>"""
         assertEquals(expected, input.markdownToHtml(listOf("brand")))
     }
 

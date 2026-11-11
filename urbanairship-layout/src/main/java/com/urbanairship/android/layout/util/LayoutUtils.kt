@@ -363,9 +363,12 @@ internal object LayoutUtils {
         val isMarkdownEnabled = markdownOptions.isEnabled
 
         if (isMarkdownEnabled) {
+            // The leading <body> is required by MarkdownTagHandler.
             val html = HtmlCompat.fromHtml(
-                text.markdownToHtml(NamedColorsContext.colorsOf(context).names),
-                HtmlCompat.FROM_HTML_MODE_LEGACY
+                "<body>" + text.markdownToHtml(NamedColorsContext.colorsOf(context).names),
+                HtmlCompat.FROM_HTML_MODE_LEGACY,
+                null,
+                MarkdownTagHandler
             )
             textView.setHtml(context, html, markdownOptions)
         } else {

@@ -322,7 +322,7 @@ internal fun TextView.setHtml(
 }
 
 /**
- * Finds standard background spans (from <span style='background-color'>)
+ * Finds standard background spans (from the highlight tag)
  * and replaces them with custom RoundedBackgroundSpans.
  */
 private fun Spannable.convertHighlightSpans(
