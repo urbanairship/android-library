@@ -489,3 +489,20 @@ internal fun View.hasContentSizedAncestor(horizontal: Boolean): Boolean {
     }
     return false
 }
+
+/**
+ * Finds the view in this view's window whose `labelFor` is [id], the way a label made by
+ * `LabelModel` points at the view it labels.
+ */
+internal fun View.findLabelFor(id: Int): View? {
+    fun search(view: View): View? {
+        if (view.labelFor == id) return view
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                search(view.getChildAt(i))?.let { return it }
+            }
+        }
+        return null
+    }
+    return search(rootView)
+}
