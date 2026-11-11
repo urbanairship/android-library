@@ -22,16 +22,20 @@ private class DelimiterRun(
     val closeTags = StringBuilder()
 }
 
+/** The ASCII punctuation code points: `!` to `/`, `:` to `@`, `[` to `` ` `` and `{` to `~`. */
+private val ASCII_PUNCTUATION: Set<Int> = ((0x21..0x2F) + (0x3A..0x40) + (0x5B..0x60) + (0x7B..0x7E)).toSet()
+
 /**
- * Returns whether a code point counts as punctuation for flanking: Unicode punctuation and symbols,
- * and escape stand-ins.
+ * Returns whether a code point counts as punctuation for flanking: ASCII punctuation, Unicode
+ * punctuation and escape stand-ins, as CommonMark 0.30 and iOS's parser read it. A symbol such as an
+ * emoji or `€` reads as a letter.
  *
  * @receiver A code point, or `null` past either end of the text.
  * @return `true` for punctuation.
  */
 private fun Int?.isFlankPunctuation(): Boolean {
     if (this == null) return false
-    if (this in ESCAPED_CHAR_RANGE) return true
+    if (this in ESCAPED_CHAR_RANGE || this in ASCII_PUNCTUATION) return true
     return when (Character.getType(this).toByte()) {
         Character.CONNECTOR_PUNCTUATION,
         Character.DASH_PUNCTUATION,
@@ -39,11 +43,7 @@ private fun Int?.isFlankPunctuation(): Boolean {
         Character.END_PUNCTUATION,
         Character.INITIAL_QUOTE_PUNCTUATION,
         Character.FINAL_QUOTE_PUNCTUATION,
-        Character.OTHER_PUNCTUATION,
-        Character.MATH_SYMBOL,
-        Character.CURRENCY_SYMBOL,
-        Character.MODIFIER_SYMBOL,
-        Character.OTHER_SYMBOL -> true
+        Character.OTHER_PUNCTUATION -> true
         else -> false
     }
 }

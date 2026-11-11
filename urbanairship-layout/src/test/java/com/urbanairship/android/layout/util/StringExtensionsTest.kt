@@ -516,9 +516,11 @@ public class StringExtensionsTest {
     }
 
     @Test
-    public fun markdownToHtmlEmojiIsPunctuationForFlanking() {
-        assertEquals("x*\uD83D\uDE00*", "x*\uD83D\uDE00*".markdownToHtml())
-        assertEquals("<i>\uD83D\uDE00</i>", "*\uD83D\uDE00*".markdownToHtml())
+    public fun markdownToHtmlSymbolReadsAsALetterForFlanking() {
+        assertEquals("x<i>\uD83D\uDE00</i>", "x*\uD83D\uDE00*".markdownToHtml())
+        assertEquals("x<i>\u20AC</i>", "x*\u20AC*".markdownToHtml())
+        assertEquals("x*$*", "x*$*".markdownToHtml())
+        assertEquals("x*\u00AB*", "x*\u00AB*".markdownToHtml())
     }
 
     @Test
