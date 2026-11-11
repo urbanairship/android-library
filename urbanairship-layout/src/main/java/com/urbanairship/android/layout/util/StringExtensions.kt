@@ -17,7 +17,7 @@ internal fun String?.ifNotEmpty(block: (String) -> Unit) {
  * - Bold: `**bold**`
  * - Italic: `*italic*`
  * - Bold and italic: `***bold + italic***`
- * - Strikethrough: `~~strikethrough~~`
+ * - Strikethrough: `~~strikethrough~~` or `~strikethrough~`
  * - Highlight: `==highlight==`
  * - Superscript: `^^superscript^^`
  * - Subscript: `,{subscript},`
@@ -71,96 +71,6 @@ private val colorSpanRegex = run {
 /** Matches `[link](url)` */
 private val linkRegex = """\[(.+?)]\((.+?)\)""".toRegex()
 private const val linkTag = """<a href="$2">$1</a>"""
-
-/**
- * Punctuation for the flanking rules: Unicode punctuation and symbols, plus the stand-ins for
- * backslash-escaped characters, which are always ASCII punctuation.
- */
-private const val flankPunct = """\p{P}\p{S}\uE021-\uE07E"""
-
-/**
- * Returns a pattern for a delimiter that may sit at the edge of a longer run, so `**a*` leaves one
- * star literal.
- *
- * @param delimiter The marker character.
- * @param length How many characters the delimiter has.
- * @param opens True for an opener, which must not extend away from its content; false for a
- *   closer, which must not extend toward it.
- * @param wholeRun True to require the delimiter to be an entire run, with no extra marker beside it.
- */
-private fun run(delimiter: Char, length: Int, opens: Boolean, wholeRun: Boolean = false): String {
-    val c = Regex.escape(delimiter.toString())
-    val delim = "$c".repeat(length)
-    return when {
-        wholeRun -> "(?<!$c)$delim(?!$c)"
-        opens -> "$delim(?!$c)"
-        else -> "(?<!$c)$delim"
-    }
-}
-
-/**
- * A delimiter that opens when left-flanking: its run is not followed by whitespace, and when
- * followed by punctuation, the run is preceded by whitespace, punctuation or the start of the text.
- *
- * @param delimiter The marker character.
- * @param run The delimiter pattern from [run].
- */
-private fun opening(delimiter: Char, run: String): String {
-    val c = Regex.escape(delimiter.toString())
-    return """(?:(?<![^\s$flankPunct]$c{0,8})$run(?!$c*(?:\s|\z))|$run(?=$c*[^\s$flankPunct]))"""
-}
-
-/**
- * The mirror of [opening]: a delimiter that closes when right-flanking.
- *
- * @param delimiter The marker character.
- * @param run The delimiter pattern from [run].
- */
-private fun closing(delimiter: Char, run: String): String {
-    val c = Regex.escape(delimiter.toString())
-    return """(?:(?<![\s$flankPunct])$run|(?<!\s)$run(?!$c*[^\s$flankPunct]))"""
-}
-
-private fun pairedRegex(
-    delimiter: Char,
-    length: Int,
-    content: String = ".+?",
-    wholeRun: Boolean = false
-): Regex {
-    val open = opening(delimiter, run(delimiter, length, opens = true, wholeRun = wholeRun))
-    val close = closing(delimiter, run(delimiter, length, opens = false, wholeRun = wholeRun))
-    return """$open($content)$close""".toRegex()
-}
-
-/** Underscores never open or close inside a word, so only the strict flanking branch applies. */
-private fun pairedUnderscoreRegex(length: Int): Regex {
-    val open = run('_', length, opens = true)
-    val close = run('_', length, opens = false)
-    return """(?<![^\s$flankPunct]_{0,8})$open(?!\s)(.+?)(?<!\s)$close(?!_*[^\s$flankPunct])""".toRegex()
-}
-
-/** Matches `***bold + italic***` or `___bold + italic___` */
-private val boldAndItalicRegexStar = pairedRegex('*', 3)
-private val boldAndItalicRegexBar = pairedUnderscoreRegex(3)
-private const val boldAndItalicTag = """<b><i>$1</i></b>"""
-
-/** Matches `**bold**` or `__bold__` */
-private val boldRegexStar = pairedRegex('*', 2)
-private val boldRegexBar = pairedUnderscoreRegex(2)
-private const val boldTag = """<b>$1</b>"""
-
-/**
- * Matches `*italic*` or `_italic_`. Runs after bold, so a star left in the text is unmatched and
- * stays literal rather than pairing as an empty or star-only italic.
- */
-private val italicRegexStar = pairedRegex('*', 1, content = "[^*]+?")
-private val italicRegexBar = pairedUnderscoreRegex(1)
-private const val italicTag = """<i>$1</i>"""
-
-/** Matches `~~strikethrough~~` or `~strikethrough~` */
-private val strikethroughRegex = pairedRegex('~', 2, wholeRun = true)
-private val strikethroughSingleRegex = pairedRegex('~', 1, content = "[^~]+?", wholeRun = true)
-private const val strikethroughTag = """<s>$1</s>"""
 
 /** Matches `^^superscript^^` */
 private val superscriptRegex = """\^\^(.+?)\^\^""".toRegex()
@@ -216,18 +126,8 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         .replace(newlineEscaped, newlineTag)
         // Replace [link](url) with <a href="url">link</a>
         .replace(linkRegex, linkTag)
-        // Replace ***bold + italic*** and ___bold + italic___ with <b><i>bold + italic</i></b>
-        .replace(boldAndItalicRegexStar, boldAndItalicTag)
-        .replace(boldAndItalicRegexBar, boldAndItalicTag)
-        // Replace **bold** and __bold__ with <b>bold</b>
-        .replace(boldRegexStar, boldTag)
-        .replace(boldRegexBar, boldTag)
-        // Replace *italic* and _italic_ with <i>italic</i>
-        .replace(italicRegexStar, italicTag)
-        .replace(italicRegexBar, italicTag)
-        // Replace ~~strikethrough~~ with <s>strikethrough</s>
-        .replace(strikethroughRegex, strikethroughTag)
-        .replace(strikethroughSingleRegex, strikethroughTag)
+        // Replace **bold**, *italic*, ***both*** and ~strikethrough~ with tags
+        .applyEmphasis()
         // Replace ^^superscript^^ with <sup>superscript</sup>
         .replace(superscriptRegex, superscriptTag)
         // Replace ,{subscript}, with <sub>subscript</sub>

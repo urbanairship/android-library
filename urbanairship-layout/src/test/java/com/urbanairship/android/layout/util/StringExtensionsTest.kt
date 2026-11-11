@@ -325,6 +325,26 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlMixedMarkersNestWithoutBrokenTags() {
+        assertEquals("<i>a <b>b</b></i>", "_a **b**_".markdownToHtml())
+        assertEquals("<i>__</i>__", "*__*__".markdownToHtml())
+        assertEquals("<b>__</b>__", "**__**__".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlMarkerSplitByRuleOfThreeStaysLiteral() {
+        assertEquals("*a**a", "*a**a".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlIgnoresMarkersInsideTags() {
+        assertEquals(
+            """<a href="https://example.com/a_b_c">x</a>""",
+            "[x](https://example.com/a_b_c)".markdownToHtml()
+        )
+    }
+
+    @Test
     public fun markdownToHtmlUnmatchedMarkerBesideAPair() {
         assertEquals("<b>bold</b> and **open", "**bold** and **open".markdownToHtml())
         assertEquals("<i>italic</i> and **open", "*italic* and **open".markdownToHtml())
