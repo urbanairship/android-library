@@ -2,18 +2,26 @@
 package com.urbanairship.push
 
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Airship
 import com.urbanairship.MainDispatcherRule
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.InteractiveNotificationEvent
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.verify
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
@@ -218,6 +226,83 @@ public class NotificationIntentProcessorTest {
         Assert.assertTrue(processIntent(Intent().setAction(PushManager.ACTION_NOTIFICATION_DISMISSED)).isFailure)
     }
 
+    /**
+     * Test that the SDK is not reached while the processor is being constructed.
+     */
+    @Test
+    public fun testConstructionDoesNotResolveAirship() {
+        mockkObject(Airship)
+        try {
+            val resolvedDuringConstruction = AssertionError("Resolved the SDK during construction")
+            every { Airship.analytics } throws resolvedDuringConstruction
+            every { Airship.push } throws resolvedDuringConstruction
+            every { Airship.airshipConfigOptions } throws resolvedDuringConstruction
+
+            NotificationIntentProcessor(context = context, intent = responseIntent)
+        } finally {
+            unmockkObject(Airship)
+        }
+    }
+
+    /**
+     * Test that processing fails when the SDK never becomes ready.
+     */
+    @Test
+    public fun testNotReadyFails(): TestResult = runTest {
+        val result = processIntent(responseIntent, waitForReady = { false })
+
+        Assert.assertTrue(result.exceptionOrNull() is IllegalStateException)
+        verify(exactly = 0) { context.startActivity(any()) }
+        verify(exactly = 0) { notificationListener.onNotificationOpened(any()) }
+    }
+
+    /**
+     * Test that the overall timeout covers the wait for the SDK to become ready.
+     */
+    @Test
+    public fun testOverallTimeoutCoversWaitForReady(): TestResult = runTest {
+        val result = processIntent(
+            intent = responseIntent,
+            overallTimeout = 9.seconds,
+            waitForReady = { awaitCancellation() }
+        )
+
+        Assert.assertTrue(result.exceptionOrNull() is TimeoutCancellationException)
+        verify(exactly = 0) { context.startActivity(any()) }
+    }
+
+    /**
+     * Test that the ready timeout bounds the wait rather than the processing that follows.
+     */
+    @Test
+    public fun testReadyTimeoutBoundsTheWait(): TestResult = runTest {
+        var passedToWait: Duration? = null
+
+        val result = processIntent(
+            intent = responseIntent,
+            readyTimeout = 8.seconds,
+            waitForReady = { passedToWait = it; false }
+        )
+
+        Assert.assertEquals(8.seconds, passedToWait)
+        Assert.assertTrue(result.exceptionOrNull() is IllegalStateException)
+    }
+
+    /**
+     * Test that the notification's own delete intent is sent without waiting for the SDK.
+     */
+    @Test
+    public fun testDeleteIntentIsSentWithoutWaitingForReady(): TestResult = runTest {
+        val deleteIntent: PendingIntent = mockk(relaxed = true)
+        dismissIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, deleteIntent)
+
+        val result = processIntent(dismissIntent, waitForReady = { false })
+
+        Assert.assertTrue(result.exceptionOrNull() is IllegalStateException)
+        verify { deleteIntent.send() }
+        verify(exactly = 0) { notificationListener.onNotificationDismissed(any()) }
+    }
+
     private fun verifyApplicationLaunched() {
         verify { context.startActivity(launchIntent) }
 
@@ -228,15 +313,21 @@ public class NotificationIntentProcessorTest {
         Assert.assertEquals(message.getPushBundle(), launchIntent.getBundleExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE))
     }
 
-    private suspend fun processIntent(intent: Intent): Result<Unit> {
+    private suspend fun processIntent(
+        intent: Intent,
+        readyTimeout: Duration? = null,
+        overallTimeout: Duration? = null,
+        waitForReady: suspend (Duration?) -> Boolean = { true }
+    ): Result<Unit> {
         val deferred = CompletableDeferred<Result<Unit>>()
         NotificationIntentProcessor(
             context = context,
             intent = intent,
-            analytics = analytics,
-            pushManager = pushManager,
-            autoLaunchApplication = true
-        ).process { result ->
+            waitForReady = waitForReady,
+            analyticsProvider = { analytics },
+            pushProvider = { pushManager },
+            autoLaunchApplicationProvider = { true }
+        ).process(readyTimeout, overallTimeout) { result ->
             deferred.complete(result)
         }
         return deferred.await()

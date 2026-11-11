@@ -76,7 +76,7 @@ public class StringExtensionsTest {
     public fun markdownToHtmlBoldAndItalic() {
         val inputStar = "This is ***bold and italic*** text"
         val inputBar = "This is ___bold and italic___ text"
-        val expected = "This is <b><i>bold and italic</i></b> text"
+        val expected = "This is <i><b>bold and italic</b></i> text"
         assertEquals(expected, inputStar.markdownToHtml())
         assertEquals(expected, inputBar.markdownToHtml())
     }
@@ -101,7 +101,7 @@ public class StringExtensionsTest {
     public fun markdownToHtmlNested() {
         val inputStar = "***Bold and italic***, **bold with *italic* inside**"
         val inputBar = "___Bold and italic___, __bold with _italic_ inside__"
-        val expected = "<b><i>Bold and italic</i></b>, <b>bold with <i>italic</i> inside</b>"
+        val expected = "<i><b>Bold and italic</b></i>, <b>bold with <i>italic</i> inside</b>"
         assertEquals(expected, inputStar.markdownToHtml())
         assertEquals(expected, inputBar.markdownToHtml())
     }
@@ -186,7 +186,7 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlHighlightIntraword() {
         val input = "high==light==ed"
-        val expected = """high<span style="background-color: #4DFFFF00;">light</span>ed"""
+        val expected = """high<uahighlight>light</uahighlight>ed"""
         assertEquals(expected, input.markdownToHtml())
     }
 
@@ -214,14 +214,14 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlSuperscriptWithHighlightInside() {
         val input = "mc^^==2==^^"
-        val expected = """mc<sup><span style="background-color: #4DFFFF00;">2</span></sup>"""
+        val expected = """mc<sup><uahighlight>2</uahighlight></sup>"""
         assertEquals(expected, input.markdownToHtml())
     }
 
     @Test
     public fun markdownToHtmlSubscriptInsideHighlight() {
         val input = "==H,{2},O=="
-        val expected = """<span style="background-color: #4DFFFF00;">H<sub>2</sub>O</span>"""
+        val expected = """<uahighlight>H<sub>2</sub>O</uahighlight>"""
         assertEquals(expected, input.markdownToHtml())
     }
 
@@ -242,7 +242,7 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlHighlightedSubscriptAndSuperscript() {
         val input = "==H,{2},O is highlighted!==  and  ==E = mc^^2^^ too=="
-        val expected = """<span style="background-color: #4DFFFF00;">H<sub>2</sub>O is highlighted!</span>  and  <span style="background-color: #4DFFFF00;">E = mc<sup>2</sup> too</span>"""
+        val expected = """<uahighlight>H<sub>2</sub>O is highlighted!</uahighlight>  and  <uahighlight>E = mc<sup>2</sup> too</uahighlight>"""
         assertEquals(expected, input.markdownToHtml())
     }
 
@@ -254,9 +254,139 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlLeavesUnmatchedMarkersLiteral() {
+        listOf(
+            "**unclosed bold",
+            "unopened bold**",
+            "***unclosed bold italic",
+            "*unclosed italic",
+            "__unclosed bold",
+            "_unclosed italic",
+            "~~unclosed strike",
+            "==unclosed highlight",
+            "^^unclosed sup",
+            ",{unclosed sub",
+            "unopened sub},",
+        ).forEach { input ->
+            assertEquals(input, input.markdownToHtml())
+        }
+    }
+
+    @Test
+    public fun markdownToHtmlLeavesEmptyPairsLiteral() {
+        listOf("****", "____", "~~~~", "^^^^", ",{},").forEach { input ->
+            assertEquals(input, input.markdownToHtml())
+        }
+    }
+
+    @Test
+    public fun markdownToHtmlUnderscoreDoesNotPairInsideAWord() {
+        assertEquals("<i>italic</i>", "_italic_".markdownToHtml())
+        assertEquals("<i>a_b</i>", "_a_b_".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSpaceFlankedMarkersStayLiteral() {
+        listOf("2 * 3 * 4", "** spaced **", "_ spaced _", "~ spaced ~").forEach { input ->
+            assertEquals(input, input.markdownToHtml())
+        }
+    }
+
+    @Test
+    public fun markdownToHtmlIntrawordMarkerNextToLinkStaysLiteral() {
+        assertEquals(
+            """foo**<a href="u">x</a>**bar""",
+            "foo**[x](u)**bar".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlBoldAroundLinkFormatsTheLink() {
+        assertEquals(
+            """<b><a href="u">x</a></b> after""",
+            "**[x](u)** after".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlEscapedMarkerCountsAsPunctuation() {
+        assertEquals("<b>*x</b>", "**\\*x**".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSingleTildeStrikethrough() {
+        assertEquals("<s>x</s>", "~x~".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlMarkerRunFormatsOnlyWhatPairs() {
+        assertEquals("*<i>a</i>", "**a*".markdownToHtml())
+        assertEquals("~~a~", "~~a~".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlMixedMarkersNestWithoutBrokenTags() {
+        assertEquals("<i>a <b>b</b></i>", "_a **b**_".markdownToHtml())
+        assertEquals("<i>__</i>__", "*__*__".markdownToHtml())
+        assertEquals("<b>__</b>__", "**__**__".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlMarkerSplitByRuleOfThreeStaysLiteral() {
+        assertEquals("*a**a", "*a**a".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlIgnoresMarkersInsideTags() {
+        assertEquals(
+            """<a href="https://example.com/a_b_c">x</a>""",
+            "[x](https://example.com/a_b_c)".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlEmphasisDoesNotCrossALinksEdge() {
+        assertEquals(
+            """<a href="u">a **b</a>** c""",
+            "[a **b](u)** c".markdownToHtml()
+        )
+        assertEquals(
+            """**a <a href="u">b** c</a>""",
+            "**a [b** c](u)".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlEmphasisInsideALinkStaysInsideIt() {
+        assertEquals(
+            """<b>x</b> <a href="u"><i>a</i> b</a>""",
+            "**x** [*a* b](u)".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlLinkTextHoldsNoBrackets() {
+        assertEquals("""[<a href="u">a</a>""", "[[a](u)".markdownToHtml())
+        assertEquals("""<a href="u"></a>""", "[](u)".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlLineBreakIsWhitespaceForEmphasis() {
+        assertEquals("aa<br>**bb<br>**cc", "aa\n**bb\n**cc".markdownToHtml())
+        assertEquals("aa<br>**<br>bb", "aa\n**\nbb".markdownToHtml())
+        assertEquals("<b>bb</b><br><b>cc</b>", "**bb**\n**cc**".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlUnmatchedMarkerBesideAPair() {
+        assertEquals("<b>bold</b> and **open", "**bold** and **open".markdownToHtml())
+        assertEquals("<i>italic</i> and **open", "*italic* and **open".markdownToHtml())
+    }
+
+    @Test
     public fun markdownToHtmlColorSpans() {
         val input = "[Sale]{color:brand} ends [today]{color:urgent}, so don't miss it"
-        val expected = """<span style="color: #000001;">Sale</span> ends <span style="color: #000002;">today</span>, so don&#39;t miss it"""
+        val expected = """<font color="#000001">Sale</font> ends <font color="#000002">today</font>, so don&#39;t miss it"""
         assertEquals(expected, input.markdownToHtml(listOf("brand", "urgent")))
     }
 
@@ -269,27 +399,27 @@ public class StringExtensionsTest {
     @Test
     public fun markdownToHtmlNestedColorSpans() {
         val input = "[one [two]{color:inner} one]{color:outer}"
-        val expected = """<span style="color: #000001;">one <span style="color: #000002;">two</span> one</span>"""
+        val expected = """<font color="#000001">one <font color="#000002">two</font> one</font>"""
         assertEquals(expected, input.markdownToHtml(listOf("outer", "inner")))
     }
 
     @Test
     public fun markdownToHtmlColorSpanAroundStylesAndLink() {
         val input = "[**Sale** at the [store](https://example.com) ,{now},]{color:brand}"
-        val expected = """<span style="color: #000001;"><b>Sale</b> at the <a href="https://example.com">store</a> <sub>now</sub></span>"""
+        val expected = """<font color="#000001"><b>Sale</b> at the <a href="https://example.com">store</a> <sub>now</sub></font>"""
         assertEquals(expected, input.markdownToHtml(listOf("brand")))
     }
 
     @Test
     public fun markdownToHtmlColorSpanBeforeLink() {
         val input = "[Sale]{color:brand} at the [store](https://example.com)"
-        val expected = """<span style="color: #000001;">Sale</span> at the <a href="https://example.com">store</a>"""
+        val expected = """<font color="#000001">Sale</font> at the <a href="https://example.com">store</a>"""
         assertEquals(expected, input.markdownToHtml(listOf("brand")))
     }
 
     @Test
     public fun markdownToHtmlColorSpanTextWithPercent() {
-        val expected = """<span style="color: #000001;">20% off</span>"""
+        val expected = """<font color="#000001">20% off</font>"""
         assertEquals(expected, "[20% off]{color:brand}".markdownToHtml(listOf("brand")))
     }
 
@@ -323,15 +453,108 @@ public class StringExtensionsTest {
     }
 
     @Test
-    public fun markdownToHtmlEscapedBracketStillOpensAColorSpan() {
+    public fun markdownToHtmlEscapedBracketNeverOpensAColorSpan() {
         val input = """[parens](color:brand) and \[escaped]{color:brand}"""
-        val expected = """<a href="color:brand">parens</a> and <span style="color: #000001;">escaped</span>"""
+        val expected = """<a href="color:brand">parens</a> and [escaped]{color:brand}"""
         assertEquals(expected, input.markdownToHtml(listOf("brand")))
+    }
+
+    @Test
+    public fun markdownToHtmlLoneEscapedBracketInsideAColorSpan() {
+        assertEquals("""<font color="#000001">a[</font> b""", """[a\[]{color:brand} b""".markdownToHtml(listOf("brand")))
+        assertEquals("""<font color="#000001">]b</font>""", """[\]b]{color:brand}""".markdownToHtml(listOf("brand")))
     }
 
     @Test
     public fun markdownToHtmlEscapedBracketOutsideASpanIsLiteral() {
         assertEquals("[not a span] here", """\[not a span\] here""".markdownToHtml(listOf("brand")))
+    }
+
+    @Test
+    public fun markdownToHtmlEscapedBracketsInsideAColorSpan() {
+        assertEquals(
+            """<font color="#000001">[tag]</font> now""",
+            """[\[tag\]]{color:brand} now""".markdownToHtml(listOf("brand"))
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlLinkTitleIsNotPartOfTheUrl() {
+        assertEquals("""<a href="https://a.com">x</a>""", """[x](https://a.com "A title")""".markdownToHtml())
+        assertEquals("""<a href="https://a.com">x</a>""", """[x](https://a.com 'A title')""".markdownToHtml())
+        assertEquals(
+            """<a href="https://a.com">x</a>""",
+            """[x](https://a.com "A \"quoted\" title")""".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlLinkUrlKeepsBalancedParentheses() {
+        assertEquals("""<a href="https://e.com/a_(b)">x</a>""", "[x](https://e.com/a_(b))".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlLinkWithASpaceInItsUrlIsNotALink() {
+        assertEquals("[x](a b)", "[x](a b)".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlEmphasisDoesNotCrossASpansEdge() {
+        assertEquals("*a <uahighlight>b* c</uahighlight>", "*a ==b* c==".markdownToHtml())
+        assertEquals("*a <sup>b* c</sup>", "*a ^^b* c^^".markdownToHtml())
+        assertEquals("*a <sub>b* c</sub>", "*a ,{b* c},".markdownToHtml())
+        assertEquals(
+            """<font color="#000001">a *b</font> c*""",
+            "[a *b]{color:brand} c*".markdownToHtml(listOf("brand"))
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlEmphasisInsideAndAroundASpan() {
+        assertEquals("<uahighlight><i>a</i></uahighlight>", "==*a*==".markdownToHtml())
+        assertEquals("<b><uahighlight>a</uahighlight></b>", "**==a==**".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSymbolReadsAsALetterForFlanking() {
+        assertEquals("x<i>\uD83D\uDE00</i>", "x*\uD83D\uDE00*".markdownToHtml())
+        assertEquals("x<i>\u20AC</i>", "x*\u20AC*".markdownToHtml())
+        assertEquals("x*$*", "x*$*".markdownToHtml())
+        assertEquals("x*\u00AB*", "x*\u00AB*".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlMarkupInALinkUrlStaysInTheUrl() {
+        assertEquals(
+            """<a href="https://e.com/?t=ab==">x</a> and <uahighlight>hi</uahighlight>""",
+            "[x](https://e.com/?t=ab==) and ==hi==".markdownToHtml()
+        )
+        assertEquals("""<a href="https://e.com/a^^b">x</a> <sup>up</sup>""", "[x](https://e.com/a^^b) ^^up^^".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlKeepsAnIconFontsPrivateUseCharacters() {
+        assertEquals("\uE000 \uE021\uE02A\uE05F", "\uE000 \uE021\uE02A\uE05F".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlFourMarkersEachSideAreBoldOnly() {
+        assertEquals("<b><b>a</b></b>", "****a****".markdownToHtml())
+        assertEquals("<i><b>a</b></i>", "***a***".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlLineBreakInALinkUrlIsNotALink() {
+        assertEquals("[x](a<br><i>b) c</i>", "[x](a\n_b) c_".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSpacedAndEmptyMarkersStayLiteral() {
+        assertEquals("____", "____".markdownToHtml())
+        assertEquals("2 * 3 * 4", "2 * 3 * 4".markdownToHtml())
+        assertEquals("a ** b ** c", "a ** b ** c".markdownToHtml())
+        assertEquals("~~ x ~~", "~~ x ~~".markdownToHtml())
+        assertEquals("<s>x</s>", "~x~".markdownToHtml())
     }
 
     @Test
