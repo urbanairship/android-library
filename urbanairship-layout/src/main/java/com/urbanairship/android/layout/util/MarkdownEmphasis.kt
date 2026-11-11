@@ -100,9 +100,17 @@ private fun String.findDelimiterRuns(): List<DelimiterRun> {
     return runs
 }
 
+/** Returns the character a flanking check sees before [index]; a line break reads as whitespace. */
+private fun String.flankCharBefore(index: Int): Char? =
+    if (startsWith(newlineTag, index - newlineTag.length)) ' ' else getOrNull(index - 1)
+
+/** Returns the character a flanking check sees at [index]; a line break reads as whitespace. */
+private fun String.flankCharAfter(index: Int): Char? =
+    if (startsWith(newlineTag, index)) ' ' else getOrNull(index)
+
 private fun String.delimiterRun(start: Int, end: Int, char: Char, scope: Int): DelimiterRun {
-    val before = getOrNull(start - 1)
-    val after = getOrNull(end)
+    val before = flankCharBefore(start)
+    val after = flankCharAfter(end)
     val leftFlanking = !after.isFlankWhitespace() &&
         (!after.isFlankPunct() || before.isFlankWhitespace() || before.isFlankPunct())
     val rightFlanking = !before.isFlankWhitespace() &&

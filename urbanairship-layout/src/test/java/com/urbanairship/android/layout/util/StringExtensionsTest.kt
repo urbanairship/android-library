@@ -371,6 +371,13 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlLineBreakIsWhitespaceForEmphasis() {
+        assertEquals("aa<br>**bb<br>**cc", "aa\n**bb\n**cc".markdownToHtml())
+        assertEquals("aa<br>**<br>bb", "aa\n**\nbb".markdownToHtml())
+        assertEquals("<b>bb</b><br><b>cc</b>", "**bb**\n**cc**".markdownToHtml())
+    }
+
+    @Test
     public fun markdownToHtmlUnmatchedMarkerBesideAPair() {
         assertEquals("<b>bold</b> and **open", "**bold** and **open".markdownToHtml())
         assertEquals("<i>italic</i> and **open", "*italic* and **open".markdownToHtml())

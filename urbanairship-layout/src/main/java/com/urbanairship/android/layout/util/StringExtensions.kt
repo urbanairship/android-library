@@ -88,7 +88,7 @@ private const val highlightTag = """<$HIGHLIGHT_TAG>$1</$HIGHLIGHT_TAG>"""
 /** Newline character `\n` */
 private const val newline = "\n"
 private const val newlineEscaped = "\\n"
-private const val newlineTag = "<br>"
+internal const val newlineTag = "<br>"
 
 
 /** Replaces color spans until none are left, so each pass unwraps one level of nesting. */
