@@ -9,6 +9,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.AirshipConfigOptions.ConfigException
+import com.urbanairship.util.PropertiesConfigParser
+import io.mockk.spyk
+import io.mockk.verify
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 import java.util.Properties
@@ -102,11 +106,69 @@ public class AirshipConfigOptionsTest {
         Assert.assertEquals(0, production.notificationIcon.toLong())
     }
 
-    @Test(expected = ConfigException::class)
+    @Test
     public fun testThrowsInvalidConfigFile() {
-        AirshipConfigOptions.Builder()
-            .tryApplyProperties(application, UUID.randomUUID().toString())
+        val exception = Assert.assertThrows(ConfigException::class.java) {
+            AirshipConfigOptions.Builder()
+                .tryApplyProperties(application, UUID.randomUUID().toString())
+                .build()
+        }
+
+        Assert.assertTrue(exception.cause?.cause is FileNotFoundException)
+    }
+
+    @Test
+    public fun testApplyPropertiesFromAssets() {
+        val config = AirshipConfigOptions.Builder()
+            .tryApplyProperties(application, ASSET_PROPERTIES_FILE)
+            .setInProduction(false)
             .build()
+
+        Assert.assertEquals("topLevelAppKey", config.appKey)
+        Assert.assertEquals("topLevelAppSecret", config.appSecret)
+    }
+
+    /**
+     * Verifies the asset root is never listed to decide whether the properties file exists;
+     * listing walks every entry in the APK's zip directory.
+     *
+     * Robolectric's list("") returns full recursive paths, unlike a real device, so no test that
+     * only checks which files load can tell the two implementations apart. See MOBILE-5988.
+     */
+    @Test
+    public fun testDoesNotListAssets() {
+        val assets = spyk(application.resources.assets)
+
+        val parser = PropertiesConfigParser.fromAssets(application, ASSET_PROPERTIES_FILE, assets)
+
+        Assert.assertEquals("topLevelAppKey", parser.getString("developmentAppKey"))
+        verify(exactly = 0) { assets.list(any()) }
+    }
+
+    /**
+     * Same as [testDoesNotListAssets] for a file that is absent, which is the path apps that ship
+     * no properties file take on every Autopilot entry point.
+     */
+    @Test
+    public fun testMissDoesNotListAssets() {
+        val assets = spyk(application.resources.assets)
+
+        Assert.assertThrows(FileNotFoundException::class.java) {
+            PropertiesConfigParser.fromAssets(application, "missing.properties", assets)
+        }
+
+        verify(exactly = 0) { assets.list(any()) }
+    }
+
+    @Test
+    public fun testApplyPropertiesFromAssetsSubfolder() {
+        val config = AirshipConfigOptions.Builder()
+            .tryApplyProperties(application, SUBFOLDER_ASSET_PROPERTIES_FILE)
+            .setInProduction(false)
+            .build()
+
+        Assert.assertEquals("subfolderAppKey", config.appKey)
+        Assert.assertEquals("subfolderAppSecret", config.appSecret)
     }
 
     @Test
@@ -260,5 +322,7 @@ public class AirshipConfigOptionsTest {
 
         private const val TEST_PROPERTIES_FILE = "valid.properties"
         private const val INVALID_PROPERTIES_FILE = "invalid.properties"
+        private const val ASSET_PROPERTIES_FILE = "airship-assets-test.properties"
+        private const val SUBFOLDER_ASSET_PROPERTIES_FILE = "config/airship-assets-test.properties"
     }
 }

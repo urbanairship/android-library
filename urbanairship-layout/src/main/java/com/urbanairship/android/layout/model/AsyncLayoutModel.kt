@@ -16,7 +16,6 @@ import com.urbanairship.android.layout.environment.ThomasStateScopes
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.ViewInfo
-import com.urbanairship.android.layout.property.NamedColors
 import com.urbanairship.android.layout.util.CachedImage
 import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.android.layout.util.NonExtendableImageCache
@@ -144,10 +143,9 @@ internal class AsyncLayoutModel(
                     null
                 } else {
                     try {
-                        val json = JsonValue.parseString(body).requireMap()
-                        AsyncContent(
-                            info = ViewInfo.viewInfoFromJson(json),
-                            namedColors = environment.namedColors.scopedTo(json)
+                        AsyncContent.fromJson(
+                            json = JsonValue.parseString(body).requireMap(),
+                            sceneColors = environment.namedColors
                         )
                     } catch (ex: Exception) {
                         onError(State.AsyncView.Error.ErrorData.Client)
@@ -312,9 +310,6 @@ internal class AsyncLayoutModel(
             )
         }
     }
-
-    /** Fetched content, and the named colors in scope within it. */
-    private class AsyncContent(val info: ViewInfo, val namedColors: NamedColors)
 
     internal data class ContentToDisplay(
         val model: AnyModel,

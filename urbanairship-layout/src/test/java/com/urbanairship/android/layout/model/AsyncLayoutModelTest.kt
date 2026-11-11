@@ -283,6 +283,26 @@ public class AsyncLayoutModelTest {
     }
 
     @Test
+    public fun wrapperWithBrokenView_setsClientError(): TestResult = runTest(testDispatcher) {
+        val info = parseAsyncInfo(asyncControllerJson())
+        session.addResponse(200, body = """{ "type": "async_response", "view": { "type": "not_a_view" } }""")
+        val model = newModel(info)
+        val context = RuntimeEnvironment.getApplication()
+
+        model.state.test {
+            model.createView(context, viewEnvironment, null)
+            advanceUntilIdle()
+            awaitItem()
+            ensureAllEventsConsumed()
+        }
+
+        assertEquals(
+            State.AsyncView.Error.ErrorData.Client,
+            (asyncState.value as State.AsyncView.Error).data
+        )
+    }
+
+    @Test
     public fun factoryFailureWhileInflatingResponse_asyncStateEndsLoadedAfterReportLayoutLoaded(): TestResult = runTest(testDispatcher) {
         val info = parseAsyncInfo(asyncControllerJson())
         session.addResponse(200, body = """{"type":"empty_view"}""")
@@ -526,11 +546,14 @@ public class AsyncLayoutModelTest {
             200,
             body = """
                 {
-                  "type": "container",
-                  "references": { "colors": { "brand": { "default": { "type": "hex", "hex": "#C8336C" } } } },
-                  "background_color": { "type": "color_reference", "name": "brand" },
-                  "border": { "stroke_color": { "type": "color_reference", "name": "ink" } },
-                  "items": []
+                  "type": "async_response",
+                  "view": {
+                    "type": "container",
+                    "background_color": { "type": "color_reference", "name": "brand" },
+                    "border": { "stroke_color": { "type": "color_reference", "name": "ink" } },
+                    "items": []
+                  },
+                  "references": { "colors": { "brand": { "default": { "type": "hex", "hex": "#C8336C" } } } }
                 }
             """
         )

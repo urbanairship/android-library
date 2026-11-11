@@ -2,12 +2,12 @@
 package com.urbanairship.util
 
 import android.content.Context
+import android.content.res.AssetManager
 import android.graphics.Color
 import androidx.annotation.ColorInt
 import com.urbanairship.UALog
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.io.InputStream
 import java.util.Properties
 
 /**
@@ -86,37 +86,39 @@ internal class PropertiesConfigParser private constructor(
          * Factory method to create a config parser from a file in the assets directory.
          *
          * @param context The application context.
-         * @param propertiesFile The properties file.
+         * @param propertiesFile The properties file path, relative to the assets directory.
+         * @param assetManager The asset manager to read from. Defaults to the context's own.
          * @return A PropertiesConfigParser instance.
          * @throws IOException if properties file cannot be found.
          */
         @Throws(IOException::class)
-        fun fromAssets(context: Context, propertiesFile: String): PropertiesConfigParser {
-            val resources = context.resources
-            val assetManager = resources.assets
-
-            val assets = assetManager.list("")
-            //bail if the properties file can't be found
-            if (assets?.contains(propertiesFile) != true) {
+        fun fromAssets(
+            context: Context,
+            propertiesFile: String,
+            assetManager: AssetManager = context.resources.assets
+        ): PropertiesConfigParser {
+            // open() is the existence check. Listing the assets first walks every entry in the
+            // APK's zip directory, so it costs more the more assets the app ships. See MOBILE-5988.
+            val inStream = try {
+                assetManager.open(propertiesFile)
+            } catch (e: FileNotFoundException) {
+                // Chain the original; open() reports more than a missing file this way.
                 throw FileNotFoundException("Unable to find properties file: $propertiesFile")
+                    .apply { initCause(e) }
             }
 
             val properties = Properties()
-            var inStream: InputStream? = null
-
             try {
-                inStream = assetManager.open(propertiesFile)
                 properties.load(inStream)
-                return fromProperties(context, properties)
             } finally {
-                if (inStream != null) {
-                    try {
-                        inStream.close()
-                    } catch (e: IOException) {
-                        UALog.d(e, "Failed to close input stream.")
-                    }
+                try {
+                    inStream.close()
+                } catch (e: IOException) {
+                    UALog.d(e, "Failed to close input stream.")
                 }
             }
+
+            return fromProperties(context, properties)
         }
 
         /**
