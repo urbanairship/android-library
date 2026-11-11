@@ -5,7 +5,8 @@ import android.text.Spanned
 
 /**
  * Stands in for a space [android.text.Html] would collapse or drop, until [restoreSpaces] puts it
- * back. A noncharacter, which no real text holds.
+ * back. A noncharacter, which label text doesn't use; [markdownToHtml] restores its own stand-ins in
+ * the same range before this one is added.
  */
 internal const val KEPT_SPACE: Char = '\uFDD0'
 
@@ -14,7 +15,7 @@ private val tagRegex = "<[^>]*>".toRegex()
 private enum class Neighbor { EDGE, BREAK, SPACE, TEXT }
 
 /**
- * Returns the HTML with every space that [android.text.Html] would collapse or drop swapped for
+ * Returns the HTML with each space [android.text.Html] might collapse or drop swapped for
  * [KEPT_SPACE], so [restoreSpaces] can draw repeated, leading and trailing spaces as typed.
  *
  * A space stays plain when text follows it and text or a space precedes it, since `Html` keeps that
@@ -63,7 +64,7 @@ internal fun String.preserveSpaces(): String {
     return buildString(length) {
         for (i in this@preserveSpaces.indices) {
             val char = this@preserveSpaces[i]
-            // The spaces before it in a run are already no-break, so only the last can stay plain.
+            // Earlier spaces in a run are placeholders, so only the last can stay plain.
             val staysPlain = after[i] == Neighbor.TEXT && (before[i] == Neighbor.TEXT || before[i] == Neighbor.SPACE)
             val collapsible = char == ' ' && !isInTag[i] && !staysPlain
             append(if (collapsible) KEPT_SPACE else char)
@@ -74,8 +75,7 @@ internal fun String.preserveSpaces(): String {
 /**
  * Returns the parsed text with each [KEPT_SPACE] back to a plain space, keeping every span.
  *
- * Plain spaces wrap and hang at a line's end the way web's `pre-wrap` does, where a no-break space
- * would count toward a line's width.
+ * Plain spaces wrap and hang at a line's end the way web's `pre-wrap` does.
  *
  * @receiver Text parsed from [preserveSpaces]' HTML.
  * @return The text with real spaces.
