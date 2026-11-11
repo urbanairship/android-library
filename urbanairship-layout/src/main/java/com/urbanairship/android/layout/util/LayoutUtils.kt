@@ -365,7 +365,7 @@ internal object LayoutUtils {
         if (isMarkdownEnabled) {
             // The leading <body> is required by MarkdownTagHandler.
             val html = HtmlCompat.fromHtml(
-                "<body>" + text.markdownToHtml(NamedColorsContext.colorsOf(context).names),
+                "<body>" + text.markdownToHtml(NamedColorsContext.colorsOf(context).names).preserveSpaces(),
                 HtmlCompat.FROM_HTML_MODE_LEGACY,
                 null,
                 MarkdownTagHandler
