@@ -280,7 +280,7 @@ public class StringExtensionsTest {
     }
 
     @Test
-    public fun markdownToHtmlUnderscoreItalicStillMatchesInsideWords() {
+    public fun markdownToHtmlUnderscoreDoesNotPairInsideAWord() {
         assertEquals("<i>italic</i>", "_italic_".markdownToHtml())
         assertEquals("<i>a_b</i>", "_a_b_".markdownToHtml())
     }

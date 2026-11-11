@@ -83,7 +83,12 @@ private val linkRegex =
 /** Characters the superscript, subscript and highlight passes read, which a URL holds as stand-ins. */
 private val markupInUrlRegex = """[=^,{}]""".toRegex()
 
-/** Returns the `<a>` tag for a [linkRegex] match, with [markupInUrlRegex] characters in its URL as stand-ins. */
+/**
+ * Returns the `<a>` tag for a [linkRegex] match, with [markupInUrlRegex] characters in its URL as stand-ins.
+ *
+ * @param match A [linkRegex] match.
+ * @return The tag, around the link's text.
+ */
 private fun linkTag(match: MatchResult): String {
     val (text, url) = match.destructured
     val href = url.replace(markupInUrlRegex) { escaped(it.value[0]).toString() }
@@ -100,7 +105,7 @@ private const val subscriptTag = """<sub>$1</sub>"""
 
 /** Matches `==highlight==` */
 private val highlightRegex = """==([\s\S]+?)==""".toRegex()
-/** Color is replaced later **/
+/** The highlight's color and shape are set where the label is drawn. */
 private const val highlightTag = """<$HIGHLIGHT_TAG>$1</$HIGHLIGHT_TAG>"""
 
 /** Newline character `\n` */

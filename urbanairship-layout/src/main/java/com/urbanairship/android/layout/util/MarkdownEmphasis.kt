@@ -5,6 +5,8 @@ package com.urbanairship.android.layout.util
  *
  * @property scope Which span's text the run sits in (a link, color, superscript, subscript or
  *   highlight, the innermost one), or 0 outside every span.
+ * @property remaining How many of the run's markers haven't paired yet; they draw as typed.
+ * @property canStillOpen Whether the run may still open; a pair around it rules that out.
  */
 private class DelimiterRun(
     val start: Int,
@@ -15,7 +17,7 @@ private class DelimiterRun(
     val scope: Int
 ) {
     var remaining = length
-    var opensAtAll = canOpen
+    var canStillOpen = canOpen
     val openTags = StringBuilder()
     val closeTags = StringBuilder()
 }
@@ -61,9 +63,9 @@ private fun Int?.isFlankWhitespace(): Boolean =
  * the result matches iOS and web: markers open and close by flanking, `_` never works inside a word,
  * and a marker with no partner stays literal.
  *
- * HTML tags in the text are skipped, and read as punctuation beside a marker. A link binds tighter
- * than emphasis, so markers inside a link's text only pair with each other, and markers outside it
- * never pair across its edge.
+ * HTML tags in the text are skipped, and read as punctuation beside a marker. A link, color,
+ * superscript, subscript or highlight binds tighter than emphasis, so markers inside one only pair
+ * with each other, and markers outside never pair across its edge.
  *
  * @receiver Text that is already HTML-encoded, with escaped characters swapped for stand-ins.
  * @return The text with matched markers replaced by tags.
@@ -90,6 +92,12 @@ internal fun String.applyEmphasis(): String {
 /** Tags whose text emphasis can't pair across: a marker inside only pairs with one inside. */
 private val scopeTagNames = setOf("a", "font", "sup", "sub", HIGHLIGHT_TAG)
 
+/**
+ * Returns every run of `*`, `_` or `~` outside a tag, with the span it sits in.
+ *
+ * @receiver Text from [applyEmphasis].
+ * @return The runs, in order.
+ */
 private fun String.findDelimiterRuns(): List<DelimiterRun> {
     val runs = mutableListOf<DelimiterRun>()
     val scopes = ArrayDeque<Int>()
@@ -144,6 +152,15 @@ private fun String.flankCharAfter(index: Int): Int? = when {
     else -> codePointAt(index)
 }
 
+/**
+ * Returns the run of [char] from [start] to [end], with whether it can open or close by flanking.
+ *
+ * @param start The run's first index.
+ * @param end The index after the run.
+ * @param char The run's marker.
+ * @param scope The span the run sits in.
+ * @return The run.
+ */
 private fun String.delimiterRun(start: Int, end: Int, char: Char, scope: Int): DelimiterRun {
     val before = flankCharBefore(start)
     val after = flankCharAfter(end)
@@ -160,7 +177,11 @@ private fun String.delimiterRun(start: Int, end: Int, char: Char, scope: Int): D
     return DelimiterRun(start, char, end - start, canOpen, canClose, scope)
 }
 
-/** Pairs closers with the nearest compatible opener, recording the tags each run gains. */
+/**
+ * Pairs closers with the nearest compatible opener, recording the tags each run gains.
+ *
+ * @param runs Every run, in order; updated in place.
+ */
 private fun matchDelimiterRuns(runs: List<DelimiterRun>) {
     for (closerIndex in runs.indices) {
         val closer = runs[closerIndex]
@@ -189,15 +210,23 @@ private fun matchDelimiterRuns(runs: List<DelimiterRun>) {
 
             // Markers between a pair can no longer open anything that closes outside it.
             for (between in openerIndex + 1 until closerIndex) {
-                runs[between].opensAtAll = false
+                runs[between].canStillOpen = false
             }
         }
     }
 }
 
+/**
+ * Returns whether [opener] can pair with [closer]: the same marker in the same span, the rule of 3
+ * for `*` and `_`, and equal lengths of one or two for `~`.
+ *
+ * @param opener An earlier run that can open.
+ * @param closer A later run that can close.
+ * @return `true` if they pair.
+ */
 private fun canPair(opener: DelimiterRun, closer: DelimiterRun): Boolean {
     if (opener.char != closer.char || opener.scope != closer.scope) return false
-    if (!opener.canOpen || !opener.opensAtAll || opener.remaining == 0) return false
+    if (!opener.canOpen || !opener.canStillOpen || opener.remaining == 0) return false
 
     if (closer.char == '~') {
         return opener.remaining == closer.remaining && closer.remaining <= 2
