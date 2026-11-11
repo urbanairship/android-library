@@ -499,6 +499,38 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlEmphasisDoesNotCrossASpansEdge() {
+        assertEquals("*a <uahighlight>b* c</uahighlight>", "*a ==b* c==".markdownToHtml())
+        assertEquals("*a <sup>b* c</sup>", "*a ^^b* c^^".markdownToHtml())
+        assertEquals("*a <sub>b* c</sub>", "*a ,{b* c},".markdownToHtml())
+        assertEquals(
+            """<font color="#000001">a *b</font> c*""",
+            "[a *b]{color:brand} c*".markdownToHtml(listOf("brand"))
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlEmphasisInsideAndAroundASpan() {
+        assertEquals("<uahighlight><i>a</i></uahighlight>", "==*a*==".markdownToHtml())
+        assertEquals("<b><uahighlight>a</uahighlight></b>", "**==a==**".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlEmojiIsPunctuationForFlanking() {
+        assertEquals("x*\uD83D\uDE00*", "x*\uD83D\uDE00*".markdownToHtml())
+        assertEquals("<i>\uD83D\uDE00</i>", "*\uD83D\uDE00*".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlMarkupInALinkUrlStaysInTheUrl() {
+        assertEquals(
+            """<a href="https://e.com/?t=ab==">x</a> and <uahighlight>hi</uahighlight>""",
+            "[x](https://e.com/?t=ab==) and ==hi==".markdownToHtml()
+        )
+        assertEquals("""<a href="https://e.com/a^^b">x</a> <sup>up</sup>""", "[x](https://e.com/a^^b) ^^up^^".markdownToHtml())
+    }
+
+    @Test
     public fun colorSpanIndexDecodesPlaceholders() {
         assertEquals(0, colorSpanIndex(0xFF000001.toInt()))
         assertEquals(41, colorSpanIndex(0xFF00002A.toInt()))

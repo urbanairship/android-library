@@ -3,7 +3,8 @@ package com.urbanairship.android.layout.util
 /**
  * A run of identical `*`, `_` or `~` markers outside any HTML tag.
  *
- * @property scope Which link's text the run sits in, or 0 outside every link.
+ * @property scope Which span's text the run sits in (a link, color, superscript, subscript or
+ *   highlight, the innermost one), or 0 outside every span.
  */
 private class DelimiterRun(
     val start: Int,
@@ -19,25 +20,41 @@ private class DelimiterRun(
     val closeTags = StringBuilder()
 }
 
-/** Whether a character counts as punctuation for flanking: Unicode punctuation and symbols, and escape stand-ins. */
-private fun Char.isFlankPunctuation(): Boolean = when (Character.getType(this)) {
-    Character.CONNECTOR_PUNCTUATION.toInt(),
-    Character.DASH_PUNCTUATION.toInt(),
-    Character.START_PUNCTUATION.toInt(),
-    Character.END_PUNCTUATION.toInt(),
-    Character.INITIAL_QUOTE_PUNCTUATION.toInt(),
-    Character.FINAL_QUOTE_PUNCTUATION.toInt(),
-    Character.OTHER_PUNCTUATION.toInt(),
-    Character.MATH_SYMBOL.toInt(),
-    Character.CURRENCY_SYMBOL.toInt(),
-    Character.MODIFIER_SYMBOL.toInt(),
-    Character.OTHER_SYMBOL.toInt() -> true
-    else -> this in ''..''
+/**
+ * Returns whether a code point counts as punctuation for flanking: Unicode punctuation and symbols,
+ * and escape stand-ins.
+ *
+ * @receiver A code point, or `null` past either end of the text.
+ * @return `true` for punctuation.
+ */
+private fun Int?.isFlankPunctuation(): Boolean {
+    if (this == null) return false
+    if (this in ESCAPED_CHAR_RANGE) return true
+    return when (Character.getType(this).toByte()) {
+        Character.CONNECTOR_PUNCTUATION,
+        Character.DASH_PUNCTUATION,
+        Character.START_PUNCTUATION,
+        Character.END_PUNCTUATION,
+        Character.INITIAL_QUOTE_PUNCTUATION,
+        Character.FINAL_QUOTE_PUNCTUATION,
+        Character.OTHER_PUNCTUATION,
+        Character.MATH_SYMBOL,
+        Character.CURRENCY_SYMBOL,
+        Character.MODIFIER_SYMBOL,
+        Character.OTHER_SYMBOL -> true
+        else -> false
+    }
 }
 
-private fun Char?.isFlankWhitespace(): Boolean = this == null || Character.isWhitespace(this) || this == ' '
-
-private fun Char?.isFlankPunct(): Boolean = this != null && isFlankPunctuation()
+/**
+ * Returns whether a code point counts as whitespace for flanking: Unicode whitespace and space
+ * separators, or either end of the text.
+ *
+ * @receiver A code point, or `null` past either end of the text.
+ * @return `true` for whitespace.
+ */
+private fun Int?.isFlankWhitespace(): Boolean =
+    this == null || Character.isWhitespace(this) || Character.isSpaceChar(this)
 
 /**
  * Wraps `*`, `_` and `~` emphasis in `<b>`, `<i>` and `<s>` using the CommonMark delimiter-run rules, so
@@ -70,9 +87,12 @@ internal fun String.applyEmphasis(): String {
     }
 }
 
+/** Tags whose text emphasis can't pair across: a marker inside only pairs with one inside. */
+private val scopeTagNames = setOf("a", "font", "sup", "sub", HIGHLIGHT_TAG)
+
 private fun String.findDelimiterRuns(): List<DelimiterRun> {
     val runs = mutableListOf<DelimiterRun>()
-    var scope = 0
+    val scopes = ArrayDeque<Int>()
     var nextScope = 1
     var i = 0
     while (i < length) {
@@ -82,16 +102,16 @@ private fun String.findDelimiterRuns(): List<DelimiterRun> {
                 val close = indexOf('>', i)
                 val tagEnd = if (close < 0) length else close + 1
                 val tag = substring(i, tagEnd)
-                when {
-                    tag.startsWith("<a ") || tag == "<a>" -> scope = nextScope++
-                    tag == "</a>" -> scope = 0
+                val name = tag.removePrefix("<").removePrefix("/").takeWhile { it.isLetter() }
+                if (name in scopeTagNames) {
+                    if (tag.startsWith("</")) scopes.removeLastOrNull() else scopes.addLast(nextScope++)
                 }
                 i = tagEnd
             }
             c == '*' || c == '_' || c == '~' -> {
                 var end = i
                 while (end < length && this[end] == c) end++
-                runs += delimiterRun(i, end, c, scope)
+                runs += delimiterRun(i, end, c, scopes.lastOrNull() ?: 0)
                 i = end
             }
             else -> i++
@@ -100,25 +120,41 @@ private fun String.findDelimiterRuns(): List<DelimiterRun> {
     return runs
 }
 
-/** Returns the character a flanking check sees before [index]; a line break reads as whitespace. */
-private fun String.flankCharBefore(index: Int): Char? =
-    if (startsWith(newlineTag, index - newlineTag.length)) ' ' else getOrNull(index - 1)
+/**
+ * Returns the code point a flanking check sees before [index]; a line break reads as whitespace.
+ *
+ * @param index Where a delimiter run starts.
+ * @return The code point, or `null` at the start of the text.
+ */
+private fun String.flankCharBefore(index: Int): Int? = when {
+    startsWith(newlineTag, index - newlineTag.length) -> ' '.code
+    index <= 0 -> null
+    else -> codePointBefore(index)
+}
 
-/** Returns the character a flanking check sees at [index]; a line break reads as whitespace. */
-private fun String.flankCharAfter(index: Int): Char? =
-    if (startsWith(newlineTag, index)) ' ' else getOrNull(index)
+/**
+ * Returns the code point a flanking check sees at [index]; a line break reads as whitespace.
+ *
+ * @param index Where a delimiter run ends.
+ * @return The code point, or `null` at the end of the text.
+ */
+private fun String.flankCharAfter(index: Int): Int? = when {
+    startsWith(newlineTag, index) -> ' '.code
+    index >= length -> null
+    else -> codePointAt(index)
+}
 
 private fun String.delimiterRun(start: Int, end: Int, char: Char, scope: Int): DelimiterRun {
     val before = flankCharBefore(start)
     val after = flankCharAfter(end)
     val leftFlanking = !after.isFlankWhitespace() &&
-        (!after.isFlankPunct() || before.isFlankWhitespace() || before.isFlankPunct())
+        (!after.isFlankPunctuation() || before.isFlankWhitespace() || before.isFlankPunctuation())
     val rightFlanking = !before.isFlankWhitespace() &&
-        (!before.isFlankPunct() || after.isFlankWhitespace() || after.isFlankPunct())
+        (!before.isFlankPunctuation() || after.isFlankWhitespace() || after.isFlankPunctuation())
 
     val (canOpen, canClose) = when (char) {
-        '_' -> (leftFlanking && (!rightFlanking || before.isFlankPunct())) to
-            (rightFlanking && (!leftFlanking || after.isFlankPunct()))
+        '_' -> (leftFlanking && (!rightFlanking || before.isFlankPunctuation())) to
+            (rightFlanking && (!leftFlanking || after.isFlankPunctuation()))
         else -> leftFlanking to rightFlanking
     }
     return DelimiterRun(start, char, end - start, canOpen, canClose, scope)

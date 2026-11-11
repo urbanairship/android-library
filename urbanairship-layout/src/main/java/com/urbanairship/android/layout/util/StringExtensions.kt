@@ -50,6 +50,9 @@ private const val ESCAPE_OFFSET = 0xE000
 
 private fun escaped(char: Char): Char = (ESCAPE_OFFSET + char.code).toChar()
 
+/** The code points escaped characters stand in as, which flanking reads as punctuation. */
+internal val ESCAPED_CHAR_RANGE: IntRange = escaped('!').code..escaped('~').code
+
 /** Matches an escaped character's stand-in. */
 private val escapedCharRegex = "[${escaped('!')}-${escaped('~')}]".toRegex()
 
@@ -68,7 +71,16 @@ private val colorSpanRegex =
 private val linkRegex =
     """\[([^\[\]]*)]\(\s*((?:[^\s()]|\([^\s()]*\))+)(?:\s+(?:&quot;(?:(?!&quot;).)*&quot;|&#39;(?:(?!&#39;).)*&#39;))?\s*\)"""
         .toRegex()
-private const val linkTag = """<a href="$2">$1</a>"""
+
+/** Characters the superscript, subscript and highlight passes read, which a URL holds as stand-ins. */
+private val markupInUrlRegex = """[=^,{}]""".toRegex()
+
+/** Returns the `<a>` tag for a [linkRegex] match, with [markupInUrlRegex] characters in its URL as stand-ins. */
+private fun linkTag(match: MatchResult): String {
+    val (text, url) = match.destructured
+    val href = url.replace(markupInUrlRegex) { escaped(it.value[0]).toString() }
+    return """<a href="$href">$text</a>"""
+}
 
 /** Matches `^^superscript^^` */
 private val superscriptRegex = """\^\^(.+?)\^\^""".toRegex()
@@ -123,14 +135,15 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         .replace(newline, newlineTag)
         .replace(newlineEscaped, newlineTag)
         // Replace [link](url) with <a href="url">link</a>
-        .replace(linkRegex, linkTag)
-        // Replace **bold**, *italic*, ***both*** and ~strikethrough~ with tags
-        .applyEmphasis()
+        .replace(linkRegex, ::linkTag)
         // Replace ^^superscript^^ with <sup>superscript</sup>
         .replace(superscriptRegex, superscriptTag)
         // Replace ,{subscript}, with <sub>subscript</sub>
         .replace(subscriptRegex, subscriptTag)
         // Replace ==highlight== with <uahighlight>highlight</uahighlight>
         .replace(highlightRegex, highlightTag)
+        // Replace **bold**, *italic*, ***both*** and ~strikethrough~ with tags, last so a marker
+        // only pairs with one inside the same link, color, superscript, subscript or highlight
+        .applyEmphasis()
         // Draw escaped characters as themselves
         .replace(escapedCharRegex) { (it.value[0].code - ESCAPE_OFFSET).toChar().toString().htmlEncode() }
