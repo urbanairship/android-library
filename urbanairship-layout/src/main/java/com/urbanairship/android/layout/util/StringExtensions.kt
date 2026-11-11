@@ -17,15 +17,14 @@ internal fun String?.ifNotEmpty(block: (String) -> Unit) {
  * - Bold: `**bold**`
  * - Italic: `*italic*`
  * - Bold and italic: `***bold + italic***`
- * - Strikethrough: `~~strikethrough~~`
+ * - Strikethrough: `~~strikethrough~~` or `~strikethrough~`
  * - Highlight: `==highlight==`
  * - Superscript: `^^superscript^^`
  * - Subscript: `,{subscript},`
  * - Color: `[text]{color:name}`, where `name` is one of [colorNames]
  *
  * A backslash before ASCII punctuation draws that character literally, as in CommonMark:
- * `\*not italic\*` draws `*not italic*`. An escaped bracket still opens or closes a color span,
- * which is what iOS does.
+ * `\*not italic\*` draws `*not italic*`, and `\[x]{color:name}` isn't a color span.
  *
  * All other markdown syntax will be ignored.
  *
@@ -46,68 +45,73 @@ internal fun colorSpanIndex(color: Int): Int? = ((color and 0xFFFFFF) - 1).takeI
 /** Matches a backslash before ASCII punctuation, which draws that character literally. */
 private val backslashEscapeRegex = """\\([!-/:-@\[-`{-~])""".toRegex()
 
-/** Escaped characters stand in as these private-use characters until the markdown is converted. */
-private const val ESCAPE_OFFSET = 0xE000
+/** The ASCII punctuation a backslash escapes, in the order of their stand-ins. */
+private const val ESCAPABLE = """!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
 
-private fun escaped(char: Char): Char = (ESCAPE_OFFSET + char.code).toChar()
+/**
+ * The first of the noncharacters escaped characters stand in as until the markdown is converted, one
+ * per [ESCAPABLE] character. No real text holds a noncharacter, where a private-use character may be
+ * an icon font's glyph.
+ */
+private const val FIRST_STAND_IN = 0xFDD0
 
-private val escapedOpenBracket = escaped('[')
-private val escapedCloseBracket = escaped(']')
+/** Returns the stand-in for an escaped [char], one of [ESCAPABLE]. */
+private fun escaped(char: Char): Char = (FIRST_STAND_IN + ESCAPABLE.indexOf(char)).toChar()
+
+/** The code points escaped characters stand in as, which flanking reads as punctuation. */
+internal val ESCAPED_CHAR_RANGE: IntRange = FIRST_STAND_IN until FIRST_STAND_IN + ESCAPABLE.length
 
 /** Matches an escaped character's stand-in. */
 private val escapedCharRegex = "[${escaped('!')}-${escaped('~')}]".toRegex()
 
 /**
  * Matches `[text]{color:name}` whose text holds no brackets other than complete `[link](url)`s,
- * so nested spans match innermost first.
+ * so nested spans match innermost first. An escaped bracket is a stand-in by now, so it's text.
  */
-private val colorSpanRegex = run {
-    val open = """[\[$escapedOpenBracket]"""
-    val close = """[\]$escapedCloseBracket]"""
-    val notBracket = """[^\[\]$escapedOpenBracket$escapedCloseBracket]"""
-    """$open((?:$notBracket|$open$notBracket*$close\([^)]*\))+?)$close\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
+private val colorSpanRegex =
+    """\[((?:[^\[\]]|\[[^\[\]]*]\([^)]*\))+?)]\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
+
+/**
+ * Matches `[link](url)` or `[link](url "title")` whose text holds no brackets, so a bracket before
+ * the link stays literal. Runs on HTML-encoded text, so a title's quotes are `&quot;` or `&#39;`.
+ * The URL may hold one level of balanced parentheses, as in CommonMark.
+ */
+private val linkRegex =
+    """\[([^\[\]]*)]\(\s*((?:[^\s()<]|\([^\s()<]*\))+)(?:\s+(?:&quot;(?:(?!&quot;).)*&quot;|&#39;(?:(?!&#39;).)*&#39;))?\s*\)"""
+        .toRegex()
+
+/** Characters the superscript, subscript and highlight passes read, which a URL holds as stand-ins. */
+private val markupInUrlRegex = """[=^,{}]""".toRegex()
+
+/**
+ * Returns the `<a>` tag for a [linkRegex] match, with [markupInUrlRegex] characters in its URL as stand-ins.
+ *
+ * @param match A [linkRegex] match.
+ * @return The tag, around the link's text.
+ */
+private fun linkTag(match: MatchResult): String {
+    val (text, url) = match.destructured
+    val href = url.replace(markupInUrlRegex) { escaped(it.value[0]).toString() }
+    return """<a href="$href">$text</a>"""
 }
 
-/** Matches `[link](url)` */
-private val linkRegex = """\[(.+?)]\((.+?)\)""".toRegex()
-private const val linkTag = """<a href="$2">$1</a>"""
-
-/** Matches `***bold + italic***` or `___bold + italic___` */
-private val boldAndItalicRegexStar = """\*\*\*(.*?)\*\*\*""".toRegex()
-private val boldAndItalicRegexBar = """\b___(.*?)___\b""".toRegex()
-private const val boldAndItalicTag = """<b><i>$1</i></b>"""
-
-/** Matches `**bold**` or `__bold__` */
-private val boldRegexStar = """\*\*(.*?)\*\*""".toRegex()
-private val boldRegexBar = """\b__(.*?)__\b""".toRegex()
-private const val boldTag = """<b>$1</b>"""
-
-/** Matches `*italic*` or `_italic_` */
-private val italicRegexStar = """\*(.*?)\*""".toRegex()
-private val italicRegexBar = """\b_(.*?)_\b""".toRegex()
-private const val italicTag = """<i>$1</i>"""
-
-/** Matches `~~strikethrough~~` */
-private val strikethroughRegex = """~~(.*?)~~""".toRegex()
-private const val strikethroughTag = """<s>$1</s>"""
-
 /** Matches `^^superscript^^` */
-private val superscriptRegex = """\^\^(.*?)\^\^""".toRegex()
+private val superscriptRegex = """\^\^(.+?)\^\^""".toRegex()
 private const val superscriptTag = """<sup>$1</sup>"""
 
 /** Matches `,{subscript},` */
-private val subscriptRegex = """,\{(.*?)\},""".toRegex()
+private val subscriptRegex = """,\{(.+?)\},""".toRegex()
 private const val subscriptTag = """<sub>$1</sub>"""
 
 /** Matches `==highlight==` */
 private val highlightRegex = """==([\s\S]+?)==""".toRegex()
-/** Color is replaced later **/
-private const val highlightTag = """<span style="background-color: #4DFFFF00;">$1</span>"""
+/** The highlight's color and shape are set where the label is drawn. */
+private const val highlightTag = """<$HIGHLIGHT_TAG>$1</$HIGHLIGHT_TAG>"""
 
 /** Newline character `\n` */
 private const val newline = "\n"
 private const val newlineEscaped = "\\n"
-private const val newlineTag = "<br>"
+internal const val newlineTag = "<br>"
 
 
 /** Replaces color spans until none are left, so each pass unwraps one level of nesting. */
@@ -121,7 +125,7 @@ private fun String.replaceColorSpans(colorNames: List<String>): String {
                 text
             } else {
                 val placeholder = "#%06X".format(index + 1)
-                """<span style="color: $placeholder;">$text</span>"""
+                """<font color="$placeholder">$text</font>"""
             }
         }
         if (next == result) return result
@@ -135,32 +139,24 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         .replace(backslashEscapeRegex) { escaped(it.groupValues[1][0]).toString() }
         // Encode any HTML characters in the original input so that we don't lose
         // symbols like < or & after converting to HTML and rendering the text.
-        // This must be done first, before any other formatting is applied.
+        // This must be done before any tags are added.
         .htmlEncode()
-        // Replace [text]{color:name} with a placeholder-colored <span>, before links so a
+        // Replace [text]{color:name} with a placeholder-colored tag, before links so a
         // link regex can't swallow the brackets
         .replaceColorSpans(colorNames)
         // Replace newlines with <br>
         .replace(newline, newlineTag)
         .replace(newlineEscaped, newlineTag)
         // Replace [link](url) with <a href="url">link</a>
-        .replace(linkRegex, linkTag)
-        // Replace ***bold + italic*** and ___bold + italic___ with <b><i>bold + italic</i></b>
-        .replace(boldAndItalicRegexStar, boldAndItalicTag)
-        .replace(boldAndItalicRegexBar, boldAndItalicTag)
-        // Replace **bold** and __bold__ with <b>bold</b>
-        .replace(boldRegexStar, boldTag)
-        .replace(boldRegexBar, boldTag)
-        // Replace *italic* and _italic_ with <i>italic</i>
-        .replace(italicRegexStar, italicTag)
-        .replace(italicRegexBar, italicTag)
-        // Replace ~~strikethrough~~ with <s>strikethrough</s>
-        .replace(strikethroughRegex, strikethroughTag)
+        .replace(linkRegex, ::linkTag)
         // Replace ^^superscript^^ with <sup>superscript</sup>
         .replace(superscriptRegex, superscriptTag)
         // Replace ,{subscript}, with <sub>subscript</sub>
         .replace(subscriptRegex, subscriptTag)
-        // Replace ==highlight== with <span style="background-color: #4DFFFF00;">highlight</span>
+        // Replace ==highlight== with <uahighlight>highlight</uahighlight>
         .replace(highlightRegex, highlightTag)
+        // Replace **bold**, *italic*, ***both*** and ~strikethrough~ with tags, last so a marker
+        // only pairs with one inside the same link, color, superscript, subscript or highlight
+        .applyEmphasis()
         // Draw escaped characters as themselves
-        .replace(escapedCharRegex) { (it.value[0].code - ESCAPE_OFFSET).toChar().toString().htmlEncode() }
+        .replace(escapedCharRegex) { ESCAPABLE[it.value[0].code - FIRST_STAND_IN].toString().htmlEncode() }
