@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -81,10 +89,15 @@ internal fun LayoutListScreen(
     }
 
     var preview by remember { mutableStateOf<Pair<AirshipLayout, String>?>(null) }
+    var lastPreviewed by remember { mutableStateOf<String?>(null) }
 
     preview?.let { (layout, title) ->
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
         MessageCenterTheme {
             MessageCenterMessageScreen(
+                modifier = Modifier.focusRequester(focusRequester).focusGroup(),
                 state = rememberMessageCenterPreviewState(layout = layout, title = title),
                 onNavigateUp = { preview = null },
                 onClose = { preview = null }
@@ -121,10 +134,12 @@ internal fun LayoutListScreen(
                 is LayoutListScreenViewModel.State.Loaded ->
                     ContentView(
                         items = state.layouts,
+                        focusedFilename = lastPreviewed,
                         onSelected = { viewModel.display(context, it) },
                         onPreview = { file ->
                             try {
                                 preview = file.readAirshipLayout(context) to file.filename
+                                lastPreviewed = file.filename
                             } catch (ex: Exception) {
                                 UALog.e(ex) { "Failed to preview layout ${file.filename}" }
                                 scope.launch {
@@ -144,9 +159,12 @@ internal fun LayoutListScreen(
     }
 }
 
+private val selectKeys = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)
+
 @Composable
 private fun ContentView(
     items: List<ThomasLayout.LayoutFile>,
+    focusedFilename: String?,
     onSelected: (ThomasLayout.LayoutFile) -> Unit,
     onPreview: (ThomasLayout.LayoutFile) -> Unit
 ) {
@@ -162,12 +180,34 @@ private fun ContentView(
                 HorizontalDivider(Modifier.padding(horizontal = 12.dp))
             }
 
+            var isSelectKeyDown by remember { mutableStateOf(false) }
+            var previewOnKeyUp by remember { mutableStateOf(false) }
+            val focusRequester = remember { FocusRequester() }
+            if (file.filename == focusedFilename) {
+                LaunchedEffect(Unit) { focusRequester.requestFocus() }
+            }
+
+            // The preview replaces this row, so a D-pad long-press waits for the release;
+            // otherwise the release lands on whatever takes focus next.
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onPreviewKeyEvent { event ->
+                        if (event.key in selectKeys) {
+                            isSelectKeyDown = event.type == KeyEventType.KeyDown
+                            if (!isSelectKeyDown && previewOnKeyUp) {
+                                previewOnKeyUp = false
+                                onPreview(file)
+                            }
+                        }
+                        false
+                    }
                     .combinedClickable(
                         onClick = { onSelected(file) },
-                        onLongClick = { onPreview(file) }
+                        onLongClick = {
+                            if (isSelectKeyDown) previewOnKeyUp = true else onPreview(file)
+                        }
                     )
             ) {
                 Text(

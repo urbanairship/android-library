@@ -32,7 +32,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -137,9 +137,9 @@ private fun TvShell(appRouter: AppRouterViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 80.dp)
-                .onPreviewKeyEvent { event ->
+                .onKeyEvent { event ->
                     if (event.key != Key.DirectionLeft || event.type != KeyEventType.KeyDown) {
-                        return@onPreviewKeyEvent false
+                        return@onKeyEvent false
                     }
                     focusManager.moveFocus(FocusDirection.Left)
                     if (drawerHasFocus) drawerFocus.requestFocus()
