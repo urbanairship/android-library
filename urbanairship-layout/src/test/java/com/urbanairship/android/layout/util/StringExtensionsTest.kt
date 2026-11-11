@@ -542,6 +542,20 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlLineBreakInALinkUrlIsNotALink() {
+        assertEquals("[x](a<br><i>b) c</i>", "[x](a\n_b) c_".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSpacedAndEmptyMarkersStayLiteral() {
+        assertEquals("____", "____".markdownToHtml())
+        assertEquals("2 * 3 * 4", "2 * 3 * 4".markdownToHtml())
+        assertEquals("a ** b ** c", "a ** b ** c".markdownToHtml())
+        assertEquals("~~ x ~~", "~~ x ~~".markdownToHtml())
+        assertEquals("<s>x</s>", "~x~".markdownToHtml())
+    }
+
+    @Test
     public fun colorSpanIndexDecodesPlaceholders() {
         assertEquals(0, colorSpanIndex(0xFF000001.toInt()))
         assertEquals(41, colorSpanIndex(0xFF00002A.toInt()))

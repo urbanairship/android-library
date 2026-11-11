@@ -77,7 +77,7 @@ private val colorSpanRegex =
  * The URL may hold one level of balanced parentheses, as in CommonMark.
  */
 private val linkRegex =
-    """\[([^\[\]]*)]\(\s*((?:[^\s()]|\([^\s()]*\))+)(?:\s+(?:&quot;(?:(?!&quot;).)*&quot;|&#39;(?:(?!&#39;).)*&#39;))?\s*\)"""
+    """\[([^\[\]]*)]\(\s*((?:[^\s()<]|\([^\s()<]*\))+)(?:\s+(?:&quot;(?:(?!&quot;).)*&quot;|&#39;(?:(?!&#39;).)*&#39;))?\s*\)"""
         .toRegex()
 
 /** Characters the superscript, subscript and highlight passes read, which a URL holds as stand-ins. */
@@ -139,7 +139,7 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         .replace(backslashEscapeRegex) { escaped(it.groupValues[1][0]).toString() }
         // Encode any HTML characters in the original input so that we don't lose
         // symbols like < or & after converting to HTML and rendering the text.
-        // This must be done first, before any other formatting is applied.
+        // This must be done before any tags are added.
         .htmlEncode()
         // Replace [text]{color:name} with a placeholder-colored tag, before links so a
         // link regex can't swallow the brackets
