@@ -102,6 +102,20 @@ public class LabelSpacesTest {
     }
 
     @Test
+    public fun italicPadGoesBeforeTrailingSpaces() {
+        val textView = TextView(RuntimeEnvironment.getApplication())
+        LayoutUtils.applyLabel(
+            textView = textView,
+            textAppearance = TextAppearance.fromJson(
+                JsonValue.parseString("""{ "font_size": 14, "styles": ["italic"], "color": { "default": { "type": "hex", "hex": "#000000" } } }""")
+            ),
+            markdownOptions = MarkdownOptions(JsonMap.EMPTY_MAP),
+            text = "a  "
+        )
+        assertEquals("a\u202F  ", textView.text.toString().trimEnd('\n'))
+    }
+
+    @Test
     public fun singleSpacesAreUnchanged() {
         assertEquals("a b c", render("a b c"))
     }

@@ -353,10 +353,15 @@ internal object LayoutUtils {
         val isCustomFont = textAppearance.fontFamilies.any { !fonts.isSystemFont(it) }
 
         val isItalic = textAppearance.textStyles.contains(TextStyle.ITALIC)
-        if (isCustomFont && isItalic) {
-            text += NBSP
-        } else if (isCustomFont || isItalic) {
-            text += NARROW_NBSP
+        val pad = when {
+            isCustomFont && isItalic -> NBSP
+            isCustomFont || isItalic -> NARROW_NBSP
+            else -> null
+        }
+        if (pad != null) {
+            // Before any trailing spaces, so they still hang past the line's end when it's aligned.
+            val body = text.trimEnd(' ')
+            text = body + pad + text.substring(body.length)
         }
 
         val context = textView.context
