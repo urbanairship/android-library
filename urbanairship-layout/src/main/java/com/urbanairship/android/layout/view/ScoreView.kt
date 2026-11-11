@@ -61,6 +61,7 @@ internal class ScoreView(
         })
 
         this.isFocusable = true
+        this.descendantFocusability = FOCUS_AFTER_DESCENDANTS
         this.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
 
         when (model.viewInfo.style) {

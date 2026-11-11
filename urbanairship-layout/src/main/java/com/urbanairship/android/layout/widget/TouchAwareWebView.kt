@@ -71,6 +71,19 @@ internal class TouchAwareAirshipWebView(context: Context) : AirshipWebView(conte
 
     private val touchesChannel = Channel<MotionEvent>(UNLIMITED)
 
+    /**
+     * Finds the view an arrow leaving the page moves to, falling back to the next view in focus
+     * order when nothing lies that way.
+     *
+     * A web view is often the full size of its scene, with a close button drawn over it rather
+     * than beyond its edge, so a directional search alone would leave focus stuck in the page.
+     *
+     * @param direction The direction focus is moving.
+     * @return The view to focus, or `null` if there is none.
+     */
+    override fun focusSearch(direction: Int): View? =
+        super.focusSearch(direction) ?: inOrderFallback(direction)?.let { super.focusSearch(it) }
+
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         // track touch events for flow consumers
         event?.let { touchesChannel.trySend(it) }

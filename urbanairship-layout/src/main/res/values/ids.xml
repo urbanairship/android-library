@@ -7,4 +7,6 @@
     <item name="ua_border_radii" type="id" />
     <!-- View tag used by clipInsideStroke to keep the path it clips with between draws -->
     <item name="ua_inside_stroke_clip" type="id" />
+    <!-- View tag set to true on a view drawn as an ellipse, so FocusRing draws an oval around it -->
+    <item name="ua_focus_ring_oval" type="id" />
 </resources>

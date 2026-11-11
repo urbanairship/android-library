@@ -29,6 +29,7 @@ import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
+import com.urbanairship.android.layout.widget.FocusRing
 
 /**
  * Positions and sizes banner content within the bounds of a banner host.
@@ -83,6 +84,7 @@ public class ThomasBannerView internal constructor(
         model.seedEnvironment(this)
         configureBanner()
         EnvironmentConditionsWatcher(this, model) { onEnvironmentConditionsChanged() }
+        FocusRing.install(this)
     }
 
     /** Returns the placement the window and the layout's environment conditions select now. */

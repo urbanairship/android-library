@@ -8,11 +8,14 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.OrientationHelper
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerViewAccessibilityDelegate
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.PagerModel
@@ -31,6 +34,9 @@ internal class PagerRecyclerView(
 
     private var isInternalScroll = false
     private var isSettling = false
+    private var hadFocusDuringScroll = false
+    private var isHoldingFocus = false
+    private var missedFocusRequest = false
 
     private var listener: PagerView.OnScrollListener? = null
 
@@ -51,6 +57,14 @@ internal class PagerRecyclerView(
         }
 
         setLayoutManager(layoutManager)
+
+        setAccessibilityDelegateCompat(object : RecyclerViewAccessibilityDelegate(this) {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.isFocusable = false
+                info.removeAction(AccessibilityActionCompat.ACTION_FOCUS)
+            }
+        })
 
         addOnScrollListener(recyclerScrollListener)
 
@@ -79,6 +93,8 @@ internal class PagerRecyclerView(
             ?: NO_POSITION
     }
 
+    fun getDisplayedPageView(): View? = layoutManager?.let { snapHelper.findSnapView(it) }
+
     fun scrollTo(position: Int, animate: Boolean = true) {
         val displayed = getDisplayedItemPosition()
         UALog.v { "ThomasPager RecyclerView scrollTo($position) displayed=$displayed isInternalScroll=$isInternalScroll animate=$animate" }
@@ -93,6 +109,9 @@ internal class PagerRecyclerView(
         if (displayed != NO_POSITION) {
             isInternalScroll = true
         }
+
+        hadFocusDuringScroll = hadFocusDuringScroll || hasFocus()
+        if (displayed != NO_POSITION) holdFocusDuringScroll()
 
         if (animate) {
             smoothScrollToPosition(position)
@@ -157,6 +176,7 @@ internal class PagerRecyclerView(
         // A parallax background reads this before the first scroll, not just after: a pager
         // sitting on page one, never swiped, still has a resting offset to be placed against.
         listener?.onContentOffsetChanged(contentOffset())
+        focusPageAfterMissedRequest()
     }
 
     private val recyclerScrollListener: OnScrollListener = object : OnScrollListener() {
@@ -180,6 +200,10 @@ internal class PagerRecyclerView(
             UALog.v { "ThomasPager RecyclerView onScrollStateChanged=$stateName isInternalScroll=$isInternalScroll" }
 
             listener?.onScrollStateChanged(state != SCROLL_STATE_IDLE)
+
+            if (state != SCROLL_STATE_IDLE) {
+                hadFocusDuringScroll = hadFocusDuringScroll || hasFocus()
+            }
 
             // Re-stated on settle, in case the snap was instant enough that onScrolled never ran
             // for its final frame -- a page's resting offset is a real position like any other,
@@ -209,8 +233,132 @@ internal class PagerRecyclerView(
                 }
                 isInternalScroll = false
                 isSettling = false
+                releaseFocusHold()
+
+                if (hadFocusDuringScroll) {
+                    hadFocusDuringScroll = false
+                    moveFocusIntoPage(position)
+                }
             }
         }
+    }
+
+    /**
+     * Moves key focus into the page at [position] if it's on this view or in an off-screen page;
+     * leaves focus already in the page, or outside the pager, alone.
+     */
+    private fun moveFocusIntoPage(position: Int) {
+        if (isInTouchMode || position == NO_POSITION) return
+        val page = layoutManager?.findViewByPosition(position) ?: return
+        val focused = rootView.findFocus()
+        if (focused != null && focused !== this) {
+            if (page.isAncestorOf(focused) || !isAncestorOf(focused)) return
+        }
+        if (!page.requestFocus(View.FOCUS_DOWN)) focusPagerItself()
+    }
+
+    // A plain requestFocus offers focus to the pages first, and focusing a control on an
+    // off-screen neighbour scrolls the pager to it.
+    private fun focusPagerItself() {
+        if (!takesKeyFocus || isFocused) return
+        val focusability = descendantFocusability
+        descendantFocusability = FOCUS_BLOCK_DESCENDANTS
+        requestFocus()
+        descendantFocusability = focusability
+    }
+
+    /**
+     * Moves focus from inside the outgoing page onto the pager until the page turn settles.
+     *
+     * Recycling the outgoing page drops the focused view, and the window then hands focus to the
+     * first focusable view it finds: a control elsewhere in the scene, the host app, or nothing.
+     * This applies even to a pager that isn't a focus stop of its own, which keeps focus once
+     * the turn lands on a page with nothing focusable.
+     */
+    private fun holdFocusDuringScroll() {
+        if (isInTouchMode || isHoldingFocus) return
+        val focused = findFocus() ?: return
+        if (focused === this) return
+
+        isHoldingFocus = true
+        focusPagerItself()
+        descendantFocusability = FOCUS_BLOCK_DESCENDANTS
+    }
+
+    private fun releaseFocusHold() {
+        if (!isHoldingFocus) return
+        isHoldingFocus = false
+        descendantFocusability = FOCUS_AFTER_DESCENDANTS
+    }
+
+    override fun onDetachedFromWindow() {
+        releaseFocusHold()
+        super.onDetachedFromWindow()
+    }
+
+    // Holding focus on a page with nothing focusable leaves the arrows searching from a view that
+    // is often the full size of its scene, with a close button drawn over it.
+    override fun focusSearch(direction: Int): View? =
+        super.focusSearch(direction) ?: inOrderFallback(direction)?.let { super.focusSearch(it) }
+
+    // A pager left holding focus has to count as focusable, or a search in focus order from it
+    // finds nothing.
+    private val takesKeyFocus: Boolean
+        get() = isInTouchMode || isHoldingFocus || isFocused || model.handlesDirectionalKeys
+
+    // Neighbouring pages stay attached just off-screen, and focusing a control on one would move
+    // focus out of sight without turning the page.
+    private val displayedPage: View?
+        get() = getDisplayedPageView()?.takeIf { it.visibility == VISIBLE }
+
+    override fun addFocusables(views: ArrayList<View>, direction: Int, focusableMode: Int) {
+        val count = views.size
+        if (descendantFocusability != FOCUS_BLOCK_DESCENDANTS) {
+            displayedPage?.addFocusables(views, direction, focusableMode)
+        }
+        if (takesKeyFocus && (views.size == count || descendantFocusability != FOCUS_AFTER_DESCENDANTS)) {
+            addOwnFocusable(views, direction, focusableMode)
+        }
+    }
+
+    private fun addOwnFocusable(views: ArrayList<View>, direction: Int, focusableMode: Int) {
+        val focusability = descendantFocusability
+        descendantFocusability = FOCUS_BLOCK_DESCENDANTS
+        super.addFocusables(views, direction, focusableMode)
+        descendantFocusability = focusability
+    }
+
+    override fun onRequestFocusInDescendants(direction: Int, previouslyFocusedRect: Rect?): Boolean {
+        val page = displayedPage
+        if (page == null) {
+            missedFocusRequest = !isInTouchMode
+            return false
+        }
+        return !isComputingLayout && page.requestFocus(direction, previouslyFocusedRect)
+    }
+
+    // A window picks its initial focus before the pager lays out its first page, so that focus
+    // lands on a control elsewhere in the scene, such as the close button.
+    private fun focusPageAfterMissedRequest() {
+        if (!missedFocusRequest || displayedPage == null) return
+        missedFocusRequest = false
+        post { if (!isInTouchMode) displayedPage?.requestFocus(View.FOCUS_DOWN) }
+    }
+
+    override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean =
+        if (takesKeyFocus) {
+            super.requestFocus(direction, previouslyFocusedRect)
+        } else {
+            onRequestFocusInDescendants(direction, previouslyFocusedRect)
+        }
+
+    private fun View.isAncestorOf(view: View): Boolean {
+        var parent = view.parent
+        while (parent != null) {
+            if (parent === this) return true
+            parent = parent.parent
+        }
+        return false
     }
 
     init {
@@ -256,6 +404,15 @@ internal class PagerRecyclerView(
             }
             return super.requestChildRectangleOnScreen(parent, child, rect, immediate, focusedChildVisible)
         }
+
+        // Pages only change through the pager model, so directional focus never lays out and
+        // scrolls to a neighbouring page on its own.
+        override fun onFocusSearchFailed(
+            focused: View,
+            direction: Int,
+            recycler: Recycler,
+            state: State
+        ): View? = null
 
         override fun generateDefaultLayoutParams(): LayoutParams {
             return LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)

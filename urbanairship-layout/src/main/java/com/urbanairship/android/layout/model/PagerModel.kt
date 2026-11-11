@@ -639,7 +639,7 @@ internal class PagerModel(
         val triggeredGestures: List<Pair<PagerGesture, List<Outcome>?>> = when (event) {
             is PagerGestureEvent.Tap -> viewInfo.gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Tap>()
-                .filter { it.location == event.location || it.location == GestureLocation.ANY }
+                .filter { it.location == event.location }
                 .map { it to it.outcomes }
 
             is PagerGestureEvent.Swipe -> viewInfo.gestures.orEmpty()
@@ -658,6 +658,62 @@ internal class PagerModel(
             pagerOutcomeProcessor.process(outcomes, handlerOutcome = pagerOutcomeHandler)
             reportGesture(gesture, pagerState.changes.value)
         }
+    }
+
+    /**
+     * Whether Left/Right can do anything on this pager right now, as handled by [onDirectionalKey].
+     * When they can't, a page with nothing focusable has nothing for a D-pad or keyboard to do
+     * either.
+     */
+    val handlesDirectionalKeys: Boolean
+        get() = viewInfo.gestures.orEmpty().filterIsInstance<PagerGesture.Tap>().any {
+            it.location in KEY_TAP_LOCATIONS
+        } || !(isSinglePage || viewInfo.isSwipeDisabled || pagerState.changes.value.isScrollDisabled)
+
+    /**
+     * Handles a Left/Right key press that couldn't move focus within the current page.
+     *
+     * Behaves like a tap on that edge if the pager has tap gestures there, otherwise like a swipe
+     * if one is possible, otherwise like a tap anywhere, so a key never does anything a touch
+     * couldn't. A tap-anywhere gesture comes after the swipe so that Left still goes back on a
+     * pager whose only gesture is `tap: any → next`.
+     *
+     * @return `true` if the key was handled.
+     */
+    fun onDirectionalKey(isRight: Boolean, isRtl: Boolean): Boolean {
+        val edge = if (isRight) {
+            listOf(GestureLocation.RIGHT, if (isRtl) GestureLocation.START else GestureLocation.END)
+        } else {
+            listOf(GestureLocation.LEFT, if (isRtl) GestureLocation.END else GestureLocation.START)
+        }
+
+        return runTaps(edge) || swipe(isForward = isRight != isRtl) || runTaps(listOf(GestureLocation.ANY))
+    }
+
+    private fun runTaps(locations: List<GestureLocation>): Boolean {
+        val taps = viewInfo.gestures.orEmpty()
+            .filterIsInstance<PagerGesture.Tap>()
+            .filter { it.location in locations }
+        if (taps.isEmpty()) return false
+
+        modelScope.launch {
+            taps.forEach {
+                pagerOutcomeProcessor.process(it.outcomes, handlerOutcome = pagerOutcomeHandler)
+                reportGesture(it, pagerState.changes.value)
+            }
+        }
+        return true
+    }
+
+    private fun swipe(isForward: Boolean): Boolean {
+        if (isSinglePage || viewInfo.isSwipeDisabled) return false
+
+        val state = pagerState.changes.value
+        if (isForward && !state.hasNext || !isForward && !state.hasPrevious) return false
+
+        resolve(if (isForward) PageRequest.NEXT else PageRequest.BACK)
+        reportPageSwipe(pagerState.changes.value)
+        return true
     }
 
     private fun handlePagerNext(fallback: PagerNextFallback) {
@@ -780,6 +836,11 @@ internal enum class PagerNextFallback {
     DISMISS,
     FIRST
 }
+
+private val KEY_TAP_LOCATIONS = setOf(
+    GestureLocation.LEFT, GestureLocation.RIGHT, GestureLocation.START, GestureLocation.END,
+    GestureLocation.ANY
+)
 
 internal enum class PageRequest {
     NEXT,

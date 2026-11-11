@@ -7,6 +7,7 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.StoryIndicatorModel
@@ -38,10 +39,10 @@ internal class StoryIndicatorView(
 
         // Set accessibility properties on the parent view if announcePage is true
         if (model.announcePage) {
-            isFocusable = true
-            isFocusableInTouchMode = true
             importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
             accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_POLITE
+            // A stop of its own for TalkBack, without being a D-pad or keyboard focus stop.
+            ViewCompat.setScreenReaderFocusable(this, true)
         }
 
         model.listener = object : StoryIndicatorModel.Listener {

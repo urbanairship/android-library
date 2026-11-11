@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -53,9 +54,11 @@ import java.lang.ref.WeakReference
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import org.intellij.lang.annotations.Language
 import com.urbanairship.android.layout.util.isLayoutRtl
 
@@ -118,6 +121,18 @@ internal class MediaView(
         model.viewInfo.mediaType == MediaType.VIDEO &&
                 !model.viewInfo.eventHandlers.hasTapHandler() &&
                 !(model.viewInfo.video ?: Video.defaultVideo()).showControls
+
+    private val showsVideoControls: Boolean =
+        (model.viewInfo.video ?: Video.defaultVideo()).showControls
+
+    /**
+     * Whether the video's web view takes D-pad and keyboard focus: only when it has something a
+     * touch user could do with it, so a decorative or background video isn't a focus stop.
+     */
+    private val isVideoFocusable: Boolean =
+        showsVideoControls || model.viewInfo.eventHandlers.hasTapHandler()
+
+    private val keyTaps = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     init {
         id = model.viewId
@@ -225,7 +240,7 @@ internal class MediaView(
     }
 
     override fun taps(): Flow<Unit> {
-        return webView?.touchEvents()?.filter { it.isActionUp }?.map {}
+        return webView?.let { merge(it.touchEvents().filter { event -> event.isActionUp }.map {}, keyTaps) }
             ?: imageView?.debouncedClicks()
             // Shouldn't get here, unless models are set up incorrectly and
             // attempting to collect too early.
@@ -237,6 +252,64 @@ internal class MediaView(
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
         visibilityChangeListener?.onVisibilityChanged(visibility)
+    }
+
+    /**
+     * Keeps D-pad and keyboard keys away from a focused video's player, which would otherwise
+     * take the arrows for seeking and volume and leave no way out: Center plays and pauses as the
+     * player's own controls would and taps the media if it has a tap handler, and the arrows move
+     * focus on.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val wv = webView
+        if (wv == null || !wv.isFocused) return super.dispatchKeyEvent(event)
+
+        return when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> moveFocusOutOf(wv, View.FOCUS_UP, event)
+            KeyEvent.KEYCODE_DPAD_DOWN -> moveFocusOutOf(wv, View.FOCUS_DOWN, event)
+            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> false
+            KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_ENTER,
+            KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                if (event.action == KeyEvent.ACTION_UP) {
+                    if (showsVideoControls) togglePlayback()
+                    if (model.viewInfo.eventHandlers.hasTapHandler()) keyTaps.tryEmit(Unit)
+                }
+                true
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                if (!showsVideoControls) return super.dispatchKeyEvent(event)
+                if (event.action == KeyEvent.ACTION_UP) togglePlayback()
+                true
+            }
+            else -> super.dispatchKeyEvent(event)
+        }
+    }
+
+    /**
+     * A video is often the full size of its page, which leaves nothing beyond its edges for a
+     * directional search to find, so Up and Down fall back to the next view in order. Left and
+     * Right aren't handled here, so a pager gets them first as it would from any other view.
+     */
+    private fun moveFocusOutOf(wv: View, direction: Int, event: KeyEvent): Boolean {
+        val target = wv.focusSearch(direction) ?: when (direction) {
+            View.FOCUS_DOWN -> wv.focusSearch(View.FOCUS_FORWARD)
+            else -> wv.focusSearch(View.FOCUS_BACKWARD)
+        } ?: return false
+
+        // A press that moves focus sends its release to the new view, so a release still arriving
+        // here is from a press that didn't.
+        return event.action == KeyEvent.ACTION_DOWN && target.requestFocus(direction)
+    }
+
+    private fun togglePlayback() {
+        val script = when (model.viewInfo.mediaType) {
+            MediaType.VIDEO -> "if (videoElement.paused) videoElement.play(); else videoElement.pause();"
+            MediaType.YOUTUBE -> "if (player && player.getPlayerState) { if (player.getPlayerState() == YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo(); }"
+            MediaType.VIMEO -> "vimeoPlayer.getPaused().then(function(paused) { if (paused) vimeoPlayer.play(); else vimeoPlayer.pause(); });"
+            MediaType.IMAGE -> return
+        }
+        webView?.evaluateJavascript(script, null)
     }
 
     /** Media views are always shrinkable. */
@@ -461,6 +534,10 @@ internal class MediaView(
 
         val wv = TouchAwareWebView(context, webViewListener).apply {
             id = model.mediaViewId
+            if (!isVideoFocusable) {
+                isFocusable = false
+                isFocusableInTouchMode = false
+            }
         }
         webView = wv
 
@@ -607,6 +684,9 @@ internal class MediaView(
         }
 
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        if (!isVideoFocusable) {
+            wv.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
 
         model.contentDescription(context).ifNotEmpty {
             wv.contentDescription = it

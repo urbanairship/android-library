@@ -10,12 +10,17 @@ import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
+import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
+import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.Outcome
+import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.json.JsonValue
 import com.urbanairship.android.layout.util.PagerScrollEvent
+import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import app.cash.turbine.test
@@ -56,6 +61,7 @@ public class PagerModelTest {
     private val testScope = TestScope(testDispatcher)
 
     private val scrollsFlow = MutableSharedFlow<PagerScrollEvent>()
+    private val gesturesFlow = MutableSharedFlow<PagerGestureEvent>()
     private val layoutEventsFlow = MutableSharedFlow<LayoutEvent>()
     private val isScrollingFlow = MutableStateFlow(false)
 
@@ -82,6 +88,13 @@ public class PagerModelTest {
     private val pagerState: SharedState<State.Pager> =
         spyk(SharedState(State.Pager(identifier = PAGER_ID)))
 
+    private val mockViewInfo: PagerInfo = mockk(relaxUnitFun = true) {
+        every { gestures } returns emptyList()
+        every { disableSwipeWhen } returns null
+        every { backgrounds } returns null
+        every { isSwipeDisabled } returns false
+    }
+
     private lateinit var pagerModel: PagerModel
 
     @Before
@@ -91,11 +104,7 @@ public class PagerModelTest {
         pagerModel =
             spyk(PagerModel(
             availablePages = ITEMS,
-            viewInfo = mockk<PagerInfo>(relaxUnitFun = true) {
-                every { gestures } returns emptyList()
-                every { disableSwipeWhen } returns null
-                every { backgrounds } returns null
-            },
+            viewInfo = mockViewInfo,
             pagerState = pagerState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
@@ -109,6 +118,7 @@ public class PagerModelTest {
 
         mockkStatic(PagerView::pagerScrolls)
         every { mockView.pagerScrolls() } returns scrollsFlow
+        every { mockView.pagerGestures() } returns gesturesFlow
         every { mockView.isScrolling } returns isScrollingFlow
     }
 
@@ -334,6 +344,198 @@ public class PagerModelTest {
         advanceUntilIdle()
 
         verify(exactly = 1) { mockViewListener.scrollTo(2, true) }
+    }
+
+    @Test
+    public fun testDirectionalKeyPagesLikeASwipe(): TestResult = runTest {
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        assertTrue(pagerModel.onDirectionalKey(isRight = true, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+
+        assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(0, pagerState.changes.value.pageIndex)
+
+        verify(exactly = 2) { mockReporter.report(match { it is ReportingEvent.PageSwipe }) }
+    }
+
+    @Test
+    public fun testDirectionalKeyFollowsLayoutDirection(): TestResult = runTest {
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        assertFalse(pagerModel.onDirectionalKey(isRight = true, isRtl = true))
+        assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = true))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+    }
+
+    @Test
+    public fun testDirectionalKeyStopsAtTheEnds(): TestResult = runTest {
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        assertFalse(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+
+        pagerState.update { it.copyWithPageIndex(2) }
+        advanceUntilIdle()
+        assertFalse(pagerModel.onDirectionalKey(isRight = true, isRtl = false))
+
+        verify(exactly = 0) { mockReporter.report(match { it is ReportingEvent.PageSwipe }) }
+    }
+
+    @Test
+    public fun testDirectionalKeyDoesNotPageWhenSwipeIsDisabled(): TestResult = runTest {
+        every { mockViewInfo.isSwipeDisabled } returns true
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        assertFalse(pagerModel.onDirectionalKey(isRight = true, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(0, pagerState.changes.value.pageIndex)
+    }
+
+    @Test
+    public fun testDirectionalKeyRunsTheEdgeTapGesture(): TestResult = runTest {
+        every { mockViewInfo.isSwipeDisabled } returns true
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "end-tap",
+                reportingMetadata = null,
+                location = GestureLocation.END,
+                outcomes = listOf(
+                    Outcome.PagerStepNavigation("next", Outcome.PagerStepNavigation.Direction.NEXT)
+                )
+            )
+        )
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        assertTrue(pagerModel.onDirectionalKey(isRight = true, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+        verify { mockReporter.report(match { it is ReportingEvent.Gesture }) }
+        verify(exactly = 0) { mockReporter.report(match { it is ReportingEvent.PageSwipe }) }
+
+        // The end edge is on the left in RTL, and nothing is tapped on the right.
+        assertFalse(pagerModel.onDirectionalKey(isRight = true, isRtl = true))
+    }
+
+    @Test
+    public fun testDirectionalKeyRunsATapAnywhereGesture(): TestResult = runTest {
+        every { mockViewInfo.isSwipeDisabled } returns true
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "any-tap",
+                reportingMetadata = null,
+                location = GestureLocation.ANY,
+                outcomes = listOf(
+                    Outcome.PagerStepNavigation("next", Outcome.PagerStepNavigation.Direction.NEXT)
+                )
+            )
+        )
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+    }
+
+    @Test
+    public fun testDirectionalKeySwipesBeforeATapAnywhereGesture(): TestResult = runTest {
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "any-tap",
+                reportingMetadata = null,
+                location = GestureLocation.ANY,
+                outcomes = listOf(
+                    Outcome.PagerStepNavigation("next", Outcome.PagerStepNavigation.Direction.NEXT)
+                )
+            )
+        )
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        // Right and Left swipe while a swipe is possible...
+        assertTrue(pagerModel.onDirectionalKey(isRight = true, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+        assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(0, pagerState.changes.value.pageIndex)
+        verify(exactly = 2) { mockReporter.report(match { it is ReportingEvent.PageSwipe }) }
+        verify(exactly = 0) { mockReporter.report(match { it is ReportingEvent.Gesture }) }
+
+        // ...and the tap anywhere runs once there's nothing to swipe back to.
+        assertTrue(pagerModel.onDirectionalKey(isRight = false, isRtl = false))
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+        verify(exactly = 1) { mockReporter.report(match { it is ReportingEvent.Gesture }) }
+    }
+
+    @Test
+    public fun testEdgeTapRunsATapAnywhereGestureOnce(): TestResult = runTest {
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "any-tap",
+                reportingMetadata = null,
+                location = GestureLocation.ANY,
+                outcomes = listOf(
+                    Outcome.PagerStepNavigation("next", Outcome.PagerStepNavigation.Direction.NEXT)
+                )
+            )
+        )
+        pagerModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        listOf(GestureLocation.RIGHT, GestureLocation.END, GestureLocation.ANY).forEach {
+            gesturesFlow.emit(PagerGestureEvent.Tap(it))
+        }
+        advanceUntilIdle()
+        assertEquals(1, pagerState.changes.value.pageIndex)
+    }
+
+    @Test
+    public fun testHandlesDirectionalKeys() {
+        assertTrue(pagerModel.handlesDirectionalKeys)
+
+        every { mockViewInfo.isSwipeDisabled } returns true
+        assertFalse(pagerModel.handlesDirectionalKeys)
+
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "start-tap",
+                reportingMetadata = null,
+                location = GestureLocation.START,
+                outcomes = emptyList()
+            )
+        )
+        assertTrue(pagerModel.handlesDirectionalKeys)
+
+        every { mockViewInfo.gestures } returns listOf(
+            PagerGesture.Tap(
+                identifier = "any-tap",
+                reportingMetadata = null,
+                location = GestureLocation.ANY,
+                outcomes = emptyList()
+            )
+        )
+        assertTrue(pagerModel.handlesDirectionalKeys)
+    }
+
+    @Test
+    public fun testHandlesDirectionalKeysFollowsDisabledScrolling() {
+        assertTrue(pagerModel.handlesDirectionalKeys)
+
+        pagerState.update { it.copy(isScrollDisabled = true) }
+        assertFalse(pagerModel.handlesDirectionalKeys)
+
+        pagerState.update { it.copy(isScrollDisabled = false) }
+        assertTrue(pagerModel.handlesDirectionalKeys)
     }
 
     @Test

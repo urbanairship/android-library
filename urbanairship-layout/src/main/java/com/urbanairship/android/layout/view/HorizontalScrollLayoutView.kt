@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Rect
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
@@ -24,6 +25,7 @@ import com.urbanairship.android.layout.widget.backgroundsBoxWidth
 import com.urbanairship.android.layout.widget.paintBackgroundsBox
 import com.urbanairship.android.layout.widget.ScrollContentFrame
 import com.urbanairship.android.layout.widget.VideoBackgroundChildren
+import com.urbanairship.android.layout.widget.addDescendantFocusables
 import com.urbanairship.android.layout.widget.PercentBaseProvider
 
 internal class HorizontalScrollLayoutView(
@@ -177,6 +179,24 @@ internal class HorizontalScrollLayoutView(
         backgroundsPainter.offsetBoundsPx =
             0f..(computeHorizontalScrollRange() - computeHorizontalScrollExtent()).coerceAtLeast(0).toFloat()
     }
+
+    private val takesKeyFocus: Boolean
+        get() = isInTouchMode || canScrollHorizontally(1) || canScrollHorizontally(-1)
+
+    override fun addFocusables(views: ArrayList<View>, direction: Int, focusableMode: Int) {
+        if (takesKeyFocus) {
+            super.addFocusables(views, direction, focusableMode)
+        } else {
+            addDescendantFocusables(views, direction, focusableMode)
+        }
+    }
+
+    override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean =
+        if (takesKeyFocus) {
+            super.requestFocus(direction, previouslyFocusedRect)
+        } else {
+            onRequestFocusInDescendants(direction, previouslyFocusedRect)
+        }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)

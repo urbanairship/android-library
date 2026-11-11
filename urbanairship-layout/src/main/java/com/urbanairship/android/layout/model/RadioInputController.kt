@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
+import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
@@ -80,8 +81,10 @@ internal class RadioInputController(
     }
 
     private fun setupAccessibility(containerView: View) {
-        // Make the container focusable so TalkBack can select it
+        // Make the container focusable so TalkBack can select it, without it taking D-pad or
+        // keyboard focus ahead of its options.
         containerView.isFocusable = true
+        (containerView as? ViewGroup)?.descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
         // Ensure the container is important for accessibility
         containerView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
         // Set up accessibility for the radio button group
