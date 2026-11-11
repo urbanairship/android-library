@@ -369,7 +369,7 @@ internal object LayoutUtils {
                 HtmlCompat.FROM_HTML_MODE_LEGACY,
                 null,
                 MarkdownTagHandler
-            )
+            ).restoreSpaces()
             textView.setHtml(context, html, markdownOptions)
         } else {
             textView.text = text

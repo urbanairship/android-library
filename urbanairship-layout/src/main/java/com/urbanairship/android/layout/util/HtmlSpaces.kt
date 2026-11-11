@@ -1,19 +1,26 @@
 package com.urbanairship.android.layout.util
 
-private const val NO_BREAK_SPACE = ' '
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+
+/**
+ * Stands in for a space [android.text.Html] would collapse or drop, until [restoreSpaces] puts it
+ * back. A noncharacter, which no real text holds.
+ */
+internal const val KEPT_SPACE: Char = '\uFDD0'
 
 private val tagRegex = "<[^>]*>".toRegex()
 
 private enum class Neighbor { EDGE, BREAK, SPACE, TEXT }
 
 /**
- * Returns the HTML with every space that [android.text.Html] would collapse or drop swapped for a
- * no-break space, so repeated, leading and trailing spaces draw as typed.
+ * Returns the HTML with every space that [android.text.Html] would collapse or drop swapped for
+ * [KEPT_SPACE], so [restoreSpaces] can draw repeated, leading and trailing spaces as typed.
  *
- * The last space of a run stays a plain space when text follows it, so the run keeps one place for a
- * line to wrap. Tags other than `<br>` are skipped when looking for a space's neighbors.
+ * A space stays plain when text follows it and text or a space precedes it, since `Html` keeps that
+ * one. Tags other than `<br>` are skipped when looking for a space's neighbors.
  *
- * @receiver HTML whose line breaks are `<br>` tags.
+ * @receiver HTML whose line breaks are `<br>` tags, and whose text has `<`, `>` and `&` encoded.
  * @return The HTML with those spaces replaced.
  */
 internal fun String.preserveSpaces(): String {
@@ -59,7 +66,25 @@ internal fun String.preserveSpaces(): String {
             // The spaces before it in a run are already no-break, so only the last can stay plain.
             val staysPlain = after[i] == Neighbor.TEXT && (before[i] == Neighbor.TEXT || before[i] == Neighbor.SPACE)
             val collapsible = char == ' ' && !isInTag[i] && !staysPlain
-            append(if (collapsible) NO_BREAK_SPACE else char)
+            append(if (collapsible) KEPT_SPACE else char)
+        }
+    }
+}
+
+/**
+ * Returns the parsed text with each [KEPT_SPACE] back to a plain space, keeping every span.
+ *
+ * Plain spaces wrap and hang at a line's end the way web's `pre-wrap` does, where a no-break space
+ * would count toward a line's width.
+ *
+ * @receiver Text parsed from [preserveSpaces]' HTML.
+ * @return The text with real spaces.
+ */
+internal fun Spanned.restoreSpaces(): Spanned {
+    if (KEPT_SPACE !in this) return this
+    return SpannableStringBuilder(this).apply {
+        for (i in indices) {
+            if (this[i] == KEPT_SPACE) replace(i, i + 1, " ")
         }
     }
 }

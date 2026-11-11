@@ -5,7 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 public class HtmlSpacesTest {
-    private fun String.visible() = replace(' ', '~')
+    private fun String.visible() = replace(KEPT_SPACE, '~')
 
     @Test
     public fun singleSpacesBetweenTextStayPlain() {
@@ -40,6 +40,6 @@ public class HtmlSpacesTest {
     @Test
     public fun spacesInsideATagAreNotTouched() {
         assertEquals("""<a href="x y">a</a>""", """<a href="x y">a</a>""".preserveSpaces())
-        assertEquals("""<font color="#000001"> a</font>""".replace(" a", "~a"), """<font color="#000001"> a</font>""".preserveSpaces().visible())
+        assertEquals("""<font color="#000001">~a</font>""", """<font color="#000001"> a</font>""".preserveSpaces().visible())
     }
 }
