@@ -76,7 +76,7 @@ public class StringExtensionsTest {
     public fun markdownToHtmlBoldAndItalic() {
         val inputStar = "This is ***bold and italic*** text"
         val inputBar = "This is ___bold and italic___ text"
-        val expected = "This is <b><i>bold and italic</i></b> text"
+        val expected = "This is <i><b>bold and italic</b></i> text"
         assertEquals(expected, inputStar.markdownToHtml())
         assertEquals(expected, inputBar.markdownToHtml())
     }
@@ -101,7 +101,7 @@ public class StringExtensionsTest {
     public fun markdownToHtmlNested() {
         val inputStar = "***Bold and italic***, **bold with *italic* inside**"
         val inputBar = "___Bold and italic___, __bold with _italic_ inside__"
-        val expected = "<b><i>Bold and italic</i></b>, <b>bold with <i>italic</i> inside</b>"
+        val expected = "<i><b>Bold and italic</b></i>, <b>bold with <i>italic</i> inside</b>"
         assertEquals(expected, inputStar.markdownToHtml())
         assertEquals(expected, inputBar.markdownToHtml())
     }
@@ -528,6 +528,17 @@ public class StringExtensionsTest {
             "[x](https://e.com/?t=ab==) and ==hi==".markdownToHtml()
         )
         assertEquals("""<a href="https://e.com/a^^b">x</a> <sup>up</sup>""", "[x](https://e.com/a^^b) ^^up^^".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlKeepsAnIconFontsPrivateUseCharacters() {
+        assertEquals("\uE000 \uE021\uE02A\uE05F", "\uE000 \uE021\uE02A\uE05F".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlFourMarkersEachSideAreBoldOnly() {
+        assertEquals("<b><b>a</b></b>", "****a****".markdownToHtml())
+        assertEquals("<i><b>a</b></i>", "***a***".markdownToHtml())
     }
 
     @Test

@@ -45,13 +45,21 @@ internal fun colorSpanIndex(color: Int): Int? = ((color and 0xFFFFFF) - 1).takeI
 /** Matches a backslash before ASCII punctuation, which draws that character literally. */
 private val backslashEscapeRegex = """\\([!-/:-@\[-`{-~])""".toRegex()
 
-/** Escaped characters stand in as these private-use characters until the markdown is converted. */
-private const val ESCAPE_OFFSET = 0xE000
+/** The ASCII punctuation a backslash escapes, in the order of their stand-ins. */
+private const val ESCAPABLE = """!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
 
-private fun escaped(char: Char): Char = (ESCAPE_OFFSET + char.code).toChar()
+/**
+ * The first of the noncharacters escaped characters stand in as until the markdown is converted, one
+ * per [ESCAPABLE] character. No real text holds a noncharacter, where a private-use character may be
+ * an icon font's glyph.
+ */
+private const val FIRST_STAND_IN = 0xFDD0
+
+/** Returns the stand-in for an escaped [char], one of [ESCAPABLE]. */
+private fun escaped(char: Char): Char = (FIRST_STAND_IN + ESCAPABLE.indexOf(char)).toChar()
 
 /** The code points escaped characters stand in as, which flanking reads as punctuation. */
-internal val ESCAPED_CHAR_RANGE: IntRange = escaped('!').code..escaped('~').code
+internal val ESCAPED_CHAR_RANGE: IntRange = FIRST_STAND_IN until FIRST_STAND_IN + ESCAPABLE.length
 
 /** Matches an escaped character's stand-in. */
 private val escapedCharRegex = "[${escaped('!')}-${escaped('~')}]".toRegex()
@@ -146,4 +154,4 @@ private fun basicMarkdownToHtml(markdown: String, colorNames: List<String>): Str
         // only pairs with one inside the same link, color, superscript, subscript or highlight
         .applyEmphasis()
         // Draw escaped characters as themselves
-        .replace(escapedCharRegex) { (it.value[0].code - ESCAPE_OFFSET).toChar().toString().htmlEncode() }
+        .replace(escapedCharRegex) { ESCAPABLE[it.value[0].code - FIRST_STAND_IN].toString().htmlEncode() }

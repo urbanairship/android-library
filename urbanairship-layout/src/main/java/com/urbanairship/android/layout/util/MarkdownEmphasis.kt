@@ -172,13 +172,11 @@ private fun matchDelimiterRuns(runs: List<DelimiterRun>) {
 
             val count = when {
                 closer.char == '~' -> closer.remaining
-                opener.remaining >= 3 && closer.remaining >= 3 -> 3
                 opener.remaining >= 2 && closer.remaining >= 2 -> 2
                 else -> 1
             }
             val (open, close) = when {
                 closer.char == '~' -> "<s>" to "</s>"
-                count == 3 -> "<b><i>" to "</i></b>"
                 count == 2 -> "<b>" to "</b>"
                 else -> "<i>" to "</i>"
             }
