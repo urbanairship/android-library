@@ -286,6 +286,45 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlSpaceFlankedMarkersStayLiteral() {
+        listOf("2 * 3 * 4", "** spaced **", "_ spaced _", "~ spaced ~").forEach { input ->
+            assertEquals(input, input.markdownToHtml())
+        }
+    }
+
+    @Test
+    public fun markdownToHtmlIntrawordMarkerNextToLinkStaysLiteral() {
+        assertEquals(
+            """foo**<a href="u">x</a>**bar""",
+            "foo**[x](u)**bar".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlBoldAroundLinkFormatsTheLink() {
+        assertEquals(
+            """<b><a href="u">x</a></b> after""",
+            "**[x](u)** after".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlEscapedMarkerCountsAsPunctuation() {
+        assertEquals("<b>*x</b>", "**\\*x**".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSingleTildeStrikethrough() {
+        assertEquals("<s>x</s>", "~x~".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlMarkerRunFormatsOnlyWhatPairs() {
+        assertEquals("*<i>a</i>", "**a*".markdownToHtml())
+        assertEquals("~~a~", "~~a~".markdownToHtml())
+    }
+
+    @Test
     public fun markdownToHtmlUnmatchedMarkerBesideAPair() {
         assertEquals("<b>bold</b> and **open", "**bold** and **open".markdownToHtml())
         assertEquals("<i>italic</i> and **open", "*italic* and **open".markdownToHtml())
