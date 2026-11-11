@@ -39,6 +39,7 @@ import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.view.ModalView
+import com.urbanairship.android.layout.view.dispatchScenePagerKey
 import com.urbanairship.android.layout.widget.TouchAwareAirshipWebView
 import com.urbanairship.util.parcelableExtra
 import kotlin.time.Duration.Companion.milliseconds
@@ -69,6 +70,7 @@ public class ModalActivity : AppCompatActivity() {
 
     private var disableBackButton = false
     private var dismissReported = false
+    private var modalView: ModalView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Always enable edge-to-edge for this Activity.
@@ -138,7 +140,8 @@ public class ModalActivity : AppCompatActivity() {
                 args.webViewClientFactory,
                 args.imageCache,
                 placement.shouldIgnoreSafeArea(),
-                args.payload.version
+                args.payload.version,
+                receivesKeysWithoutFocus = true
             )
 
             val view = ModalView(this, model, presentation, viewEnvironment).apply {
@@ -156,6 +159,7 @@ public class ModalActivity : AppCompatActivity() {
             }
 
             setContentView(view)
+            modalView = view
 
             placement.transition?.let {
                 window.enterTransition  = TransitionFactory.modalTransition(it.enter, view.frameView, view.shadeView)
@@ -245,9 +249,19 @@ public class ModalActivity : AppCompatActivity() {
             UALog.v("Ignored back button press. Back button is disabled for this Scene.")
             return true
         }
+        if (event != null && pageFromUnfocusedKey(event)) return true
         // Otherwise, let the event through.
         return super.onKeyDown(keyCode, event)
     }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (event != null && pageFromUnfocusedKey(event)) return true
+        return super.onKeyUp(keyCode, event)
+    }
+
+    // With focus in the scene, ModalView's own dispatch has already offered the key to the pager.
+    private fun pageFromUnfocusedKey(event: KeyEvent): Boolean =
+        currentFocus == null && modalView?.dispatchScenePagerKey(event) == true
 
     /**
      * Keeps the activity through a resize or rotation, unless the new configuration selects a

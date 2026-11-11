@@ -25,4 +25,13 @@ public interface ViewEnvironment {
 
     /** The DSL version the layout being rendered states. */
     public val layoutVersion: Int
+
+    /**
+     * Whether D-pad and keyboard keys reach the scene even when nothing in it has focus.
+     *
+     * Only a modal, which owns its window, gets them; a banner or embedded scene shares the window
+     * with the app, so its keys go wherever the app's focus is.
+     */
+    public val receivesKeysWithoutFocus: Boolean
+        get() = false
 }

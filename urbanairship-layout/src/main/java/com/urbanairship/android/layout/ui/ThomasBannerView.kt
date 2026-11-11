@@ -10,6 +10,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.transition.TransitionManager
+import android.view.KeyEvent
 import android.view.View
 import androidx.annotation.RestrictTo
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -28,6 +29,7 @@ import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.view.dispatchScenePagerKey
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 import com.urbanairship.android.layout.widget.FocusRing
 
@@ -90,6 +92,9 @@ public class ThomasBannerView internal constructor(
     /** Returns the placement the window and the layout's environment conditions select now. */
     internal fun resolvedPlacement(): BannerPlacement =
         presentation.getResolvedPlacement(context, model.environmentConditionValues)
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        super.dispatchKeyEvent(event) || dispatchScenePagerKey(event)
 
     /** The scene, created once and moved into a new frame when the placement changes. */
     private lateinit var contentView: View
