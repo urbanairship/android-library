@@ -453,10 +453,16 @@ public class StringExtensionsTest {
     }
 
     @Test
-    public fun markdownToHtmlEscapedBracketStillOpensAColorSpan() {
+    public fun markdownToHtmlEscapedBracketNeverOpensAColorSpan() {
         val input = """[parens](color:brand) and \[escaped]{color:brand}"""
-        val expected = """<a href="color:brand">parens</a> and <font color="#000001">escaped</font>"""
+        val expected = """<a href="color:brand">parens</a> and [escaped]{color:brand}"""
         assertEquals(expected, input.markdownToHtml(listOf("brand")))
+    }
+
+    @Test
+    public fun markdownToHtmlLoneEscapedBracketInsideAColorSpan() {
+        assertEquals("""<font color="#000001">a[</font> b""", """[a\[]{color:brand} b""".markdownToHtml(listOf("brand")))
+        assertEquals("""<font color="#000001">]b</font>""", """[\]b]{color:brand}""".markdownToHtml(listOf("brand")))
     }
 
     @Test

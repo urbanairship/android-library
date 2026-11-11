@@ -24,8 +24,7 @@ internal fun String?.ifNotEmpty(block: (String) -> Unit) {
  * - Color: `[text]{color:name}`, where `name` is one of [colorNames]
  *
  * A backslash before ASCII punctuation draws that character literally, as in CommonMark:
- * `\*not italic\*` draws `*not italic*`. An escaped bracket still opens or closes a color span,
- * which is what iOS does.
+ * `\*not italic\*` draws `*not italic*`, and `\[x]{color:name}` isn't a color span.
  *
  * All other markdown syntax will be ignored.
  *
@@ -51,23 +50,15 @@ private const val ESCAPE_OFFSET = 0xE000
 
 private fun escaped(char: Char): Char = (ESCAPE_OFFSET + char.code).toChar()
 
-private val escapedOpenBracket = escaped('[')
-private val escapedCloseBracket = escaped(']')
-
 /** Matches an escaped character's stand-in. */
 private val escapedCharRegex = "[${escaped('!')}-${escaped('~')}]".toRegex()
 
 /**
- * Matches `[text]{color:name}` whose text holds no brackets other than complete `[link](url)`s and
- * escaped `\[…\]` pairs, so nested spans match innermost first.
+ * Matches `[text]{color:name}` whose text holds no brackets other than complete `[link](url)`s,
+ * so nested spans match innermost first. An escaped bracket is a stand-in by now, so it's text.
  */
-private val colorSpanRegex = run {
-    val open = """[\[$escapedOpenBracket]"""
-    val close = """[\]$escapedCloseBracket]"""
-    val notBracket = """[^\[\]$escapedOpenBracket$escapedCloseBracket]"""
-    val escapedPair = """$escapedOpenBracket$notBracket*$escapedCloseBracket"""
-    """$open((?:$notBracket|$escapedPair|$open$notBracket*$close\([^)]*\))+?)$close\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
-}
+private val colorSpanRegex =
+    """\[((?:[^\[\]]|\[[^\[\]]*]\([^)]*\))+?)]\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
 
 /**
  * Matches `[link](url)` or `[link](url "title")` whose text holds no brackets, so a bracket before
