@@ -58,18 +58,25 @@ private val escapedCloseBracket = escaped(']')
 private val escapedCharRegex = "[${escaped('!')}-${escaped('~')}]".toRegex()
 
 /**
- * Matches `[text]{color:name}` whose text holds no brackets other than complete `[link](url)`s,
- * so nested spans match innermost first.
+ * Matches `[text]{color:name}` whose text holds no brackets other than complete `[link](url)`s and
+ * escaped `\[…\]` pairs, so nested spans match innermost first.
  */
 private val colorSpanRegex = run {
     val open = """[\[$escapedOpenBracket]"""
     val close = """[\]$escapedCloseBracket]"""
     val notBracket = """[^\[\]$escapedOpenBracket$escapedCloseBracket]"""
-    """$open((?:$notBracket|$open$notBracket*$close\([^)]*\))+?)$close\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
+    val escapedPair = """$escapedOpenBracket$notBracket*$escapedCloseBracket"""
+    """$open((?:$notBracket|$escapedPair|$open$notBracket*$close\([^)]*\))+?)$close\{color:([\p{L}\p{N}_-]+)\}""".toRegex()
 }
 
-/** Matches `[link](url)` whose text holds no brackets, so a bracket before the link stays literal. */
-private val linkRegex = """\[([^\[\]]*)]\((.+?)\)""".toRegex()
+/**
+ * Matches `[link](url)` or `[link](url "title")` whose text holds no brackets, so a bracket before
+ * the link stays literal. Runs on HTML-encoded text, so a title's quotes are `&quot;` or `&#39;`.
+ * The URL may hold one level of balanced parentheses, as in CommonMark.
+ */
+private val linkRegex =
+    """\[([^\[\]]*)]\(\s*((?:[^\s()]|\([^\s()]*\))+)(?:\s+(?:&quot;(?:(?!&quot;).)*&quot;|&#39;(?:(?!&#39;).)*&#39;))?\s*\)"""
+        .toRegex()
 private const val linkTag = """<a href="$2">$1</a>"""
 
 /** Matches `^^superscript^^` */

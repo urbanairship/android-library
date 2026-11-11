@@ -465,6 +465,34 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlEscapedBracketsInsideAColorSpan() {
+        assertEquals(
+            """<font color="#000001">[tag]</font> now""",
+            """[\[tag\]]{color:brand} now""".markdownToHtml(listOf("brand"))
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlLinkTitleIsNotPartOfTheUrl() {
+        assertEquals("""<a href="https://a.com">x</a>""", """[x](https://a.com "A title")""".markdownToHtml())
+        assertEquals("""<a href="https://a.com">x</a>""", """[x](https://a.com 'A title')""".markdownToHtml())
+        assertEquals(
+            """<a href="https://a.com">x</a>""",
+            """[x](https://a.com "A \"quoted\" title")""".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlLinkUrlKeepsBalancedParentheses() {
+        assertEquals("""<a href="https://e.com/a_(b)">x</a>""", "[x](https://e.com/a_(b))".markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlLinkWithASpaceInItsUrlIsNotALink() {
+        assertEquals("[x](a b)", "[x](a b)".markdownToHtml())
+    }
+
+    @Test
     public fun colorSpanIndexDecodesPlaceholders() {
         assertEquals(0, colorSpanIndex(0xFF000001.toInt()))
         assertEquals(41, colorSpanIndex(0xFF00002A.toInt()))
