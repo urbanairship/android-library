@@ -1,12 +1,17 @@
 package com.urbanairship.android.layout.util
 
-/** A run of identical `*`, `_` or `~` markers outside any HTML tag. */
+/**
+ * A run of identical `*`, `_` or `~` markers outside any HTML tag.
+ *
+ * @property scope Which link's text the run sits in, or 0 outside every link.
+ */
 private class DelimiterRun(
     val start: Int,
     val char: Char,
     val length: Int,
     val canOpen: Boolean,
-    val canClose: Boolean
+    val canClose: Boolean,
+    val scope: Int
 ) {
     var remaining = length
     var opensAtAll = canOpen
@@ -39,7 +44,9 @@ private fun Char?.isFlankPunct(): Boolean = this != null && isFlankPunctuation()
  * the result matches iOS and web: markers open and close by flanking, `_` never works inside a word,
  * and a marker with no partner stays literal.
  *
- * HTML tags in the text are skipped, and read as punctuation beside a marker.
+ * HTML tags in the text are skipped, and read as punctuation beside a marker. A link binds tighter
+ * than emphasis, so markers inside a link's text only pair with each other, and markers outside it
+ * never pair across its edge.
  *
  * @receiver Text that is already HTML-encoded, with escaped characters swapped for stand-ins.
  * @return The text with matched markers replaced by tags.
@@ -65,18 +72,26 @@ internal fun String.applyEmphasis(): String {
 
 private fun String.findDelimiterRuns(): List<DelimiterRun> {
     val runs = mutableListOf<DelimiterRun>()
+    var scope = 0
+    var nextScope = 1
     var i = 0
     while (i < length) {
         val c = this[i]
         when {
             c == '<' -> {
                 val close = indexOf('>', i)
-                i = if (close < 0) length else close + 1
+                val tagEnd = if (close < 0) length else close + 1
+                val tag = substring(i, tagEnd)
+                when {
+                    tag.startsWith("<a ") || tag == "<a>" -> scope = nextScope++
+                    tag == "</a>" -> scope = 0
+                }
+                i = tagEnd
             }
             c == '*' || c == '_' || c == '~' -> {
                 var end = i
                 while (end < length && this[end] == c) end++
-                runs += delimiterRun(i, end, c)
+                runs += delimiterRun(i, end, c, scope)
                 i = end
             }
             else -> i++
@@ -85,7 +100,7 @@ private fun String.findDelimiterRuns(): List<DelimiterRun> {
     return runs
 }
 
-private fun String.delimiterRun(start: Int, end: Int, char: Char): DelimiterRun {
+private fun String.delimiterRun(start: Int, end: Int, char: Char, scope: Int): DelimiterRun {
     val before = getOrNull(start - 1)
     val after = getOrNull(end)
     val leftFlanking = !after.isFlankWhitespace() &&
@@ -98,7 +113,7 @@ private fun String.delimiterRun(start: Int, end: Int, char: Char): DelimiterRun 
             (rightFlanking && (!leftFlanking || after.isFlankPunct()))
         else -> leftFlanking to rightFlanking
     }
-    return DelimiterRun(start, char, end - start, canOpen, canClose)
+    return DelimiterRun(start, char, end - start, canOpen, canClose, scope)
 }
 
 /** Pairs closers with the nearest compatible opener, recording the tags each run gains. */
@@ -139,7 +154,8 @@ private fun matchDelimiterRuns(runs: List<DelimiterRun>) {
 }
 
 private fun canPair(opener: DelimiterRun, closer: DelimiterRun): Boolean {
-    if (opener.char != closer.char || !opener.canOpen || !opener.opensAtAll || opener.remaining == 0) return false
+    if (opener.char != closer.char || opener.scope != closer.scope) return false
+    if (!opener.canOpen || !opener.opensAtAll || opener.remaining == 0) return false
 
     if (closer.char == '~') {
         return opener.remaining == closer.remaining && closer.remaining <= 2

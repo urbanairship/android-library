@@ -345,6 +345,26 @@ public class StringExtensionsTest {
     }
 
     @Test
+    public fun markdownToHtmlEmphasisDoesNotCrossALinksEdge() {
+        assertEquals(
+            """<a href="u">a **b</a>** c""",
+            "[a **b](u)** c".markdownToHtml()
+        )
+        assertEquals(
+            """**a <a href="u">b** c</a>""",
+            "**a [b** c](u)".markdownToHtml()
+        )
+    }
+
+    @Test
+    public fun markdownToHtmlEmphasisInsideALinkStaysInsideIt() {
+        assertEquals(
+            """<b>x</b> <a href="u"><i>a</i> b</a>""",
+            "**x** [*a* b](u)".markdownToHtml()
+        )
+    }
+
+    @Test
     public fun markdownToHtmlUnmatchedMarkerBesideAPair() {
         assertEquals("<b>bold</b> and **open", "**bold** and **open".markdownToHtml())
         assertEquals("<i>italic</i> and **open", "*italic* and **open".markdownToHtml())
