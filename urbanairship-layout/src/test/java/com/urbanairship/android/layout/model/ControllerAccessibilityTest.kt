@@ -26,7 +26,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -72,9 +71,20 @@ public class ControllerAccessibilityTest {
     }
 
     @Test
-    public fun testALabelledControllerDropsTheFallback() {
+    public fun testALabelledControllerIsNamedByItsLabel() {
         for (type in CONTROLLERS) {
-            assertNull(type, node(type, label = "How was your stay?").contentDescription)
+            assertEquals(type, "How was your stay?", node(type, label = "How was your stay?").contentDescription?.toString())
+        }
+    }
+
+    @Test
+    public fun testAControllersOwnDescriptionWinsOverItsLabel() {
+        for (type in CONTROLLERS) {
+            assertEquals(
+                type,
+                "Rate it",
+                node(type, description = "Rate it", label = "How was your stay?").contentDescription?.toString()
+            )
         }
     }
 
