@@ -14,6 +14,8 @@ import android.text.TextPaint
 import android.text.TextWatcher
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.SubscriptSpan
+import android.text.style.SuperscriptSpan
 import android.text.style.URLSpan
 import android.util.Patterns
 import android.view.KeyEvent
@@ -313,6 +315,7 @@ internal fun TextView.setHtml(
             // Before the links, so a link inside a color span keeps its own color.
             convertColorSpans(NamedColorsContext.colorsOf(context).resolveAll(context))
             convertUrlSpans(underlineLinks, linkColor)
+            convertScriptSpans(textSize)
             // The highlight reads its geometry off the laid-out text, so we pass it via a
             // block so that RoundedBackgroundSpan can always operate on the current layout.
             convertHighlightSpans(highlightColor, highlightCornerRadius) { this@setHtml.layout }
@@ -373,6 +376,26 @@ private fun Spannable.convertColorSpans(colors: List<Int>) {
                 setSpan(ForegroundColorSpan(color), start, end, flags)
             }
         }
+}
+
+/**
+ * Replaces the framework's superscript and subscript spans with [ScriptSpan]s sized from [baseTextSize].
+ *
+ * @param baseTextSize The label's text size, in pixels.
+ */
+private fun Spannable.convertScriptSpans(baseTextSize: Float) {
+    getSpans(0, length, SuperscriptSpan::class.java)?.forEach { span ->
+        replaceSpan(span, ScriptSpan(baseTextSize, superscript = true))
+    }
+    getSpans(0, length, SubscriptSpan::class.java)?.forEach { span ->
+        replaceSpan(span, ScriptSpan(baseTextSize, superscript = false))
+    }
+}
+
+/** Puts [replacement] over the same text and with the same flags as [span], then removes [span]. */
+private fun Spannable.replaceSpan(span: Any, replacement: Any) {
+    setSpan(replacement, getSpanStart(span), getSpanEnd(span), getSpanFlags(span))
+    removeSpan(span)
 }
 
 /** Replaces URLSpans with ClickableSpans. */
