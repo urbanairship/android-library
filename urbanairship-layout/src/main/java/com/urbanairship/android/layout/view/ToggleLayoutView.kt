@@ -6,6 +6,7 @@ import android.graphics.drawable.RippleDrawable
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.CheckBox
 import android.widget.Checkable
 import android.widget.FrameLayout
 import android.widget.RadioButton
@@ -174,7 +175,11 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
 
     override fun performClick(): Boolean {
         super.performClick()
-        model.toggle()
+        when (type) {
+            // Tapping a radio or score choice selects it; it never turns a selected one off.
+            ToggleLayoutType.SCORE, ToggleLayoutType.RADIO -> model.setChecked(true)
+            ToggleLayoutType.CHECKBOX, ToggleLayoutType.BASIC -> model.toggle()
+        }
         return true
     }
 
@@ -235,7 +240,7 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
         return when (type) {
             ToggleLayoutType.SCORE -> RadioButton::class.java.name
             ToggleLayoutType.RADIO -> RadioButton::class.java.name
-            ToggleLayoutType.CHECKBOX -> ToggleButton::class.java.name
+            ToggleLayoutType.CHECKBOX -> CheckBox::class.java.name
             ToggleLayoutType.BASIC -> ToggleButton::class.java.name
         }
     }

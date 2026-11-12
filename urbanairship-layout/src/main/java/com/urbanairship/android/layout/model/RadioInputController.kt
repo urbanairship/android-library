@@ -19,6 +19,8 @@ import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
+import com.urbanairship.android.layout.util.findLabelFor
+import com.urbanairship.android.layout.view.ButtonDescriptionSource
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -95,8 +97,11 @@ internal class RadioInputController(
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info.className = RadioGroup::class.java.name
-
-                info.contentDescription = host.context.getString(com.urbanairship.R.string.ua_accessibility_radio_group)
+                // A label pointed at this controller names it, the way a button takes its name
+                // from a label inside it. The fallback is only for neither.
+                info.contentDescription = contentDescription(host.context)
+                    ?: (host.findLabelFor(viewId) as? ButtonDescriptionSource)?.buttonDescription()
+                    ?: host.context.getString(com.urbanairship.R.string.ua_accessibility_radio_group)
             }
         })
     }

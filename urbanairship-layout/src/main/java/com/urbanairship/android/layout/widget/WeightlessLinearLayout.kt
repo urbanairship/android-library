@@ -6,8 +6,6 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import com.urbanairship.android.layout.R
@@ -182,15 +180,9 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
         return p is LayoutParams
     }
 
-    override fun onInitializeAccessibilityEvent(event: AccessibilityEvent) {
-        super.onInitializeAccessibilityEvent(event)
-        event.className = ACCESSIBILITY_CLASS_NAME
-    }
-
-    override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
-        super.onInitializeAccessibilityNodeInfo(info)
-        info.className = ACCESSIBILITY_CLASS_NAME
-    }
+    // Reported through the class name rather than set on the node afterwards, so an accessibility
+    // delegate (a radio or score controller's group, a list role) can still set its own.
+    override fun getAccessibilityClassName(): CharSequence = ACCESSIBILITY_CLASS_NAME
 
     private var isAutoWidth = false
     private var isAutoHeight = false
