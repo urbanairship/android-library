@@ -78,7 +78,19 @@ public class ControllerAccessibilityTest {
         }
     }
 
-    private fun node(type: String, description: String? = null, label: String? = null): AccessibilityNodeInfoCompat {
+    @Test
+    public fun testALinearLayoutChildKeepsTheRadioGroupRole() {
+        for (type in CONTROLLERS) {
+            assertEquals(type, "Radio group", node(type, child = LINEAR_CHILD).contentDescription?.toString())
+        }
+    }
+
+    private fun node(
+        type: String,
+        description: String? = null,
+        label: String? = null,
+        child: String = GRID_CHILD
+    ): AccessibilityNodeInfoCompat {
         val labelItem = label?.let {
             """
             {
@@ -107,7 +119,7 @@ public class ControllerAccessibilityTest {
                       "type": "$type",
                       "identifier": "controller",
                       ${description?.let { """"content_description": "$it",""" } ?: ""}
-                      "view": {"type": "grid_layout", "identifier": "grid", "config": {"columns": {"type": "fixed", "count": 1}}, "items": []}
+                      "view": $child
                     }
                   }
                 ]
@@ -144,5 +156,8 @@ public class ControllerAccessibilityTest {
 
     private companion object {
         val CONTROLLERS = listOf("score_controller", "radio_input_controller")
+        const val GRID_CHILD =
+            """{"type": "grid_layout", "identifier": "grid", "config": {"columns": {"type": "fixed", "count": 1}}, "items": []}"""
+        const val LINEAR_CHILD = """{"type": "linear_layout", "direction": "vertical", "items": []}"""
     }
 }
