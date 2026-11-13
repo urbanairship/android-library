@@ -1,0 +1,336 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>com.urbanairship.ai</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-core/release">release</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-core/release" data-filter=":urbanairship-core/release">
+                                <span class="checkbox--icon"></span>
+                                release
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageids="urbanairship-core::com.urbanairship.ai////PointingToDeclaration//-708863246">
+  <div class="breadcrumbs"><a href="../index.html">urbanairship-core</a><span class="delimiter">/</span><span class="current">com.urbanairship.ai</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="274440477%2FClasslikes%2F-708863246" anchor-label="AirshipAi" id="274440477%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-airship-ai/index.html"><span>Airship</span><wbr><span><span>Ai</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="274440477%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-airship-ai/index.html">AirshipAi</a></div><div class="brief "><p class="paragraph">Entry point for Airship's on-device AI features, reached via <a href="../com.urbanairship/-airship/ai.html">com.urbanairship.Airship.ai</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1622577356%2FClasslikes%2F-708863246" anchor-label="DefaultEvaluationContextProvider" id="-1622577356%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-default-evaluation-context-provider/index.html"><span>Default</span><wbr><span>Evaluation</span><wbr><span>Context</span><wbr><span><span>Provider</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1622577356%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-default-evaluation-context-provider/index.html">DefaultEvaluationContextProvider</a></div><div class="brief "><p class="paragraph">Supplies context for usages with no provider of their own, e.g. general profile data.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1486812872%2FClasslikes%2F-708863246" anchor-label="EvaluationContext" id="-1486812872%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-evaluation-context/index.html"><span>Evaluation</span><wbr><span><span>Context</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1486812872%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-evaluation-context/index.html">EvaluationContext</a>&nbsp;<span><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a>&nbsp;</span><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>items<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-evaluation-context/-item/index.html">EvaluationContext.Item</a><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyList()</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">App-supplied context for a model evaluation, as an ordered list of prioritized items.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2055705273%2FClasslikes%2F-708863246" anchor-label="EvaluationContextProvider" id="-2055705273%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-evaluation-context-provider/index.html"><span>Evaluation</span><wbr><span>Context</span><wbr><span><span>Provider</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2055705273%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-evaluation-context-provider/index.html">EvaluationContextProvider</a><span class="token operator">&lt;</span><a href="-evaluation-context-provider/index.html">Subject</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Supplies the context for an evaluation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1943340293%2FClasslikes%2F-708863246" anchor-label="EvaluationObserver" id="1943340293%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-evaluation-observer/index.html"><span>Evaluation</span><wbr><span><span>Observer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1943340293%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-evaluation-observer/index.html">EvaluationObserver</a></div><div class="brief "><p class="paragraph">Observes finished evaluations.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1904160362%2FClasslikes%2F-708863246" anchor-label="EvaluationRecord" id="1904160362%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-evaluation-record/index.html"><span>Evaluation</span><wbr><span><span>Record</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1904160362%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-evaluation-record/index.html">EvaluationRecord</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>usage<span class="token operator">: </span><a href="-usage/index.html">Usage</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>request<span class="token operator">: </span><a href="-model-request/index.html">ModelRequest</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>outcome<span class="token operator">: </span><a href="-evaluation-record/-outcome/index.html">EvaluationRecord.Outcome</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>duration<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.time/-duration/index.html">Duration</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>attempts<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">A finished evaluation, handed to the observer set with <a href="-airship-ai/set-evaluation-observer.html">AirshipAi.setEvaluationObserver</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1003771473%2FClasslikes%2F-708863246" anchor-label="ModelAdapter" id="1003771473%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-model-adapter/index.html"><span>Model</span><wbr><span><span>Adapter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1003771473%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-model-adapter/index.html">ModelAdapter</a></div><div class="brief "><p class="paragraph">The framework's interface to a model backend.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1981436423%2FClasslikes%2F-708863246" anchor-label="ModelAvailability" id="1981436423%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-model-availability/index.html"><span>Model</span><wbr><span><span>Availability</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1981436423%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-model-availability/index.html">ModelAvailability</a></div><div class="brief "><p class="paragraph">Whether a resolved model can be used right now.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1059958545%2FClasslikes%2F-708863246" anchor-label="ModelRequest" id="1059958545%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-model-request/index.html"><span>Model</span><wbr><span><span>Request</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1059958545%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-model-request/index.html">ModelRequest</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>instructions<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>schema<span class="token operator">: </span><a href="../com.urbanairship.json/-airship-json-schema/index.html">AirshipJsonSchema</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>context<span class="token operator">: </span><a href="-evaluation-context/index.html">EvaluationContext</a><span class="token punctuation">, </span></span><span class="parameter ">render<span class="token operator">: </span><span class="token punctuation">(</span><a href="-evaluation-context/index.html">EvaluationContext</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">A single request handed to an <a href="-model-adapter/index.html">ModelAdapter</a>: instructions, output schema, and prioritized context.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1568735804%2FClasslikes%2F-708863246" anchor-label="ModelResolver" id="1568735804%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-model-resolver/index.html"><span>Model</span><wbr><span><span>Resolver</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1568735804%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-model-resolver/index.html">ModelResolver</a></div><div class="brief "><p class="paragraph">Routes a usage to a model backend.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="703996035%2FClasslikes%2F-708863246" anchor-label="ModelSelector" id="703996035%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-model-selector/index.html"><span>Model</span><wbr><span><span>Selector</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="703996035%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-model-selector/index.html">ModelSelector</a></div><div class="brief "><p class="paragraph">Selects which model backs an evaluation. Returned from an <a href="-model-resolver/index.html">ModelResolver</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-15437945%2FClasslikes%2F-708863246" anchor-label="RetryDecision" id="-15437945%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-retry-decision/index.html"><span>Retry</span><wbr><span><span>Decision</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-15437945%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-retry-decision/index.html">RetryDecision</a></div><div class="brief "><p class="paragraph">What the evaluator does after a failed attempt.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="78294998%2FClasslikes%2F-708863246" anchor-label="SchemaValidationException" id="78294998%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-schema-validation-exception/index.html"><span>Schema</span><wbr><span>Validation</span><wbr><span><span>Exception</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="78294998%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-schema-validation-exception/index.html">SchemaValidationException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>cause<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-throwable/index.html">Throwable</a></span></span><span class="token punctuation">)</span> : <a href="https://developer.android.com/reference/kotlin/java/lang/Exception.html">Exception</a></div><div class="brief "><p class="paragraph">Thrown when a model's response doesn't conform to the evaluation's schema.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1985969878%2FClasslikes%2F-708863246" anchor-label="Usage" id="-1985969878%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-usage/index.html"><span><span>Usage</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1985969878%2FClasslikes%2F-708863246"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-usage/index.html">Usage</a><span class="token operator">&lt;</span><a href="-usage/index.html">Subject</a><span class="token operator">&gt;</span>&nbsp;<span><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.html"><span class="token annotation builtin">RestrictTo</span></a><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.Scope.html#LIBRARY_GROUP">RestrictTo.Scope.LIBRARY_GROUP</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span>&nbsp;</span><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>rawValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Identifies an AI use case — one key per evaluable feature.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2026 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
