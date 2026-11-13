@@ -204,7 +204,10 @@ internal class InAppMessageAutomationExecutor(
     ): InterruptedBehavior {
         return when(schedule.data) {
             is AutomationSchedule.ScheduleData.InAppMessageData -> {
-                if (schedule.data.message.isEmbedded()) {
+                // Push-action embedded content has no end date and can't be cancelled
+                // remotely, so retrying it would keep it around forever.
+                val message = schedule.data.message
+                if (message.isEmbedded() && message.source != InAppMessage.Source.PUSH_ACTION) {
                     return InterruptedBehavior.RETRY
                 }
 
