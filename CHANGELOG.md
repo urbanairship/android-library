@@ -4,6 +4,16 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 21.2.0 - November 13, 2026
+
+Minor release that fixes several crashes and ANRs and improves D-pad and TalkBack support in Scenes.
+
+### Changes
+- Added message list state and actions to `MessageCenterListState`
+- Fixed several crashes and ANRs
+- Improved D-pad and TalkBack support in Scenes
+- Fixed several Scene layout and rendering issues
+
 ## Version 21.1.0 - October 22, 2026
 
 Minor release that adds suspending actions, email open and click tracking consent, along with security hardening, Scene layout fixes, and reporting improvements.
