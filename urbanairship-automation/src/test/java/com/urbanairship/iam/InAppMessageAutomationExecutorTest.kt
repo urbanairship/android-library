@@ -22,6 +22,8 @@ import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.android.layout.analytics.events.LayoutEvent
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.android.layout.assets.AssetCacheManager
+import com.urbanairship.automation.engine.InterruptedBehavior
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.coordinator.DisplayCoordinator
@@ -160,6 +162,64 @@ public class InAppMessageAutomationExecutorTest {
 
         verify { analytics.recordEvent(any(), any()) }
         coVerify { assetManager.clearCache(any()) }
+    }
+
+    @Test
+    public fun testInterruptedEmbedded(): TestResult = runTest {
+        val schedule = AutomationSchedule(
+            identifier = preparedInfo.scheduleId,
+            triggers = listOf(),
+            data = AutomationSchedule.ScheduleData.InAppMessageData(embeddedMessage(InAppMessage.Source.REMOTE_DATA)),
+            created = Instant.ofEpochMilli(0),
+        )
+
+        assertEquals(InterruptedBehavior.RETRY, executor.interrupted(schedule, preparedInfo))
+    }
+
+    @Test
+    public fun testInterruptedEmbeddedPushAction(): TestResult = runTest {
+        val schedule = AutomationSchedule(
+            identifier = preparedInfo.scheduleId,
+            triggers = listOf(),
+            data = AutomationSchedule.ScheduleData.InAppMessageData(embeddedMessage(InAppMessage.Source.PUSH_ACTION)),
+            created = Instant.ofEpochMilli(0),
+        )
+
+        every { analytics.recordEvent(any(), any()) } just runs
+        coEvery { assetManager.clearCache(any()) } just runs
+
+        assertEquals(InterruptedBehavior.FINISH, executor.interrupted(schedule, preparedInfo))
+        coVerify { assetManager.clearCache(preparedInfo.scheduleId) }
+    }
+
+    private fun embeddedMessage(source: InAppMessage.Source): InAppMessage {
+        val layout = """
+            {
+              "layout": {
+                "version": 1,
+                "presentation": {
+                  "type": "embedded",
+                  "embedded_id": "home_banner",
+                  "default_placement": {
+                    "size": {
+                      "width": "50%",
+                      "height": "50%"
+                    }
+                  }
+                },
+                "view": {
+                  "type": "container",
+                  "items": []
+                }
+              }
+            }
+        """.trimIndent()
+
+        return InAppMessage(
+            name = "embedded",
+            displayContent = InAppMessageDisplayContent.AirshipLayoutContent(AirshipLayout.fromJson(JsonValue.parseString(layout))),
+            source = source
+        )
     }
 
     @Test
