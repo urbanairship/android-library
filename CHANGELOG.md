@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.12.4 - November 20, 2026
+
+Patch release that fixes a crash on Android 6.0. Apps that support Android 6.0 (API 23) should update to this version or newer.
+
+### Changes
+- Fixed a crash on Android 6.0 when parsing an ISO 8601 timestamp with a time zone, which could break attributes, remote data, automation and Message Center for the rest of the app session
+
 ## Version 20.12.3 - October 30, 2026
 
 Patch release that fixes several issues. Apps that use Scenes with multiple pages, or that identify contacts with a named user, should update to this version or newer.
